@@ -644,9 +644,9 @@
   }
 
   .calm-hero h1 {
-    max-width: 10.4em;
-    font-size: clamp(2.05em, 10.6vw, 2.45em);
-    line-height: 1.05;
+    max-width: 100%;
+    font-size: clamp(2em, 8.8vw, 2.24em);
+    line-height: 1.08;
   }
 
   .calm-hero p {
@@ -657,12 +657,13 @@
   }
 
   .calm-route-slot {
-    display: grid;
-    width: 4em;
+    display: inline-grid;
+    width: 3.75em;
     height: 1.12em;
-    margin: 4px 0 0;
+    margin: 0 0 0 0.18em;
     overflow: hidden;
-    font-size: 0.96em;
+    vertical-align: baseline;
+    font-size: 0.9em;
     line-height: 1.05;
   }
 
