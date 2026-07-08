@@ -99,10 +99,6 @@
               </div>
               <div class="ari-map__note"><b>Inspect both routes.</b> Zoom or switch view before choosing. The routes stay unlabeled on purpose.</div>
             </div>
-            <div class="ari-scenario">
-              <span class="ari-scenario__icon" aria-hidden="true">sun</span>
-              <span><b>Scenario:</b> <span data-scenario></span></span>
-            </div>
           </section>
 
           <aside class="ari-question-card" aria-label="Benchmark questions">
@@ -114,6 +110,10 @@
 
             <h2>Judge the two <span>unlabeled</span> routes.</h2>
             <p class="ari-question-card__sub">Use the map only. Choose what you would actually walk in this calm situation.</p>
+            <div class="ari-scenario">
+              <span class="ari-scenario__icon" aria-hidden="true">sun</span>
+              <span><b>Scenario:</b> <span data-scenario></span></span>
+            </div>
 
             <form class="ari-question-stack" data-form>
               <section class="ari-question-block">
@@ -253,13 +253,14 @@
         return;
       }
 
-      state.standardTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap'
-      });
-      state.googleTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      els.googleView.textContent = 'Detail view';
+      state.standardTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 20,
         attribution: '&copy; OpenStreetMap &copy; CARTO'
+      });
+      state.googleTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
       });
       state.map = L.map(els.mapCanvas, {
         zoomControl: false,
@@ -283,7 +284,7 @@
         if (!bounds.isEmpty()) {
           state.map.fitBounds(bounds, 96);
           google.maps.event.addListenerOnce(state.map, 'idle', () => {
-            if (state.map.getZoom() > 15) state.map.setZoom(15);
+            if (state.map.getZoom() > 14) state.map.setZoom(14);
           });
         }
         return;
@@ -291,7 +292,7 @@
 
       if (!state.routeLayers?.getLayers().length) return;
       state.map.invalidateSize();
-      state.map.fitBounds(state.routeLayers.getBounds(), { padding: [70, 70], maxZoom: 16 });
+      state.map.fitBounds(state.routeLayers.getBounds(), { padding: [130, 130], maxZoom: 14 });
     }
 
     function drawRoutes(pair) {
