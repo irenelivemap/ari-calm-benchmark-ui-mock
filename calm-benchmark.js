@@ -270,7 +270,33 @@
       state.routeLayers = L.featureGroup().addTo(state.map);
     }
 
+    function getRouteFitPadding() {
+      const isMobile = window.matchMedia('(max-width: 700px)').matches;
+      if (!isMobile) {
+        return {
+          google: 96,
+          leaflet: { padding: [130, 130], maxZoom: 14 }
+        };
+      }
+
+      const lowerSheet = Math.min(Math.round(window.innerHeight * 0.52), 450);
+      return {
+        google: {
+          top: 156,
+          right: 34,
+          bottom: lowerSheet + 24,
+          left: 34
+        },
+        leaflet: {
+          paddingTopLeft: [34, 156],
+          paddingBottomRight: [34, lowerSheet + 24],
+          maxZoom: 14
+        }
+      };
+    }
+
     function fitRoutes() {
+      const fitPadding = getRouteFitPadding();
       if (state.mapProvider === 'google') {
         if (!state.googleOverlays.length) return;
         const bounds = new google.maps.LatLngBounds();
@@ -282,7 +308,7 @@
           }
         });
         if (!bounds.isEmpty()) {
-          state.map.fitBounds(bounds, 96);
+          state.map.fitBounds(bounds, fitPadding.google);
           google.maps.event.addListenerOnce(state.map, 'idle', () => {
             if (state.map.getZoom() > 14) state.map.setZoom(14);
           });
@@ -292,7 +318,7 @@
 
       if (!state.routeLayers?.getLayers().length) return;
       state.map.invalidateSize();
-      state.map.fitBounds(state.routeLayers.getBounds(), { padding: [130, 130], maxZoom: 14 });
+      state.map.fitBounds(state.routeLayers.getBounds(), fitPadding.leaflet);
     }
 
     function drawRoutes(pair) {
