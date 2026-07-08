@@ -579,43 +579,6 @@
   font-size: 0.74rem;
 }
 
-.calm-map-key {
-  margin-top: 6px;
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 0.74rem;
-}
-
-.calm-map-key summary {
-  width: max-content;
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.72);
-  font-weight: 700;
-}
-
-.calm-map-key label {
-  display: block;
-  margin-top: 10px;
-}
-
-.calm-map-key input {
-  width: min(100%, 420px);
-  margin-top: 7px;
-  padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-}
-
-.calm-map-key input::placeholder {
-  color: rgba(255, 255, 255, 0.58);
-}
-
-.calm-map-key p {
-  margin-top: 7px;
-  max-width: 52ch;
-}
-
 @media (max-width: 900px) {
   .calm-info-grid {
     grid-template-columns: 1fr;

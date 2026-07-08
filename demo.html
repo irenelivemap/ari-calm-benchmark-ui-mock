@@ -112,12 +112,6 @@
               <button id="start-test" type="submit" disabled>Start test -></button>
             </div>
             <p>Used only to label this session.</p>
-            <details class="calm-map-key">
-              <summary>Use Google Maps basemap</summary>
-              <label for="google-maps-key">Google Maps browser key</label>
-              <input id="google-maps-key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste key for this browser">
-              <p>Stored only in this browser. If empty, the demo uses the Leaflet fallback.</p>
-            </details>
           </form>
         </section>
       </section>
@@ -133,7 +127,6 @@
     const introHeader = document.querySelector('.calm-intro-header');
     const benchmarkRoot = document.getElementById('calm-benchmark-root');
     const participantInput = document.getElementById('participant-name');
-    const googleMapsInput = document.getElementById('google-maps-key');
     const startButton = document.getElementById('start-test');
     const GOOGLE_KEY_STORAGE = 'ari-calm-benchmark-google-maps-key';
     let benchmarkMounted = false;
@@ -146,7 +139,6 @@
       const cleanUrl = `${window.location.pathname}${urlParams.toString() ? `?${urlParams}` : ''}${window.location.hash}`;
       window.history.replaceState({}, '', cleanUrl);
     }
-    googleMapsInput.value = localStorage.getItem(GOOGLE_KEY_STORAGE) || '';
 
     function loadGoogleMaps(key) {
       if (window.google?.maps) return Promise.resolve(true);
@@ -173,7 +165,7 @@
     }
 
     async function startBenchmark(participantName) {
-      const googleKey = googleMapsInput.value.trim();
+      const googleKey = window.ARI_GOOGLE_MAPS_KEY || localStorage.getItem(GOOGLE_KEY_STORAGE) || '';
       if (googleKey) localStorage.setItem(GOOGLE_KEY_STORAGE, googleKey);
       const googleAvailable = await loadGoogleMaps(googleKey).catch(error => {
         console.warn(error);

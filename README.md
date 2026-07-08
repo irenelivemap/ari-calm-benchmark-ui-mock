@@ -77,12 +77,14 @@ The model/backend knows which route is `fast` and which route is `calm`. The tes
 
 ## Google Maps Mode
 
-`demo.html` can use Google Maps without storing a key in the repo:
+The tester UI does not expose Google Maps setup. In a deployed app, the runtime should load Google Maps before mounting the benchmark, the same way `livemap-routing/runtime/js/bench.js` does.
 
-- open the "Use Google Maps basemap" disclosure on the start card and paste a browser key, or
+For private local development, `demo.html` can still use Google Maps without storing a key in the repo:
+
+- set `window.ARI_GOOGLE_MAPS_KEY` before starting the benchmark, or
 - open `demo.html?gmap=YOUR_KEY` once; the key is moved into localStorage and removed from the URL.
 
-If no key is available, the demo uses the Leaflet fallback. The production integration can load Google Maps the same way `livemap-routing/runtime/js/bench.js` does, then mount this UI with `mapProvider: 'google'`.
+If no key is available, the demo uses the Leaflet fallback.
 
 ## Map Requirements
 
