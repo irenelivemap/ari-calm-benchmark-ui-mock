@@ -85,12 +85,12 @@
               <div class="ari-map__toolbar" aria-label="Map tools">
                 <div class="ari-map__chips">
                   <div class="ari-map-chip" data-participant-chip>Participant</div>
-                  <div class="ari-map-chip"><span class="ari-swatch ari-swatch--a"></span>Route A</div>
-                  <div class="ari-map-chip"><span class="ari-swatch ari-swatch--b"></span>Route B</div>
+                  <div class="ari-map-chip ari-map-chip--route" aria-label="Route A"><span class="ari-swatch ari-swatch--a"></span><span class="ari-map-chip__label">Route A</span></div>
+                  <div class="ari-map-chip ari-map-chip--route" aria-label="Route B"><span class="ari-swatch ari-swatch--b"></span><span class="ari-map-chip__label">Route B</span></div>
                 </div>
                 <div class="ari-map__chips">
-                  <button class="ari-map-tool" data-action="fit-routes" type="button">Fit routes</button>
-                  <button class="ari-map-tool" data-action="toggle-map-style" type="button" aria-pressed="false">Google view</button>
+                  <button class="ari-map-tool" data-action="fit-routes" type="button" aria-label="Fit routes">Fit routes</button>
+                  <button class="ari-map-tool" data-action="toggle-map-style" type="button" aria-label="Switch map view" aria-pressed="false">Google view</button>
                 </div>
               </div>
               <div class="ari-map__zoom" aria-label="Map zoom controls">
