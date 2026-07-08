@@ -17,18 +17,163 @@
   </style>
 </head>
 <body>
-  <div id="calm-benchmark-root"></div>
+  <header class="calm-intro-header">
+    <div class="calm-intro-wrap">
+      <nav class="calm-tabs" aria-label="Benchmark sections">
+        <button type="button" aria-current="page">Testing</button>
+        <button type="button">Results</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="calm-intro" class="calm-intro">
+    <div class="calm-intro-wrap">
+      <section class="calm-hero" aria-labelledby="calm-hero-title">
+        <h1 id="calm-hero-title">
+          <span>Which route feels calmer for this walk?</span>
+          <span class="calm-route-slot" aria-hidden="true">
+            <span class="calm-route-token calm-route-token--a">Route A</span>
+            <span class="calm-route-token calm-route-token--b">Route B</span>
+          </span>
+        </h1>
+        <p>Imagine you are walking somewhere in the city. You are not rushing, and the walking experience matters more than arriving as fast as possible.</p>
+      </section>
+
+      <section class="calm-info-grid" aria-label="Test overview">
+        <article class="calm-card calm-card--how">
+          <div class="calm-card-main">
+            <div class="calm-kicker">
+              <span class="calm-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-5-2V6l5 2 6-2 5 2v12l-5-2-6 2z"/><path d="M9 8v12M15 6v12"/></svg>
+              </span>
+              How it works
+            </div>
+            <h2>3 <span>steps.</span></h2>
+            <div class="calm-route-steps">
+              <div class="calm-route-track" aria-hidden="true">
+                <svg class="calm-route-path" viewBox="0 0 100 42" preserveAspectRatio="none">
+                  <path d="M0 22 C 18 13, 32 31, 50 22 C 68 13, 82 31, 100 22"/>
+                </svg>
+                <span class="calm-stop calm-stop--start"></span>
+                <span class="calm-stop calm-stop--mid"></span>
+                <span class="calm-stop calm-stop--end"></span>
+              </div>
+              <div class="calm-step-list">
+                <div><b>Compare</b><span>Look at both routes on the map.</span></div>
+                <div><b>Choose</b><span>Pick the one you would actually take.</span></div>
+                <div><b>Explain</b><span>Tell us why you chose it.</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="calm-disclosure">
+            <button type="button" aria-expanded="false" aria-controls="calm-meaning">What do we mean by calm?</button>
+            <div id="calm-meaning" class="calm-disclosure-panel" role="region">
+              <div>Quieter, pleasant, comfortable, easy to follow, less stressful, or closer to greenery or water.</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="calm-card calm-card--session">
+          <div class="calm-card-main">
+            <div class="calm-kicker">
+              <span class="calm-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              </span>
+              Session
+            </div>
+            <h2>10 <span>comparisons.</span></h2>
+            <div class="calm-session-points">
+              <div><b>About 6-8 min</b></div>
+              <div><b>Best on laptop or desktop</b></div>
+            </div>
+          </div>
+          <div class="calm-disclosure">
+            <button type="button" aria-expanded="false" aria-controls="answers-help">How your answers help</button>
+            <div id="answers-help" class="calm-disclosure-panel" role="region">
+              <div>Checks if calm routes feel meaningfully different.</div>
+            </div>
+          </div>
+        </article>
+
+        <section class="calm-start-card" aria-label="Start testing">
+          <div class="calm-start-left">
+            <div class="calm-kicker">
+              <span class="calm-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+              </span>
+              Start testing
+            </div>
+            <h2>Enter the <span>duel.</span></h2>
+          </div>
+          <form class="calm-start-form">
+            <label for="participant-name">Participant name</label>
+            <div class="calm-start-row">
+              <input id="participant-name" type="text" autocomplete="name" placeholder="Type a name">
+              <button id="start-test" type="submit" disabled>Start test -></button>
+            </div>
+            <p>Used only to label this session.</p>
+          </form>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <div id="calm-benchmark-root" hidden></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="./calm-benchmark.js"></script>
   <script>
-    AriCalmBenchmark.mount(document.getElementById('calm-benchmark-root'), {
-      participantName: 'Demo tester',
-      totalRounds: 10,
-      routePairProvider: AriCalmBenchmark.mockRoutePairProvider,
-      answerSink: async answer => {
-        console.log('Demo answer payload:', answer);
+    const intro = document.getElementById('calm-intro');
+    const introHeader = document.querySelector('.calm-intro-header');
+    const benchmarkRoot = document.getElementById('calm-benchmark-root');
+    const participantInput = document.getElementById('participant-name');
+    const startButton = document.getElementById('start-test');
+    let benchmarkMounted = false;
+
+    function startBenchmark(participantName) {
+      intro.hidden = true;
+      introHeader.hidden = true;
+      benchmarkRoot.hidden = false;
+
+      if (!benchmarkMounted) {
+        AriCalmBenchmark.mount(benchmarkRoot, {
+          participantName,
+          totalRounds: 10,
+          routePairProvider: AriCalmBenchmark.mockRoutePairProvider,
+          onExit: () => {
+            benchmarkRoot.hidden = true;
+            intro.hidden = false;
+            introHeader.hidden = false;
+            window.scrollTo({ top: 0, behavior: 'auto' });
+          },
+          answerSink: async answer => {
+            console.log('Demo answer payload:', answer);
+          }
+        });
+        benchmarkMounted = true;
       }
+
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
+    participantInput.addEventListener('input', () => {
+      startButton.disabled = participantInput.value.trim().length === 0;
+    });
+
+    document.querySelector('.calm-start-form').addEventListener('submit', event => {
+      event.preventDefault();
+      const participantName = participantInput.value.trim();
+      if (!participantName) return;
+      startBenchmark(participantName);
+    });
+
+    document.addEventListener('click', event => {
+      const trigger = event.target.closest('.calm-disclosure button');
+      if (!trigger) return;
+      const disclosure = trigger.closest('.calm-disclosure');
+      const open = !disclosure.classList.contains('is-open');
+      trigger.setAttribute('aria-expanded', String(open));
+      disclosure.classList.toggle('is-open', open);
     });
   </script>
 </body>

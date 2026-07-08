@@ -9,7 +9,7 @@ It is intentionally separate from `livemap-routing` for now and should not be cr
 ## Files
 
 - `demo.html`  
-  Standalone demo page. Open this to see the UI working.
+  Standalone demo page. Opens on the tester intro/start page, then launches the map-first benchmark.
 
 - `calm-benchmark.js`  
   Framework-agnostic UI module. Exposes `AriCalmBenchmark.mount(root, options)`.

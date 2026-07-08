@@ -191,6 +191,7 @@
 
     const routePairProvider = options.routePairProvider || mockRoutePairProvider;
     const answerSink = options.answerSink || consoleAnswerSink;
+    const onExit = typeof options.onExit === 'function' ? options.onExit : null;
 
     buildShell(root, state.totalRounds);
 
@@ -205,6 +206,8 @@
       q2: root.querySelector('[data-q2]'),
       q3: root.querySelector('[data-q3]'),
       submit: root.querySelector('[data-submit]'),
+      exit: root.querySelector('[data-action="exit"]'),
+      previous: root.querySelector('[data-action="previous"]'),
       googleView: root.querySelector('[data-action="toggle-map-style"]'),
       fitRoutes: root.querySelector('[data-action="fit-routes"]'),
       zoomIn: root.querySelector('[data-action="zoom-in"]'),
@@ -322,6 +325,7 @@
       els.form.reset();
       updateConditionalQuestions();
       renderPips();
+      els.previous.disabled = state.roundIndex === 0;
       drawRoutes(state.pair);
     }
 
@@ -335,6 +339,14 @@
       } else {
         els.submit.textContent = 'Complete';
       }
+    });
+
+    els.exit.addEventListener('click', () => {
+      if (onExit) onExit();
+    });
+
+    els.previous.addEventListener('click', () => {
+      if (state.roundIndex > 0) loadRound(state.roundIndex - 1);
     });
 
     els.fitRoutes.addEventListener('click', fitRoutes);
