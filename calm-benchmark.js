@@ -82,22 +82,11 @@
           <section class="ari-map-card" aria-label="Route map">
             <div class="ari-map" data-map>
               <div class="ari-map__canvas" data-map-canvas aria-label="Interactive route comparison map"></div>
-              <div class="ari-map__toolbar" aria-label="Map tools">
-                <div class="ari-map__chips">
-                  <div class="ari-map-chip" data-participant-chip>Participant</div>
-                  <div class="ari-map-chip ari-map-chip--route" aria-label="Route A"><span class="ari-swatch ari-swatch--a"></span><span class="ari-map-chip__label">Route A</span></div>
-                  <div class="ari-map-chip ari-map-chip--route" aria-label="Route B"><span class="ari-swatch ari-swatch--b"></span><span class="ari-map-chip__label">Route B</span></div>
-                </div>
-                <div class="ari-map__chips">
-                  <button class="ari-map-tool" data-action="fit-routes" type="button" aria-label="Fit routes">Fit routes</button>
-                  <button class="ari-map-tool" data-action="toggle-map-style" type="button" aria-label="Switch map view" aria-pressed="false">Google view</button>
-                </div>
-              </div>
               <div class="ari-map__zoom" aria-label="Map zoom controls">
                 <button data-action="zoom-in" type="button" aria-label="Zoom in">+</button>
                 <button data-action="zoom-out" type="button" aria-label="Zoom out">-</button>
               </div>
-              <div class="ari-map__note"><b>Inspect both routes.</b> Zoom or switch view before choosing. The routes stay unlabeled on purpose.</div>
+              <div class="ari-map__note"><b>Inspect both routes.</b> Zoom before choosing. The routes stay unlabeled on purpose.</div>
             </div>
           </section>
 
@@ -111,7 +100,6 @@
             <h2>Judge the two <span>unlabeled</span> routes.</h2>
             <p class="ari-question-card__sub">Use the map only. Choose what you would actually walk in this calm situation.</p>
             <div class="ari-scenario">
-              <span class="ari-scenario__icon" aria-hidden="true">sun</span>
               <span><b>Scenario:</b> <span data-scenario></span></span>
             </div>
 
@@ -121,8 +109,8 @@
                 <fieldset>
                   <legend>Which route would you choose in this situation?</legend>
                   <div class="ari-choice-grid ari-choice-grid--two">
-                    <label><input type="radio" name="q1Choice" value="route_a">Route A</label>
-                    <label><input type="radio" name="q1Choice" value="route_b">Route B</label>
+                    <label class="ari-choice--route-a"><input type="radio" name="q1Choice" value="route_a"><span class="ari-choice-swatch ari-choice-swatch--a" aria-hidden="true"></span>Route A</label>
+                    <label class="ari-choice--route-b"><input type="radio" name="q1Choice" value="route_b"><span class="ari-choice-swatch ari-choice-swatch--b" aria-hidden="true"></span>Route B</label>
                     <label><input type="radio" name="q1Choice" value="either">Either one would be fine</label>
                     <label><input type="radio" name="q1Choice" value="neither">I would choose neither</label>
                     <label><input type="radio" name="q1Choice" value="hard_to_judge">Hard to judge from the map</label>
@@ -197,7 +185,6 @@
       routeLayers: null,
       googleOverlays: [],
       standardTiles: null,
-      googleTiles: null,
       mapProvider: useGoogleMaps ? 'google' : 'leaflet'
     };
 
@@ -210,9 +197,7 @@
     const els = {
       currentRound: root.querySelector('[data-round-current]'),
       pips: root.querySelector('[data-pips]'),
-      mapShell: root.querySelector('[data-map]'),
       mapCanvas: root.querySelector('[data-map-canvas]'),
-      participantChip: root.querySelector('[data-participant-chip]'),
       scenario: root.querySelector('[data-scenario]'),
       form: root.querySelector('[data-form]'),
       q2: root.querySelector('[data-q2]'),
@@ -220,8 +205,6 @@
       submit: root.querySelector('[data-submit]'),
       exit: root.querySelector('[data-action="exit"]'),
       previous: root.querySelector('[data-action="previous"]'),
-      googleView: root.querySelector('[data-action="toggle-map-style"]'),
-      fitRoutes: root.querySelector('[data-action="fit-routes"]'),
       zoomIn: root.querySelector('[data-action="zoom-in"]'),
       zoomOut: root.querySelector('[data-action="zoom-out"]')
     };
@@ -249,18 +232,12 @@
           scaleControl: true,
           gestureHandling: 'greedy'
         });
-        els.googleView.textContent = 'Satellite';
         return;
       }
 
-      els.googleView.textContent = 'Detail view';
       state.standardTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 20,
         attribution: '&copy; OpenStreetMap &copy; CARTO'
-      });
-      state.googleTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap'
       });
       state.map = L.map(els.mapCanvas, {
         zoomControl: false,
@@ -462,7 +439,6 @@
         roundIndex: state.roundIndex
       });
       els.currentRound.textContent = String(state.roundIndex + 1);
-      els.participantChip.textContent = state.participantName ? `Participant: ${state.participantName}` : 'Participant';
       els.scenario.textContent = state.pair.scenario;
       els.form.reset();
       updateConditionalQuestions();
@@ -491,7 +467,6 @@
       if (state.roundIndex > 0) loadRound(state.roundIndex - 1);
     });
 
-    els.fitRoutes.addEventListener('click', fitRoutes);
     els.zoomIn.addEventListener('click', () => {
       if (!state.map) return;
       if (state.mapProvider === 'google') state.map.setZoom(state.map.getZoom() + 1);
@@ -501,24 +476,6 @@
       if (!state.map) return;
       if (state.mapProvider === 'google') state.map.setZoom(state.map.getZoom() - 1);
       else state.map.zoomOut();
-    });
-    els.googleView.addEventListener('click', () => {
-      if (!state.map) return;
-      const active = !els.mapShell.classList.contains('is-google-view');
-      els.mapShell.classList.toggle('is-google-view', active);
-      els.googleView.classList.toggle('is-active', active);
-      els.googleView.setAttribute('aria-pressed', String(active));
-      if (state.mapProvider === 'google') {
-        state.map.setMapTypeId(active ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP);
-        return;
-      }
-      if (active) {
-        state.map.removeLayer(state.standardTiles);
-        state.googleTiles.addTo(state.map);
-      } else {
-        state.map.removeLayer(state.googleTiles);
-        state.standardTiles.addTo(state.map);
-      }
     });
 
     loadRound(state.roundIndex);
