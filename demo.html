@@ -112,6 +112,12 @@
               <button id="start-test" type="submit" disabled>Start test -></button>
             </div>
             <p>Used only to label this session.</p>
+            <details class="calm-map-key">
+              <summary>Use Google Maps basemap</summary>
+              <label for="google-maps-key">Google Maps browser key</label>
+              <input id="google-maps-key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste key for this browser">
+              <p>Stored only in this browser. If empty, the demo uses the Leaflet fallback.</p>
+            </details>
           </form>
         </section>
       </section>
@@ -127,10 +133,53 @@
     const introHeader = document.querySelector('.calm-intro-header');
     const benchmarkRoot = document.getElementById('calm-benchmark-root');
     const participantInput = document.getElementById('participant-name');
+    const googleMapsInput = document.getElementById('google-maps-key');
     const startButton = document.getElementById('start-test');
+    const GOOGLE_KEY_STORAGE = 'ari-calm-benchmark-google-maps-key';
     let benchmarkMounted = false;
 
-    function startBenchmark(participantName) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlGoogleKey = urlParams.get('gmap');
+    if (urlGoogleKey) {
+      localStorage.setItem(GOOGLE_KEY_STORAGE, urlGoogleKey);
+      urlParams.delete('gmap');
+      const cleanUrl = `${window.location.pathname}${urlParams.toString() ? `?${urlParams}` : ''}${window.location.hash}`;
+      window.history.replaceState({}, '', cleanUrl);
+    }
+    googleMapsInput.value = localStorage.getItem(GOOGLE_KEY_STORAGE) || '';
+
+    function loadGoogleMaps(key) {
+      if (window.google?.maps) return Promise.resolve(true);
+      if (!key) return Promise.resolve(false);
+      if (window.__ariGoogleMapsPromise) return window.__ariGoogleMapsPromise;
+
+      window.__ariGoogleMapsPromise = new Promise((resolve, reject) => {
+        const callbackName = `ariGoogleMapsReady_${Math.random().toString(36).slice(2)}`;
+        const script = document.createElement('script');
+        window[callbackName] = () => {
+          delete window[callbackName];
+          resolve(true);
+        };
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&callback=${callbackName}`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = () => {
+          delete window[callbackName];
+          reject(new Error('Google Maps failed to load'));
+        };
+        document.head.appendChild(script);
+      });
+      return window.__ariGoogleMapsPromise;
+    }
+
+    async function startBenchmark(participantName) {
+      const googleKey = googleMapsInput.value.trim();
+      if (googleKey) localStorage.setItem(GOOGLE_KEY_STORAGE, googleKey);
+      const googleAvailable = await loadGoogleMaps(googleKey).catch(error => {
+        console.warn(error);
+        return false;
+      });
+
       intro.hidden = true;
       introHeader.hidden = true;
       benchmarkRoot.hidden = false;
@@ -139,6 +188,7 @@
         AriCalmBenchmark.mount(benchmarkRoot, {
           participantName,
           totalRounds: 10,
+          mapProvider: googleAvailable ? 'google' : 'leaflet',
           routePairProvider: AriCalmBenchmark.mockRoutePairProvider,
           onExit: () => {
             benchmarkRoot.hidden = true;

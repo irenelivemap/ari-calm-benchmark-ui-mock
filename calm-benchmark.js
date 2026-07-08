@@ -59,6 +59,14 @@
     return Promise.resolve();
   }
 
+  function toLatLngObject(point) {
+    return { lat: point[0], lng: point[1] };
+  }
+
+  function hasGoogleMaps() {
+    return !!(window.google && window.google.maps);
+  }
+
   function buildShell(root, totalRounds) {
     root.innerHTML = `
       <section class="ari-benchmark" aria-label="ARI calm route benchmark">
@@ -172,8 +180,10 @@
   }
 
   function mount(root, options = {}) {
-    if (!window.L) {
-      throw new Error('AriCalmBenchmark requires Leaflet on window.L before mounting.');
+    const requestedProvider = options.mapProvider || 'leaflet';
+    const useGoogleMaps = requestedProvider === 'google' && hasGoogleMaps();
+    if (!useGoogleMaps && !window.L) {
+      throw new Error('AriCalmBenchmark requires Leaflet on window.L, or Google Maps on window.google.maps, before mounting.');
     }
 
     const state = {
@@ -185,8 +195,10 @@
       assignment: null,
       map: null,
       routeLayers: null,
+      googleOverlays: [],
       standardTiles: null,
-      googleTiles: null
+      googleTiles: null,
+      mapProvider: useGoogleMaps ? 'google' : 'leaflet'
     };
 
     const routePairProvider = options.routePairProvider || mockRoutePairProvider;
@@ -225,6 +237,22 @@
 
     function ensureMap() {
       if (state.map) return;
+      if (state.mapProvider === 'google') {
+        state.map = new google.maps.Map(els.mapCanvas, {
+          center: { lat: 47.377, lng: 8.54 },
+          zoom: 13,
+          clickableIcons: true,
+          fullscreenControl: true,
+          mapTypeControl: false,
+          streetViewControl: true,
+          zoomControl: false,
+          scaleControl: true,
+          gestureHandling: 'greedy'
+        });
+        els.googleView.textContent = 'Satellite';
+        return;
+      }
+
       state.standardTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap'
@@ -242,6 +270,25 @@
     }
 
     function fitRoutes() {
+      if (state.mapProvider === 'google') {
+        if (!state.googleOverlays.length) return;
+        const bounds = new google.maps.LatLngBounds();
+        state.googleOverlays.forEach(overlay => {
+          if (overlay.getPath) {
+            overlay.getPath().forEach(point => bounds.extend(point));
+          } else if (overlay.getPosition) {
+            bounds.extend(overlay.getPosition());
+          }
+        });
+        if (!bounds.isEmpty()) {
+          state.map.fitBounds(bounds, 96);
+          google.maps.event.addListenerOnce(state.map, 'idle', () => {
+            if (state.map.getZoom() > 15) state.map.setZoom(15);
+          });
+        }
+        return;
+      }
+
       if (!state.routeLayers?.getLayers().length) return;
       state.map.invalidateSize();
       state.map.fitBounds(state.routeLayers.getBounds(), { padding: [70, 70], maxZoom: 16 });
@@ -249,6 +296,74 @@
 
     function drawRoutes(pair) {
       ensureMap();
+
+      if (state.mapProvider === 'google') {
+        state.googleOverlays.forEach(overlay => overlay.setMap(null));
+        state.googleOverlays = [];
+
+        const routeA = normalizeLatLngs(pair.routes[state.assignment.routeA].geometry).map(toLatLngObject);
+        const routeB = normalizeLatLngs(pair.routes[state.assignment.routeB].geometry).map(toLatLngObject);
+
+        const routeALine = new google.maps.Polyline({
+          path: routeA,
+          map: state.map,
+          strokeColor: routeAColor,
+          strokeOpacity: 0.95,
+          strokeWeight: 7
+        });
+        const routeBLine = new google.maps.Polyline({
+          path: routeB,
+          map: state.map,
+          strokeColor: routeBColor,
+          strokeOpacity: 0,
+          strokeWeight: 7,
+          icons: [{
+            icon: {
+              path: 'M 0,-1 0,1',
+              strokeColor: routeBColor,
+              strokeOpacity: 1,
+              strokeWeight: 5,
+              scale: 3
+            },
+            offset: '0',
+            repeat: '18px'
+          }]
+        });
+        const startMarker = new google.maps.Marker({
+          position: { lat: pair.origin.lat, lng: pair.origin.lng },
+          map: state.map,
+          title: 'Start',
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: '#101511',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 3
+          }
+        });
+        const endMarker = new google.maps.Marker({
+          position: { lat: pair.destination.lat, lng: pair.destination.lng },
+          map: state.map,
+          title: 'Destination',
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 9,
+            fillColor: '#075F3D',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 3
+          }
+        });
+
+        state.googleOverlays.push(routeALine, routeBLine, startMarker, endMarker);
+        requestAnimationFrame(() => {
+          fitRoutes();
+          setTimeout(fitRoutes, 180);
+        });
+        return;
+      }
+
       state.routeLayers.clearLayers();
 
       const startIcon = L.divIcon({
@@ -350,14 +465,26 @@
     });
 
     els.fitRoutes.addEventListener('click', fitRoutes);
-    els.zoomIn.addEventListener('click', () => state.map?.zoomIn());
-    els.zoomOut.addEventListener('click', () => state.map?.zoomOut());
+    els.zoomIn.addEventListener('click', () => {
+      if (!state.map) return;
+      if (state.mapProvider === 'google') state.map.setZoom(state.map.getZoom() + 1);
+      else state.map.zoomIn();
+    });
+    els.zoomOut.addEventListener('click', () => {
+      if (!state.map) return;
+      if (state.mapProvider === 'google') state.map.setZoom(state.map.getZoom() - 1);
+      else state.map.zoomOut();
+    });
     els.googleView.addEventListener('click', () => {
       if (!state.map) return;
       const active = !els.mapShell.classList.contains('is-google-view');
       els.mapShell.classList.toggle('is-google-view', active);
       els.googleView.classList.toggle('is-active', active);
       els.googleView.setAttribute('aria-pressed', String(active));
+      if (state.mapProvider === 'google') {
+        state.map.setMapTypeId(active ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP);
+        return;
+      }
       if (active) {
         state.map.removeLayer(state.standardTiles);
         state.googleTiles.addTo(state.map);

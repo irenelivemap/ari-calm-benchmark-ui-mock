@@ -12,7 +12,7 @@ It is intentionally separate from `livemap-routing` for now and should not be cr
   Standalone demo page. Opens on the tester intro/start page, then launches the map-first benchmark.
 
 - `calm-benchmark.js`  
-  Framework-agnostic UI module. Exposes `AriCalmBenchmark.mount(root, options)`.
+  Framework-agnostic UI module. Exposes `AriCalmBenchmark.mount(root, options)`. Supports a Google Maps adapter when `window.google.maps` is loaded, with Leaflet fallback for private/local use.
 
 - `calm-benchmark.css`  
   Styles for the map-first layout, question panel, controls, and Leaflet hardening.
@@ -54,6 +54,7 @@ http://127.0.0.1:8787/demo.html
 AriCalmBenchmark.mount(document.getElementById('calm-benchmark-root'), {
   participantName,
   totalRounds: 10,
+  mapProvider: window.google?.maps ? 'google' : 'leaflet',
   routePairProvider: async ({ sessionId, roundIndex }) => {
     return fetch(`/api/calm-benchmark/pairs?sessionId=${sessionId}&round=${roundIndex}`)
       .then(response => response.json());
@@ -73,6 +74,15 @@ AriCalmBenchmark.mount(document.getElementById('calm-benchmark-root'), {
 The UI is blinded.
 
 The model/backend knows which route is `fast` and which route is `calm`. The tester sees only `Route A` and `Route B`. The UI stores the hidden assignment in the answer payload so analysis can later determine whether the calm route was preferred or perceived as meaningfully different.
+
+## Google Maps Mode
+
+`demo.html` can use Google Maps without storing a key in the repo:
+
+- open the "Use Google Maps basemap" disclosure on the start card and paste a browser key, or
+- open `demo.html?gmap=YOUR_KEY` once; the key is moved into localStorage and removed from the URL.
+
+If no key is available, the demo uses the Leaflet fallback. The production integration can load Google Maps the same way `livemap-routing/runtime/js/bench.js` does, then mount this UI with `mapProvider: 'google'`.
 
 ## Map Requirements
 
