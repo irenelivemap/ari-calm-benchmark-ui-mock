@@ -91,18 +91,6 @@
           </section>
 
           <aside class="ari-question-card" aria-label="Benchmark questions">
-            <div class="ari-stepper" aria-hidden="true">
-              <span class="is-active">1 · Choose</span>
-              <span>2 · Separate</span>
-              <span>3 · Why</span>
-            </div>
-
-            <h2>Judge the two <span>unlabeled</span> routes.</h2>
-            <p class="ari-question-card__sub">Use the map only. Choose what you would actually walk in this calm situation.</p>
-            <div class="ari-scenario">
-              <span><b>Scenario:</b> <span data-scenario></span></span>
-            </div>
-
             <form class="ari-question-stack" data-form>
               <section class="ari-question-block">
                 <div class="ari-kicker">Q1</div>
@@ -198,7 +186,6 @@
       currentRound: root.querySelector('[data-round-current]'),
       pips: root.querySelector('[data-pips]'),
       mapCanvas: root.querySelector('[data-map-canvas]'),
-      scenario: root.querySelector('[data-scenario]'),
       form: root.querySelector('[data-form]'),
       q2: root.querySelector('[data-q2]'),
       q3: root.querySelector('[data-q3]'),
@@ -439,7 +426,6 @@
         roundIndex: state.roundIndex
       });
       els.currentRound.textContent = String(state.roundIndex + 1);
-      els.scenario.textContent = state.pair.scenario;
       els.form.reset();
       updateConditionalQuestions();
       renderPips();

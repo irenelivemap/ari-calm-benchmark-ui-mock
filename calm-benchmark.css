@@ -1060,67 +1060,11 @@
   color: var(--ari-ink);
 }
 
-.ari-scenario {
-  border-top: 1px solid rgba(16, 21, 17, 0.1);
-  padding: 14px 18px 16px;
-  color: var(--ari-muted);
-  font-size: 0.92rem;
-  line-height: 1.5;
-}
-
-.ari-scenario b {
-  color: var(--ari-ink);
-}
-
 .ari-question-card {
   max-height: calc(100vh - 112px);
   overflow: auto;
   padding: 28px;
   background: var(--ari-card-blue);
-}
-
-.ari-stepper {
-  display: flex;
-  margin-bottom: 22px;
-  border-radius: 999px;
-  padding: 4px;
-  background: rgba(16, 21, 17, 0.1);
-}
-
-.ari-stepper span {
-  flex: 1;
-  border-radius: 999px;
-  padding: 9px 4px;
-  color: var(--ari-muted);
-  text-align: center;
-  font-size: 0.74rem;
-  font-weight: 700;
-}
-
-.ari-stepper .is-active {
-  background: #fff;
-  color: var(--ari-ink);
-  box-shadow: 0 2px 8px rgba(16, 21, 17, 0.1);
-}
-
-.ari-question-card h2 {
-  margin: 0;
-  color: var(--ari-ink);
-  font-size: 1.55rem;
-  line-height: 1.15;
-}
-
-.ari-question-card h2 span {
-  font-family: var(--ari-serif);
-  font-style: italic;
-  font-weight: 500;
-}
-
-.ari-question-card__sub {
-  margin: 12px 0 18px;
-  color: var(--ari-muted);
-  font-size: 0.92rem;
-  line-height: 1.55;
 }
 
 .ari-question-stack {
@@ -1406,35 +1350,6 @@
   -webkit-backdrop-filter: blur(12px);
 }
 
-.ari-stepper {
-  margin-bottom: 14px;
-  background: rgba(16, 21, 17, 0.08);
-}
-
-.ari-stepper span {
-  padding: 7px 4px;
-  font-size: 0.68rem;
-}
-
-.ari-question-card h2 {
-  font-size: 1.14rem;
-}
-
-.ari-question-card__sub {
-  margin: 8px 0 12px;
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.ari-scenario {
-  margin: 0 0 13px;
-  border: 1px solid rgba(16, 21, 17, 0.08);
-  border-radius: 8px;
-  padding: 10px;
-  background: rgba(16, 21, 17, 0.04);
-  font-size: 0.76rem;
-}
-
 .ari-question-stack {
   gap: 10px;
 }
@@ -1603,36 +1518,6 @@
     border-radius: 20px;
     padding: 14px;
     background: rgba(255, 255, 255, 0.96);
-  }
-
-  .ari-stepper {
-    position: sticky;
-    top: -14px;
-    z-index: 2;
-    margin: -14px -14px 12px;
-    border-radius: 20px 20px 0 0;
-    padding: 10px 10px 6px;
-    background: rgba(255, 255, 255, 0.96);
-  }
-
-  .ari-stepper span {
-    padding: 7px 4px;
-    font-size: 0.66rem;
-  }
-
-  .ari-question-card h2 {
-    font-size: 1.05rem;
-  }
-
-  .ari-question-card__sub {
-    margin: 6px 0 10px;
-    font-size: 0.76rem;
-  }
-
-  .ari-scenario {
-    margin-bottom: 10px;
-    padding: 8px;
-    font-size: 0.72rem;
   }
 
   .ari-question-stack {
