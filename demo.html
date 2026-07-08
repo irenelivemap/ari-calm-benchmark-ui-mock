@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ARI Calm Benchmark Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
+  <link rel="stylesheet" href="./calm-benchmark.css">
+  <style>
+    body {
+      margin: 0;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div id="calm-benchmark-root"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="./calm-benchmark.js"></script>
+  <script>
+    AriCalmBenchmark.mount(document.getElementById('calm-benchmark-root'), {
+      participantName: 'Demo tester',
+      totalRounds: 10,
+      routePairProvider: AriCalmBenchmark.mockRoutePairProvider,
+      answerSink: async answer => {
+        console.log('Demo answer payload:', answer);
+      }
+    });
+  </script>
+</body>
+</html>
