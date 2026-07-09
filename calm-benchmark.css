@@ -1418,8 +1418,6 @@
   inset: 0;
   z-index: 45;
   padding: 0;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
 }
 
 .ari-exit-confirm {
@@ -1427,6 +1425,8 @@
   place-items: center;
   padding: 24px;
   background: rgba(8, 9, 9, 0.32);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 .ari-onboarding[hidden],
@@ -1480,7 +1480,7 @@
   left: var(--coach-left, 24px);
   top: var(--coach-top, 24px);
   z-index: 2;
-  width: min(310px, calc(100% - 28px));
+  width: var(--coach-width, min(310px, calc(100% - 28px)));
   border-radius: 16px;
   padding: 18px;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -2407,18 +2407,8 @@
   }
 
   .ari-onboarding__coach {
-    right: 12px;
-    bottom: 12px;
-    left: 12px !important;
-    top: auto !important;
-    width: auto;
     border-radius: 18px;
     padding: 16px;
-  }
-
-  .ari-onboarding[data-step="answer"] .ari-onboarding__coach {
-    top: 78px !important;
-    bottom: auto;
   }
 
   .ari-onboarding__coach h2 {

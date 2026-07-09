@@ -431,25 +431,45 @@
       const localLeft = targetRect.left - benchmarkRect.left;
       const localTop = targetRect.top - benchmarkRect.top;
       const padding = 14;
+      const margin = 14;
+      const gap = 12;
       const spotlightLeft = Math.max(8, localLeft - padding);
       const spotlightTop = Math.max(8, localTop - padding);
       const spotlightWidth = Math.min(benchmarkRect.width - spotlightLeft - 8, targetRect.width + padding * 2);
       const spotlightHeight = Math.min(benchmarkRect.height - spotlightTop - 8, targetRect.height + padding * 2);
-      const coachWidth = 310;
-      const gap = 16;
-      const canPlaceRight = spotlightLeft + spotlightWidth + gap + coachWidth < benchmarkRect.width - 14;
-      const canPlaceLeft = spotlightLeft - gap - coachWidth > 14;
-      const coachLeft = canPlaceRight
-        ? spotlightLeft + spotlightWidth + gap
-        : canPlaceLeft
-          ? spotlightLeft - gap - coachWidth
-          : Math.max(14, Math.min(benchmarkRect.width - coachWidth - 14, spotlightLeft));
-      const coachTop = Math.max(14, Math.min(benchmarkRect.height - 210, spotlightTop));
+      const coachWidth = Math.min(310, benchmarkRect.width - margin * 2);
+      const coachHeight = Math.ceil(els.onboardingCoach.getBoundingClientRect().height || 184);
+      const clampLeft = value => Math.max(margin, Math.min(benchmarkRect.width - coachWidth - margin, value));
+      const clampTop = value => Math.max(margin, Math.min(benchmarkRect.height - coachHeight - margin, value));
+      const placeRight = spotlightLeft + spotlightWidth + gap + coachWidth <= benchmarkRect.width - margin;
+      const placeLeft = spotlightLeft - gap - coachWidth >= margin;
+      const placeBelow = spotlightTop + spotlightHeight + gap + coachHeight <= benchmarkRect.height - margin;
+      const placeAbove = spotlightTop - gap - coachHeight >= margin;
+      let coachLeft;
+      let coachTop;
+
+      if (placeRight) {
+        coachLeft = spotlightLeft + spotlightWidth + gap;
+        coachTop = clampTop(spotlightTop);
+      } else if (placeLeft || spotlightLeft > benchmarkRect.width / 2) {
+        coachLeft = clampLeft(spotlightLeft - gap - coachWidth);
+        coachTop = clampTop(spotlightTop);
+      } else if (placeBelow) {
+        coachLeft = clampLeft(spotlightLeft + spotlightWidth / 2 - coachWidth / 2);
+        coachTop = spotlightTop + spotlightHeight + gap;
+      } else if (placeAbove) {
+        coachLeft = clampLeft(spotlightLeft + spotlightWidth / 2 - coachWidth / 2);
+        coachTop = spotlightTop - gap - coachHeight;
+      } else {
+        coachLeft = clampLeft(spotlightLeft + spotlightWidth / 2 - coachWidth / 2);
+        coachTop = clampTop(spotlightTop + spotlightHeight + gap);
+      }
 
       els.onboarding.style.setProperty('--spot-left', `${spotlightLeft}px`);
       els.onboarding.style.setProperty('--spot-top', `${spotlightTop}px`);
       els.onboarding.style.setProperty('--spot-width', `${spotlightWidth}px`);
       els.onboarding.style.setProperty('--spot-height', `${spotlightHeight}px`);
+      els.onboarding.style.setProperty('--coach-width', `${coachWidth}px`);
       els.onboarding.style.setProperty('--coach-left', `${coachLeft}px`);
       els.onboarding.style.setProperty('--coach-top', `${coachTop}px`);
     }
