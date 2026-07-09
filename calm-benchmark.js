@@ -97,8 +97,8 @@
                 <fieldset>
                   <legend>Which route would you choose in this situation?</legend>
                   <div class="ari-choice-grid ari-choice-grid--two">
-                    <label class="ari-choice--route-a"><input type="radio" name="q1Choice" value="route_a"><span class="ari-choice-swatch ari-choice-swatch--a" aria-hidden="true"></span>Route A</label>
-                    <label class="ari-choice--route-b"><input type="radio" name="q1Choice" value="route_b"><span class="ari-choice-swatch ari-choice-swatch--b" aria-hidden="true"></span>Route B</label>
+                    <label class="ari-choice--route-a"><input type="radio" name="q1Choice" value="route_a">Route A</label>
+                    <label class="ari-choice--route-b"><input type="radio" name="q1Choice" value="route_b">Route B</label>
                     <label><input type="radio" name="q1Choice" value="either">Either one would be fine</label>
                     <label><input type="radio" name="q1Choice" value="neither">I would choose neither</label>
                     <label><input type="radio" name="q1Choice" value="hard_to_judge">Hard to judge from the map</label>
