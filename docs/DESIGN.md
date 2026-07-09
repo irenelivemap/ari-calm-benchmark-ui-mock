@@ -209,7 +209,8 @@ Rules:
 - Progress pips are neutral white (`rgba(255,255,255,0.82)` done, `0.12` remaining). Never route green/orange — route colors are reserved.
 - The `Resume →` button uses the same neutral bright treatment as `Start test →`.
 - The pips goal is the next milestone (10 → 15 → 20), not a fixed 10. Counting past the goal must keep working.
-- `New session` is a small underlined text link in the footnote line; it clears saved progress. Minimum `rgba(255,255,255,0.55)` text.
+- There is no `New session` / reset control on the card. Clearing progress is a dev action (localStorage), not a tester affordance.
+- Contrast floor on the dark card: body and footnote text at `rgba(255,255,255,0.84)` minimum, small-caps labels at `0.72` minimum. The old `0.55` floor was too low for small text — reserve values below `0.72` for decorative elements only, never for text that must be read.
 
 ## Gamification Rules
 

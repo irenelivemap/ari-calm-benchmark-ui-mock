@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260709-resume-8">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260709-resume-9">
   <style>
     body {
       margin: 0;
@@ -127,7 +127,7 @@
             <div class="calm-start-row">
               <button id="resume-test" type="button">Resume →</button>
             </div>
-            <p class="calm-resume-foot"><span id="resume-foot-text"></span><button class="calm-resume-clear" id="resume-clear" type="button">New session</button></p>
+            <p class="calm-resume-foot" id="resume-foot-text"></p>
           </div>
         </section>
       </section>
@@ -138,8 +138,8 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="./src/data/mock-route-pairs.js?v=20260709-structure-1"></script>
-  <script src="./src/maps/map-adapter.js?v=20260709-resume-8"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260709-resume-8"></script>
+  <script src="./src/maps/map-adapter.js?v=20260709-resume-9"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260709-resume-9"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -260,12 +260,6 @@
         document.getElementById('start-h2').innerHTML = `Enter the <span>duel.</span>`;
       }
     }
-
-    document.getElementById('resume-clear').addEventListener('click', () => {
-      localStorage.removeItem(PROGRESS_STORAGE);
-      savedProgress = null;
-      checkResumeState();
-    });
 
     async function startBenchmark(participantName, extraOptions = {}) {
       const googleKey = window.ARI_GOOGLE_MAPS_KEY || localStorage.getItem(GOOGLE_KEY_STORAGE) || '';
