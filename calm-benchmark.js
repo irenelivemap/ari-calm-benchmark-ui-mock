@@ -1,5 +1,6 @@
 (function () {
   const DEFAULT_TOTAL_ROUNDS = 10;
+  const ROUTE_FIT_MAX_ZOOM = 19;
 
   const demoPairs = [
     {
@@ -344,7 +345,8 @@
       });
       state.map = L.map(els.mapCanvas, {
         zoomControl: false,
-        attributionControl: true
+        attributionControl: true,
+        zoomSnap: 0.25
       });
       state.standardTiles.addTo(state.map);
       state.routeLayers = L.featureGroup().addTo(state.map);
@@ -354,23 +356,23 @@
       const isMobile = window.matchMedia('(max-width: 700px)').matches;
       if (!isMobile) {
         return {
-          google: 96,
-          leaflet: { padding: [72, 72], maxZoom: 16 }
+          google: 44,
+          leaflet: { padding: [44, 44], maxZoom: ROUTE_FIT_MAX_ZOOM }
         };
       }
 
       const lowerSheet = state.panelCollapsed ? 82 : Math.min(Math.round(window.innerHeight * 0.5), 430);
       return {
         google: {
-          top: 108,
-          right: 26,
-          bottom: lowerSheet + 18,
-          left: 26
+          top: 76,
+          right: 16,
+          bottom: lowerSheet + 10,
+          left: 16
         },
         leaflet: {
-          paddingTopLeft: [26, 108],
-          paddingBottomRight: [26, lowerSheet + 18],
-          maxZoom: 16
+          paddingTopLeft: [16, 76],
+          paddingBottomRight: [16, lowerSheet + 10],
+          maxZoom: ROUTE_FIT_MAX_ZOOM
         }
       };
     }
@@ -390,7 +392,7 @@
         if (!bounds.isEmpty()) {
           state.map.fitBounds(bounds, fitPadding.google);
           google.maps.event.addListenerOnce(state.map, 'idle', () => {
-              if (state.map.getZoom() > 16) state.map.setZoom(16);
+            if (state.map.getZoom() > ROUTE_FIT_MAX_ZOOM) state.map.setZoom(ROUTE_FIT_MAX_ZOOM);
           });
         }
         return;
