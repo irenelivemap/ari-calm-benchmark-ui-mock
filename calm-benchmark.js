@@ -180,50 +180,15 @@
         </main>
 
         <section class="ari-onboarding" data-onboarding aria-label="Before you start">
-          <div class="ari-onboarding__panel">
-            <div class="ari-kicker">Before you start</div>
-            <h2>Inspect the routes, then choose.</h2>
-            <div class="ari-onboarding__guide" role="list" aria-label="How to use the test map">
-              <div class="ari-onboarding__item" role="listitem">
-                <div class="ari-onboarding__demo ari-onboarding__demo--zoom" aria-hidden="true">
-                  <span>+</span>
-                  <span>-</span>
-                </div>
-                <div>
-                  <b>Zoom</b>
-                  <span>Move closer or wider.</span>
-                </div>
-              </div>
-              <div class="ari-onboarding__item" role="listitem">
-                <div class="ari-onboarding__demo ari-onboarding__demo--fit" aria-hidden="true">
-                  <span></span>
-                </div>
-                <div>
-                  <b>Fit routes</b>
-                  <span>Bring both routes back.</span>
-                </div>
-              </div>
-              <div class="ari-onboarding__item" role="listitem">
-                <div class="ari-onboarding__demo ari-onboarding__demo--street" aria-hidden="true">
-                  <span></span>
-                </div>
-                <div>
-                  <b>Street View</b>
-                  <span>Click a route point.</span>
-                </div>
-              </div>
-              <div class="ari-onboarding__item" role="listitem">
-                <div class="ari-onboarding__demo ari-onboarding__demo--answer" aria-hidden="true">
-                  <span>A</span>
-                  <span>B</span>
-                </div>
-                <div>
-                  <b>Answer</b>
-                  <span>Choose what you would walk.</span>
-                </div>
-              </div>
+          <div class="ari-onboarding__spotlight" data-onboarding-spotlight aria-hidden="true"></div>
+          <div class="ari-onboarding__coach" role="dialog" aria-labelledby="ari-onboarding-title" aria-describedby="ari-onboarding-copy">
+            <div class="ari-kicker" data-onboarding-count>1 / 4</div>
+            <h2 id="ari-onboarding-title" data-onboarding-title>Zoom in or out.</h2>
+            <p id="ari-onboarding-copy" data-onboarding-copy>Use + and - when you need to inspect streets more closely.</p>
+            <div class="ari-onboarding__actions">
+              <button class="ari-btn ari-btn--secondary" data-action="skip-onboarding" type="button">Skip intro</button>
+              <button class="ari-btn ari-btn--primary" data-action="next-onboarding" type="button">OK</button>
             </div>
-            <button class="ari-btn ari-btn--primary" data-action="start-round" type="button">Start round 1 →</button>
           </div>
         </section>
 
@@ -259,6 +224,7 @@
       assignment: null,
       questionStep: 'q1',
       onboardingComplete: false,
+      onboardingStepIndex: 0,
       completedRounds: 0,
       panelCollapsed: false,
       map: null,
@@ -282,7 +248,13 @@
       pips: root.querySelector('[data-pips]'),
       mapCanvas: root.querySelector('[data-map-canvas]'),
       onboarding: root.querySelector('[data-onboarding]'),
-      startRound: root.querySelector('[data-action="start-round"]'),
+      onboardingSpotlight: root.querySelector('[data-onboarding-spotlight]'),
+      onboardingCoach: root.querySelector('.ari-onboarding__coach'),
+      onboardingCount: root.querySelector('[data-onboarding-count]'),
+      onboardingTitle: root.querySelector('[data-onboarding-title]'),
+      onboardingCopy: root.querySelector('[data-onboarding-copy]'),
+      skipOnboarding: root.querySelector('[data-action="skip-onboarding"]'),
+      nextOnboarding: root.querySelector('[data-action="next-onboarding"]'),
       exitConfirm: root.querySelector('[data-exit-confirm]'),
       exitCopy: root.querySelector('[data-exit-copy]'),
       keepTesting: root.querySelector('[data-action="keep-testing"]'),
@@ -307,6 +279,34 @@
       leaveWithoutSaving: root.querySelector('[data-action="leave-without-saving"]'),
       saveProgress: root.querySelector('[data-action="save-progress"]')
     };
+
+    const onboardingSteps = [
+      {
+        id: 'zoom',
+        target: () => els.zoomIn?.parentElement,
+        title: 'Zoom in or out.',
+        copy: 'Use + and - when you need to inspect streets more closely.'
+      },
+      {
+        id: 'fit',
+        target: () => els.fitRoutes,
+        title: 'Bring both routes back.',
+        copy: 'Tap Fit routes if you lose the comparison while exploring.'
+      },
+      {
+        id: 'street',
+        target: getStreetViewTeachingRect,
+        title: 'Check the street.',
+        copy: 'Click a point on either route to open the Street View prompt.'
+      },
+      {
+        id: 'answer',
+        target: () => els.questionCard,
+        title: 'Choose when ready.',
+        copy: 'Pick the route you would actually walk, then continue.',
+        final: true
+      }
+    ];
 
     function renderPips() {
       els.pips.innerHTML = '';
@@ -395,6 +395,84 @@
       if (!state.routeLayers?.getLayers().length) return;
       state.map.invalidateSize();
       state.map.fitBounds(state.routeLayers.getBounds(), fitPadding.leaflet);
+    }
+
+    function getElementRect(target) {
+      if (!target) return null;
+      if (target instanceof DOMRect || typeof target.left === 'number') return target;
+      if (typeof target.getBoundingClientRect === 'function') return target.getBoundingClientRect();
+      return null;
+    }
+
+    function getStreetViewTeachingRect() {
+      const canvasRect = els.mapCanvas.getBoundingClientRect();
+      const fallback = new DOMRect(
+        canvasRect.left + canvasRect.width / 2 - 28,
+        canvasRect.top + canvasRect.height / 2 - 28,
+        56,
+        56
+      );
+      if (!state.pair || !state.assignment || !canvasRect.width || !canvasRect.height) return fallback;
+
+      const route = normalizeLatLngs(state.pair.routes[state.assignment.routeA].geometry);
+      const point = route[Math.floor(route.length / 2)];
+      if (!point) return fallback;
+
+      if (state.mapProvider === 'leaflet' && state.map?.latLngToContainerPoint) {
+        const containerPoint = state.map.latLngToContainerPoint(point);
+        return new DOMRect(canvasRect.left + containerPoint.x - 28, canvasRect.top + containerPoint.y - 28, 56, 56);
+      }
+
+      return fallback;
+    }
+
+    function placeOnboardingStep(targetRect) {
+      const benchmarkRect = root.querySelector('.ari-benchmark').getBoundingClientRect();
+      const localLeft = targetRect.left - benchmarkRect.left;
+      const localTop = targetRect.top - benchmarkRect.top;
+      const padding = 14;
+      const spotlightLeft = Math.max(8, localLeft - padding);
+      const spotlightTop = Math.max(8, localTop - padding);
+      const spotlightWidth = Math.min(benchmarkRect.width - spotlightLeft - 8, targetRect.width + padding * 2);
+      const spotlightHeight = Math.min(benchmarkRect.height - spotlightTop - 8, targetRect.height + padding * 2);
+      const coachWidth = 310;
+      const gap = 16;
+      const canPlaceRight = spotlightLeft + spotlightWidth + gap + coachWidth < benchmarkRect.width - 14;
+      const canPlaceLeft = spotlightLeft - gap - coachWidth > 14;
+      const coachLeft = canPlaceRight
+        ? spotlightLeft + spotlightWidth + gap
+        : canPlaceLeft
+          ? spotlightLeft - gap - coachWidth
+          : Math.max(14, Math.min(benchmarkRect.width - coachWidth - 14, spotlightLeft));
+      const coachTop = Math.max(14, Math.min(benchmarkRect.height - 210, spotlightTop));
+
+      els.onboarding.style.setProperty('--spot-left', `${spotlightLeft}px`);
+      els.onboarding.style.setProperty('--spot-top', `${spotlightTop}px`);
+      els.onboarding.style.setProperty('--spot-width', `${spotlightWidth}px`);
+      els.onboarding.style.setProperty('--spot-height', `${spotlightHeight}px`);
+      els.onboarding.style.setProperty('--coach-left', `${coachLeft}px`);
+      els.onboarding.style.setProperty('--coach-top', `${coachTop}px`);
+    }
+
+    function renderOnboardingStep() {
+      if (state.onboardingComplete || els.onboarding.hidden) return;
+      const step = onboardingSteps[state.onboardingStepIndex] || onboardingSteps[0];
+      const targetRect = getElementRect(step.target());
+      if (!targetRect) return;
+
+      els.onboarding.dataset.step = step.id;
+      els.onboardingCount.textContent = `${state.onboardingStepIndex + 1} / ${onboardingSteps.length}`;
+      els.onboardingTitle.textContent = step.title;
+      els.onboardingCopy.textContent = step.copy;
+      els.nextOnboarding.textContent = step.final ? 'Start round →' : 'OK';
+      els.skipOnboarding.hidden = !!step.final;
+      placeOnboardingStep(targetRect);
+    }
+
+    function finishOnboarding() {
+      state.onboardingComplete = true;
+      els.onboarding.hidden = true;
+      requestAnimationFrame(fitRoutes);
     }
 
     function isNearLeafletRoute(latlng, containerPoint) {
@@ -757,6 +835,13 @@
       updateQuestionFlow();
       renderPips();
       drawRoutes(state.pair);
+      if (!state.onboardingComplete) {
+        state.onboardingStepIndex = 0;
+        requestAnimationFrame(() => {
+          renderOnboardingStep();
+          setTimeout(renderOnboardingStep, 220);
+        });
+      }
     }
 
     els.form.addEventListener('change', updateQuestionFlow);
@@ -804,10 +889,19 @@
       if (onExit) onExit();
     });
 
-    els.startRound.addEventListener('click', () => {
-      state.onboardingComplete = true;
-      els.onboarding.hidden = true;
-      requestAnimationFrame(fitRoutes);
+    els.nextOnboarding.addEventListener('click', () => {
+      const isLastStep = state.onboardingStepIndex >= onboardingSteps.length - 1;
+      if (isLastStep) {
+        finishOnboarding();
+        return;
+      }
+
+      state.onboardingStepIndex += 1;
+      renderOnboardingStep();
+    });
+
+    els.skipOnboarding.addEventListener('click', () => {
+      finishOnboarding();
     });
 
     els.panelToggle.addEventListener('click', () => {
@@ -847,6 +941,10 @@
       label.addEventListener('mouseleave', () => setRouteFocus(null));
       label.addEventListener('focusin', () => setRouteFocus(key));
       label.addEventListener('focusout', () => setRouteFocus(null));
+    });
+
+    window.addEventListener('resize', () => {
+      requestAnimationFrame(renderOnboardingStep);
     });
 
     loadRound(state.roundIndex);
