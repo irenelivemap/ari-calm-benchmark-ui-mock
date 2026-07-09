@@ -602,6 +602,23 @@
   font-size: 0.74em;
 }
 
+.calm-resume-right {
+  grid-area: form;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.calm-resume-name {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 @media (max-width: 900px) {
   .calm-hero h1 {
     text-wrap: wrap;
@@ -1440,6 +1457,7 @@
 }
 
 .ari-exit-confirm__panel {
+  position: relative;
   width: min(430px, 100%);
   border-radius: 18px;
   padding: 22px;
@@ -1449,6 +1467,40 @@
     linear-gradient(180deg, rgba(16, 18, 17, 0.98), rgba(8, 9, 9, 0.98));
   color: #fff;
   box-shadow: 0 24px 70px rgba(16, 21, 17, 0.32), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.ari-exit-confirm__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.065);
+  color: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 400;
+  line-height: 1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.ari-exit-confirm__close:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.ari-exit-confirm__close:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.52);
+  outline-offset: 3px;
 }
 
 .ari-onboarding__spotlight {

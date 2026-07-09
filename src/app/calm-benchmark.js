@@ -148,11 +148,11 @@
 
         <section class="ari-exit-confirm" data-exit-confirm hidden aria-label="Exit confirmation">
           <div class="ari-exit-confirm__panel">
+            <button class="ari-exit-confirm__close" data-action="keep-testing" type="button" aria-label="Keep testing">&times;</button>
             <div class="ari-kicker">Exit test</div>
             <h2>Leave this session?</h2>
             <p data-exit-copy>Completed rounds already submitted will stay submitted. This round has not been submitted yet.</p>
             <div class="ari-exit-confirm__actions">
-              <button class="ari-btn ari-btn--secondary" data-action="keep-testing" type="button">Keep testing</button>
               <button class="ari-btn ari-btn--secondary" data-action="leave-without-saving" type="button">Leave without saving</button>
               <button class="ari-btn ari-btn--primary" data-action="save-progress" type="button">Save progress</button>
             </div>
@@ -181,7 +181,7 @@
       pair: null,
       assignment: null,
       questionStep: 'q1',
-      onboardingComplete: false,
+      onboardingComplete: options.skipOnboarding || false,
       onboardingStepIndex: 0,
       completedRounds: 0,
       panelCollapsed: false,

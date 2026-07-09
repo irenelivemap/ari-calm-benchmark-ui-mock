@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260709-structure-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260709-resume-1">
   <style>
     body {
       margin: 0;
@@ -96,7 +96,8 @@
         </article>
 
         <section class="calm-start-card" aria-label="Start testing">
-          <div class="calm-start-left">
+          <!-- default: start state -->
+          <div class="calm-start-left" id="start-left">
             <div class="calm-kicker">
               <span class="calm-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>
@@ -105,7 +106,7 @@
             </div>
             <h2>Enter the <span>duel.</span></h2>
           </div>
-          <form class="calm-start-form">
+          <form class="calm-start-form" id="start-form">
             <label for="participant-name">Participant name</label>
             <div class="calm-start-row">
               <input id="participant-name" type="text" autocomplete="name" placeholder="Type a name">
@@ -113,6 +114,22 @@
             </div>
             <p>Used only to label this session.</p>
           </form>
+          <!-- resume state (hidden until progress detected) -->
+          <div class="calm-start-left" id="resume-left" hidden>
+            <div class="calm-kicker">
+              <span class="calm-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+              </span>
+              Welcome back
+            </div>
+            <h2 id="resume-count">0 <span>routes compared.</span></h2>
+          </div>
+          <div class="calm-resume-right" id="resume-right" hidden>
+            <p class="calm-resume-name" id="resume-name"></p>
+            <div class="calm-start-row">
+              <button id="resume-test" type="button">Continue →</button>
+            </div>
+          </div>
         </section>
       </section>
     </div>
@@ -122,8 +139,8 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="./src/data/mock-route-pairs.js?v=20260709-structure-1"></script>
-  <script src="./src/maps/map-adapter.js?v=20260709-map-adapter-1"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260709-map-adapter-1"></script>
+  <script src="./src/maps/map-adapter.js?v=20260709-resume-1"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260709-resume-1"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -134,6 +151,7 @@
     const ANSWERS_STORAGE = 'ari-calm-benchmark-answers';
     const PROGRESS_STORAGE = 'ari-calm-benchmark-progress';
     let benchmarkMounted = false;
+    let savedProgress = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     const urlGoogleKey = urlParams.get('gmap');
@@ -168,7 +186,28 @@
       return window.__ariGoogleMapsPromise;
     }
 
-    async function startBenchmark(participantName) {
+    function checkResumeState() {
+      const raw = localStorage.getItem(PROGRESS_STORAGE);
+      let progress = null;
+      try { progress = raw ? JSON.parse(raw) : null; } catch {}
+
+      const hasProgress = progress && (progress.completedRounds > 0 || progress.roundIndex > 0);
+
+      document.getElementById('start-left').hidden = !!hasProgress;
+      document.getElementById('start-form').hidden = !!hasProgress;
+      document.getElementById('resume-left').hidden = !hasProgress;
+      document.getElementById('resume-right').hidden = !hasProgress;
+
+      if (hasProgress) {
+        savedProgress = progress;
+        const count = progress.completedRounds || 0;
+        document.getElementById('resume-count').innerHTML =
+          `${count} <span>route${count === 1 ? '' : 's'} compared.</span>`;
+        document.getElementById('resume-name').textContent = progress.participantName || '';
+      }
+    }
+
+    async function startBenchmark(participantName, extraOptions = {}) {
       const googleKey = window.ARI_GOOGLE_MAPS_KEY || localStorage.getItem(GOOGLE_KEY_STORAGE) || '';
       if (googleKey) localStorage.setItem(GOOGLE_KEY_STORAGE, googleKey);
       const googleAvailable = await loadGoogleMaps(googleKey).catch(error => {
@@ -186,10 +225,13 @@
           totalRounds: 10,
           mapProvider: googleAvailable ? 'google' : 'leaflet',
           routePairProvider: AriCalmBenchmark.mockRoutePairProvider,
+          ...extraOptions,
           onExit: () => {
             benchmarkRoot.hidden = true;
             intro.hidden = false;
             introHeader.hidden = false;
+            benchmarkMounted = false;
+            checkResumeState();
             window.scrollTo({ top: 0, behavior: 'auto' });
           },
           answerSink: async answer => {
@@ -220,6 +262,14 @@
       startBenchmark(participantName);
     });
 
+    document.getElementById('resume-test').addEventListener('click', () => {
+      if (!savedProgress) return;
+      startBenchmark(savedProgress.participantName, {
+        initialRoundIndex: savedProgress.roundIndex,
+        skipOnboarding: true
+      });
+    });
+
     document.addEventListener('click', event => {
       const trigger = event.target.closest('.calm-disclosure button');
       if (!trigger) return;
@@ -228,6 +278,8 @@
       trigger.setAttribute('aria-expanded', String(open));
       disclosure.classList.toggle('is-open', open);
     });
+
+    checkResumeState();
   </script>
 </body>
 </html>
