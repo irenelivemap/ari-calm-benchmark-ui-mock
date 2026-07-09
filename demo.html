@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260709-resume-4">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260709-resume-5">
   <style>
     body {
       margin: 0;
@@ -120,6 +120,7 @@
               <span class="calm-resume-player-name" id="resume-name"></span>
             </div>
             <div class="calm-resume-pips" id="resume-pips"></div>
+            <div class="calm-resume-remaining" id="resume-remaining"></div>
             <div class="calm-start-row">
               <button id="resume-test" type="button">Continue →</button>
             </div>
@@ -133,8 +134,8 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="./src/data/mock-route-pairs.js?v=20260709-structure-1"></script>
-  <script src="./src/maps/map-adapter.js?v=20260709-resume-4"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260709-resume-4"></script>
+  <script src="./src/maps/map-adapter.js?v=20260709-resume-5"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260709-resume-5"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -195,17 +196,24 @@
         const count = progress.completedRounds || 0;
         const total = 10;
         const pad = n => String(n).padStart(2, '0');
+        const remaining = total - count;
         document.getElementById('start-kicker-text').textContent = 'Session saved';
         document.getElementById('start-h2').innerHTML =
-          `<span class="calm-score-main">${pad(count)}<span class="calm-score-denom"> /${total}</span></span>` +
-          `<span class="calm-score-sub">routes compared</span>`;
+          `<span class="calm-score-sub">Routes compared</span>` +
+          `<span class="calm-score-main">${pad(count)}<span class="calm-score-denom"> /${total}</span></span>`;
         document.getElementById('resume-name').textContent = (progress.participantName || '').toUpperCase();
+        const remainingEl = document.getElementById('resume-remaining');
+        if (remainingEl) {
+          remainingEl.innerHTML = `<strong>${remaining}</strong> route${remaining === 1 ? '' : 's'} remaining`;
+        }
         const pipsEl = document.getElementById('resume-pips');
         if (pipsEl) {
           pipsEl.innerHTML = '';
           for (let i = 0; i < total; i++) {
             const pip = document.createElement('div');
-            pip.className = 'calm-resume-pip' + (i < count ? ' is-done' : '');
+            if (i < count) pip.className = 'calm-resume-pip is-done';
+            else if (i === count) pip.className = 'calm-resume-pip is-next';
+            else pip.className = 'calm-resume-pip';
             pipsEl.appendChild(pip);
           }
         }

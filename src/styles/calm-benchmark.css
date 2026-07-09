@@ -640,8 +640,8 @@
 
 .calm-resume-pip {
   flex: 1;
-  height: 4px;
-  border-radius: 2px;
+  height: 6px;
+  border-radius: 3px;
   background: rgba(255, 255, 255, 0.09);
   transition: background 200ms, box-shadow 200ms;
 }
@@ -649,6 +649,28 @@
 .calm-resume-pip.is-done {
   background: var(--ari-green);
   box-shadow: 0 0 6px rgba(8, 120, 77, 0.85), 0 0 16px rgba(8, 120, 77, 0.35);
+}
+
+@keyframes calm-pip-pulse {
+  0%, 100% { background: rgba(8, 120, 77, 0.28); box-shadow: 0 0 4px rgba(8, 120, 77, 0.3); }
+  50% { background: rgba(8, 120, 77, 0.55); box-shadow: 0 0 10px rgba(8, 120, 77, 0.65); }
+}
+
+.calm-resume-pip.is-next {
+  animation: calm-pip-pulse 1.8s ease-in-out infinite;
+}
+
+.calm-resume-remaining {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.calm-resume-remaining strong {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 1.15em;
 }
 
 /* score display injected into h2 for resume state */
@@ -672,9 +694,10 @@
   font-family: var(--ari-font);
   font-style: normal;
   font-weight: 700;
-  font-size: 0.9em;
-  color: rgba(255, 255, 255, 0.22);
-  letter-spacing: -0.01em;
+  font-size: 0.55em;
+  color: rgba(255, 255, 255, 0.14);
+  letter-spacing: 0em;
+  vertical-align: middle;
 }
 
 .calm-start-card h2 .calm-score-sub {
@@ -686,7 +709,7 @@
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: rgba(8, 120, 77, 0.9);
-  margin-top: 12px;
+  margin-bottom: 10px;
 }
 
 @media (max-width: 900px) {
