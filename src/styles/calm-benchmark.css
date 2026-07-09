@@ -646,7 +646,7 @@
   font-weight: 800;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.52);
 }
 
 .calm-resume-player-name {
@@ -690,11 +690,11 @@
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.52);
 }
 
 .calm-resume-remaining strong {
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.88);
   font-size: 1.15em;
 }
 
@@ -703,9 +703,27 @@
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.42);
   margin-top: 1px;
 }
+
+.calm-resume-clear {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.28);
+  font: 700 0.56rem/1 var(--ari-font);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 150ms;
+}
+
+.calm-resume-clear:hover { color: rgba(255, 255, 255, 0.52); }
 
 .calm-start-row .calm-resume-btn {
   background: linear-gradient(180deg, rgba(11, 150, 96, 0.92) 0%, #065c3b 100%);
@@ -745,7 +763,7 @@
   font-style: normal;
   font-weight: 700;
   font-size: 0.55em;
-  color: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.26);
   letter-spacing: 0em;
   vertical-align: middle;
 }
@@ -758,8 +776,36 @@
   font-size: 0.46em;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(8, 120, 77, 0.9);
+  color: rgba(46, 210, 132, 0.92);
   margin-bottom: 10px;
+}
+
+/* completion / bonus state */
+@keyframes calm-pip-complete {
+  0%, 100% { background: var(--ari-green); box-shadow: 0 0 6px rgba(8, 120, 77, 0.85), 0 0 16px rgba(8, 120, 77, 0.35); }
+  50%       { background: #2ed684; box-shadow: 0 0 10px rgba(46, 214, 132, 1), 0 0 24px rgba(46, 214, 132, 0.55); }
+}
+
+.calm-resume-pips.is-complete .calm-resume-pip.is-done {
+  animation: calm-pip-complete 1.4s ease-in-out infinite;
+}
+
+.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(2)  { animation-delay: 0.1s; }
+.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(3)  { animation-delay: 0.2s; }
+.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(4)  { animation-delay: 0.3s; }
+.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(5)  { animation-delay: 0.4s; }
+.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(6)  { animation-delay: 0.5s; }
+.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(7)  { animation-delay: 0.6s; }
+.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(8)  { animation-delay: 0.7s; }
+.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(9)  { animation-delay: 0.8s; }
+.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(10) { animation-delay: 0.9s; }
+
+.calm-start-card.is-resumed.is-complete {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 0 1.5px rgba(46, 210, 132, 0.5),
+    0 18px 42px rgba(16, 21, 17, 0.16),
+    0 0 60px rgba(46, 210, 132, 0.14);
 }
 
 @media (max-width: 900px) {
@@ -965,10 +1011,22 @@
       "form";
   }
 
-  .calm-start-card::after {
+  .calm-start-dots {
     top: 20px;
     right: 22px;
-    width: 70px;
+    gap: 8px;
+  }
+
+  .calm-start-card h2 .calm-score-main {
+    font-size: 2em;
+  }
+
+  .calm-resume-right {
+    gap: 12px;
+  }
+
+  .calm-resume-pips {
+    gap: 3px;
   }
 
   .calm-start-row input,

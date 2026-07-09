@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260709-resume-6">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260709-resume-7">
   <style>
     body {
       margin: 0;
@@ -125,6 +125,7 @@
               <span class="calm-resume-player-tag">Player</span>
               <span class="calm-resume-player-name" id="resume-name"></span>
               <span class="calm-resume-last-played" id="resume-last-played"></span>
+              <button class="calm-resume-clear" id="resume-clear" type="button">New session</button>
             </div>
             <div class="calm-resume-pips" id="resume-pips"></div>
             <div class="calm-resume-remaining" id="resume-remaining"></div>
@@ -141,8 +142,8 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="./src/data/mock-route-pairs.js?v=20260709-structure-1"></script>
-  <script src="./src/maps/map-adapter.js?v=20260709-resume-6"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260709-resume-6"></script>
+  <script src="./src/maps/map-adapter.js?v=20260709-resume-7"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260709-resume-7"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -208,14 +209,21 @@
         const count = progress.completedRounds || 0;
         const total = 10;
         const pad = n => String(n).padStart(2, '0');
-        const remaining = total - count;
+        const isComplete = count >= total;
+        const bonus = Math.max(0, count - total);
+        const remaining = Math.max(0, total - count);
 
         document.getElementById('start-kicker-icon').innerHTML =
           `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`;
         document.getElementById('start-kicker-text').textContent = 'Session saved';
+
+        let scoreSub = 'Routes compared';
+        if (isComplete && bonus === 0) scoreSub = '★  Mission complete';
+        else if (bonus > 0) scoreSub = `★  +${bonus} bonus route${bonus === 1 ? '' : 's'}`;
         document.getElementById('start-h2').innerHTML =
-          `<span class="calm-score-sub">Routes compared</span>` +
+          `<span class="calm-score-sub">${scoreSub}</span>` +
           `<span class="calm-score-main">${pad(count)}<span class="calm-score-denom"> /${total}</span></span>`;
+
         document.getElementById('resume-name').textContent = (progress.participantName || '').toUpperCase();
 
         const lastPlayedEl = document.getElementById('resume-last-played');
@@ -226,19 +234,26 @@
         }
 
         const remainingEl = document.getElementById('resume-remaining');
-        if (remainingEl) remainingEl.innerHTML = `<strong>${remaining}</strong> route${remaining === 1 ? '' : 's'} remaining`;
+        if (remainingEl) {
+          if (isComplete && bonus === 0) remainingEl.innerHTML = `Goal reached! Keep going for more data`;
+          else if (bonus > 0) remainingEl.innerHTML = `<strong>+${bonus}</strong> beyond the goal — every route helps`;
+          else remainingEl.innerHTML = `<strong>${remaining}</strong> route${remaining === 1 ? '' : 's'} remaining`;
+        }
 
         const pipsEl = document.getElementById('resume-pips');
         if (pipsEl) {
           pipsEl.innerHTML = '';
+          pipsEl.classList.toggle('is-complete', isComplete);
           for (let i = 0; i < total; i++) {
             const pip = document.createElement('div');
-            if (i < count) pip.className = 'calm-resume-pip is-done';
+            if (i < Math.min(count, total)) pip.className = 'calm-resume-pip is-done';
             else if (i === count) pip.className = 'calm-resume-pip is-next';
             else pip.className = 'calm-resume-pip';
             pipsEl.appendChild(pip);
           }
         }
+
+        card.classList.toggle('is-complete', isComplete);
       } else {
         document.getElementById('start-kicker-icon').innerHTML =
           `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>`;
@@ -246,6 +261,12 @@
         document.getElementById('start-h2').innerHTML = `Enter the <span>duel.</span>`;
       }
     }
+
+    document.getElementById('resume-clear').addEventListener('click', () => {
+      localStorage.removeItem(PROGRESS_STORAGE);
+      savedProgress = null;
+      checkResumeState();
+    });
 
     async function startBenchmark(participantName, extraOptions = {}) {
       const googleKey = window.ARI_GOOGLE_MAPS_KEY || localStorage.getItem(GOOGLE_KEY_STORAGE) || '';
