@@ -1019,16 +1019,16 @@
 
 .ari-map__zoom {
   position: absolute;
-  right: 14px;
-  top: 72px;
+  right: var(--ari-map-control-inset, 24px);
+  top: calc(var(--ari-map-control-inset, 24px) + var(--ari-map-control-size, 44px) + var(--ari-map-control-gap, 10px));
   z-index: 2;
   display: grid;
-  gap: 8px;
+  gap: var(--ari-map-control-gap, 10px);
 }
 
 .ari-map__zoom button {
-  width: 40px;
-  height: 40px;
+  width: var(--ari-map-control-size, 44px);
+  height: var(--ari-map-control-size, 44px);
   border: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.92);
@@ -1041,17 +1041,17 @@
 
 .ari-map__tools {
   position: absolute;
-  right: 14px;
-  top: 14px;
+  right: var(--ari-map-control-inset, 24px);
+  top: var(--ari-map-control-inset, 24px);
   z-index: 2;
   display: flex;
-  gap: 8px;
+  gap: var(--ari-map-control-gap, 10px);
 }
 
 .ari-map__tools button {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: var(--ari-map-control-size, 44px);
+  height: var(--ari-map-control-size, 44px);
   border: 0;
   border-radius: 50%;
   padding: 0;
@@ -1089,8 +1089,8 @@
 
 .ari-street-card {
   position: absolute;
-  right: 14px;
-  top: 62px;
+  right: var(--ari-map-control-inset, 24px);
+  top: calc(var(--ari-map-control-inset, 24px) + var(--ari-map-control-size, 44px) + var(--ari-map-control-gap, 10px));
   z-index: 65;
   display: flex;
   align-items: center;
@@ -1712,6 +1712,9 @@
 
 /* Map-first benchmark layout: closer to the existing /bench runtime. */
 .ari-benchmark {
+  --ari-map-control-inset: 24px;
+  --ari-map-control-size: 44px;
+  --ari-map-control-gap: 10px;
   --ari-rail-width: 365px;
   position: relative;
   height: 100vh;
@@ -1813,13 +1816,13 @@
 }
 
 .ari-map__zoom {
-  top: 62px;
-  right: 12px;
+  top: calc(var(--ari-map-control-inset) + var(--ari-map-control-size) + var(--ari-map-control-gap));
+  right: var(--ari-map-control-inset);
 }
 
 .ari-map__tools {
-  top: 12px;
-  right: 12px;
+  top: var(--ari-map-control-inset);
+  right: var(--ari-map-control-inset);
 }
 
 .ari-map__tools button {
@@ -1828,8 +1831,8 @@
 }
 
 .ari-street-card {
-  top: 62px;
-  right: 12px;
+  top: calc(var(--ari-map-control-inset) + var(--ari-map-control-size) + var(--ari-map-control-gap));
+  right: var(--ari-map-control-inset);
 }
 
 .ari-map__note {
@@ -2127,6 +2130,9 @@
 
 @media (max-width: 920px) {
   .ari-benchmark {
+    --ari-map-control-inset: 20px;
+    --ari-map-control-size: 44px;
+    --ari-map-control-gap: 10px;
     height: auto;
     min-height: 100vh;
     overflow: visible;
@@ -2234,14 +2240,14 @@
   }
 
   .ari-map__zoom {
-    top: 140px;
-    right: 8px;
-    gap: 6px;
+    top: 130px;
+    right: var(--ari-map-control-inset);
+    gap: var(--ari-map-control-gap);
   }
 
   .ari-map__zoom button {
-    width: 36px;
-    height: 36px;
+    width: var(--ari-map-control-size);
+    height: var(--ari-map-control-size);
     border: 1px solid rgba(255, 255, 255, 0.14);
     background: rgba(16, 18, 17, 0.9);
     color: #fff;
@@ -2250,14 +2256,14 @@
   }
 
   .ari-map__tools {
-    top: 58px;
-    right: 8px;
-    gap: 6px;
+    top: 68px;
+    right: var(--ari-map-control-inset);
+    gap: var(--ari-map-control-gap);
   }
 
   .ari-map__tools button {
-    width: 34px;
-    height: 34px;
+    width: var(--ari-map-control-size);
+    height: var(--ari-map-control-size);
     border: 1px solid rgba(255, 255, 255, 0.14);
     padding: 0;
     background: rgba(16, 18, 17, 0.9);
@@ -2266,8 +2272,8 @@
   }
 
   .ari-street-card {
-    top: 98px;
-    right: 8px;
+    top: 122px;
+    right: var(--ari-map-control-inset);
   }
 
   .ari-map__note {
