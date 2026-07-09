@@ -24,7 +24,10 @@ It is intentionally separate from `livemap-routing` for now and should not be cr
   Integration notes for route loading, answer saving, and progress saving.
 
 - `src/maps/`
-  Integration notes for replacing the demo map implementation with the product map.
+  Map adapter implementation and integration notes for replacing the demo map with the product map.
+
+- `src/maps/map-adapter.js`
+  The current Leaflet/Google map adapter used by the demo.
 
 - `src/answers/`
   Notes on answer handling and hidden route assignment.

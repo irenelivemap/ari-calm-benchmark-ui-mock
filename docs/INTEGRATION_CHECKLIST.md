@@ -7,6 +7,7 @@ Use this checklist when moving the calm benchmark UI into `livemap-routing`.
 - [ ] Add Leaflet CSS/JS or use the app's existing map bundle.
 - [ ] Copy/adapt `src/styles/calm-benchmark.css`.
 - [ ] Copy/adapt `src/app/calm-benchmark.js`.
+- [ ] Copy/adapt or replace `src/maps/map-adapter.js`.
 - [ ] Create a route, for example `/bench/calm` or `/calm-benchmark`.
 - [ ] Add a root element for the benchmark UI.
 - [ ] Mount with `AriCalmBenchmark.mount(...)`.

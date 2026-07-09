@@ -16,10 +16,6 @@
       : { routeA: 'calm', routeB: 'fast' };
   }
 
-  function normalizeLatLngs(geometry) {
-    return geometry.map(point => Array.isArray(point) ? point : [point.lat, point.lng]);
-  }
-
   function mockRoutePairProvider({ roundIndex }) {
     if (!demoPairs.length) {
       return Promise.reject(new Error('No mock route pairs loaded. Include src/data/mock-route-pairs.js or provide routePairProvider.'));
@@ -39,24 +35,6 @@
   function consoleProgressSink(progress) {
     console.info('[ARI calm benchmark progress]', progress);
     return Promise.resolve();
-  }
-
-  function toLatLngObject(point) {
-    return { lat: point[0], lng: point[1] };
-  }
-
-  function pointToSegmentDistance(point, start, end) {
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    if (dx === 0 && dy === 0) {
-      return Math.hypot(point.x - start.x, point.y - start.y);
-    }
-    const t = Math.max(0, Math.min(1, ((point.x - start.x) * dx + (point.y - start.y) * dy) / (dx * dx + dy * dy)));
-    return Math.hypot(point.x - (start.x + t * dx), point.y - (start.y + t * dy));
-  }
-
-  function hasGoogleMaps() {
-    return !!(window.google && window.google.maps);
   }
 
   function buildShell(root, totalRounds) {
@@ -185,8 +163,12 @@
   }
 
   function mount(root, options = {}) {
+    const mapTools = window.AriCalmBenchmarkMaps;
+    if (!mapTools) {
+      throw new Error('AriCalmBenchmark requires src/maps/map-adapter.js before mounting.');
+    }
     const requestedProvider = options.mapProvider || 'leaflet';
-    const useGoogleMaps = requestedProvider === 'google' && hasGoogleMaps();
+    const useGoogleMaps = requestedProvider === 'google' && mapTools.hasGoogleMaps();
     if (!useGoogleMaps && !window.L) {
       throw new Error('AriCalmBenchmark requires Leaflet on window.L, or Google Maps on window.google.maps, before mounting.');
     }
@@ -203,12 +185,7 @@
       onboardingStepIndex: 0,
       completedRounds: 0,
       panelCollapsed: false,
-      map: null,
-      routeLayers: null,
-      routeVisuals: { routeA: [], routeB: [] },
-      googleOverlays: [],
-      googleRouteVisuals: { routeA: [], routeB: [] },
-      standardTiles: null,
+      mapAdapter: null,
       mapProvider: useGoogleMaps ? 'google' : 'leaflet'
     };
 
@@ -255,6 +232,15 @@
       saveProgress: root.querySelector('[data-action="save-progress"]')
     };
 
+    state.mapAdapter = mapTools.createMapAdapter({
+      canvas: els.mapCanvas,
+      provider: state.mapProvider,
+      routeAColor,
+      routeBColor,
+      maxFitZoom: ROUTE_FIT_MAX_ZOOM,
+      onRoutePointClick: setStreetViewPoint
+    });
+
     const onboardingSteps = [
       {
         id: 'zoom',
@@ -283,36 +269,6 @@
       }
     ];
 
-    function ensureMap() {
-      if (state.map) return;
-      if (state.mapProvider === 'google') {
-        state.map = new google.maps.Map(els.mapCanvas, {
-          center: { lat: 47.377, lng: 8.54 },
-          zoom: 13,
-          clickableIcons: true,
-          fullscreenControl: true,
-          mapTypeControl: false,
-          streetViewControl: false,
-          zoomControl: false,
-          scaleControl: true,
-          gestureHandling: 'greedy'
-        });
-        return;
-      }
-
-      state.standardTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20,
-        attribution: '&copy; OpenStreetMap &copy; CARTO'
-      });
-      state.map = L.map(els.mapCanvas, {
-        zoomControl: false,
-        attributionControl: true,
-        zoomSnap: 0.25
-      });
-      state.standardTiles.addTo(state.map);
-      state.routeLayers = L.featureGroup().addTo(state.map);
-    }
-
     function getRouteFitPadding() {
       const isMobile = window.matchMedia('(max-width: 700px)').matches;
       if (!isMobile) {
@@ -339,29 +295,7 @@
     }
 
     function fitRoutes() {
-      const fitPadding = getRouteFitPadding();
-      if (state.mapProvider === 'google') {
-        if (!state.googleOverlays.length) return;
-        const bounds = new google.maps.LatLngBounds();
-        state.googleOverlays.forEach(overlay => {
-          if (overlay.getPath) {
-            overlay.getPath().forEach(point => bounds.extend(point));
-          } else if (overlay.getPosition) {
-            bounds.extend(overlay.getPosition());
-          }
-        });
-        if (!bounds.isEmpty()) {
-          state.map.fitBounds(bounds, fitPadding.google);
-          google.maps.event.addListenerOnce(state.map, 'idle', () => {
-            if (state.map.getZoom() > ROUTE_FIT_MAX_ZOOM) state.map.setZoom(ROUTE_FIT_MAX_ZOOM);
-          });
-        }
-        return;
-      }
-
-      if (!state.routeLayers?.getLayers().length) return;
-      state.map.invalidateSize();
-      state.map.fitBounds(state.routeLayers.getBounds(), fitPadding.leaflet);
+      state.mapAdapter.fitRoutes(getRouteFitPadding());
     }
 
     function getElementRect(target) {
@@ -390,25 +324,7 @@
     }
 
     function getStreetViewTeachingRect() {
-      const canvasRect = els.mapCanvas.getBoundingClientRect();
-      const fallback = new DOMRect(
-        canvasRect.left + canvasRect.width / 2 - 28,
-        canvasRect.top + canvasRect.height / 2 - 28,
-        56,
-        56
-      );
-      if (!state.pair || !state.assignment || !canvasRect.width || !canvasRect.height) return fallback;
-
-      const route = normalizeLatLngs(state.pair.routes[state.assignment.routeA].geometry);
-      const point = route[Math.floor(route.length / 2)];
-      if (!point) return fallback;
-
-      if (state.mapProvider === 'leaflet' && state.map?.latLngToContainerPoint) {
-        const containerPoint = state.map.latLngToContainerPoint(point);
-        return new DOMRect(canvasRect.left + containerPoint.x - 28, canvasRect.top + containerPoint.y - 28, 56, 56);
-      }
-
-      return fallback;
+      return state.mapAdapter.getRoutePointRect();
     }
 
     function placeOnboardingStep(targetRect) {
@@ -509,87 +425,6 @@
       requestAnimationFrame(fitRoutes);
     }
 
-    function isNearLeafletRoute(latlng, containerPoint) {
-      if (!state.pair || !state.assignment) return false;
-      const routes = [
-        normalizeLatLngs(state.pair.routes[state.assignment.routeA].geometry),
-        normalizeLatLngs(state.pair.routes[state.assignment.routeB].geometry)
-      ];
-      return routes.some(route => route.slice(1).some((point, index) => {
-        const start = state.map.latLngToContainerPoint(route[index]);
-        const end = state.map.latLngToContainerPoint(point);
-        return pointToSegmentDistance(containerPoint, start, end) <= 32;
-      }));
-    }
-
-    function isNearLatLngRoute(latLng) {
-      if (!state.pair || !state.assignment) return false;
-      const clickPoint = { x: latLng.lng, y: latLng.lat };
-      const routes = [
-        normalizeLatLngs(state.pair.routes[state.assignment.routeA].geometry).map(point => ({ x: point[1], y: point[0] })),
-        normalizeLatLngs(state.pair.routes[state.assignment.routeB].geometry).map(point => ({ x: point[1], y: point[0] }))
-      ];
-      return routes.some(route => route.slice(1).some((point, index) => {
-        return pointToSegmentDistance(clickPoint, route[index], point) <= 0.00055;
-      }));
-    }
-
-    function bindStreetViewMapClick() {
-      if (state.mapStreetHandlerBound) return;
-      state.mapStreetHandlerBound = true;
-      if (state.mapProvider === 'google') {
-        state.map.addListener('click', event => {
-          const point = { lat: event.latLng.lat(), lng: event.latLng.lng() };
-          if (isNearLatLngRoute(point)) setStreetViewPoint(point);
-        });
-        return;
-      }
-      state.map.on('click', event => {
-        if (isNearLeafletRoute(event.latlng, event.containerPoint)) {
-          setStreetViewPoint(event.latlng);
-        }
-      });
-    }
-
-    function setRouteFocus(routeKey) {
-      const focusConfig = routeKey
-        ? {
-            routeA: routeKey === 'routeA' ? { opacity: 1, weightBoost: 2 } : { opacity: 0.38, weightBoost: -2 },
-            routeB: routeKey === 'routeB' ? { opacity: 1, weightBoost: 2 } : { opacity: 0.38, weightBoost: -2 }
-          }
-        : {
-            routeA: { opacity: 0.98, weightBoost: 0 },
-            routeB: { opacity: 0.98, weightBoost: 0 }
-          };
-
-      if (state.mapProvider === 'google') {
-        Object.entries(state.googleRouteVisuals).forEach(([key, layers]) => {
-          const config = focusConfig[key];
-          layers.forEach(layer => {
-            const baseWeight = layer.__ariBaseWeight || 7;
-            const baseOpacity = layer.__ariBaseOpacity ?? 0.98;
-            layer.setOptions({
-              strokeOpacity: Math.min(baseOpacity, config.opacity),
-              strokeWeight: Math.max(4, baseWeight + config.weightBoost)
-            });
-          });
-        });
-        return;
-      }
-
-      Object.entries(state.routeVisuals).forEach(([key, layers]) => {
-        const config = focusConfig[key];
-        layers.forEach(layer => {
-          const baseWeight = layer.options.__ariBaseWeight || layer.options.weight || 7;
-          const baseOpacity = layer.options.__ariBaseOpacity ?? layer.options.opacity ?? 0.98;
-          layer.setStyle({
-            opacity: Math.min(baseOpacity, config.opacity),
-            weight: Math.max(4, baseWeight + config.weightBoost)
-          });
-        });
-      });
-    }
-
     function setStreetViewPoint(point) {
       state.streetViewPoint = point;
       els.streetCard.hidden = false;
@@ -603,125 +438,7 @@
     }
 
     function drawRoutes(pair) {
-      ensureMap();
-      bindStreetViewMapClick();
-
-      if (state.mapProvider === 'google') {
-        state.googleOverlays.forEach(overlay => overlay.setMap(null));
-        state.googleOverlays = [];
-
-        const routeA = normalizeLatLngs(pair.routes[state.assignment.routeA].geometry).map(toLatLngObject);
-        const routeB = normalizeLatLngs(pair.routes[state.assignment.routeB].geometry).map(toLatLngObject);
-
-        const routeACase = new google.maps.Polyline({
-          path: routeA,
-          map: state.map,
-          strokeColor: '#ffffff',
-          strokeOpacity: 0.82,
-          strokeWeight: 15
-        });
-        const routeBCase = new google.maps.Polyline({
-          path: routeB,
-          map: state.map,
-          strokeColor: '#ffffff',
-          strokeOpacity: 0.82,
-          strokeWeight: 15
-        });
-        const routeALine = new google.maps.Polyline({
-          path: routeA,
-          map: state.map,
-          strokeColor: routeAColor,
-          strokeOpacity: 0.98,
-          strokeWeight: 9
-        });
-        const routeBLine = new google.maps.Polyline({
-          path: routeB,
-          map: state.map,
-          strokeColor: routeBColor,
-          strokeOpacity: 0.98,
-          strokeWeight: 6
-        });
-        [routeACase, routeBCase, routeALine, routeBLine].forEach(layer => {
-          layer.__ariBaseWeight = layer.strokeWeight || 7;
-          layer.__ariBaseOpacity = layer.strokeOpacity ?? 0.98;
-        });
-        [routeACase, routeBCase, routeALine, routeBLine].forEach(layer => {
-          layer.addListener('click', event => {
-            setStreetViewPoint({ lat: event.latLng.lat(), lng: event.latLng.lng() });
-          });
-        });
-        const startMarker = new google.maps.Marker({
-          position: { lat: pair.origin.lat, lng: pair.origin.lng },
-          map: state.map,
-          title: 'Start',
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: '#101511',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 3
-          }
-        });
-        const endMarker = new google.maps.Marker({
-          position: { lat: pair.destination.lat, lng: pair.destination.lng },
-          map: state.map,
-          title: 'Destination',
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 9,
-            fillColor: '#075F3D',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 3
-          }
-        });
-
-        state.googleRouteVisuals = {
-          routeA: [routeACase, routeALine],
-          routeB: [routeBCase, routeBLine]
-        };
-        state.googleOverlays.push(routeACase, routeBCase, routeALine, routeBLine, startMarker, endMarker);
-        requestAnimationFrame(() => {
-          fitRoutes();
-          setTimeout(fitRoutes, 180);
-        });
-        return;
-      }
-
-      state.routeLayers.clearLayers();
-
-      const startIcon = L.divIcon({
-        className: '',
-        html: '<span class="ari-route-marker ari-route-marker--start"></span>',
-        iconSize: [18, 18],
-        iconAnchor: [9, 9]
-      });
-      const endIcon = L.divIcon({
-        className: '',
-        html: '<span class="ari-route-marker ari-route-marker--end"></span>',
-        iconSize: [18, 18],
-        iconAnchor: [9, 9]
-      });
-
-      const routeA = normalizeLatLngs(pair.routes[state.assignment.routeA].geometry);
-      const routeB = normalizeLatLngs(pair.routes[state.assignment.routeB].geometry);
-      const routeACase = L.polyline(routeA, { color: '#ffffff', weight: 15, opacity: 0.82, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 15, __ariBaseOpacity: 0.82 }).addTo(state.routeLayers);
-      const routeBCase = L.polyline(routeB, { color: '#ffffff', weight: 15, opacity: 0.82, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 15, __ariBaseOpacity: 0.82 }).addTo(state.routeLayers);
-      const routeALine = L.polyline(routeA, { color: routeAColor, weight: 9, opacity: 0.98, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 9, __ariBaseOpacity: 0.98 }).addTo(state.routeLayers);
-      const routeBLine = L.polyline(routeB, { color: routeBColor, weight: 6, opacity: 0.98, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 6, __ariBaseOpacity: 0.98 }).addTo(state.routeLayers);
-      [routeACase, routeBCase, routeALine, routeBLine].forEach(layer => {
-        layer.on('click', event => {
-          setStreetViewPoint(event.latlng);
-        });
-      });
-      state.routeVisuals = {
-        routeA: [routeACase, routeALine],
-        routeB: [routeBCase, routeBLine]
-      };
-      L.marker([pair.origin.lat, pair.origin.lng], { icon: startIcon, keyboard: false }).addTo(state.routeLayers);
-      L.marker([pair.destination.lat, pair.destination.lng], { icon: endIcon, keyboard: false }).addTo(state.routeLayers);
-
+      state.mapAdapter.drawRoutes(pair, state.assignment);
       requestAnimationFrame(() => {
         fitRoutes();
         setTimeout(fitRoutes, 180);
@@ -793,7 +510,7 @@
       els.panelToggle.setAttribute('title', collapsed ? 'Expand question panel' : 'Minimize question panel');
       if (!collapsed) {
         requestAnimationFrame(() => {
-          if (state.map) fitRoutes();
+          if (state.mapAdapter.hasMap()) fitRoutes();
         });
       } else {
         requestAnimationFrame(fitRoutes);
@@ -958,14 +675,10 @@
     });
 
     els.zoomIn.addEventListener('click', () => {
-      if (!state.map) return;
-      if (state.mapProvider === 'google') state.map.setZoom(state.map.getZoom() + 1);
-      else state.map.zoomIn();
+      state.mapAdapter.zoomIn();
     });
     els.zoomOut.addEventListener('click', () => {
-      if (!state.map) return;
-      if (state.mapProvider === 'google') state.map.setZoom(state.map.getZoom() - 1);
-      else state.map.zoomOut();
+      state.mapAdapter.zoomOut();
     });
 
     els.fitRoutes.addEventListener('click', fitRoutes);
@@ -977,10 +690,10 @@
 
     els.form.querySelectorAll('.ari-choice--route-a, .ari-choice--route-b').forEach(label => {
       const key = label.classList.contains('ari-choice--route-a') ? 'routeA' : 'routeB';
-      label.addEventListener('mouseenter', () => setRouteFocus(key));
-      label.addEventListener('mouseleave', () => setRouteFocus(null));
-      label.addEventListener('focusin', () => setRouteFocus(key));
-      label.addEventListener('focusout', () => setRouteFocus(null));
+      label.addEventListener('mouseenter', () => state.mapAdapter.focusRoute(key));
+      label.addEventListener('mouseleave', () => state.mapAdapter.focusRoute(null));
+      label.addEventListener('focusin', () => state.mapAdapter.focusRoute(key));
+      label.addEventListener('focusout', () => state.mapAdapter.focusRoute(null));
     });
 
     window.addEventListener('resize', () => {

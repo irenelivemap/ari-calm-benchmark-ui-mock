@@ -8,20 +8,21 @@ The benchmark UI should not depend on where the map comes from. It needs a map c
 - fitting both routes into the closest useful comparison view
 - detecting route-point interaction for Street View handoff
 
-The current implementation keeps Leaflet and Google Maps rendering inside `src/app/calm-benchmark.js` to preserve the standalone demo. When this moves into `livemap-routing`, this is the part that should be replaced with the production map implementation used by the existing benchmark.
+The current implementation lives in `src/maps/map-adapter.js`. It supports Leaflet for local/private use and Google Maps when `window.google.maps` is already loaded. When this moves into `livemap-routing`, this is the part that should be replaced or adapted to use the production map implementation from the existing benchmark.
 
 ## Required map actions
 
 ```js
-showRoutes({ routeA, routeB, origin, destination })
-fitRoutes()
+drawRoutes(pair, assignment)
+fitRoutes(fitPadding)
 zoomIn()
 zoomOut()
-onRoutePointClick(callback)
-openStreetView(point)
+getRoutePointRect()
 focusRoute(routeKey)
-clearRouteFocus()
+hasMap()
 ```
+
+The adapter receives `onRoutePointClick` when it is created. The app owns the actual Street View URL handoff after the adapter reports that a route point was clicked.
 
 ## Coordinate rule
 
