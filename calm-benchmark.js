@@ -182,11 +182,13 @@
         <section class="ari-onboarding" data-onboarding aria-label="Before you start">
           <div class="ari-onboarding__spotlight" data-onboarding-spotlight aria-hidden="true"></div>
           <div class="ari-onboarding__coach" role="dialog" aria-labelledby="ari-onboarding-title" aria-describedby="ari-onboarding-copy">
-            <div class="ari-kicker" data-onboarding-count>1 / 4</div>
+            <div class="ari-onboarding__top">
+              <div class="ari-kicker" data-onboarding-count>1 / 4</div>
+              <button class="ari-onboarding__skip" data-action="skip-onboarding" type="button">Skip</button>
+            </div>
             <h2 id="ari-onboarding-title" data-onboarding-title>Zoom in or out.</h2>
             <p id="ari-onboarding-copy" data-onboarding-copy>Use + and - when you need to inspect streets more closely.</p>
             <div class="ari-onboarding__actions">
-              <button class="ari-btn ari-btn--secondary" data-action="skip-onboarding" type="button">Skip intro</button>
               <button class="ari-btn ari-btn--primary" data-action="next-onboarding" type="button">OK</button>
             </div>
           </div>
@@ -283,7 +285,7 @@
     const onboardingSteps = [
       {
         id: 'zoom',
-        target: () => els.zoomIn?.parentElement,
+        target: getZoomControlsRect,
         title: 'Zoom in or out.',
         copy: 'Use + and - when you need to inspect streets more closely.'
       },
@@ -404,6 +406,24 @@
       return null;
     }
 
+    function getCombinedRect(elements) {
+      const rects = elements
+        .filter(Boolean)
+        .map(element => element.getBoundingClientRect())
+        .filter(rect => rect.width && rect.height);
+      if (!rects.length) return null;
+
+      const left = Math.min(...rects.map(rect => rect.left));
+      const top = Math.min(...rects.map(rect => rect.top));
+      const right = Math.max(...rects.map(rect => rect.right));
+      const bottom = Math.max(...rects.map(rect => rect.bottom));
+      return new DOMRect(left, top, right - left, bottom - top);
+    }
+
+    function getZoomControlsRect() {
+      return getCombinedRect([els.zoomIn, els.zoomOut]);
+    }
+
     function getStreetViewTeachingRect() {
       const canvasRect = els.mapCanvas.getBoundingClientRect();
       const fallback = new DOMRect(
@@ -477,6 +497,7 @@
     function renderOnboardingStep() {
       if (state.onboardingComplete || els.onboarding.hidden) return;
       const step = onboardingSteps[state.onboardingStepIndex] || onboardingSteps[0];
+      updatePanelState(step.id !== 'answer');
       const targetRect = getElementRect(step.target());
       if (!targetRect) return;
 
@@ -492,6 +513,7 @@
     function finishOnboarding() {
       state.onboardingComplete = true;
       els.onboarding.hidden = true;
+      updatePanelState(false);
       requestAnimationFrame(fitRoutes);
     }
 

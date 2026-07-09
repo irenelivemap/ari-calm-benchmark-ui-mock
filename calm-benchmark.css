@@ -1498,7 +1498,7 @@
 .ari-exit-confirm__panel h2 {
   margin: 0 0 8px;
   color: #fff;
-  font-size: 1.12rem;
+  font-size: 1rem;
   line-height: 1.08;
 }
 
@@ -1510,29 +1510,62 @@
 .ari-onboarding__coach p {
   margin: 0 0 16px;
   color: rgba(255, 255, 255, 0.78);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 600;
   line-height: 1.4;
+}
+
+.ari-onboarding__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.ari-onboarding__top .ari-kicker {
+  margin: 0;
+}
+
+.ari-onboarding__skip {
+  appearance: none;
+  min-height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.065);
+  color: rgba(255, 255, 255, 0.68);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+}
+
+.ari-onboarding__skip:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ari-onboarding__skip[hidden] {
+  display: none;
 }
 
 .ari-onboarding__actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 10px;
 }
 
-.ari-onboarding__actions .ari-btn--secondary {
-  min-height: 42px;
-  padding-inline: 18px;
-}
-
-.ari-onboarding__actions .ari-btn--secondary:hover {
-  color: #fff;
-}
-
-.ari-onboarding__actions .ari-btn--secondary[hidden] {
-  display: none;
+.ari-onboarding__actions .ari-btn--primary {
+  min-height: 40px;
+  padding: 10px 22px;
+  font-size: 0.84rem;
 }
 
 .ari-exit-confirm__panel p {
@@ -1559,6 +1592,7 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.065));
   cursor: pointer;
   font: inherit;
+  font-size: 0.78rem;
   font-weight: 800;
   box-shadow:
     0 10px 22px rgba(0, 0, 0, 0.24),
@@ -1598,6 +1632,7 @@
   background:
     linear-gradient(180deg, #fbfbf2 0%, #d7d8cf 100%);
   color: #101511;
+  font-size: 0.86rem;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
   box-shadow:
     0 0 0 4px rgba(255, 255, 255, 0.12),
