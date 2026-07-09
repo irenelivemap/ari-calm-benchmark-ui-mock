@@ -1086,6 +1086,10 @@
   display: none;
 }
 
+.ari-note-details[hidden] {
+  display: none;
+}
+
 .ari-question-block fieldset {
   min-width: 0;
   margin: 0;
@@ -1103,13 +1107,43 @@
 }
 
 .ari-question-block legend,
-.ari-free-note {
+.ari-free-note,
+.ari-note-details summary {
   display: block;
   margin-bottom: 10px;
   color: var(--ari-ink);
   font-size: 0.92rem;
   font-weight: 700;
   line-height: 1.35;
+}
+
+.ari-note-details {
+  border-top: 1px solid rgba(111, 50, 24, 0.24);
+  padding-top: 14px;
+}
+
+.ari-note-details summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.ari-note-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.ari-note-details summary::after {
+  content: "+";
+  float: right;
+  font-weight: 800;
+}
+
+.ari-note-details[open] summary::after {
+  content: "-";
+}
+
+.ari-free-note span {
+  display: block;
+  margin-bottom: 8px;
 }
 
 .ari-choice-grid {
@@ -1265,8 +1299,12 @@
   gap: 8px;
   border-radius: 8px;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 28px rgba(16, 21, 17, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(16, 18, 17, 0.96), rgba(8, 9, 9, 0.94)),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 6px);
+  color: #fff;
+  box-shadow: 0 14px 34px rgba(16, 21, 17, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -1274,21 +1312,30 @@
 .ari-benchmark__round .ari-btn {
   min-height: 34px;
   padding: 8px 13px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.76rem;
 }
 
 .ari-round-chip {
   padding: 8px 12px;
-  background: rgba(16, 21, 17, 0.06);
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.86);
   box-shadow: none;
   font-size: 0.76rem;
 }
 
+.ari-round-chip b {
+  color: #33B783;
+}
+
 .ari-pips {
+  display: none;
   border-radius: 8px;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 28px rgba(16, 21, 17, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 12, 11, 0.88);
+  box-shadow: 0 10px 28px rgba(16, 21, 17, 0.18);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -1336,18 +1383,37 @@
 .ari-question-card {
   position: absolute;
   top: 92px;
-  bottom: 10px;
+  bottom: auto;
   left: 10px;
   z-index: 25;
   width: var(--ari-rail-width);
-  max-height: none;
+  max-height: calc(100vh - 112px);
   overflow: auto;
   border-radius: 8px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 14px 36px rgba(16, 21, 17, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(120% 90% at 90% 0%, rgba(8, 120, 77, 0.18), transparent 42%),
+    linear-gradient(180deg, rgba(16, 18, 17, 0.98), rgba(8, 9, 9, 0.98));
+  color: #fff;
+  box-shadow: 0 20px 44px rgba(16, 21, 17, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+.ari-question-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.1) 0 1px, transparent 1px 7px);
+  mask-image: linear-gradient(180deg, #000 0%, #000 72%, transparent 100%);
+}
+
+.ari-question-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .ari-question-stack {
@@ -1355,11 +1421,18 @@
 }
 
 .ari-question-block {
+  border-top-color: rgba(255, 255, 255, 0.12);
   padding-top: 11px;
 }
 
+.ari-kicker {
+  color: #E86E3E;
+}
+
 .ari-question-block legend,
-.ari-free-note {
+.ari-free-note,
+.ari-note-details summary {
+  color: rgba(255, 255, 255, 0.94);
   margin-bottom: 8px;
   font-size: 0.82rem;
 }
@@ -1374,17 +1447,65 @@
 
 .ari-choice-grid label {
   min-height: 36px;
-  border-radius: 8px;
+  border-color: rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
   padding: 8px 12px;
-  background: rgba(16, 21, 17, 0.045);
+  background: rgba(255, 255, 255, 0.075);
+  color: rgba(255, 255, 255, 0.82);
   font-size: 0.78rem;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.24);
+}
+
+.ari-choice-grid label:hover {
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.ari-choice-grid label.is-selected {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  box-shadow: 0 0 0 3px rgba(8, 120, 77, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.ari-choice-grid label.ari-choice--route-a.is-selected {
+  border-color: rgba(232, 110, 62, 0.85);
+  box-shadow: 0 0 0 3px rgba(200, 71, 32, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.ari-choice-grid label.ari-choice--route-b.is-selected {
+  border-color: rgba(51, 183, 131, 0.78);
+  box-shadow: 0 0 0 3px rgba(8, 120, 77, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.ari-choice-swatch {
+  box-shadow: 0 0 12px currentColor;
+}
+
+.ari-note-details {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+.ari-note-details:not([open]) summary {
+  margin-bottom: 0;
+}
+
+.ari-free-note span {
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .ari-question-card textarea {
   min-height: 62px;
+  border-color: rgba(255, 255, 255, 0.14);
   border-radius: 8px;
   padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
   font-size: 0.78rem;
+}
+
+.ari-question-card textarea::placeholder {
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .ari-actions {
@@ -1392,12 +1513,31 @@
   bottom: -16px;
   margin: 12px -16px -16px;
   padding: 12px 16px 16px;
-  background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0.96) 26%);
+  background: linear-gradient(180deg, rgba(8, 9, 9, 0), rgba(8, 9, 9, 0.98) 26%);
 }
 
 .ari-actions .ari-btn {
   padding: 11px 14px;
   font-size: 0.78rem;
+}
+
+.ari-actions .ari-btn--secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ari-actions .ari-btn--primary {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(135deg, var(--ari-route-a) 0%, #D95A2E 38%, var(--ari-green) 100%);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(200, 71, 32, 0.14), 0 12px 22px rgba(8, 120, 77, 0.22), inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.ari-actions .ari-btn--primary:disabled {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.46);
+  box-shadow: none;
 }
 
 @media (max-width: 920px) {
@@ -1443,7 +1583,6 @@
     margin-top: 12px;
     max-height: none;
     border-radius: 18px;
-    background: var(--ari-card-blue);
   }
 }
 
@@ -1467,6 +1606,12 @@
 
   .ari-benchmark__round {
     padding: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background:
+      linear-gradient(180deg, rgba(16, 18, 17, 0.96), rgba(8, 9, 9, 0.94)),
+      repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 6px);
+    color: #fff;
+    box-shadow: 0 14px 34px rgba(16, 21, 17, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   }
 
   .ari-benchmark__round .ari-btn,
@@ -1474,6 +1619,20 @@
     min-height: 32px;
     padding: 7px 10px;
     font-size: 0.72rem;
+  }
+
+  .ari-benchmark__round .ari-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .ari-round-chip {
+    background: rgba(255, 255, 255, 0.09);
+    color: rgba(255, 255, 255, 0.86);
+  }
+
+  .ari-round-chip b {
+    color: #33B783;
   }
 
   .ari-pips {
@@ -1498,6 +1657,10 @@
   .ari-map__zoom button {
     width: 36px;
     height: 36px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(16, 18, 17, 0.9);
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(16, 21, 17, 0.22), inset 0 -2px 0 rgba(0, 0, 0, 0.28);
     font-size: 1rem;
   }
 
@@ -1516,38 +1679,114 @@
     margin-top: 0;
     overflow: auto;
     border-radius: 20px;
-    padding: 14px;
-    background: rgba(255, 255, 255, 0.96);
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background:
+      radial-gradient(120% 90% at 90% 0%, rgba(8, 120, 77, 0.18), transparent 42%),
+      linear-gradient(180deg, rgba(16, 18, 17, 0.98), rgba(8, 9, 9, 0.98));
+    color: #fff;
+    box-shadow: 0 20px 44px rgba(16, 21, 17, 0.32), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+
+  .ari-question-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.16;
+    pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.1) 0 1px, transparent 1px 7px);
+    mask-image: linear-gradient(180deg, #000 0%, #000 72%, transparent 100%);
+  }
+
+  .ari-question-card > * {
+    position: relative;
+    z-index: 1;
   }
 
   .ari-question-stack {
-    gap: 9px;
+    gap: 10px;
   }
 
   .ari-question-block {
+    border-top-color: rgba(255, 255, 255, 0.12);
     padding-top: 10px;
   }
 
   .ari-kicker {
     margin-bottom: 5px;
+    color: #E86E3E;
     font-size: 0.68rem;
   }
 
   .ari-question-block legend,
-  .ari-free-note {
+  .ari-free-note,
+  .ari-note-details summary {
     margin-bottom: 7px;
+    color: rgba(255, 255, 255, 0.94);
     font-size: 0.78rem;
   }
 
   .ari-choice-grid label {
     min-height: 34px;
-    padding: 8px 10px;
+    border-color: rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    padding: 8px 11px;
+    background: rgba(255, 255, 255, 0.075);
+    color: rgba(255, 255, 255, 0.82);
     font-size: 0.76rem;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.24);
+  }
+
+  .ari-choice-grid label:hover {
+    background: rgba(255, 255, 255, 0.11);
+  }
+
+  .ari-choice-grid label.is-selected {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    box-shadow: 0 0 0 3px rgba(8, 120, 77, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  .ari-choice-grid label.ari-choice--route-a.is-selected {
+    border-color: rgba(232, 110, 62, 0.85);
+    box-shadow: 0 0 0 3px rgba(200, 71, 32, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+
+  .ari-choice-grid label.ari-choice--route-b.is-selected {
+    border-color: rgba(51, 183, 131, 0.78);
+    box-shadow: 0 0 0 3px rgba(8, 120, 77, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+
+  .ari-choice-swatch {
+    box-shadow: 0 0 12px currentColor;
+  }
+
+  .ari-note-details {
+    border-top-color: rgba(255, 255, 255, 0.12);
+    padding-top: 10px;
+  }
+
+  .ari-note-details:not([open]) {
+    padding-bottom: 2px;
+  }
+
+  .ari-free-note span {
+    color: rgba(255, 255, 255, 0.72);
   }
 
   .ari-question-card textarea {
     min-height: 58px;
+    border-color: rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
     font-size: 0.76rem;
+  }
+
+  .ari-question-card textarea::placeholder {
+    color: rgba(255, 255, 255, 0.55);
   }
 
   .ari-actions {
@@ -1558,7 +1797,27 @@
   }
 
   .ari-actions .ari-btn {
+    min-height: 42px;
     padding: 10px 13px;
     font-size: 0.76rem;
+  }
+
+  .ari-actions .ari-btn--secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .ari-actions .ari-btn--primary {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: linear-gradient(135deg, var(--ari-route-a) 0%, #D95A2E 38%, var(--ari-green) 100%);
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(200, 71, 32, 0.14), 0 12px 22px rgba(8, 120, 77, 0.22), inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  .ari-actions .ari-btn--primary:disabled {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.46);
+    box-shadow: none;
   }
 }

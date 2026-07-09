@@ -140,9 +140,10 @@
                 </fieldset>
               </section>
 
-              <section class="ari-question-block">
-                <label class="ari-free-note">Anything to add?<textarea name="note" placeholder="Optional note"></textarea></label>
-              </section>
+              <details class="ari-note-details">
+                <summary>Anything to add?</summary>
+                <label class="ari-free-note"><span>Optional note</span><textarea name="note" placeholder="Tell us more"></textarea></label>
+              </details>
 
               <div class="ari-actions">
                 <button class="ari-btn ari-btn--secondary" data-action="previous" type="button">Back</button>
@@ -372,8 +373,10 @@
 
       const routeA = normalizeLatLngs(pair.routes[state.assignment.routeA].geometry);
       const routeB = normalizeLatLngs(pair.routes[state.assignment.routeB].geometry);
-      L.polyline(routeA, { color: routeAColor, weight: 7, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(state.routeLayers);
-      L.polyline(routeB, { color: routeBColor, weight: 7, opacity: 0.95, dashArray: '2 12', lineCap: 'round', lineJoin: 'round' }).addTo(state.routeLayers);
+      L.polyline(routeA, { color: '#ffffff', weight: 11, opacity: 0.76, lineCap: 'round', lineJoin: 'round' }).addTo(state.routeLayers);
+      L.polyline(routeB, { color: '#ffffff', weight: 11, opacity: 0.76, dashArray: '2 12', lineCap: 'round', lineJoin: 'round' }).addTo(state.routeLayers);
+      L.polyline(routeA, { color: routeAColor, weight: 7, opacity: 0.98, lineCap: 'round', lineJoin: 'round' }).addTo(state.routeLayers);
+      L.polyline(routeB, { color: routeBColor, weight: 7, opacity: 0.98, dashArray: '2 12', lineCap: 'round', lineJoin: 'round' }).addTo(state.routeLayers);
       L.marker([pair.origin.lat, pair.origin.lng], { icon: startIcon, keyboard: false }).addTo(state.routeLayers);
       L.marker([pair.destination.lat, pair.destination.lng], { icon: endIcon, keyboard: false }).addTo(state.routeLayers);
 
