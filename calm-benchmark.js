@@ -184,11 +184,12 @@
           <div class="ari-onboarding__coach" role="dialog" aria-labelledby="ari-onboarding-title" aria-describedby="ari-onboarding-copy">
             <div class="ari-onboarding__top">
               <div class="ari-kicker" data-onboarding-count>1 / 4</div>
-              <button class="ari-onboarding__skip" data-action="skip-onboarding" type="button">Skip</button>
+              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Close onboarding" title="Close onboarding">×</button>
             </div>
             <h2 id="ari-onboarding-title" data-onboarding-title>Zoom in or out.</h2>
             <p id="ari-onboarding-copy" data-onboarding-copy>Use + and - when you need to inspect streets more closely.</p>
             <div class="ari-onboarding__actions">
+              <button class="ari-onboarding__back" data-action="previous-onboarding" type="button">Back</button>
               <button class="ari-btn ari-btn--primary" data-action="next-onboarding" type="button">OK</button>
             </div>
           </div>
@@ -256,6 +257,7 @@
       onboardingTitle: root.querySelector('[data-onboarding-title]'),
       onboardingCopy: root.querySelector('[data-onboarding-copy]'),
       skipOnboarding: root.querySelector('[data-action="skip-onboarding"]'),
+      previousOnboarding: root.querySelector('[data-action="previous-onboarding"]'),
       nextOnboarding: root.querySelector('[data-action="next-onboarding"]'),
       exitConfirm: root.querySelector('[data-exit-confirm]'),
       exitCopy: root.querySelector('[data-exit-copy]'),
@@ -506,14 +508,15 @@
       els.onboardingTitle.textContent = step.title;
       els.onboardingCopy.textContent = step.copy;
       els.nextOnboarding.textContent = step.final ? 'Start round →' : 'OK';
-      els.skipOnboarding.hidden = !!step.final;
+      els.previousOnboarding.hidden = state.onboardingStepIndex === 0;
+      els.previousOnboarding.disabled = state.onboardingStepIndex === 0;
       placeOnboardingStep(targetRect);
     }
 
     function finishOnboarding() {
       state.onboardingComplete = true;
       els.onboarding.hidden = true;
-      updatePanelState(false);
+      updatePanelState(true);
       requestAnimationFrame(fitRoutes);
     }
 
@@ -939,6 +942,12 @@
       }
 
       state.onboardingStepIndex += 1;
+      renderOnboardingStep();
+    });
+
+    els.previousOnboarding.addEventListener('click', () => {
+      if (state.onboardingStepIndex <= 0) return;
+      state.onboardingStepIndex -= 1;
       renderOnboardingStep();
     });
 
