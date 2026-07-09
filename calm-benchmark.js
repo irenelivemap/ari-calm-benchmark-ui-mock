@@ -295,8 +295,8 @@
       {
         id: 'fit',
         target: () => els.fitRoutes,
-        title: 'See the full routes again.',
-        copy: 'Use this after moving or zooming the map to fit both routes back on screen.'
+        title: 'Fit both routes on screen.',
+        copy: 'Return to the comparison view.'
       },
       {
         id: 'street',
