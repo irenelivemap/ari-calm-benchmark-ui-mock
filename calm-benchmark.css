@@ -1091,7 +1091,7 @@
   position: absolute;
   right: 14px;
   top: 62px;
-  z-index: 3;
+  z-index: 65;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1420,6 +1420,10 @@
   padding: 0;
 }
 
+.ari-onboarding {
+  pointer-events: none;
+}
+
 .ari-exit-confirm {
   display: grid;
   place-items: center;
@@ -1480,6 +1484,7 @@
   left: var(--coach-left, 24px);
   top: var(--coach-top, 24px);
   z-index: 2;
+  pointer-events: auto;
   width: var(--coach-width, min(310px, calc(100% - 28px)));
   border-radius: 16px;
   padding: 18px;

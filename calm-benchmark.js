@@ -289,7 +289,7 @@
         id: 'zoom',
         target: getZoomControlsRect,
         title: 'Zoom in or out.',
-        copy: 'Use + and - when you need to inspect streets more closely.'
+        copy: 'Use + / -, scroll, or pinch when you need to inspect streets more closely.'
       },
       {
         id: 'fit',
