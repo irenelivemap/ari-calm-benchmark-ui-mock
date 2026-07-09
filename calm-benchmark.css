@@ -863,10 +863,10 @@
   align-items: center;
   gap: 10px;
   border-radius: 999px;
-  padding: 12px 22px;
-  background: #fff;
-  box-shadow: 0 4px 18px rgba(16, 21, 17, 0.08);
-  font-weight: 600;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1741,40 +1741,51 @@
 }
 
 .ari-benchmark__round {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  border-radius: 8px;
-  padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background:
-    linear-gradient(180deg, rgba(16, 18, 17, 0.96), rgba(8, 9, 9, 0.94)),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 6px);
-  color: #fff;
-  box-shadow: 0 14px 34px rgba(16, 21, 17, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  gap: 12px;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px;
+  border: 1px solid rgba(16, 21, 17, 0.1);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--ari-ink);
+  box-shadow: 0 12px 34px rgba(16, 21, 17, 0.14);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
 .ari-benchmark__round .ari-btn {
   min-height: 34px;
-  padding: 8px 13px;
+  border-color: rgba(16, 21, 17, 0.1);
+  padding: 8px 12px;
+  background: rgba(16, 21, 17, 0.08);
+  color: rgba(16, 21, 17, 0.78);
   font-size: 0.76rem;
-  box-shadow:
-    0 5px 12px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.ari-benchmark__round .ari-btn:hover:not(:disabled) {
+  border-color: rgba(16, 21, 17, 0.18);
+  background: rgba(16, 21, 17, 0.12);
+  color: var(--ari-ink);
 }
 
 .ari-round-chip {
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.09);
-  color: rgba(255, 255, 255, 0.86);
-  box-shadow: none;
+  padding: 0 8px 0 0;
+  background: transparent;
+  color: rgba(16, 21, 17, 0.68);
   font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  box-shadow: none;
 }
 
 .ari-round-chip b {
-  color: rgba(255, 255, 255, 0.94);
+  color: var(--ari-ink);
+  font-size: 0.86rem;
 }
 
 .ari-pips {
@@ -2196,13 +2207,8 @@
   }
 
   .ari-benchmark__round {
-    padding: 7px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background:
-      linear-gradient(180deg, rgba(16, 18, 17, 0.96), rgba(8, 9, 9, 0.94)),
-      repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 6px);
-    color: #fff;
-    box-shadow: 0 14px 34px rgba(16, 21, 17, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    max-width: calc(100vw - 16px);
+    padding: 6px;
   }
 
   .ari-benchmark__round .ari-btn,
@@ -2213,17 +2219,17 @@
   }
 
   .ari-benchmark__round .ari-btn {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.9);
+    background: rgba(16, 21, 17, 0.08);
+    color: rgba(16, 21, 17, 0.78);
   }
 
   .ari-round-chip {
-    background: rgba(255, 255, 255, 0.09);
-    color: rgba(255, 255, 255, 0.86);
+    background: transparent;
+    color: rgba(16, 21, 17, 0.68);
   }
 
   .ari-round-chip b {
-    color: rgba(255, 255, 255, 0.94);
+    color: var(--ari-ink);
   }
 
   .ari-pips {
