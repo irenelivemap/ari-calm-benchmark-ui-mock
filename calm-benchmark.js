@@ -182,12 +182,47 @@
         <section class="ari-onboarding" data-onboarding aria-label="Before you start">
           <div class="ari-onboarding__panel">
             <div class="ari-kicker">Before you start</div>
-            <h2>Explore the map first.</h2>
-            <ul>
-              <li>Zoom and pan until both routes are clear.</li>
-              <li>Use Fit routes if you lose the comparison.</li>
-              <li>Click a route to open Street View for that area.</li>
-            </ul>
+            <h2>Inspect the routes, then choose.</h2>
+            <div class="ari-onboarding__guide" role="list" aria-label="How to use the test map">
+              <div class="ari-onboarding__item" role="listitem">
+                <div class="ari-onboarding__demo ari-onboarding__demo--zoom" aria-hidden="true">
+                  <span>+</span>
+                  <span>-</span>
+                </div>
+                <div>
+                  <b>Zoom</b>
+                  <span>Move closer or wider.</span>
+                </div>
+              </div>
+              <div class="ari-onboarding__item" role="listitem">
+                <div class="ari-onboarding__demo ari-onboarding__demo--fit" aria-hidden="true">
+                  <span></span>
+                </div>
+                <div>
+                  <b>Fit routes</b>
+                  <span>Bring both routes back.</span>
+                </div>
+              </div>
+              <div class="ari-onboarding__item" role="listitem">
+                <div class="ari-onboarding__demo ari-onboarding__demo--street" aria-hidden="true">
+                  <span></span>
+                </div>
+                <div>
+                  <b>Street View</b>
+                  <span>Click a route point.</span>
+                </div>
+              </div>
+              <div class="ari-onboarding__item" role="listitem">
+                <div class="ari-onboarding__demo ari-onboarding__demo--answer" aria-hidden="true">
+                  <span>A</span>
+                  <span>B</span>
+                </div>
+                <div>
+                  <b>Answer</b>
+                  <span>Choose what you would walk.</span>
+                </div>
+              </div>
+            </div>
             <button class="ari-btn ari-btn--primary" data-action="start-round" type="button">Start round 1 →</button>
           </div>
         </section>
