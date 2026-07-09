@@ -59,8 +59,23 @@
     return Promise.resolve();
   }
 
+  function consoleProgressSink(progress) {
+    console.info('[ARI calm benchmark progress]', progress);
+    return Promise.resolve();
+  }
+
   function toLatLngObject(point) {
     return { lat: point[0], lng: point[1] };
+  }
+
+  function pointToSegmentDistance(point, start, end) {
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    if (dx === 0 && dy === 0) {
+      return Math.hypot(point.x - start.x, point.y - start.y);
+    }
+    const t = Math.max(0, Math.min(1, ((point.x - start.x) * dx + (point.y - start.y) * dy) / (dx * dx + dy * dy)));
+    return Math.hypot(point.x - (start.x + t * dx), point.y - (start.y + t * dy));
   }
 
   function hasGoogleMaps() {
@@ -87,16 +102,17 @@
                 <button data-action="zoom-out" type="button" aria-label="Zoom out">-</button>
               </div>
               <div class="ari-map__tools" aria-label="Map tools">
-                <button data-action="fit-routes" type="button">Fit routes</button>
-                <button data-action="street-view" type="button">Street view</button>
+                <button class="ari-icon-btn ari-icon-btn--fit" data-action="fit-routes" type="button" aria-label="Fit routes" title="Fit routes"><span aria-hidden="true"></span></button>
+              </div>
+              <div class="ari-street-card" data-street-card hidden>
+                <button data-action="open-street-view" type="button">Open Street View</button>
+                <button data-action="close-street-view" type="button" aria-label="Close Street View prompt">x</button>
               </div>
             </div>
           </section>
 
           <aside class="ari-question-card" aria-label="Benchmark questions" data-question-card>
-            <button class="ari-panel-toggle" data-action="toggle-panel" type="button" aria-expanded="true">
-              <span data-panel-toggle-label>Minimize</span>
-            </button>
+            <button class="ari-panel-toggle" data-action="toggle-panel" type="button" aria-expanded="true" aria-label="Minimize question panel" title="Minimize question panel"></button>
             <div class="ari-panel-summary" data-panel-summary>
               <span data-panel-step>Q1</span>
               <b data-panel-question>Which route would you choose for this calm walk?</b>
@@ -170,7 +186,7 @@
             <ul>
               <li>Zoom and pan until both routes are clear.</li>
               <li>Use Fit routes if you lose the comparison.</li>
-              <li>Open Street view if a place needs more context.</li>
+              <li>Click a route to open Street View for that area.</li>
             </ul>
             <button class="ari-btn ari-btn--primary" data-action="start-round" type="button">Start round 1 →</button>
           </div>
@@ -183,7 +199,8 @@
             <p data-exit-copy>Completed rounds already submitted will stay submitted. This round has not been submitted yet.</p>
             <div class="ari-exit-confirm__actions">
               <button class="ari-btn ari-btn--secondary" data-action="keep-testing" type="button">Keep testing</button>
-              <button class="ari-btn ari-btn--primary" data-action="confirm-exit" type="button">Leave test</button>
+              <button class="ari-btn ari-btn--secondary" data-action="leave-without-saving" type="button">Leave without saving</button>
+              <button class="ari-btn ari-btn--primary" data-action="save-progress" type="button">Save progress</button>
             </div>
           </div>
         </section>
@@ -220,6 +237,7 @@
 
     const routePairProvider = options.routePairProvider || mockRoutePairProvider;
     const answerSink = options.answerSink || consoleAnswerSink;
+    const progressSink = options.progressSink || consoleProgressSink;
     const onExit = typeof options.onExit === 'function' ? options.onExit : null;
 
     buildShell(root, state.totalRounds);
@@ -233,10 +251,8 @@
       exitConfirm: root.querySelector('[data-exit-confirm]'),
       exitCopy: root.querySelector('[data-exit-copy]'),
       keepTesting: root.querySelector('[data-action="keep-testing"]'),
-      confirmExit: root.querySelector('[data-action="confirm-exit"]'),
       questionCard: root.querySelector('[data-question-card]'),
       panelToggle: root.querySelector('[data-action="toggle-panel"]'),
-      panelToggleLabel: root.querySelector('[data-panel-toggle-label]'),
       panelStep: root.querySelector('[data-panel-step]'),
       panelQuestion: root.querySelector('[data-panel-question]'),
       form: root.querySelector('[data-form]'),
@@ -250,7 +266,11 @@
       zoomIn: root.querySelector('[data-action="zoom-in"]'),
       zoomOut: root.querySelector('[data-action="zoom-out"]'),
       fitRoutes: root.querySelector('[data-action="fit-routes"]'),
-      streetView: root.querySelector('[data-action="street-view"]')
+      streetCard: root.querySelector('[data-street-card]'),
+      openStreetView: root.querySelector('[data-action="open-street-view"]'),
+      closeStreetView: root.querySelector('[data-action="close-street-view"]'),
+      leaveWithoutSaving: root.querySelector('[data-action="leave-without-saving"]'),
+      saveProgress: root.querySelector('[data-action="save-progress"]')
     };
 
     function renderPips() {
@@ -271,7 +291,7 @@
           clickableIcons: true,
           fullscreenControl: true,
           mapTypeControl: false,
-          streetViewControl: true,
+          streetViewControl: false,
           zoomControl: false,
           scaleControl: true,
           gestureHandling: 'greedy'
@@ -296,22 +316,22 @@
       if (!isMobile) {
         return {
           google: 96,
-          leaflet: { padding: [130, 130], maxZoom: 14 }
+          leaflet: { padding: [72, 72], maxZoom: 16 }
         };
       }
 
-      const lowerSheet = Math.min(Math.round(window.innerHeight * 0.52), 450);
+      const lowerSheet = state.panelCollapsed ? 82 : Math.min(Math.round(window.innerHeight * 0.5), 430);
       return {
         google: {
-          top: 156,
-          right: 34,
-          bottom: lowerSheet + 24,
-          left: 34
+          top: 108,
+          right: 26,
+          bottom: lowerSheet + 18,
+          left: 26
         },
         leaflet: {
-          paddingTopLeft: [34, 156],
-          paddingBottomRight: [34, lowerSheet + 24],
-          maxZoom: 14
+          paddingTopLeft: [26, 108],
+          paddingBottomRight: [26, lowerSheet + 18],
+          maxZoom: 16
         }
       };
     }
@@ -331,7 +351,7 @@
         if (!bounds.isEmpty()) {
           state.map.fitBounds(bounds, fitPadding.google);
           google.maps.event.addListenerOnce(state.map, 'idle', () => {
-            if (state.map.getZoom() > 14) state.map.setZoom(14);
+              if (state.map.getZoom() > 16) state.map.setZoom(16);
           });
         }
         return;
@@ -340,6 +360,48 @@
       if (!state.routeLayers?.getLayers().length) return;
       state.map.invalidateSize();
       state.map.fitBounds(state.routeLayers.getBounds(), fitPadding.leaflet);
+    }
+
+    function isNearLeafletRoute(latlng, containerPoint) {
+      if (!state.pair || !state.assignment) return false;
+      const routes = [
+        normalizeLatLngs(state.pair.routes[state.assignment.routeA].geometry),
+        normalizeLatLngs(state.pair.routes[state.assignment.routeB].geometry)
+      ];
+      return routes.some(route => route.slice(1).some((point, index) => {
+        const start = state.map.latLngToContainerPoint(route[index]);
+        const end = state.map.latLngToContainerPoint(point);
+        return pointToSegmentDistance(containerPoint, start, end) <= 32;
+      }));
+    }
+
+    function isNearLatLngRoute(latLng) {
+      if (!state.pair || !state.assignment) return false;
+      const clickPoint = { x: latLng.lng, y: latLng.lat };
+      const routes = [
+        normalizeLatLngs(state.pair.routes[state.assignment.routeA].geometry).map(point => ({ x: point[1], y: point[0] })),
+        normalizeLatLngs(state.pair.routes[state.assignment.routeB].geometry).map(point => ({ x: point[1], y: point[0] }))
+      ];
+      return routes.some(route => route.slice(1).some((point, index) => {
+        return pointToSegmentDistance(clickPoint, route[index], point) <= 0.00055;
+      }));
+    }
+
+    function bindStreetViewMapClick() {
+      if (state.mapStreetHandlerBound) return;
+      state.mapStreetHandlerBound = true;
+      if (state.mapProvider === 'google') {
+        state.map.addListener('click', event => {
+          const point = { lat: event.latLng.lat(), lng: event.latLng.lng() };
+          if (isNearLatLngRoute(point)) setStreetViewPoint(point);
+        });
+        return;
+      }
+      state.map.on('click', event => {
+        if (isNearLeafletRoute(event.latlng, event.containerPoint)) {
+          setStreetViewPoint(event.latlng);
+        }
+      });
     }
 
     function setRouteFocus(routeKey) {
@@ -381,24 +443,21 @@
       });
     }
 
-    function getStreetViewPoint() {
-      if (state.mapProvider === 'google') {
-        const center = state.map.getCenter();
-        return { lat: center.lat(), lng: center.lng() };
-      }
-      const center = state.map.getCenter();
-      return { lat: center.lat, lng: center.lng };
+    function setStreetViewPoint(point) {
+      state.streetViewPoint = point;
+      els.streetCard.hidden = false;
     }
 
     function openStreetView() {
-      if (!state.map) return;
-      const point = getStreetViewPoint();
+      if (!state.streetViewPoint) return;
+      const point = state.streetViewPoint;
       const url = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${point.lat},${point.lng}`;
       window.open(url, '_blank', 'noopener,noreferrer');
     }
 
     function drawRoutes(pair) {
       ensureMap();
+      bindStreetViewMapClick();
 
       if (state.mapProvider === 'google') {
         state.googleOverlays.forEach(overlay => overlay.setMap(null));
@@ -438,6 +497,11 @@
         [routeACase, routeBCase, routeALine, routeBLine].forEach(layer => {
           layer.__ariBaseWeight = layer.strokeWeight || 7;
           layer.__ariBaseOpacity = layer.strokeOpacity ?? 0.98;
+        });
+        [routeACase, routeBCase, routeALine, routeBLine].forEach(layer => {
+          layer.addListener('click', event => {
+            setStreetViewPoint({ lat: event.latLng.lat(), lng: event.latLng.lng() });
+          });
         });
         const startMarker = new google.maps.Marker({
           position: { lat: pair.origin.lat, lng: pair.origin.lng },
@@ -499,6 +563,11 @@
       const routeBCase = L.polyline(routeB, { color: '#ffffff', weight: 15, opacity: 0.82, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 15, __ariBaseOpacity: 0.82 }).addTo(state.routeLayers);
       const routeALine = L.polyline(routeA, { color: routeAColor, weight: 9, opacity: 0.98, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 9, __ariBaseOpacity: 0.98 }).addTo(state.routeLayers);
       const routeBLine = L.polyline(routeB, { color: routeBColor, weight: 6, opacity: 0.98, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 6, __ariBaseOpacity: 0.98 }).addTo(state.routeLayers);
+      [routeACase, routeBCase, routeALine, routeBLine].forEach(layer => {
+        layer.on('click', event => {
+          setStreetViewPoint(event.latlng);
+        });
+      });
       state.routeVisuals = {
         routeA: [routeACase, routeALine],
         routeB: [routeBCase, routeBLine]
@@ -573,19 +642,45 @@
       state.panelCollapsed = collapsed;
       els.questionCard.classList.toggle('is-collapsed', collapsed);
       els.panelToggle.setAttribute('aria-expanded', String(!collapsed));
-      els.panelToggleLabel.textContent = collapsed ? 'Expand' : 'Minimize';
+      els.panelToggle.setAttribute('aria-label', collapsed ? 'Expand question panel' : 'Minimize question panel');
+      els.panelToggle.setAttribute('title', collapsed ? 'Expand question panel' : 'Minimize question panel');
       if (!collapsed) {
         requestAnimationFrame(() => {
           if (state.map) fitRoutes();
         });
+      } else {
+        requestAnimationFrame(fitRoutes);
       }
+    }
+
+    function hasPartialProgress() {
+      return !!getQ1Choice()
+        || !!els.form.querySelector('input[name="q2Separate"]:checked')
+        || !!els.form.querySelector('input[name="q3Issues"]:checked')
+        || !!els.form.querySelector('textarea[name="q3Note"]')?.value.trim();
     }
 
     function updateExitCopy() {
       const currentAnswered = isStepComplete(state.questionStep);
       els.exitCopy.textContent = state.completedRounds > 0
-        ? `You have submitted ${state.completedRounds} round${state.completedRounds === 1 ? '' : 's'}. This round ${currentAnswered ? 'has changes that are not submitted yet.' : 'has not been submitted yet.'}`
-        : 'No rounds have been submitted yet. You can leave now or keep testing.';
+        ? `You have submitted ${state.completedRounds} round${state.completedRounds === 1 ? '' : 's'}. You can also save your current progress before leaving.`
+        : currentAnswered || hasPartialProgress()
+          ? 'This round is not submitted yet. Save progress if you want to keep where you are before leaving.'
+          : 'No rounds have been submitted yet. You can leave without saving or keep testing.';
+    }
+
+    function readProgress() {
+      return {
+        sessionId: state.sessionId,
+        participantName: state.participantName,
+        roundIndex: state.roundIndex,
+        completedRounds: state.completedRounds,
+        pairId: state.pair?.pairId,
+        routeAssignment: state.assignment,
+        questionStep: state.questionStep,
+        partialAnswer: readAnswer(),
+        savedAt: new Date().toISOString()
+      };
     }
 
     function readAnswer() {
@@ -620,6 +715,8 @@
       els.currentRound.textContent = String(state.roundIndex + 1);
       els.scenario.textContent = state.pair.scenario || 'No specific situation provided.';
       state.questionStep = 'q1';
+      state.streetViewPoint = null;
+      els.streetCard.hidden = true;
       els.form.reset();
       updatePanelState(false);
       updateQuestionFlow();
@@ -659,8 +756,16 @@
       els.exitConfirm.hidden = true;
     });
 
-    els.confirmExit.addEventListener('click', () => {
+    els.leaveWithoutSaving.addEventListener('click', () => {
       els.exitConfirm.hidden = true;
+      if (onExit) onExit();
+    });
+
+    els.saveProgress.addEventListener('click', async () => {
+      els.saveProgress.disabled = true;
+      await progressSink(readProgress());
+      els.exitConfirm.hidden = true;
+      els.saveProgress.disabled = false;
       if (onExit) onExit();
     });
 
@@ -695,7 +800,11 @@
     });
 
     els.fitRoutes.addEventListener('click', fitRoutes);
-    els.streetView.addEventListener('click', openStreetView);
+    els.openStreetView.addEventListener('click', openStreetView);
+    els.closeStreetView.addEventListener('click', () => {
+      els.streetCard.hidden = true;
+      state.streetViewPoint = null;
+    });
 
     els.form.querySelectorAll('.ari-choice--route-a, .ari-choice--route-b').forEach(label => {
       const key = label.classList.contains('ari-choice--route-a') ? 'routeA' : 'routeB';
@@ -714,9 +823,10 @@
     };
   }
 
-  window.AriCalmBenchmark = {
-    mount,
-    mockRoutePairProvider,
-    consoleAnswerSink
-  };
+    window.AriCalmBenchmark = {
+      mount,
+      mockRoutePairProvider,
+      consoleAnswerSink,
+      consoleProgressSink
+    };
 })();

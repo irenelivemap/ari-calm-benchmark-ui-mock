@@ -13,9 +13,11 @@ Use this checklist when moving the calm benchmark UI into `livemap-routing`.
 - [ ] Pass the participant name from the start screen/session.
 - [ ] Implement `routePairProvider`.
 - [ ] Implement `answerSink`.
+- [ ] Implement `progressSink` if testers should be able to save and leave mid-session.
 - [ ] Verify map pan/zoom works.
 - [ ] Verify `Fit routes` works.
 - [ ] Verify Street View handoff works or replace with the app's real Street View control.
+- [ ] Verify Save progress persists completed and current-round state.
 - [ ] Verify the question panel can be minimized and expanded.
 - [ ] Verify Exit test explains whether completed/current rounds are saved.
 - [ ] Verify Route A / Route B remain blinded.
@@ -42,6 +44,7 @@ Use this checklist when moving the calm benchmark UI into `livemap-routing`.
 - [ ] Tester can fit both routes back into view.
 - [ ] Tester can open Street View when they need more visual context.
 - [ ] Tester can minimize the question panel to focus on the map.
+- [ ] Tester can save progress before leaving the session.
 - [ ] Tester can submit Q1.
 - [ ] Q2 appears for Route A, Route B, or Either.
 - [ ] Q3 appears for Route A, Route B, or Neither.

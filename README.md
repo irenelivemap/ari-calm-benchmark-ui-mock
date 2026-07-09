@@ -65,6 +65,13 @@ AriCalmBenchmark.mount(document.getElementById('calm-benchmark-root'), {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(answer)
     });
+  },
+  progressSink: async progress => {
+    await fetch('/api/calm-benchmark/progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(progress)
+    });
   }
 });
 ```
@@ -94,7 +101,8 @@ This UI expects real route geometries as latitude/longitude points. It handles:
 - start/end markers
 - pan and zoom
 - fit-to-routes
-- Street View handoff from the current map center
+- Street View handoff from a clicked route point
+- optional progress save on exit
 - a minimizable question panel for map inspection
 - first-round onboarding and explicit exit confirmation
 - full-screen map-first desktop layout
