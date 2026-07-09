@@ -1549,76 +1549,12 @@
 }
 
 .ari-onboarding,
-.ari-exit-confirm {
-  position: absolute;
-  inset: 0;
-  z-index: 45;
-  padding: 0;
-}
-
 .ari-onboarding {
   pointer-events: none;
 }
 
-.ari-exit-confirm {
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(8, 9, 9, 0.32);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-}
-
-.ari-onboarding[hidden],
-.ari-exit-confirm[hidden] {
+.ari-onboarding[hidden] {
   display: none;
-}
-
-.ari-exit-confirm__panel {
-  position: relative;
-  width: min(430px, 100%);
-  border-radius: 18px;
-  padding: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background:
-    radial-gradient(120% 90% at 90% 0%, rgba(255, 255, 255, 0.08), transparent 42%),
-    linear-gradient(180deg, rgba(16, 18, 17, 0.98), rgba(8, 9, 9, 0.98));
-  color: #fff;
-  box-shadow: 0 24px 70px rgba(16, 21, 17, 0.32), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-
-.ari-exit-confirm__close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  appearance: none;
-  display: inline-grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 50%;
-  padding: 0;
-  background: rgba(255, 255, 255, 0.065);
-  color: rgba(255, 255, 255, 0.78);
-  cursor: pointer;
-  font: inherit;
-  font-size: 1.1rem;
-  font-weight: 400;
-  line-height: 1;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.22);
-  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
-}
-
-.ari-exit-confirm__close:hover {
-  border-color: rgba(255, 255, 255, 0.24);
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.ari-exit-confirm__close:focus-visible {
-  outline: 3px solid rgba(255, 255, 255, 0.52);
-  outline-offset: 3px;
 }
 
 .ari-onboarding__spotlight {
@@ -1670,17 +1606,11 @@
     top 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.ari-onboarding__coach h2,
-.ari-exit-confirm__panel h2 {
+.ari-onboarding__coach h2 {
   margin: 0 0 8px;
   color: #fff;
   font-size: 1rem;
   line-height: 1.08;
-}
-
-.ari-exit-confirm__panel h2 {
-  margin-bottom: 12px;
-  font-size: 1.35rem;
 }
 
 .ari-onboarding__coach p {
@@ -1771,19 +1701,6 @@
   min-height: 40px;
   padding: 10px 22px;
   font-size: 0.84rem;
-}
-
-.ari-exit-confirm__panel p {
-  margin: 0 0 18px;
-  color: rgba(255, 255, 255, 0.76);
-  font-size: 0.92rem;
-  line-height: 1.45;
-}
-
-.ari-exit-confirm__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
 }
 
 .ari-btn {
@@ -2063,6 +1980,29 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.ari-save-flash {
+  margin-left: auto;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+}
+
+@keyframes ari-save-flash {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  72% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.ari-save-flash.is-flashing {
+  animation: ari-save-flash 1.8s ease forwards;
+}
+
 .ari-panel-handle {
   appearance: none;
   display: inline-grid;
@@ -2070,7 +2010,6 @@
   width: 30px;
   height: 30px;
   flex: none;
-  margin-left: auto;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 50%;
   padding: 0;
@@ -2322,14 +2261,9 @@
   font-size: 0.78rem;
 }
 
-.ari-onboarding,
-.ari-exit-confirm {
+.ari-onboarding {
   position: absolute;
   z-index: 60;
-}
-
-.ari-exit-confirm__panel {
-  border-radius: 14px;
 }
 
 @media (max-width: 920px) {
@@ -2641,22 +2575,8 @@
     font-size: 0.76rem;
   }
 
-  .ari-onboarding,
-  .ari-exit-confirm {
+  .ari-onboarding {
     padding: 0;
-  }
-
-  .ari-exit-confirm {
-    padding: 18px;
-  }
-
-  .ari-exit-confirm__panel {
-    border-radius: 18px;
-    padding: 18px;
-  }
-
-  .ari-exit-confirm__panel h2 {
-    font-size: 1.2rem;
   }
 
   .ari-onboarding__spotlight {
@@ -2672,12 +2592,7 @@
     font-size: 1rem;
   }
 
-  .ari-onboarding__coach p,
-  .ari-exit-confirm__panel p {
+  .ari-onboarding__coach p {
     font-size: 0.84rem;
-  }
-
-  .ari-exit-confirm__actions {
-    display: grid;
   }
 }

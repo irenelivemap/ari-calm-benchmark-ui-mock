@@ -60,9 +60,10 @@
 
           <aside class="ari-question-card" aria-label="Benchmark questions" data-question-card>
             <div class="ari-card-header">
-              <button class="ari-hud-exit" data-action="exit" type="button" aria-label="Exit test">&times;</button>
+              <button class="ari-hud-exit" data-action="exit" type="button" aria-label="Exit test — progress is saved" title="Exit — progress is saved">&times;</button>
               <span class="ari-hud-sep" aria-hidden="true"></span>
               <div class="ari-round-chip"><span class="ari-round-kicker">Round</span> <b data-round-current>01</b> <span class="ari-round-slash" aria-hidden="true">/</span> <span data-round-total>${String(totalRounds).padStart(2, '0')}</span></div>
+              <span class="ari-save-flash" data-save-flash aria-live="polite">Saved &#10003;</span>
               <button class="ari-panel-handle" data-action="toggle-panel" type="button" aria-expanded="true" aria-label="Minimize question panel" title="Minimize question panel"></button>
             </div>
             <div class="ari-panel-summary" data-panel-summary>
@@ -146,18 +147,6 @@
           </div>
         </section>
 
-        <section class="ari-exit-confirm" data-exit-confirm hidden aria-label="Exit confirmation">
-          <div class="ari-exit-confirm__panel">
-            <button class="ari-exit-confirm__close" data-action="keep-testing" type="button" aria-label="Keep testing">&times;</button>
-            <div class="ari-kicker">Exit test</div>
-            <h2>Leave this session?</h2>
-            <p data-exit-copy>Completed rounds already submitted will stay submitted. This round has not been submitted yet.</p>
-            <div class="ari-exit-confirm__actions">
-              <button class="ari-btn ari-btn--secondary" data-action="leave-without-saving" type="button">Leave without saving</button>
-              <button class="ari-btn ari-btn--primary" data-action="save-progress" type="button">Save progress</button>
-            </div>
-          </div>
-        </section>
       </section>
     `;
   }
@@ -207,9 +196,7 @@
       onboardingCopy: root.querySelector('[data-onboarding-copy]'),
       skipOnboarding: root.querySelector('[data-action="skip-onboarding"]'),
       nextOnboarding: root.querySelector('[data-action="next-onboarding"]'),
-      exitConfirm: root.querySelector('[data-exit-confirm]'),
-      exitCopy: root.querySelector('[data-exit-copy]'),
-      keepTesting: root.querySelector('[data-action="keep-testing"]'),
+      saveFlash: root.querySelector('[data-save-flash]'),
       questionCard: root.querySelector('[data-question-card]'),
       panelToggle: root.querySelector('[data-action="toggle-panel"]'),
       panelStep: root.querySelector('[data-panel-step]'),
@@ -227,9 +214,7 @@
       fitRoutes: root.querySelector('[data-action="fit-routes"]'),
       streetCard: root.querySelector('[data-street-card]'),
       openStreetView: root.querySelector('[data-action="open-street-view"]'),
-      closeStreetView: root.querySelector('[data-action="close-street-view"]'),
-      leaveWithoutSaving: root.querySelector('[data-action="leave-without-saving"]'),
-      saveProgress: root.querySelector('[data-action="save-progress"]')
+      closeStreetView: root.querySelector('[data-action="close-street-view"]')
     };
 
     state.mapAdapter = mapTools.createMapAdapter({
@@ -517,20 +502,14 @@
       }
     }
 
-    function hasPartialProgress() {
-      return !!getQ1Choice()
-        || !!els.form.querySelector('input[name="q2Separate"]:checked')
-        || !!els.form.querySelector('input[name="q3Issues"]:checked')
-        || !!els.form.querySelector('textarea[name="q3Note"]')?.value.trim();
+    function autosave() {
+      Promise.resolve(progressSink(readProgress())).catch(() => {});
     }
 
-    function updateExitCopy() {
-      const currentAnswered = isStepComplete(state.questionStep);
-      els.exitCopy.textContent = state.completedRounds > 0
-        ? `You have submitted ${state.completedRounds} round${state.completedRounds === 1 ? '' : 's'}. You can also save your current progress before leaving.`
-        : currentAnswered || hasPartialProgress()
-          ? 'This round is not submitted yet. Save progress if you want to keep where you are before leaving.'
-          : 'No rounds have been submitted yet. You can leave without saving or keep testing.';
+    function flashSaved() {
+      els.saveFlash.classList.remove('is-flashing');
+      void els.saveFlash.offsetWidth;
+      els.saveFlash.classList.add('is-flashing');
     }
 
     function readProgress() {
@@ -594,7 +573,10 @@
       }
     }
 
-    els.form.addEventListener('change', updateQuestionFlow);
+    els.form.addEventListener('change', () => {
+      updateQuestionFlow();
+      autosave();
+    });
     els.form.addEventListener('submit', async event => {
       event.preventDefault();
       const sequence = getQuestionSequence();
@@ -604,6 +586,7 @@
       if (stepIndex < sequence.length - 1) {
         state.questionStep = sequence[stepIndex + 1];
         updateQuestionFlow();
+        autosave();
         return;
       }
 
@@ -615,27 +598,12 @@
       } else {
         els.submit.textContent = 'Complete';
       }
+      autosave();
+      flashSaved();
     });
 
-    els.exit.addEventListener('click', () => {
-      updateExitCopy();
-      els.exitConfirm.hidden = false;
-    });
-
-    els.keepTesting.addEventListener('click', () => {
-      els.exitConfirm.hidden = true;
-    });
-
-    els.leaveWithoutSaving.addEventListener('click', () => {
-      els.exitConfirm.hidden = true;
-      if (onExit) onExit();
-    });
-
-    els.saveProgress.addEventListener('click', async () => {
-      els.saveProgress.disabled = true;
-      await progressSink(readProgress());
-      els.exitConfirm.hidden = true;
-      els.saveProgress.disabled = false;
+    els.exit.addEventListener('click', async () => {
+      await Promise.resolve(progressSink(readProgress())).catch(() => {});
       if (onExit) onExit();
     });
 

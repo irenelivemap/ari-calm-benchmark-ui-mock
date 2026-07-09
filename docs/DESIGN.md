@@ -222,10 +222,13 @@ Rules:
 
 ## Exit And Progress Rules
 
-- Exiting affects the whole session, not just the current question.
-- Exit should trigger a confirmation, especially if progress exists.
-- The user should be able to save progress or leave without saving.
+- Saving is a property of the system, not a user action. Progress autosaves on every answer change, step advance, and round submission.
+- Exit is one click with no confirmation dialog: it saves current progress and leaves. There is no "leave without saving" path.
+- The exit button label is `Exit test — progress is saved` (aria-label and title) so hover/AT users learn the behavior before clicking.
+- A `Saved ✓` status flickers next to the round chip after each submitted round. It is status, not a control — `pointer-events: none`, never styled like a button.
+- The resume card on the intro page is the post-exit reassurance: landing on it shows nothing was lost.
 - Completed submitted rounds remain submitted.
+- Resuming returns the tester to the exact saved position, including a partially answered round (`questionStep` + `partialAnswer` in the progress payload).
 
 ## Responsive Rules
 
