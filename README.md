@@ -94,7 +94,9 @@ This UI expects real route geometries as latitude/longitude points. It handles:
 - start/end markers
 - pan and zoom
 - fit-to-routes
-- a map detail toggle in the local Leaflet fallback
+- Street View handoff from the current map center
+- a minimizable question panel for map inspection
+- first-round onboarding and explicit exit confirmation
 - full-screen map-first desktop layout
 
 The routing engineer does not need to implement the questions or UI behavior. They only need to provide route pairs in the route-pair contract.

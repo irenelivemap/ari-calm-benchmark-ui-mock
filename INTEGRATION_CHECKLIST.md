@@ -15,7 +15,9 @@ Use this checklist when moving the calm benchmark UI into `livemap-routing`.
 - [ ] Implement `answerSink`.
 - [ ] Verify map pan/zoom works.
 - [ ] Verify `Fit routes` works.
-- [ ] Verify Google-like map view works or replace with the app's real Google map layer.
+- [ ] Verify Street View handoff works or replace with the app's real Street View control.
+- [ ] Verify the question panel can be minimized and expanded.
+- [ ] Verify Exit test explains whether completed/current rounds are saved.
 - [ ] Verify Route A / Route B remain blinded.
 - [ ] Verify Q2/Q3 conditional display.
 - [ ] Verify answer payload includes hidden route assignment.
@@ -38,7 +40,8 @@ Use this checklist when moving the calm benchmark UI into `livemap-routing`.
 - [ ] Tester can inspect both routes clearly on a large map.
 - [ ] Tester can zoom and pan the map.
 - [ ] Tester can fit both routes back into view.
-- [ ] Tester can switch map style when they need more visual context.
+- [ ] Tester can open Street View when they need more visual context.
+- [ ] Tester can minimize the question panel to focus on the map.
 - [ ] Tester can submit Q1.
 - [ ] Q2 appears for Route A, Route B, or Either.
 - [ ] Q3 appears for Route A, Route B, or Neither.

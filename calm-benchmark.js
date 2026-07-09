@@ -72,7 +72,7 @@
       <section class="ari-benchmark" aria-label="ARI calm route benchmark">
         <header class="ari-benchmark__top">
           <div class="ari-benchmark__round">
-            <button class="ari-btn ari-btn--secondary" data-action="exit" type="button">Exit</button>
+            <button class="ari-btn ari-btn--secondary" data-action="exit" type="button">Exit test</button>
             <span class="ari-round-chip">Round <b data-round-current>1</b> / <span data-round-total>${totalRounds}</span></span>
           </div>
           <div class="ari-pips" data-pips></div>
@@ -86,10 +86,21 @@
                 <button data-action="zoom-in" type="button" aria-label="Zoom in">+</button>
                 <button data-action="zoom-out" type="button" aria-label="Zoom out">-</button>
               </div>
+              <div class="ari-map__tools" aria-label="Map tools">
+                <button data-action="fit-routes" type="button">Fit routes</button>
+                <button data-action="street-view" type="button">Street view</button>
+              </div>
             </div>
           </section>
 
-          <aside class="ari-question-card" aria-label="Benchmark questions">
+          <aside class="ari-question-card" aria-label="Benchmark questions" data-question-card>
+            <button class="ari-panel-toggle" data-action="toggle-panel" type="button" aria-expanded="true">
+              <span data-panel-toggle-label>Minimize</span>
+            </button>
+            <div class="ari-panel-summary" data-panel-summary>
+              <span data-panel-step>Q1</span>
+              <b data-panel-question>Which route would you choose for this calm walk?</b>
+            </div>
             <form class="ari-question-stack" data-form>
               <section class="ari-question-block" data-q1>
                 <div class="ari-kicker">Q1</div>
@@ -98,6 +109,7 @@
                   <details class="ari-context-details">
                     <summary>Calm walk context</summary>
                     <p>Imagine you are walking somewhere in the city. You are not rushing, and the walking experience matters more than arriving as fast as possible.</p>
+                    <p><b>Situation:</b> <span data-round-scenario></span></p>
                   </details>
                   <div class="ari-choice-grid ari-choice-grid--two">
                     <label class="ari-choice--route-a"><input type="radio" name="q1Choice" value="route_a">Route A</label>
@@ -150,6 +162,31 @@
             </form>
           </aside>
         </main>
+
+        <section class="ari-onboarding" data-onboarding aria-label="Before you start">
+          <div class="ari-onboarding__panel">
+            <div class="ari-kicker">Before you start</div>
+            <h2>Explore the map first.</h2>
+            <ul>
+              <li>Zoom and pan until both routes are clear.</li>
+              <li>Use Fit routes if you lose the comparison.</li>
+              <li>Open Street view if a place needs more context.</li>
+            </ul>
+            <button class="ari-btn ari-btn--primary" data-action="start-round" type="button">Start round 1 →</button>
+          </div>
+        </section>
+
+        <section class="ari-exit-confirm" data-exit-confirm hidden aria-label="Exit confirmation">
+          <div class="ari-exit-confirm__panel">
+            <div class="ari-kicker">Exit test</div>
+            <h2>Leave this session?</h2>
+            <p data-exit-copy>Completed rounds already submitted will stay submitted. This round has not been submitted yet.</p>
+            <div class="ari-exit-confirm__actions">
+              <button class="ari-btn ari-btn--secondary" data-action="keep-testing" type="button">Keep testing</button>
+              <button class="ari-btn ari-btn--primary" data-action="confirm-exit" type="button">Leave test</button>
+            </div>
+          </div>
+        </section>
       </section>
     `;
   }
@@ -169,9 +206,14 @@
       pair: null,
       assignment: null,
       questionStep: 'q1',
+      onboardingComplete: false,
+      completedRounds: 0,
+      panelCollapsed: false,
       map: null,
       routeLayers: null,
+      routeVisuals: { routeA: [], routeB: [] },
       googleOverlays: [],
+      googleRouteVisuals: { routeA: [], routeB: [] },
       standardTiles: null,
       mapProvider: useGoogleMaps ? 'google' : 'leaflet'
     };
@@ -186,15 +228,29 @@
       currentRound: root.querySelector('[data-round-current]'),
       pips: root.querySelector('[data-pips]'),
       mapCanvas: root.querySelector('[data-map-canvas]'),
+      onboarding: root.querySelector('[data-onboarding]'),
+      startRound: root.querySelector('[data-action="start-round"]'),
+      exitConfirm: root.querySelector('[data-exit-confirm]'),
+      exitCopy: root.querySelector('[data-exit-copy]'),
+      keepTesting: root.querySelector('[data-action="keep-testing"]'),
+      confirmExit: root.querySelector('[data-action="confirm-exit"]'),
+      questionCard: root.querySelector('[data-question-card]'),
+      panelToggle: root.querySelector('[data-action="toggle-panel"]'),
+      panelToggleLabel: root.querySelector('[data-panel-toggle-label]'),
+      panelStep: root.querySelector('[data-panel-step]'),
+      panelQuestion: root.querySelector('[data-panel-question]'),
       form: root.querySelector('[data-form]'),
       q1: root.querySelector('[data-q1]'),
       q2: root.querySelector('[data-q2]'),
       q3: root.querySelector('[data-q3]'),
+      scenario: root.querySelector('[data-round-scenario]'),
       submit: root.querySelector('[data-submit]'),
       exit: root.querySelector('[data-action="exit"]'),
       previous: root.querySelector('[data-action="previous"]'),
       zoomIn: root.querySelector('[data-action="zoom-in"]'),
-      zoomOut: root.querySelector('[data-action="zoom-out"]')
+      zoomOut: root.querySelector('[data-action="zoom-out"]'),
+      fitRoutes: root.querySelector('[data-action="fit-routes"]'),
+      streetView: root.querySelector('[data-action="street-view"]')
     };
 
     function renderPips() {
@@ -286,6 +342,61 @@
       state.map.fitBounds(state.routeLayers.getBounds(), fitPadding.leaflet);
     }
 
+    function setRouteFocus(routeKey) {
+      const focusConfig = routeKey
+        ? {
+            routeA: routeKey === 'routeA' ? { opacity: 1, weightBoost: 2 } : { opacity: 0.38, weightBoost: -2 },
+            routeB: routeKey === 'routeB' ? { opacity: 1, weightBoost: 2 } : { opacity: 0.38, weightBoost: -2 }
+          }
+        : {
+            routeA: { opacity: 0.98, weightBoost: 0 },
+            routeB: { opacity: 0.98, weightBoost: 0 }
+          };
+
+      if (state.mapProvider === 'google') {
+        Object.entries(state.googleRouteVisuals).forEach(([key, layers]) => {
+          const config = focusConfig[key];
+          layers.forEach(layer => {
+            const baseWeight = layer.__ariBaseWeight || 7;
+            const baseOpacity = layer.__ariBaseOpacity ?? 0.98;
+            layer.setOptions({
+              strokeOpacity: Math.min(baseOpacity, config.opacity),
+              strokeWeight: Math.max(4, baseWeight + config.weightBoost)
+            });
+          });
+        });
+        return;
+      }
+
+      Object.entries(state.routeVisuals).forEach(([key, layers]) => {
+        const config = focusConfig[key];
+        layers.forEach(layer => {
+          const baseWeight = layer.options.__ariBaseWeight || layer.options.weight || 7;
+          const baseOpacity = layer.options.__ariBaseOpacity ?? layer.options.opacity ?? 0.98;
+          layer.setStyle({
+            opacity: Math.min(baseOpacity, config.opacity),
+            weight: Math.max(4, baseWeight + config.weightBoost)
+          });
+        });
+      });
+    }
+
+    function getStreetViewPoint() {
+      if (state.mapProvider === 'google') {
+        const center = state.map.getCenter();
+        return { lat: center.lat(), lng: center.lng() };
+      }
+      const center = state.map.getCenter();
+      return { lat: center.lat, lng: center.lng };
+    }
+
+    function openStreetView() {
+      if (!state.map) return;
+      const point = getStreetViewPoint();
+      const url = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${point.lat},${point.lng}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
     function drawRoutes(pair) {
       ensureMap();
 
@@ -296,30 +407,37 @@
         const routeA = normalizeLatLngs(pair.routes[state.assignment.routeA].geometry).map(toLatLngObject);
         const routeB = normalizeLatLngs(pair.routes[state.assignment.routeB].geometry).map(toLatLngObject);
 
+        const routeACase = new google.maps.Polyline({
+          path: routeA,
+          map: state.map,
+          strokeColor: '#ffffff',
+          strokeOpacity: 0.82,
+          strokeWeight: 15
+        });
+        const routeBCase = new google.maps.Polyline({
+          path: routeB,
+          map: state.map,
+          strokeColor: '#ffffff',
+          strokeOpacity: 0.82,
+          strokeWeight: 15
+        });
         const routeALine = new google.maps.Polyline({
           path: routeA,
           map: state.map,
           strokeColor: routeAColor,
-          strokeOpacity: 0.95,
-          strokeWeight: 7
+          strokeOpacity: 0.98,
+          strokeWeight: 9
         });
         const routeBLine = new google.maps.Polyline({
           path: routeB,
           map: state.map,
           strokeColor: routeBColor,
-          strokeOpacity: 0,
-          strokeWeight: 7,
-          icons: [{
-            icon: {
-              path: 'M 0,-1 0,1',
-              strokeColor: routeBColor,
-              strokeOpacity: 1,
-              strokeWeight: 5,
-              scale: 3
-            },
-            offset: '0',
-            repeat: '18px'
-          }]
+          strokeOpacity: 0.98,
+          strokeWeight: 6
+        });
+        [routeACase, routeBCase, routeALine, routeBLine].forEach(layer => {
+          layer.__ariBaseWeight = layer.strokeWeight || 7;
+          layer.__ariBaseOpacity = layer.strokeOpacity ?? 0.98;
         });
         const startMarker = new google.maps.Marker({
           position: { lat: pair.origin.lat, lng: pair.origin.lng },
@@ -348,7 +466,11 @@
           }
         });
 
-        state.googleOverlays.push(routeALine, routeBLine, startMarker, endMarker);
+        state.googleRouteVisuals = {
+          routeA: [routeACase, routeALine],
+          routeB: [routeBCase, routeBLine]
+        };
+        state.googleOverlays.push(routeACase, routeBCase, routeALine, routeBLine, startMarker, endMarker);
         requestAnimationFrame(() => {
           fitRoutes();
           setTimeout(fitRoutes, 180);
@@ -373,10 +495,14 @@
 
       const routeA = normalizeLatLngs(pair.routes[state.assignment.routeA].geometry);
       const routeB = normalizeLatLngs(pair.routes[state.assignment.routeB].geometry);
-      L.polyline(routeA, { color: '#ffffff', weight: 11, opacity: 0.76, lineCap: 'round', lineJoin: 'round' }).addTo(state.routeLayers);
-      L.polyline(routeB, { color: '#ffffff', weight: 11, opacity: 0.76, dashArray: '2 12', lineCap: 'round', lineJoin: 'round' }).addTo(state.routeLayers);
-      L.polyline(routeA, { color: routeAColor, weight: 7, opacity: 0.98, lineCap: 'round', lineJoin: 'round' }).addTo(state.routeLayers);
-      L.polyline(routeB, { color: routeBColor, weight: 7, opacity: 0.98, dashArray: '2 12', lineCap: 'round', lineJoin: 'round' }).addTo(state.routeLayers);
+      const routeACase = L.polyline(routeA, { color: '#ffffff', weight: 15, opacity: 0.82, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 15, __ariBaseOpacity: 0.82 }).addTo(state.routeLayers);
+      const routeBCase = L.polyline(routeB, { color: '#ffffff', weight: 15, opacity: 0.82, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 15, __ariBaseOpacity: 0.82 }).addTo(state.routeLayers);
+      const routeALine = L.polyline(routeA, { color: routeAColor, weight: 9, opacity: 0.98, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 9, __ariBaseOpacity: 0.98 }).addTo(state.routeLayers);
+      const routeBLine = L.polyline(routeB, { color: routeBColor, weight: 6, opacity: 0.98, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 6, __ariBaseOpacity: 0.98 }).addTo(state.routeLayers);
+      state.routeVisuals = {
+        routeA: [routeACase, routeALine],
+        routeB: [routeBCase, routeBLine]
+      };
       L.marker([pair.origin.lat, pair.origin.lng], { icon: startIcon, keyboard: false }).addTo(state.routeLayers);
       L.marker([pair.destination.lat, pair.destination.lng], { icon: endIcon, keyboard: false }).addTo(state.routeLayers);
 
@@ -414,10 +540,17 @@
       const sequence = getQuestionSequence();
       if (!sequence.includes(state.questionStep)) state.questionStep = sequence[0];
       const stepIndex = sequence.indexOf(state.questionStep);
+      const questionMeta = {
+        q1: ['Q1', 'Which route would you choose for this calm walk?'],
+        q2: ['Q2', 'Is it worth showing both routes as separate options?'],
+        q3: ['Q3', 'What made one or both routes less suitable?']
+      }[state.questionStep];
 
       els.q1.hidden = state.questionStep !== 'q1';
       els.q2.hidden = state.questionStep !== 'q2';
       els.q3.hidden = state.questionStep !== 'q3';
+      els.panelStep.textContent = questionMeta[0];
+      els.panelQuestion.textContent = questionMeta[1];
       els.previous.hidden = stepIndex === 0;
       els.previous.disabled = stepIndex === 0;
       els.submit.disabled = !isStepComplete(state.questionStep);
@@ -434,6 +567,25 @@
         const input = label.querySelector('input');
         label.classList.toggle('is-selected', !!input && input.checked);
       });
+    }
+
+    function updatePanelState(collapsed) {
+      state.panelCollapsed = collapsed;
+      els.questionCard.classList.toggle('is-collapsed', collapsed);
+      els.panelToggle.setAttribute('aria-expanded', String(!collapsed));
+      els.panelToggleLabel.textContent = collapsed ? 'Expand' : 'Minimize';
+      if (!collapsed) {
+        requestAnimationFrame(() => {
+          if (state.map) fitRoutes();
+        });
+      }
+    }
+
+    function updateExitCopy() {
+      const currentAnswered = isStepComplete(state.questionStep);
+      els.exitCopy.textContent = state.completedRounds > 0
+        ? `You have submitted ${state.completedRounds} round${state.completedRounds === 1 ? '' : 's'}. This round ${currentAnswered ? 'has changes that are not submitted yet.' : 'has not been submitted yet.'}`
+        : 'No rounds have been submitted yet. You can leave now or keep testing.';
     }
 
     function readAnswer() {
@@ -466,8 +618,10 @@
         roundIndex: state.roundIndex
       });
       els.currentRound.textContent = String(state.roundIndex + 1);
+      els.scenario.textContent = state.pair.scenario || 'No specific situation provided.';
       state.questionStep = 'q1';
       els.form.reset();
+      updatePanelState(false);
       updateQuestionFlow();
       renderPips();
       drawRoutes(state.pair);
@@ -488,6 +642,7 @@
 
       els.submit.disabled = true;
       await answerSink(readAnswer());
+      state.completedRounds += 1;
       if (state.roundIndex < state.totalRounds - 1) {
         await loadRound(state.roundIndex + 1);
       } else {
@@ -496,7 +651,27 @@
     });
 
     els.exit.addEventListener('click', () => {
+      updateExitCopy();
+      els.exitConfirm.hidden = false;
+    });
+
+    els.keepTesting.addEventListener('click', () => {
+      els.exitConfirm.hidden = true;
+    });
+
+    els.confirmExit.addEventListener('click', () => {
+      els.exitConfirm.hidden = true;
       if (onExit) onExit();
+    });
+
+    els.startRound.addEventListener('click', () => {
+      state.onboardingComplete = true;
+      els.onboarding.hidden = true;
+      requestAnimationFrame(fitRoutes);
+    });
+
+    els.panelToggle.addEventListener('click', () => {
+      updatePanelState(!state.panelCollapsed);
     });
 
     els.previous.addEventListener('click', () => {
@@ -517,6 +692,17 @@
       if (!state.map) return;
       if (state.mapProvider === 'google') state.map.setZoom(state.map.getZoom() - 1);
       else state.map.zoomOut();
+    });
+
+    els.fitRoutes.addEventListener('click', fitRoutes);
+    els.streetView.addEventListener('click', openStreetView);
+
+    els.form.querySelectorAll('.ari-choice--route-a, .ari-choice--route-b').forEach(label => {
+      const key = label.classList.contains('ari-choice--route-a') ? 'routeA' : 'routeB';
+      label.addEventListener('mouseenter', () => setRouteFocus(key));
+      label.addEventListener('mouseleave', () => setRouteFocus(null));
+      label.addEventListener('focusin', () => setRouteFocus(key));
+      label.addEventListener('focusout', () => setRouteFocus(null));
     });
 
     loadRound(state.roundIndex);
