@@ -40,7 +40,7 @@ Avoid:
 
 ## Color Rules
 
-Core colors in `calm-benchmark.css`:
+Core colors in `src/styles/calm-benchmark.css`:
 
 - Ink: `#101511`
 - Muted text: `#37483F`

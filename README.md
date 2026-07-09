@@ -6,25 +6,43 @@ This package is an implementation-ready frontend slice for the ARI calm-route be
 
 It is intentionally separate from `livemap-routing` for now and should not be created as a GitHub fork. Nothing here modifies the team repo or the deployed `tbt-routing` app. The goal is to give the routing engineer a clean UI integration target: provide fast/calm route geometries in the expected contract, and the UI can render the blinded A/B test.
 
-## Files
+## Repository Structure
 
-- `demo.html`  
+- `demo.html`
   Standalone demo page. Opens on the tester intro/start page, then launches the map-first benchmark.
 
-- `calm-benchmark.js`  
+- `src/app/calm-benchmark.js`
   Framework-agnostic UI module. Exposes `AriCalmBenchmark.mount(root, options)`. Supports a Google Maps adapter when `window.google.maps` is loaded, with Leaflet fallback for private/local use.
 
-- `calm-benchmark.css`  
+- `src/styles/calm-benchmark.css`
   Styles for the map-first layout, question panel, controls, and Leaflet hardening.
 
-- `DATA_CONTRACT.md`  
+- `src/data/mock-route-pairs.js`
+  Demo-only route pair data. Replace this with `routePairProvider` in the product.
+
+- `src/api/`
+  Integration notes for route loading, answer saving, and progress saving.
+
+- `src/maps/`
+  Integration notes for replacing the demo map implementation with the product map.
+
+- `src/answers/`
+  Notes on answer handling and hidden route assignment.
+
+- `docs/DATA_CONTRACT.md`
   Route pair contract the backend/model should return.
 
-- `ANSWER_SCHEMA.md`  
+- `docs/ANSWER_SCHEMA.md`
   Answer payload produced by the UI.
 
-- `DESIGN.md`
+- `docs/DESIGN.md`
   Design-system rules for layout, color, map controls, onboarding, HUD, and responsive behavior.
+
+- `docs/PRODUCT.md`
+  Product intent, tester task, and success criteria.
+
+- `docs/INTEGRATION_CHECKLIST.md`
+  Practical checklist for moving this UI into `livemap-routing`.
 
 ## How to Run Locally
 
@@ -42,7 +60,7 @@ http://127.0.0.1:8787/demo.html
 
 ## How to Ingest Into the Product
 
-1. Copy `calm-benchmark.js` and `calm-benchmark.css` into the frontend/static app.
+1. Copy/adapt `src/app/calm-benchmark.js` and `src/styles/calm-benchmark.css` into the frontend/static app.
 2. Load Leaflet before mounting the benchmark UI.
 3. Create a route in the app, for example `/bench/calm` or `/calm-benchmark`.
 4. Add a root element:
@@ -110,4 +128,4 @@ This UI expects real route geometries as latitude/longitude points. It handles:
 - first-round onboarding and explicit exit confirmation
 - full-screen map-first desktop layout
 
-The routing engineer does not need to implement the questions or UI behavior. They only need to provide route pairs in the route-pair contract.
+The routing engineer does not need to implement the questions or UI behavior. They only need to provide route pairs in the route-pair contract and connect the map/data sinks described in `src/api/` and `src/maps/`.
