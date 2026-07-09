@@ -501,21 +501,11 @@
 .calm-dot--white { background: rgba(255, 255, 255, 0.65); }
 .calm-dot--dim   { background: rgba(255, 255, 255, 0.24); }
 
-@keyframes calm-dot-pulse {
-  0%, 100% { background: #08784D; box-shadow: none; }
-  50%       { background: #0da86a; box-shadow: 0 0 0 3px rgba(8, 120, 77, 0.28), 0 0 10px rgba(8, 120, 77, 0.5); }
-}
-
-.calm-dot--green.is-pulsing {
-  animation: calm-dot-pulse 2s ease-in-out infinite;
-}
-
 .calm-start-card.is-resumed {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 0 0 1.5px rgba(8, 120, 77, 0.35),
-    0 18px 42px rgba(16, 21, 17, 0.16),
-    0 0 48px rgba(8, 120, 77, 0.1);
+  grid-template-areas:
+    "label label"
+    "title form"
+    "medals form";
 }
 
 .calm-start-card > * {
@@ -630,182 +620,120 @@
 .calm-resume-right {
   grid-area: form;
   display: flex;
+  min-width: 0;
   flex-direction: column;
   justify-content: center;
-  gap: 16px;
+  gap: 12px;
 }
 
-.calm-resume-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.calm-resume-player-tag {
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.52);
-}
-
-.calm-resume-player-name {
-  font-size: 1.08rem;
+.calm-resume-meta-line {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.74em;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #fff;
+  font-variant-numeric: tabular-nums;
 }
 
 .calm-resume-pips {
   display: flex;
   gap: 5px;
   align-items: center;
+  min-height: 14px;
 }
 
 .calm-resume-pip {
   flex: 1;
   height: 6px;
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.09);
-  transition: background 200ms, box-shadow 200ms;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .calm-resume-pip.is-done {
-  background: var(--ari-green);
-  box-shadow: 0 0 6px rgba(8, 120, 77, 0.85), 0 0 16px rgba(8, 120, 77, 0.35);
+  background: rgba(255, 255, 255, 0.82);
 }
 
-@keyframes calm-pip-pulse {
-  0%, 100% { background: rgba(8, 120, 77, 0.28); box-shadow: 0 0 4px rgba(8, 120, 77, 0.3); }
-  50% { background: rgba(8, 120, 77, 0.55); box-shadow: 0 0 10px rgba(8, 120, 77, 0.65); }
+.calm-resume-foot {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 0.74em;
 }
 
-.calm-resume-pip.is-next {
-  animation: calm-pip-pulse 1.8s ease-in-out infinite;
-}
-
-.calm-resume-remaining {
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.52);
-}
-
-.calm-resume-remaining strong {
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 1.15em;
-}
-
-.calm-resume-last-played {
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.42);
-  margin-top: 1px;
+.calm-resume-foot em {
+  font-family: var(--ari-serif);
+  font-style: italic;
 }
 
 .calm-resume-clear {
   appearance: none;
   border: none;
   background: transparent;
-  padding: 0;
-  margin-top: 2px;
-  color: rgba(255, 255, 255, 0.28);
-  font: 700 0.56rem/1 var(--ari-font);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  padding: 6px 0;
+  margin: -6px 0 -6px 6px;
+  color: rgba(255, 255, 255, 0.55);
+  font: 600 0.9em/1 var(--ari-font);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
   transition: color 150ms;
 }
 
-.calm-resume-clear:hover { color: rgba(255, 255, 255, 0.52); }
+.calm-resume-clear:hover { color: rgba(255, 255, 255, 0.85); }
 
-.calm-start-row .calm-resume-btn {
-  background: linear-gradient(180deg, rgba(11, 150, 96, 0.92) 0%, #065c3b 100%);
-  color: #fff;
-  border-color: rgba(8, 120, 77, 0.5);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+/* milestone medal shelf — letterpress seals, neutral treatment */
+.calm-medal-shelf {
+  grid-area: medals;
+  display: flex;
+  gap: 18px;
+  align-self: end;
+  padding-top: 2px;
+}
+
+.calm-medal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.calm-medal__seal {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.calm-medal__seal svg {
+  width: 16px;
+  height: 16px;
+}
+
+.calm-medal.is-earned .calm-medal__seal {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: linear-gradient(180deg, #fbfbf2 0%, #d7d8cf 100%);
+  color: #101511;
   box-shadow:
-    0 0 0 4px rgba(8, 120, 77, 0.18),
-    0 14px 30px rgba(0, 0, 0, 0.32),
-    inset 0 2px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -4px 0 rgba(0, 0, 0, 0.22);
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    inset 0 -2px 0 rgba(16, 21, 17, 0.14),
+    0 3px 8px rgba(0, 0, 0, 0.35);
 }
 
-.calm-start-row .calm-resume-btn:hover {
-  background: linear-gradient(180deg, #0eb872 0%, #077346 100%);
-}
-
-/* score display injected into h2 for resume state */
-.calm-start-card h2 .calm-score-main {
-  font-family: var(--ari-font);
-  font-style: normal;
-  font-weight: 900;
-  display: inline-block;
-  font-size: 2.6em;
-  line-height: 0.88;
-  letter-spacing: -0.03em;
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-  text-shadow:
-    0 0 16px rgba(8, 120, 77, 1),
-    0 0 40px rgba(8, 120, 77, 0.55),
-    0 0 80px rgba(8, 120, 77, 0.22);
-}
-
-.calm-start-card h2 .calm-score-denom {
-  font-family: var(--ari-font);
-  font-style: normal;
+.calm-medal__label {
+  font-size: 0.58rem;
   font-weight: 700;
-  font-size: 0.55em;
-  color: rgba(255, 255, 255, 0.26);
-  letter-spacing: 0em;
-  vertical-align: middle;
-}
-
-.calm-start-card h2 .calm-score-sub {
-  display: block;
-  font-family: var(--ari-font);
-  font-style: normal;
-  font-weight: 800;
-  font-size: 0.46em;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(46, 210, 132, 0.92);
-  margin-bottom: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-/* completion / bonus state */
-@keyframes calm-pip-complete {
-  0%, 100% { background: var(--ari-green); box-shadow: 0 0 6px rgba(8, 120, 77, 0.85), 0 0 16px rgba(8, 120, 77, 0.35); }
-  50%       { background: #2ed684; box-shadow: 0 0 10px rgba(46, 214, 132, 1), 0 0 24px rgba(46, 214, 132, 0.55); }
-}
-
-.calm-resume-pips.is-complete .calm-resume-pip.is-done {
-  animation: calm-pip-complete 1.4s ease-in-out infinite;
-}
-
-.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(2)  { animation-delay: 0.1s; }
-.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(3)  { animation-delay: 0.2s; }
-.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(4)  { animation-delay: 0.3s; }
-.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(5)  { animation-delay: 0.4s; }
-.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(6)  { animation-delay: 0.5s; }
-.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(7)  { animation-delay: 0.6s; }
-.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(8)  { animation-delay: 0.7s; }
-.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(9)  { animation-delay: 0.8s; }
-.calm-resume-pips.is-complete .calm-resume-pip.is-done:nth-child(10) { animation-delay: 0.9s; }
-
-.calm-start-card.is-resumed.is-complete {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 0 0 1.5px rgba(46, 210, 132, 0.5),
-    0 18px 42px rgba(16, 21, 17, 0.16),
-    0 0 60px rgba(46, 210, 132, 0.14);
+.calm-medal.is-earned .calm-medal__label {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 @media (max-width: 900px) {
@@ -828,6 +756,14 @@
   .calm-start-card {
     grid-template-columns: 1fr;
     grid-template-areas: "label" "title" "form";
+  }
+
+  .calm-start-card.is-resumed {
+    grid-template-areas: "label" "title" "medals" "form";
+  }
+
+  .calm-medal-shelf {
+    align-self: start;
   }
 
   .calm-start-row {
@@ -1017,12 +953,17 @@
     gap: 8px;
   }
 
-  .calm-start-card h2 .calm-score-main {
-    font-size: 2em;
+  .calm-start-card.is-resumed {
+    grid-template-areas: "label" "title" "medals" "form";
   }
 
-  .calm-resume-right {
-    gap: 12px;
+  .calm-medal-shelf {
+    gap: 14px;
+  }
+
+  .calm-medal__seal {
+    width: 34px;
+    height: 34px;
   }
 
   .calm-resume-pips {

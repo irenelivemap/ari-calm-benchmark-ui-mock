@@ -196,6 +196,29 @@ Primary question:
 
 `Which route would you choose for this calm walk?`
 
+## Intro Start Card States
+
+The dark start card on the intro page has two states that must read as the same surface:
+
+- State 0 (no saved progress): kicker `Start testing`, title `Enter the duel.`, name form on the right.
+- Resume (saved progress): kicker `Welcome back`, title uses the intro number pattern (`4 routes compared.` / `12 routes. Wayfinder.`), progress pips + `Resume →` on the right.
+
+Rules:
+
+- Both states use the intro h2 pattern: bold number in `Outfit`, serif italic phrase in `Newsreader`. No scoreboard numerals, no glow, no all-caps data blocks.
+- Progress pips are neutral white (`rgba(255,255,255,0.82)` done, `0.12` remaining). Never route green/orange — route colors are reserved.
+- The `Resume →` button uses the same neutral bright treatment as `Start test →`.
+- The pips goal is the next milestone (10 → 15 → 20), not a fixed 10. Counting past the goal must keep working.
+- `New session` is a small underlined text link in the footnote line; it clears saved progress. Minimum `rgba(255,255,255,0.55)` text.
+
+## Gamification Rules
+
+- Milestone ranks: 5 `Scout`, 10 `Pathfinder`, 15 `Wayfinder`, 20 `Cartographer`.
+- Medals are letterpress seals: earned = the neutral bright button gradient with ink icon; locked = thin dashed circle with `at N` label. Locked medals stay visible — the next empty slot is the motivator.
+- Celebration happens in words (serif italic rank in the title), not in effects. No neon, no pulsing glow.
+- Reward count only. Never reward speed — no timers or time-based scores, they bias answers.
+- Impact framing in the footnote (`every route sharpens the benchmark`) instead of points language.
+
 ## Exit And Progress Rules
 
 - Exiting affects the whole session, not just the current question.

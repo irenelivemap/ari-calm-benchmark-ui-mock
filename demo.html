@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260709-resume-7">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260709-resume-8">
   <style>
     body {
       margin: 0;
@@ -105,12 +105,13 @@
           </div>
           <div class="calm-start-left">
             <div class="calm-kicker">
-              <span class="calm-icon" id="start-kicker-icon" aria-hidden="true">
+              <span class="calm-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>
               </span>
               <span id="start-kicker-text">Start testing</span>
             </div>
             <h2 id="start-h2">Enter the <span>duel.</span></h2>
+            <div class="calm-medal-shelf calm-hidden" id="medal-shelf" aria-label="Milestones"></div>
           </div>
           <form class="calm-start-form" id="start-form">
             <label for="participant-name">Participant name</label>
@@ -121,17 +122,12 @@
             <p>Used only to label this session.</p>
           </form>
           <div class="calm-resume-right calm-hidden" id="resume-right">
-            <div class="calm-resume-meta">
-              <span class="calm-resume-player-tag">Player</span>
-              <span class="calm-resume-player-name" id="resume-name"></span>
-              <span class="calm-resume-last-played" id="resume-last-played"></span>
-              <button class="calm-resume-clear" id="resume-clear" type="button">New session</button>
-            </div>
+            <p class="calm-resume-meta-line" id="resume-meta-line"></p>
             <div class="calm-resume-pips" id="resume-pips"></div>
-            <div class="calm-resume-remaining" id="resume-remaining"></div>
             <div class="calm-start-row">
-              <button id="resume-test" type="button" class="calm-resume-btn">Resume →</button>
+              <button id="resume-test" type="button">Resume →</button>
             </div>
+            <p class="calm-resume-foot"><span id="resume-foot-text"></span><button class="calm-resume-clear" id="resume-clear" type="button">New session</button></p>
           </div>
         </section>
       </section>
@@ -142,8 +138,8 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="./src/data/mock-route-pairs.js?v=20260709-structure-1"></script>
-  <script src="./src/maps/map-adapter.js?v=20260709-resume-7"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260709-resume-7"></script>
+  <script src="./src/maps/map-adapter.js?v=20260709-resume-8"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260709-resume-8"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -189,6 +185,14 @@
       return window.__ariGoogleMapsPromise;
     }
 
+    const MEDAL_SVG = attrs => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${attrs}</svg>`;
+    const MILESTONES = [
+      { at: 5,  name: 'Scout',        icon: MEDAL_SVG('<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>') },
+      { at: 10, name: 'Pathfinder',   icon: MEDAL_SVG('<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>') },
+      { at: 15, name: 'Wayfinder',    icon: MEDAL_SVG('<polygon points="3 11 22 2 13 21 11 13 3 11"/>') },
+      { at: 20, name: 'Cartographer', icon: MEDAL_SVG('<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>') }
+    ];
+
     function checkResumeState() {
       const raw = localStorage.getItem(PROGRESS_STORAGE);
       let progress = null;
@@ -197,66 +201,61 @@
       const hasProgress = progress && (progress.completedRounds > 0 || progress.roundIndex > 0);
 
       const card = document.querySelector('.calm-start-card');
-      const greenDot = document.getElementById('start-dot-green');
+      const shelf = document.getElementById('medal-shelf');
 
       document.getElementById('start-form').classList.toggle('calm-hidden', !!hasProgress);
       document.getElementById('resume-right').classList.toggle('calm-hidden', !hasProgress);
+      shelf.classList.toggle('calm-hidden', !hasProgress);
       card.classList.toggle('is-resumed', !!hasProgress);
-      greenDot.classList.toggle('is-pulsing', !!hasProgress);
 
       if (hasProgress) {
         savedProgress = progress;
         const count = progress.completedRounds || 0;
-        const total = 10;
-        const pad = n => String(n).padStart(2, '0');
-        const isComplete = count >= total;
-        const bonus = Math.max(0, count - total);
-        const remaining = Math.max(0, total - count);
+        const rank = [...MILESTONES].reverse().find(m => count >= m.at) || null;
+        const next = MILESTONES.find(m => count < m.at) || null;
+        const goal = next ? next.at : MILESTONES[MILESTONES.length - 1].at;
 
-        document.getElementById('start-kicker-icon').innerHTML =
-          `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`;
-        document.getElementById('start-kicker-text').textContent = 'Session saved';
+        document.getElementById('start-kicker-text').textContent = 'Welcome back';
+        document.getElementById('start-h2').innerHTML = rank
+          ? `${count} <span>routes. ${rank.name}.</span>`
+          : `${count} <span>route${count === 1 ? '' : 's'} compared.</span>`;
 
-        let scoreSub = 'Routes compared';
-        if (isComplete && bonus === 0) scoreSub = '★  Mission complete';
-        else if (bonus > 0) scoreSub = `★  +${bonus} bonus route${bonus === 1 ? '' : 's'}`;
-        document.getElementById('start-h2').innerHTML =
-          `<span class="calm-score-sub">${scoreSub}</span>` +
-          `<span class="calm-score-main">${pad(count)}<span class="calm-score-denom"> /${total}</span></span>`;
-
-        document.getElementById('resume-name').textContent = (progress.participantName || '').toUpperCase();
-
-        const lastPlayedEl = document.getElementById('resume-last-played');
-        if (lastPlayedEl && progress.savedAt) {
+        let played = '';
+        if (progress.savedAt) {
           const saved = new Date(progress.savedAt);
           const isToday = saved.toDateString() === new Date().toDateString();
-          lastPlayedEl.textContent = `Last played: ${isToday ? 'today' : saved.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+          played = ` · Last played ${isToday ? 'today' : saved.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
         }
-
-        const remainingEl = document.getElementById('resume-remaining');
-        if (remainingEl) {
-          if (isComplete && bonus === 0) remainingEl.innerHTML = `Goal reached! Keep going for more data`;
-          else if (bonus > 0) remainingEl.innerHTML = `<strong>+${bonus}</strong> beyond the goal — every route helps`;
-          else remainingEl.innerHTML = `<strong>${remaining}</strong> route${remaining === 1 ? '' : 's'} remaining`;
-        }
+        document.getElementById('resume-meta-line').textContent =
+          `${(progress.participantName || '').toUpperCase()}${played}`;
 
         const pipsEl = document.getElementById('resume-pips');
-        if (pipsEl) {
-          pipsEl.innerHTML = '';
-          pipsEl.classList.toggle('is-complete', isComplete);
-          for (let i = 0; i < total; i++) {
-            const pip = document.createElement('div');
-            if (i < Math.min(count, total)) pip.className = 'calm-resume-pip is-done';
-            else if (i === count) pip.className = 'calm-resume-pip is-next';
-            else pip.className = 'calm-resume-pip';
-            pipsEl.appendChild(pip);
-          }
+        pipsEl.innerHTML = '';
+        for (let i = 0; i < goal; i++) {
+          const pip = document.createElement('div');
+          pip.className = 'calm-resume-pip' + (i < count ? ' is-done' : '');
+          pipsEl.appendChild(pip);
         }
 
-        card.classList.toggle('is-complete', isComplete);
+        const footEl = document.getElementById('resume-foot-text');
+        if (next) {
+          const left = next.at - count;
+          footEl.innerHTML = `${left} more to <em>${next.name}</em> — every route sharpens the benchmark.`;
+        } else {
+          footEl.innerHTML = `Every route beyond ${goal} sharpens the benchmark.`;
+        }
+
+        shelf.innerHTML = '';
+        MILESTONES.forEach(m => {
+          const earned = count >= m.at;
+          const medal = document.createElement('div');
+          medal.className = 'calm-medal' + (earned ? ' is-earned' : '');
+          medal.innerHTML =
+            `<span class="calm-medal__seal" aria-hidden="true">${m.icon}</span>` +
+            `<span class="calm-medal__label">${earned ? m.name : `at ${m.at}`}</span>`;
+          shelf.appendChild(medal);
+        });
       } else {
-        document.getElementById('start-kicker-icon').innerHTML =
-          `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>`;
         document.getElementById('start-kicker-text').textContent = 'Start testing';
         document.getElementById('start-h2').innerHTML = `Enter the <span>duel.</span>`;
       }
