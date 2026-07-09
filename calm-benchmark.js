@@ -103,7 +103,7 @@
                 <button data-action="zoom-out" type="button" aria-label="Zoom out">-</button>
               </div>
               <div class="ari-map__tools" aria-label="Map tools">
-                <button class="ari-icon-btn ari-icon-btn--fit" data-action="fit-routes" type="button" aria-label="Fit routes" title="Fit routes"><span aria-hidden="true"></span></button>
+                <button class="ari-icon-btn ari-icon-btn--fit" data-action="fit-routes" type="button" aria-label="See full routes" title="See full routes"><span aria-hidden="true"></span></button>
               </div>
               <div class="ari-street-card" data-street-card hidden>
                 <button data-action="open-street-view" type="button">Open Street View</button>
@@ -295,8 +295,8 @@
       {
         id: 'fit',
         target: () => els.fitRoutes,
-        title: 'Bring both routes back.',
-        copy: 'Tap Fit routes if you lose the comparison while exploring.'
+        title: 'See the full routes again.',
+        copy: 'Use this after moving or zooming the map to fit both routes back on screen.'
       },
       {
         id: 'street',
