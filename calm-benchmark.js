@@ -86,14 +86,6 @@
   function buildShell(root, totalRounds) {
     root.innerHTML = `
       <section class="ari-benchmark" aria-label="ARI calm route benchmark">
-        <header class="ari-benchmark__top">
-          <div class="ari-benchmark__round">
-            <button class="ari-btn ari-btn--secondary" data-action="exit" type="button">Exit test</button>
-            <span class="ari-round-chip">Round <b data-round-current>1</b> / <span data-round-total>${totalRounds}</span></span>
-          </div>
-          <div class="ari-pips" data-pips></div>
-        </header>
-
         <main class="ari-benchmark__grid">
           <section class="ari-map-card" aria-label="Route map">
             <div class="ari-map" data-map>
@@ -113,7 +105,12 @@
           </section>
 
           <aside class="ari-question-card" aria-label="Benchmark questions" data-question-card>
-            <button class="ari-panel-toggle" data-action="toggle-panel" type="button" aria-expanded="true" aria-label="Minimize question panel" title="Minimize question panel"></button>
+            <div class="ari-card-header">
+              <button class="ari-hud-exit" data-action="exit" type="button" aria-label="Exit test">&times;</button>
+              <span class="ari-hud-sep" aria-hidden="true"></span>
+              <div class="ari-round-chip"><span class="ari-round-kicker">Round</span> <b data-round-current>01</b> <span class="ari-round-slash" aria-hidden="true">/</span> <span data-round-total>${String(totalRounds).padStart(2, '0')}</span></div>
+              <button class="ari-panel-handle" data-action="toggle-panel" type="button" aria-expanded="true" aria-label="Minimize question panel" title="Minimize question panel"></button>
+            </div>
             <div class="ari-panel-summary" data-panel-summary>
               <span data-panel-step>Q1</span>
               <b data-panel-question>Which route would you choose for this calm walk?</b>
@@ -184,14 +181,13 @@
           <div class="ari-onboarding__spotlight" data-onboarding-spotlight aria-hidden="true"></div>
           <div class="ari-onboarding__coach" role="dialog" aria-labelledby="ari-onboarding-title" aria-describedby="ari-onboarding-copy">
             <div class="ari-onboarding__top">
-              <div class="ari-kicker" data-onboarding-count>1 / 4</div>
-              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Close onboarding" title="Close onboarding">×</button>
+              <div class="ari-onboarding__dots" data-onboarding-dots></div>
+              <button class="ari-onboarding__skip" data-action="skip-onboarding" type="button" aria-label="Skip tutorial">Skip</button>
             </div>
             <h2 id="ari-onboarding-title" data-onboarding-title>Zoom in or out.</h2>
             <p id="ari-onboarding-copy" data-onboarding-copy>Use + and - when you need to inspect streets more closely.</p>
             <div class="ari-onboarding__actions">
-              <button class="ari-onboarding__back" data-action="previous-onboarding" type="button">Back</button>
-              <button class="ari-btn ari-btn--primary" data-action="next-onboarding" type="button">OK</button>
+              <button class="ari-btn ari-btn--primary" data-action="next-onboarding" type="button">Got it →</button>
             </div>
           </div>
         </section>
@@ -249,16 +245,14 @@
 
     const els = {
       currentRound: root.querySelector('[data-round-current]'),
-      pips: root.querySelector('[data-pips]'),
       mapCanvas: root.querySelector('[data-map-canvas]'),
       onboarding: root.querySelector('[data-onboarding]'),
       onboardingSpotlight: root.querySelector('[data-onboarding-spotlight]'),
       onboardingCoach: root.querySelector('.ari-onboarding__coach'),
-      onboardingCount: root.querySelector('[data-onboarding-count]'),
+      onboardingDots: root.querySelector('[data-onboarding-dots]'),
       onboardingTitle: root.querySelector('[data-onboarding-title]'),
       onboardingCopy: root.querySelector('[data-onboarding-copy]'),
       skipOnboarding: root.querySelector('[data-action="skip-onboarding"]'),
-      previousOnboarding: root.querySelector('[data-action="previous-onboarding"]'),
       nextOnboarding: root.querySelector('[data-action="next-onboarding"]'),
       exitConfirm: root.querySelector('[data-exit-confirm]'),
       exitCopy: root.querySelector('[data-exit-copy]'),
@@ -312,15 +306,6 @@
         final: true
       }
     ];
-
-    function renderPips() {
-      els.pips.innerHTML = '';
-      for (let i = 0; i < state.totalRounds; i += 1) {
-        const pip = document.createElement('span');
-        pip.className = i < state.roundIndex ? 'is-done' : i === state.roundIndex ? 'is-now' : '';
-        els.pips.appendChild(pip);
-      }
-    }
 
     function ensureMap() {
       if (state.map) return;
@@ -510,12 +495,34 @@
       if (!targetRect) return;
 
       els.onboarding.dataset.step = step.id;
-      els.onboardingCount.textContent = `${state.onboardingStepIndex + 1} / ${onboardingSteps.length}`;
       els.onboardingTitle.textContent = step.title;
       els.onboardingCopy.textContent = step.copy;
-      els.nextOnboarding.textContent = step.final ? 'Start round →' : 'OK';
-      els.previousOnboarding.hidden = state.onboardingStepIndex === 0;
-      els.previousOnboarding.disabled = state.onboardingStepIndex === 0;
+      els.nextOnboarding.textContent = step.final ? 'Start round →' : 'Got it →';
+
+      els.onboardingDots.innerHTML = '';
+      onboardingSteps.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'ari-onboarding__dot';
+        if (i < state.onboardingStepIndex) {
+          dot.classList.add('is-done');
+          dot.setAttribute('aria-label', `Go to step ${i + 1}`);
+          dot.addEventListener('click', () => {
+            state.onboardingStepIndex = i;
+            renderOnboardingStep();
+          });
+        } else if (i === state.onboardingStepIndex) {
+          dot.classList.add('is-current');
+          dot.setAttribute('aria-label', `Step ${i + 1} of ${onboardingSteps.length}`);
+          dot.setAttribute('aria-current', 'step');
+          dot.disabled = true;
+        } else {
+          dot.setAttribute('aria-label', `Step ${i + 1}`);
+          dot.disabled = true;
+        }
+        els.onboardingDots.appendChild(dot);
+      });
+
       placeOnboardingStep(targetRect);
     }
 
@@ -876,15 +883,14 @@
         sessionId: state.sessionId,
         roundIndex: state.roundIndex
       });
-      els.currentRound.textContent = String(state.roundIndex + 1);
+      els.currentRound.textContent = String(state.roundIndex + 1).padStart(2, '0');
       els.scenario.textContent = state.pair.scenario || 'No specific situation provided.';
       state.questionStep = 'q1';
       state.streetViewPoint = null;
       els.streetCard.hidden = true;
       els.form.reset();
-      updatePanelState(false);
+      updatePanelState(!state.onboardingComplete);
       updateQuestionFlow();
-      renderPips();
       drawRoutes(state.pair);
       if (!state.onboardingComplete) {
         state.onboardingStepIndex = 0;
@@ -951,18 +957,19 @@
       renderOnboardingStep();
     });
 
-    els.previousOnboarding.addEventListener('click', () => {
-      if (state.onboardingStepIndex <= 0) return;
-      state.onboardingStepIndex -= 1;
-      renderOnboardingStep();
-    });
-
     els.skipOnboarding.addEventListener('click', () => {
       finishOnboarding();
     });
 
     els.panelToggle.addEventListener('click', () => {
       updatePanelState(!state.panelCollapsed);
+    });
+
+    els.questionCard.addEventListener('click', (e) => {
+      if (!state.panelCollapsed) return;
+      if (e.target.closest('[data-action="toggle-panel"]')) return;
+      if (e.target.closest('[data-action="exit"]')) return;
+      updatePanelState(false);
     });
 
     els.previous.addEventListener('click', () => {

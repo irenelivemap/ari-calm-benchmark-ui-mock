@@ -137,8 +137,10 @@ Behavior:
 - Onboarding uses a spotlight and a nearby coach tooltip.
 - The overlay must not block map controls or route interaction.
 - The coach tooltip remains clickable.
-- Users can advance with `OK`, go back with `Back`, or close with `x`.
-- The `x` closes onboarding and keeps the question panel collapsed.
+- Users advance with `Got it →` (or `Start round →` on the final step).
+- Users go back by clicking a previously visited dot in the header row.
+- Users skip by clicking the `Skip` text link in the header row.
+- Skipping closes onboarding and keeps the question panel collapsed.
 - The final onboarding step can expand the question panel to show where answers happen.
 
 Spotlight:
@@ -166,20 +168,24 @@ The benchmark HUD should be minimal and readable over the map.
 Rules:
 
 - Do not make status text look like a button.
-- `Round 1 / 10` is status, not an action.
-- Exit should be compact and should not compete with the route task.
-- Prefer icon-only exit (`x`) if the UI becomes cluttered, with accessible label `Exit test`.
-- If using a scoreboard style, it should feel like a compact game HUD, not a group of large buttons.
-- Avoid heavy black containers unless they clarify hierarchy.
+- `ROUND 01 / 10` is status, not an action — `pointer-events: none`, no hover, no cursor.
+- Exit is an icon-only `×` button with accessible label `Exit test`. It must not compete with the route task.
+- The HUD pill and question panel both use dark glass (`rgba(10,12,11,0.88)` + `backdrop-filter: blur`) as a unified overlay system. This is intentional — both are overlay surfaces on the map and should read as the same design language.
+- The HUD pill is `inline-flex` with the exit button on the left, a thin separator, and the round indicator on the right.
+- Round numbers are zero-padded (`01`, `02` … `10`) for a scoreboard feel.
+- `ROUND` label uses `rgba(255,255,255,0.55)` minimum — do not go below this on the dark pill or contrast will fail.
 
-Open question:
+Implemented pattern:
 
-- The final HUD style is still being explored. Current direction: a minimal arcade HUD with an icon-only exit and a non-interactive round indicator, for example `[x] ROUND 01 / 10`.
+```
+[ × │ ROUND 01 / 10 ]
+```
 
 ## Question Panel Rules
 
 - The map remains the main focus.
 - The panel should be collapsible/minimizable without adding extra text labels.
+- When collapsed, the panel shows a one-line summary of the current question step label and question text, so the tester knows where they are without expanding.
 - Route A and Route B answer buttons use route colors.
 - Other answer buttons use neutral button styling.
 - `Next question` is clearer than `Submit answer` when the user is moving through follow-up questions.
