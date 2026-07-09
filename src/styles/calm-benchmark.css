@@ -607,16 +607,86 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 10px;
+  gap: 16px;
 }
 
-.calm-resume-name {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.46);
-  font-size: 0.72rem;
+.calm-resume-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.calm-resume-player-tag {
+  font-size: 0.6rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.calm-resume-player-name {
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.calm-resume-pips {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.calm-resume-pip {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.09);
+  transition: background 200ms, box-shadow 200ms;
+}
+
+.calm-resume-pip.is-done {
+  background: var(--ari-green);
+  box-shadow: 0 0 6px rgba(8, 120, 77, 0.85), 0 0 16px rgba(8, 120, 77, 0.35);
+}
+
+/* score display injected into h2 for resume state */
+.calm-start-card h2 .calm-score-main {
+  font-family: var(--ari-font);
+  font-style: normal;
+  font-weight: 900;
+  display: inline-block;
+  font-size: 2.6em;
+  line-height: 0.88;
+  letter-spacing: -0.03em;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-shadow:
+    0 0 16px rgba(8, 120, 77, 1),
+    0 0 40px rgba(8, 120, 77, 0.55),
+    0 0 80px rgba(8, 120, 77, 0.22);
+}
+
+.calm-start-card h2 .calm-score-denom {
+  font-family: var(--ari-font);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.22);
+  letter-spacing: -0.01em;
+}
+
+.calm-start-card h2 .calm-score-sub {
+  display: block;
+  font-family: var(--ari-font);
+  font-style: normal;
+  font-weight: 800;
+  font-size: 0.46em;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(8, 120, 77, 0.9);
+  margin-top: 12px;
 }
 
 @media (max-width: 900px) {
