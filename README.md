@@ -23,6 +23,9 @@ It is intentionally separate from `livemap-routing` for now and should not be cr
 - `ANSWER_SCHEMA.md`  
   Answer payload produced by the UI.
 
+- `DESIGN.md`
+  Design-system rules for layout, color, map controls, onboarding, HUD, and responsive behavior.
+
 ## How to Run Locally
 
 From this folder:
