@@ -86,16 +86,19 @@
                 <button data-action="zoom-in" type="button" aria-label="Zoom in">+</button>
                 <button data-action="zoom-out" type="button" aria-label="Zoom out">-</button>
               </div>
-              <div class="ari-map__note"><b>Inspect both routes.</b> Zoom before choosing. The routes stay unlabeled on purpose.</div>
             </div>
           </section>
 
           <aside class="ari-question-card" aria-label="Benchmark questions">
             <form class="ari-question-stack" data-form>
-              <section class="ari-question-block">
+              <section class="ari-question-block" data-q1>
                 <div class="ari-kicker">Q1</div>
                 <fieldset>
-                  <legend>Which route would you choose in this situation?</legend>
+                  <legend>Which route would you choose for this calm walk?</legend>
+                  <details class="ari-context-details">
+                    <summary>Calm walk context</summary>
+                    <p>Imagine you are walking somewhere in the city. You are not rushing, and the walking experience matters more than arriving as fast as possible.</p>
+                  </details>
                   <div class="ari-choice-grid ari-choice-grid--two">
                     <label class="ari-choice--route-a"><input type="radio" name="q1Choice" value="route_a">Route A</label>
                     <label class="ari-choice--route-b"><input type="radio" name="q1Choice" value="route_b">Route B</label>
@@ -140,14 +143,9 @@
                 </fieldset>
               </section>
 
-              <details class="ari-note-details">
-                <summary>Anything to add?</summary>
-                <label class="ari-free-note"><span>Optional note</span><textarea name="note" placeholder="Tell us more"></textarea></label>
-              </details>
-
               <div class="ari-actions">
                 <button class="ari-btn ari-btn--secondary" data-action="previous" type="button">Back</button>
-                <button class="ari-btn ari-btn--primary" data-submit type="submit" disabled>Submit answer</button>
+                <button class="ari-btn ari-btn--primary" data-submit type="submit" disabled>Next question →</button>
               </div>
             </form>
           </aside>
@@ -170,6 +168,7 @@
       totalRounds: options.totalRounds || DEFAULT_TOTAL_ROUNDS,
       pair: null,
       assignment: null,
+      questionStep: 'q1',
       map: null,
       routeLayers: null,
       googleOverlays: [],
@@ -188,6 +187,7 @@
       pips: root.querySelector('[data-pips]'),
       mapCanvas: root.querySelector('[data-map-canvas]'),
       form: root.querySelector('[data-form]'),
+      q1: root.querySelector('[data-q1]'),
       q2: root.querySelector('[data-q2]'),
       q3: root.querySelector('[data-q3]'),
       submit: root.querySelector('[data-submit]'),
@@ -386,13 +386,50 @@
       });
     }
 
-    function updateConditionalQuestions() {
+    function getQ1Choice() {
+      return els.form.querySelector('input[name="q1Choice"]:checked')?.value;
+    }
+
+    function getQuestionSequence() {
+      const selected = getQ1Choice();
+      const sequence = ['q1'];
+      if (selected === 'route_a' || selected === 'route_b' || selected === 'either') {
+        sequence.push('q2');
+      }
+      if (selected === 'route_a' || selected === 'route_b' || selected === 'neither') {
+        sequence.push('q3');
+      }
+      return sequence;
+    }
+
+    function isStepComplete(step) {
+      if (step === 'q1') return !!getQ1Choice();
+      if (step === 'q2') return !!els.form.querySelector('input[name="q2Separate"]:checked');
+      if (step === 'q3') return !!els.form.querySelector('input[name="q3Issues"]:checked');
+      return false;
+    }
+
+    function updateQuestionFlow() {
       const selected = els.form.querySelector('input[name="q1Choice"]:checked')?.value;
-      const showQ2 = selected === 'route_a' || selected === 'route_b' || selected === 'either';
-      const showQ3 = selected === 'route_a' || selected === 'route_b' || selected === 'neither';
-      els.q2.hidden = !showQ2;
-      els.q3.hidden = !showQ3;
-      els.submit.disabled = !selected;
+      const sequence = getQuestionSequence();
+      if (!sequence.includes(state.questionStep)) state.questionStep = sequence[0];
+      const stepIndex = sequence.indexOf(state.questionStep);
+
+      els.q1.hidden = state.questionStep !== 'q1';
+      els.q2.hidden = state.questionStep !== 'q2';
+      els.q3.hidden = state.questionStep !== 'q3';
+      els.previous.hidden = stepIndex === 0;
+      els.previous.disabled = stepIndex === 0;
+      els.submit.disabled = !isStepComplete(state.questionStep);
+      if (state.questionStep === 'q1' && !selected) {
+        els.submit.textContent = 'Next question →';
+      } else if (stepIndex < sequence.length - 1) {
+        els.submit.textContent = 'Next question →';
+      } else if (state.roundIndex < state.totalRounds - 1) {
+        els.submit.textContent = selected === 'hard_to_judge' ? 'Next round →' : 'Finish round →';
+      } else {
+        els.submit.textContent = 'Finish test →';
+      }
       els.form.querySelectorAll('label').forEach(label => {
         const input = label.querySelector('input');
         label.classList.toggle('is-selected', !!input && input.checked);
@@ -416,7 +453,7 @@
         q2Separate,
         q3Issues,
         q3Note: form.get('q3Note') || '',
-        note: form.get('note') || '',
+        note: '',
         createdAt: new Date().toISOString()
       };
     }
@@ -429,16 +466,26 @@
         roundIndex: state.roundIndex
       });
       els.currentRound.textContent = String(state.roundIndex + 1);
+      state.questionStep = 'q1';
       els.form.reset();
-      updateConditionalQuestions();
+      updateQuestionFlow();
       renderPips();
-      els.previous.disabled = state.roundIndex === 0;
       drawRoutes(state.pair);
     }
 
-    els.form.addEventListener('change', updateConditionalQuestions);
+    els.form.addEventListener('change', updateQuestionFlow);
     els.form.addEventListener('submit', async event => {
       event.preventDefault();
+      const sequence = getQuestionSequence();
+      const stepIndex = sequence.indexOf(state.questionStep);
+      if (!isStepComplete(state.questionStep)) return;
+
+      if (stepIndex < sequence.length - 1) {
+        state.questionStep = sequence[stepIndex + 1];
+        updateQuestionFlow();
+        return;
+      }
+
       els.submit.disabled = true;
       await answerSink(readAnswer());
       if (state.roundIndex < state.totalRounds - 1) {
@@ -453,7 +500,12 @@
     });
 
     els.previous.addEventListener('click', () => {
-      if (state.roundIndex > 0) loadRound(state.roundIndex - 1);
+      const sequence = getQuestionSequence();
+      const stepIndex = sequence.indexOf(state.questionStep);
+      if (stepIndex > 0) {
+        state.questionStep = sequence[stepIndex - 1];
+        updateQuestionFlow();
+      }
     });
 
     els.zoomIn.addEventListener('click', () => {
