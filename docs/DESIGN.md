@@ -57,6 +57,7 @@ Rules:
 - Secondary buttons should be subtle but visibly clickable.
 - Status chips should use neutral text and transparent or very low-emphasis backgrounds.
 - Check contrast whenever text sits on tinted or dark surfaces.
+- On dark glass surfaces, readable text must not go below `rgba(255,255,255,0.84)`. Decorative separators, borders, and disabled states may be lower, but labels, status, goals, and helper copy may not.
 
 ## Typography
 
@@ -77,6 +78,7 @@ Rules:
   - Secondary/icon button labels: around `0.72rem` to `0.78rem`.
   - Progress/status labels: around `0.68rem` to `0.76rem`.
 - Use tabular numbers for round/progress indicators.
+- Compact HUD/status text must be at least `0.72rem` on mobile and `0.76rem` on desktop. Anything smaller is decorative only and cannot carry task-critical information.
 
 ## Layout Rules
 
@@ -85,6 +87,16 @@ Intro page:
 - Header, intro text, cards, and start card must share the same content width.
 - On mobile, the session card appears before the start card.
 - Avoid repeating the same information in the hero, cards, and start section.
+- The `How it works` and `Session` overview cards are collapsible from the first visit. They start expanded for new testers and collapsed after at least one route has been compared.
+- Compact rows must have a single visible alignment contract: icon, label, and action control share one center line. Hidden expanded content must not leave margins, gaps, or padding inside the compact row.
+
+Alignment QA:
+
+- Elements that must share a center line can opt into the browser check with the same `data-align-group` value.
+- Open `demo.html?qa=alignment` after changing compact rows, headers, HUD pills, or button groups. This QA mode forces overview cards into their compact state before measuring.
+- Run `window.ariCheckAlignment()` in the browser console when checking the current visible state manually.
+- A group fails if its vertical center drift is more than `1px`.
+- If a hidden element is visually collapsed, also collapse its spacing (`gap`, margin, padding, line-height side effects), or remove it from layout.
 
 Benchmark screen:
 
@@ -168,17 +180,19 @@ The benchmark HUD should be minimal and readable over the map.
 Rules:
 
 - Do not make status text look like a button.
-- `ROUND 01 / 10` is status, not an action — `pointer-events: none`, no hover, no cursor.
+- Route progress is status, not an action — `pointer-events: none`, no hover, no cursor.
 - Exit is an icon-only `×` button with accessible label `Exit test`. It must not compete with the route task.
 - The HUD pill and question panel both use dark glass (`rgba(10,12,11,0.88)` + `backdrop-filter: blur`) as a unified overlay system. This is intentional — both are overlay surfaces on the map and should read as the same design language.
-- The HUD pill is `inline-flex` with the exit button on the left, a thin separator, and the round indicator on the right.
-- Round numbers are zero-padded (`01`, `02` … `10`) for a scoreboard feel.
-- `ROUND` label uses `rgba(255,255,255,0.55)` minimum — do not go below this on the dark pill or contrast will fail.
+- The HUD pill is `inline-flex` with the exit button on the left, a thin separator, route number, and compact numbered medal targets.
+- Route numbers are zero-padded (`01`, `02` … `10`) for a scoreboard feel.
+- Do not use `Route X / Y` when the target can expand. Use the current route number plus compact numbered medal targets.
+- Do not explain medal names in the active HUD. Show numbered medal targets (`5`, `10`, `15`, `20`) and keep names/explanations on the resume card.
+- Earned HUD medals use the bright metal treatment. Locked medals stay dark. The next target gets a slightly brighter ring.
 
 Implemented pattern:
 
 ```
-[ × │ ROUND 01 / 10 ]
+[ × │ ROUTE 011  5 10 15 20 ]
 ```
 
 ## Question Panel Rules
@@ -210,15 +224,15 @@ Rules:
 - The `Resume →` button uses the same neutral bright treatment as `Start test →`.
 - The pips goal is the next milestone (10 → 15 → 20), not a fixed 10. Counting past the goal must keep working.
 - There is no `New session` / reset control on the card. Clearing progress is a dev action (localStorage), not a tester affordance.
-- Contrast floor on the dark card: body and footnote text at `rgba(255,255,255,0.84)` minimum, small-caps labels at `0.72` minimum. The old `0.55` floor was too low for small text — reserve values below `0.72` for decorative elements only, never for text that must be read.
+- Contrast floor on the dark card: body text at `rgba(255,255,255,0.84)` minimum, small-caps labels at `0.72` minimum. The old `0.55` floor was too low for small text — reserve values below `0.72` for decorative elements only, never for text that must be read.
 
 ## Gamification Rules
 
 - Milestone ranks: 5 `Scout`, 10 `Pathfinder`, 15 `Wayfinder`, 20 `Cartographer`.
-- Medals are letterpress seals: earned = the neutral bright button gradient with ink icon; locked = thin dashed circle with `at N` label. Locked medals stay visible — the next empty slot is the motivator.
+- Medals are letterpress seals: earned = the neutral bright button gradient with ink icon; locked = dark/desaturated seal. Locked medals stay visible — the next empty slot is the motivator.
+- Resume-card medals are buttons. The front shows the icon and medal name; tapping/clicking flips the medal to show the route count needed to earn it.
 - Celebration happens in words (serif italic rank in the title), not in effects. No neon, no pulsing glow.
 - Reward count only. Never reward speed — no timers or time-based scores, they bias answers.
-- Impact framing in the footnote (`every route sharpens the benchmark`) instead of points language.
 
 ## Exit And Progress Rules
 
@@ -268,3 +282,5 @@ Check every UI change against this list:
 - Is there any repeated or unnecessary copy?
 - Does the change work on both laptop and mobile?
 - Does the UI still feel subtly arcade without becoming cluttered?
+- Are all task-critical labels readable in a screenshot at 100% zoom without enlarging the image?
+- Does any compact HUD/status text wrap, truncate, or drop below the minimum opacity/size rules above?
