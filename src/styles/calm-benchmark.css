@@ -9,6 +9,9 @@
   --ari-route-a: #C84720;
   --ari-amber-deep: #6F3218;
   --ari-hairline: rgba(16, 21, 17, 0.14);
+  --ari-hairline-warm: rgba(111, 50, 24, 0.28);
+  --ari-warm-ink: #4b3729;
+  --ari-warm-muted: #5b4436;
   --ari-radius-card: 30px;
   --ari-radius-inner: 22px;
   --ari-font: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -72,6 +75,26 @@ html {
   box-shadow: 0 2px 8px rgba(16, 21, 17, 0.1);
 }
 
+.calm-tabs button:disabled {
+  color: rgba(16, 21, 17, 0.32);
+  cursor: default;
+}
+
+.calm-intro-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.calm-brand {
+  color: var(--ari-muted);
+  font-size: 0.74em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .calm-hero {
   display: grid;
   width: 100%;
@@ -126,12 +149,12 @@ html {
 
 .calm-route-token--a {
   color: var(--ari-route-a);
-  animation: calm-route-a-swap 5.2s cubic-bezier(.2, .8, .2, 1) infinite;
+  animation: calm-route-a-swap 8s cubic-bezier(.2, .8, .2, 1) infinite;
 }
 
 .calm-route-token--b {
   color: var(--ari-green);
-  animation: calm-route-b-swap 5.2s cubic-bezier(.2, .8, .2, 1) infinite;
+  animation: calm-route-b-swap 8s cubic-bezier(.2, .8, .2, 1) infinite;
 }
 
 @keyframes calm-route-a-swap {
@@ -207,11 +230,19 @@ html {
   outline-offset: -6px;
 }
 
+.calm-card:not(.is-compact) .calm-card-head:hover .calm-kicker {
+  color: var(--ari-ink);
+}
+
+.calm-card--session:not(.is-compact) .calm-card-head:hover .calm-kicker {
+  color: var(--ari-ink);
+}
+
 .calm-card-main {
   display: grid;
   grid-template-rows: 44px minmax(0, 1fr);
-  height: 214px;
-  gap: 14px;
+  height: 216px;
+  gap: 16px;
 }
 
 .calm-card-body {
@@ -232,7 +263,7 @@ html {
 .calm-card-body-inner {
   min-height: 0;
   overflow: visible;
-  padding-top: 12px;
+  padding-top: 14px;
   padding-bottom: 0;
 }
 
@@ -245,7 +276,7 @@ html {
 .calm-card.is-compact {
   padding-block: 28px;
   padding-inline: 28px;
-  border-radius: 26px;
+  border-radius: var(--ari-radius-card);
 }
 
 .calm-card.is-compact:hover,
@@ -286,7 +317,7 @@ html {
 }
 
 .calm-card--session .calm-kicker {
-  color: #4b3729;
+  color: var(--ari-warm-ink);
 }
 
 .calm-icon {
@@ -338,27 +369,27 @@ html {
 }
 
 .calm-disclosure {
-  margin-top: 14px;
+  margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgba(16, 21, 17, 0.18);
+  border-top: 1px solid var(--ari-hairline);
 }
 
 .calm-card--session .calm-disclosure {
-  border-top-color: rgba(111, 50, 24, 0.26);
+  border-top-color: var(--ari-hairline-warm);
 }
 
 .calm-disclosure-q {
   margin: 0;
-  color: var(--ari-ink);
+  color: var(--ari-muted);
   font: 600 0.84em/1.3 var(--ari-font);
 }
 
 .calm-card--session .calm-disclosure-q {
-  color: #5b4436;
+  color: var(--ari-warm-muted);
 }
 
 .calm-disclosure-a {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: var(--ari-muted);
   font-size: 0.84em;
   line-height: 1.42;
@@ -448,7 +479,7 @@ html {
 
 .calm-session-points {
   display: grid;
-  align-content: start;
+  align-content: center;
 }
 
 .calm-session-points div {
@@ -456,8 +487,8 @@ html {
   gap: 12px;
   align-items: center;
   padding: 12px 0;
-  border-top: 1px solid rgba(111, 50, 24, 0.32);
-  color: #3f362e;
+  border-top: 1px solid var(--ari-hairline-warm);
+  color: var(--ari-warm-ink);
 }
 
 .calm-session-points div:first-child {
@@ -490,7 +521,7 @@ html {
   gap: 16px 24px;
   align-items: start;
   overflow: hidden;
-  padding: 28px 32px 30px;
+  padding: 28px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background:
     radial-gradient(90% 140% at 82% 0%, rgba(8, 120, 77, 0.22) 0%, rgba(8, 120, 77, 0) 42%),
@@ -503,35 +534,17 @@ html {
   content: "";
   position: absolute;
   inset: 0;
-  opacity: .32;
+  opacity: .16;
   pointer-events: none;
   background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 7px);
   mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
 }
 
-.calm-start-card::after {
-  content: "";
-  position: absolute;
-  top: 22px;
-  right: 30px;
-  width: 86px;
-  height: 8px;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 4px 4px, #C84720 0 3px, transparent 3.5px),
-    radial-gradient(circle at 26px 4px, #08784D 0 3px, transparent 3.5px),
-    radial-gradient(circle at 48px 4px, rgba(255, 255, 255, 0.65) 0 3px, transparent 3.5px),
-    radial-gradient(circle at 70px 4px, rgba(255, 255, 255, 0.24) 0 3px, transparent 3.5px);
-}
-
 .calm-start-card.is-resumed {
-  grid-template-columns: minmax(320px, 390px) minmax(340px, 460px);
   grid-template-areas:
     "label label"
     "title form"
     "medals form";
-  justify-content: space-between;
-  column-gap: 48px;
 }
 
 .calm-start-card > * {
@@ -610,20 +623,9 @@ html {
   font: 700 0.92em/1 var(--ari-font);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
   box-shadow:
-    0 0 0 4px rgba(255, 255, 255, 0.12),
     0 14px 30px rgba(0, 0, 0, 0.32),
     inset 0 2px 0 rgba(255, 255, 255, 0.86),
     inset 0 -4px 0 rgba(16, 21, 17, 0.18);
-}
-
-.calm-start-row button::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: .18;
-  pointer-events: none;
-  background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.08) 0 2px, transparent 2px 8px);
-  mask-image: linear-gradient(90deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
 }
 
 .calm-start-row button:disabled {
@@ -1161,12 +1163,6 @@ html {
       "label"
       "title"
       "form";
-  }
-
-  .calm-start-card::after {
-    top: 20px;
-    right: 22px;
-    width: 70px;
   }
 
   .calm-start-card.is-resumed {
@@ -2421,7 +2417,7 @@ html {
 }
 
 .ari-kicker {
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .ari-question-block legend,
@@ -2429,7 +2425,7 @@ html {
 .ari-note-details summary {
   color: rgba(255, 255, 255, 0.94);
   margin-bottom: 8px;
-  font-size: 0.9rem;
+  font-size: 0.94rem;
 }
 
 .ari-context-details {
