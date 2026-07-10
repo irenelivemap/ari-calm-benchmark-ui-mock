@@ -333,6 +333,16 @@
       else state.map.zoomOut();
     }
 
+    function destroy() {
+      if (state.provider === 'leaflet' && state.map) {
+        state.map.remove();
+      }
+      state.map = null;
+      state.routeLayers = null;
+      state.standardTiles = null;
+      state.googleOverlays = [];
+    }
+
     return {
       provider: state.provider,
       drawRoutes,
@@ -341,7 +351,8 @@
       getRoutePointRect,
       hasMap: () => !!state.map,
       zoomIn,
-      zoomOut
+      zoomOut,
+      destroy
     };
   }
 

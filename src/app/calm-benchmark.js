@@ -62,7 +62,8 @@
             <div class="ari-card-header">
               <button class="ari-hud-exit" data-action="exit" type="button" aria-label="Exit test — progress is saved" title="Exit — progress is saved">&times;</button>
               <span class="ari-hud-sep" aria-hidden="true"></span>
-              <div class="ari-round-chip"><span class="ari-round-kicker">Round</span> <b data-round-current>01</b> <span class="ari-round-slash" aria-hidden="true">/</span> <span data-round-total>${String(totalRounds).padStart(2, '0')}</span></div>
+              <div class="ari-round-chip"><span class="ari-round-kicker">Route</span> <b data-round-current>001</b></div>
+              <div class="ari-hud-medals" data-hud-medals aria-label="Medal progress"></div>
               <span class="ari-save-flash" data-save-flash aria-live="polite">Saved &#10003;</span>
               <button class="ari-panel-handle" data-action="toggle-panel" type="button" aria-expanded="true" aria-label="Minimize question panel" title="Minimize question panel"></button>
             </div>
@@ -162,17 +163,19 @@
       throw new Error('AriCalmBenchmark requires Leaflet on window.L, or Google Maps on window.google.maps, before mounting.');
     }
 
+    const initialRoundIndex = options.initialRoundIndex || 0;
+    const initialTotalRounds = Math.max(options.totalRounds || DEFAULT_TOTAL_ROUNDS, initialRoundIndex + 1);
     const state = {
       sessionId: options.sessionId || createId('calm-session'),
       participantName: options.participantName || '',
-      roundIndex: options.initialRoundIndex || 0,
-      totalRounds: options.totalRounds || DEFAULT_TOTAL_ROUNDS,
+      roundIndex: initialRoundIndex,
+      totalRounds: initialTotalRounds,
       pair: null,
       assignment: null,
       questionStep: 'q1',
-      onboardingComplete: options.skipOnboarding || false,
+      onboardingComplete: !!options.skipOnboarding || initialRoundIndex > 0,
       onboardingStepIndex: 0,
-      completedRounds: 0,
+      completedRounds: options.initialCompletedRounds || 0,
       panelCollapsed: false,
       mapAdapter: null,
       mapProvider: useGoogleMaps ? 'google' : 'leaflet'
@@ -182,11 +185,14 @@
     const answerSink = options.answerSink || consoleAnswerSink;
     const progressSink = options.progressSink || consoleProgressSink;
     const onExit = typeof options.onExit === 'function' ? options.onExit : null;
+    const milestones = Array.isArray(options.milestones) ? options.milestones : [];
 
     buildShell(root, state.totalRounds);
 
     const els = {
       currentRound: root.querySelector('[data-round-current]'),
+      cardHeader: root.querySelector('.ari-card-header'),
+      hudMedals: root.querySelector('[data-hud-medals]'),
       mapCanvas: root.querySelector('[data-map-canvas]'),
       onboarding: root.querySelector('[data-onboarding]'),
       onboardingSpotlight: root.querySelector('[data-onboarding-spotlight]'),
@@ -216,6 +222,30 @@
       openStreetView: root.querySelector('[data-action="open-street-view"]'),
       closeStreetView: root.querySelector('[data-action="close-street-view"]')
     };
+
+    function canContinueAfterCurrentRound() {
+      return options.allowExtraRounds || state.roundIndex < state.totalRounds - 1;
+    }
+
+    function renderHudMedals() {
+      if (!els.hudMedals || !milestones.length) return;
+      const next = milestones.find(milestone => state.completedRounds < milestone.at);
+      els.hudMedals.innerHTML = milestones.map(milestone => {
+        const earned = state.completedRounds >= milestone.at;
+        const isNext = next?.at === milestone.at;
+        const classes = [
+          'ari-hud-medal',
+          earned ? 'is-earned' : '',
+          isNext ? 'is-next' : ''
+        ].filter(Boolean).join(' ');
+        return `<span class="${classes}" title="${milestone.name} at ${milestone.at} routes" aria-label="${milestone.name} medal at ${milestone.at} routes${earned ? ', earned' : ''}">${milestone.at}</span>`;
+      }).join('');
+    }
+
+    function updateProgressHud() {
+      els.currentRound.textContent = String(state.roundIndex + 1).padStart(3, '0');
+      renderHudMedals();
+    }
 
     state.mapAdapter = mapTools.createMapAdapter({
       canvas: els.mapCanvas,
@@ -476,7 +506,7 @@
         els.submit.textContent = 'Next question →';
       } else if (stepIndex < sequence.length - 1) {
         els.submit.textContent = 'Next question →';
-      } else if (state.roundIndex < state.totalRounds - 1) {
+      } else if (canContinueAfterCurrentRound()) {
         els.submit.textContent = selected === 'hard_to_judge' ? 'Next round →' : 'Finish round →';
       } else {
         els.submit.textContent = 'Finish test →';
@@ -487,7 +517,47 @@
       });
     }
 
-    function updatePanelState(collapsed) {
+    function updatePanelState(collapsed, { animate = false } = {}) {
+      const form = els.form;
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (animate && !reduceMotion) {
+        if (collapsed) {
+          const h = form.offsetHeight;
+          form.style.overflow = 'hidden';
+          form.style.height = h + 'px';
+          form.style.transition = 'height 300ms cubic-bezier(0.16,1,0.3,1), opacity 200ms ease';
+          requestAnimationFrame(() => {
+            form.style.height = '0';
+            form.style.opacity = '0';
+          });
+        } else {
+          const targetH = form.scrollHeight;
+          form.style.overflow = 'hidden';
+          form.style.height = '0';
+          form.style.opacity = '0';
+          form.style.transition = 'height 340ms cubic-bezier(0.16,1,0.3,1), opacity 220ms ease 50ms';
+          requestAnimationFrame(() => {
+            form.style.height = targetH + 'px';
+            form.style.opacity = '1';
+          });
+          function onHeightDone(e) {
+            if (e.propertyName !== 'height') return;
+            form.style.height = '';
+            form.style.overflow = '';
+            form.style.transition = '';
+            form.style.opacity = '';
+            form.removeEventListener('transitionend', onHeightDone);
+          }
+          form.addEventListener('transitionend', onHeightDone);
+        }
+      } else {
+        form.style.height = collapsed ? '0' : '';
+        form.style.overflow = collapsed ? 'hidden' : '';
+        form.style.opacity = '';
+        form.style.transition = '';
+      }
+
       state.panelCollapsed = collapsed;
       els.questionCard.classList.toggle('is-collapsed', collapsed);
       els.panelToggle.setAttribute('aria-expanded', String(!collapsed));
@@ -550,12 +620,16 @@
 
     async function loadRound(index) {
       state.roundIndex = index;
+      if (state.roundIndex > 0) {
+        state.onboardingComplete = true;
+        if (els.onboarding) els.onboarding.hidden = true;
+      }
       state.assignment = randomAssignment();
       state.pair = await routePairProvider({
         sessionId: state.sessionId,
         roundIndex: state.roundIndex
       });
-      els.currentRound.textContent = String(state.roundIndex + 1).padStart(2, '0');
+      updateProgressHud();
       els.scenario.textContent = state.pair.scenario || 'No specific situation provided.';
       state.questionStep = 'q1';
       state.streetViewPoint = null;
@@ -593,10 +667,13 @@
       els.submit.disabled = true;
       await answerSink(readAnswer());
       state.completedRounds += 1;
-      if (state.roundIndex < state.totalRounds - 1) {
-        await loadRound(state.roundIndex + 1);
-      } else {
+      if (!canContinueAfterCurrentRound()) {
         els.submit.textContent = 'Complete';
+      } else {
+        if (state.roundIndex >= state.totalRounds - 1) {
+          state.totalRounds += 5;
+        }
+        await loadRound(state.roundIndex + 1);
       }
       autosave();
       flashSaved();
@@ -622,15 +699,22 @@
       finishOnboarding();
     });
 
-    els.panelToggle.addEventListener('click', () => {
-      updatePanelState(!state.panelCollapsed);
+    els.panelToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      updatePanelState(!state.panelCollapsed, { animate: true });
+    });
+
+    els.cardHeader.addEventListener('click', (e) => {
+      if (e.target.closest('[data-action="exit"]')) return;
+      if (e.target.closest('[data-action="toggle-panel"]')) return;
+      if (!state.panelCollapsed) updatePanelState(true, { animate: true });
     });
 
     els.questionCard.addEventListener('click', (e) => {
       if (!state.panelCollapsed) return;
       if (e.target.closest('[data-action="toggle-panel"]')) return;
       if (e.target.closest('[data-action="exit"]')) return;
-      updatePanelState(false);
+      updatePanelState(false, { animate: true });
     });
 
     els.previous.addEventListener('click', () => {
@@ -664,16 +748,23 @@
       label.addEventListener('focusout', () => state.mapAdapter.focusRoute(null));
     });
 
+    const resizeController = new AbortController();
     window.addEventListener('resize', () => {
       requestAnimationFrame(renderOnboardingStep);
-    });
+    }, { signal: resizeController.signal });
 
     loadRound(state.roundIndex);
+
+    function unmount() {
+      resizeController.abort();
+      state.mapAdapter?.destroy();
+    }
 
     return {
       getState: () => ({ ...state }),
       fitRoutes,
-      loadRound
+      loadRound,
+      unmount
     };
   }
 

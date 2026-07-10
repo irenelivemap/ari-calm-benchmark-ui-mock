@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260709-autosave-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260709-pocket-slim-wave-2">
   <style>
     body {
       margin: 0;
@@ -41,15 +41,21 @@
       </section>
 
       <section class="calm-info-grid" aria-label="Test overview">
-        <article class="calm-card calm-card--how">
-          <div class="calm-card-main">
-            <div class="calm-kicker">
-              <span class="calm-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-5-2V6l5 2 6-2 5 2v12l-5-2-6 2z"/><path d="M9 8v12M15 6v12"/></svg>
-              </span>
-              How it works
+        <article class="calm-card calm-card--how" data-overview-card>
+          <div class="calm-card-head">
+            <div class="calm-card-title">
+              <div class="calm-kicker">
+                <span class="calm-icon" data-align-group="intro-how-card-head" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-5-2V6l5 2 6-2 5 2v12l-5-2-6 2z"/><path d="M9 8v12M15 6v12"/></svg>
+                </span>
+                <span data-align-group="intro-how-card-head">How it works</span>
+              </div>
+              <h2>3 <span>steps.</span></h2>
             </div>
-            <h2>3 <span>steps.</span></h2>
+            <button class="calm-card-toggle" data-align-group="intro-how-card-head" type="button" aria-expanded="true" aria-controls="how-card-body" aria-label="Collapse How it works"></button>
+          </div>
+          <div id="how-card-body" class="calm-card-body">
+            <div class="calm-card-body-inner">
             <div class="calm-route-steps">
               <div class="calm-route-track" aria-hidden="true">
                 <svg class="calm-route-path" viewBox="0 0 100 42" preserveAspectRatio="none">
@@ -65,34 +71,46 @@
                 <div><b>Explain</b><span>Tell us why you chose it.</span></div>
               </div>
             </div>
-          </div>
-          <div class="calm-disclosure">
-            <button type="button" aria-expanded="false" aria-controls="calm-meaning">What do we mean by calm?</button>
-            <div id="calm-meaning" class="calm-disclosure-panel" role="region">
-              <div>Quieter, pleasant, comfortable, easy to follow, less stressful, or closer to greenery or water.</div>
+            <div class="calm-disclosure">
+              <button type="button" aria-expanded="false" aria-controls="calm-meaning">What do we mean by calm?</button>
+              <div id="calm-meaning" class="calm-disclosure-panel" role="region">
+                <div>
+                A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.
+                </div>
+              </div>
             </div>
+          </div>
           </div>
         </article>
 
-        <article class="calm-card calm-card--session">
-          <div class="calm-card-main">
-            <div class="calm-kicker">
-              <span class="calm-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-              </span>
-              Session
+        <article class="calm-card calm-card--session" data-overview-card>
+          <div class="calm-card-head">
+            <div class="calm-card-title">
+              <div class="calm-kicker">
+                <span class="calm-icon" data-align-group="intro-session-card-head" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                </span>
+                <span data-align-group="intro-session-card-head">Session</span>
+              </div>
+              <h2>10 <span>comparisons.</span></h2>
             </div>
-            <h2>10 <span>comparisons.</span></h2>
+            <button class="calm-card-toggle" data-align-group="intro-session-card-head" type="button" aria-expanded="true" aria-controls="session-card-body" aria-label="Collapse Session"></button>
+          </div>
+          <div id="session-card-body" class="calm-card-body">
+            <div class="calm-card-body-inner">
             <div class="calm-session-points">
               <div><b>About 6-8 min</b></div>
               <div><b>Best on laptop or desktop</b></div>
             </div>
-          </div>
-          <div class="calm-disclosure">
-            <button type="button" aria-expanded="false" aria-controls="answers-help">How your answers help</button>
-            <div id="answers-help" class="calm-disclosure-panel" role="region">
-              <div>Checks if calm routes feel meaningfully different.</div>
+            <div class="calm-disclosure">
+              <button type="button" aria-expanded="false" aria-controls="answers-help">How your answers help</button>
+              <div id="answers-help" class="calm-disclosure-panel" role="region">
+                <div>
+                Checks if calm routes feel meaningfully different.
+                </div>
+              </div>
             </div>
+          </div>
           </div>
         </article>
 
@@ -121,7 +139,6 @@
             <div class="calm-start-row">
               <button id="resume-test" type="button">Resume →</button>
             </div>
-            <p class="calm-resume-foot" id="resume-foot-text"></p>
           </div>
         </section>
       </section>
@@ -133,7 +150,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="./src/data/mock-route-pairs.js?v=20260709-structure-1"></script>
   <script src="./src/maps/map-adapter.js?v=20260709-autosave-1"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260709-autosave-1"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260709-medal-targets-2"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -144,6 +161,7 @@
     const ANSWERS_STORAGE = 'ari-calm-benchmark-answers';
     const PROGRESS_STORAGE = 'ari-calm-benchmark-progress';
     let benchmarkMounted = false;
+    let benchmarkInstance = null;
     let savedProgress = null;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -186,6 +204,7 @@
       { at: 15, name: 'Wayfinder',    icon: MEDAL_SVG('<polygon points="3 11 22 2 13 21 11 13 3 11"/>') },
       { at: 20, name: 'Cartographer', icon: MEDAL_SVG('<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>') }
     ];
+    const DEMO_INITIAL_ROUNDS = MILESTONES[MILESTONES.length - 1].at;
 
     function checkResumeState() {
       const raw = localStorage.getItem(PROGRESS_STORAGE);
@@ -196,11 +215,22 @@
 
       const card = document.querySelector('.calm-start-card');
       const shelf = document.getElementById('medal-shelf');
+      const infoGrid = document.querySelector('.calm-info-grid');
 
       document.getElementById('start-form').classList.toggle('calm-hidden', !!hasProgress);
       document.getElementById('resume-right').classList.toggle('calm-hidden', !hasProgress);
       shelf.classList.toggle('calm-hidden', !hasProgress);
       card.classList.toggle('is-resumed', !!hasProgress);
+      infoGrid.classList.toggle('has-progress', !!hasProgress);
+
+      document.querySelectorAll('[data-overview-card]').forEach(overviewCard => {
+        if (overviewCard.dataset.userToggled === 'true') return;
+        if (hasProgress) {
+          setOverviewCardExpanded(overviewCard, false);
+        } else {
+          setOverviewCardExpanded(overviewCard, true);
+        }
+      });
 
       if (hasProgress) {
         savedProgress = progress;
@@ -231,22 +261,30 @@
           pipsEl.appendChild(pip);
         }
 
-        const footEl = document.getElementById('resume-foot-text');
-        if (next) {
-          const left = next.at - count;
-          footEl.innerHTML = `${left} more to <em>${next.name}</em> — every route sharpens the benchmark.`;
-        } else {
-          footEl.innerHTML = `Every route beyond ${goal} sharpens the benchmark.`;
-        }
-
         shelf.innerHTML = '';
         MILESTONES.forEach(m => {
           const earned = count >= m.at;
-          const medal = document.createElement('div');
+          const medal = document.createElement('button');
+          medal.type = 'button';
           medal.className = 'calm-medal' + (earned ? ' is-earned' : '');
+          medal.setAttribute('aria-pressed', 'false');
+          medal.setAttribute('aria-label', `${m.name} medal, ${earned ? 'earned' : 'locked'}, ${m.at} routes`);
           medal.innerHTML =
-            `<span class="calm-medal__seal" aria-hidden="true">${m.icon}</span>` +
-            `<span class="calm-medal__label">${earned ? m.name : `at ${m.at}`}</span>`;
+            `<span class="calm-medal__flip">` +
+              `<span class="calm-medal__face calm-medal__face--front">` +
+                `<span class="calm-medal__seal" aria-hidden="true">${m.icon}</span>` +
+                `<span class="calm-medal__label">${m.name}</span>` +
+              `</span>` +
+              `<span class="calm-medal__face calm-medal__face--back" aria-hidden="true">` +
+                `<span class="calm-medal__seal calm-medal__seal--number"><b>${m.at}</b></span>` +
+                `<span class="calm-medal__label">routes</span>` +
+              `</span>` +
+            `</span>`;
+          medal.addEventListener('click', () => {
+            const flipped = !medal.classList.contains('is-flipped');
+            medal.classList.toggle('is-flipped', flipped);
+            medal.setAttribute('aria-pressed', String(flipped));
+          });
           shelf.appendChild(medal);
         });
       } else {
@@ -254,6 +292,76 @@
         document.getElementById('start-h2').innerHTML = `Enter the <span>duel.</span>`;
       }
     }
+
+    function setOverviewCardExpanded(card, expanded) {
+      const toggle = card.querySelector('.calm-card-toggle');
+      const body = card.querySelector('.calm-card-body');
+      const title = card.classList.contains('calm-card--session') ? 'Session' : 'How it works';
+      updateOverviewBodyHeight(card);
+      card.classList.toggle('is-compact', !expanded);
+      toggle.setAttribute('aria-expanded', String(expanded));
+      toggle.setAttribute('aria-label', `${expanded ? 'Collapse' : 'Expand'} ${title}`);
+      body.toggleAttribute('aria-hidden', !expanded);
+      body.toggleAttribute('inert', !expanded);
+      if (expanded) requestAnimationFrame(() => updateOverviewBodyHeight(card));
+    }
+
+    function updateOverviewBodyHeight(card) {
+      const body = card.querySelector('.calm-card-body');
+      body.style.setProperty('--calm-card-body-height', `${body.scrollHeight}px`);
+    }
+
+    function updateOverviewHeights() {
+      document.querySelectorAll('[data-overview-card]').forEach(updateOverviewBodyHeight);
+    }
+
+    function checkAlignmentGroups({ tolerance = 1, compactOverviewCards = false } = {}) {
+      if (compactOverviewCards) {
+        document.querySelectorAll('[data-overview-card]').forEach(card => {
+          setOverviewCardExpanded(card, false);
+        });
+      }
+
+      const groups = Array.from(document.querySelectorAll('[data-align-group]'))
+        .reduce((registry, element) => {
+          const name = element.dataset.alignGroup;
+          if (!registry.has(name)) registry.set(name, []);
+          registry.get(name).push(element);
+          return registry;
+        }, new Map());
+
+      const results = Array.from(groups, ([name, elements]) => {
+        const centers = elements.map(element => {
+          const rect = element.getBoundingClientRect();
+          return {
+            element,
+            label: element.textContent.trim() || element.getAttribute('aria-label') || element.className,
+            center: rect.top + rect.height / 2
+          };
+        });
+        const values = centers.map(item => item.center);
+        const drift = Math.max(...values) - Math.min(...values);
+        return {
+          name,
+          pass: drift <= tolerance,
+          drift: Number(drift.toFixed(2)),
+          centers: centers.map(item => ({
+            label: item.label,
+            center: Number(item.center.toFixed(2))
+          }))
+        };
+      });
+
+      const failures = results.filter(result => !result.pass);
+      if (failures.length) {
+        console.warn('ARI alignment check failed', failures);
+      } else if (results.length) {
+        console.info('ARI alignment check passed', results);
+      }
+      return { pass: failures.length === 0, results };
+    }
+
+    window.ariCheckAlignment = checkAlignmentGroups;
 
     async function startBenchmark(participantName, extraOptions = {}) {
       const googleKey = window.ARI_GOOGLE_MAPS_KEY || localStorage.getItem(GOOGLE_KEY_STORAGE) || '';
@@ -268,13 +376,17 @@
       benchmarkRoot.hidden = false;
 
       if (!benchmarkMounted) {
-        AriCalmBenchmark.mount(benchmarkRoot, {
+        benchmarkInstance = AriCalmBenchmark.mount(benchmarkRoot, {
           participantName,
-          totalRounds: 10,
+          totalRounds: Math.max(DEMO_INITIAL_ROUNDS, (extraOptions.initialRoundIndex || 0) + 1),
+          allowExtraRounds: true,
+          milestones: MILESTONES.map(({ at, name }) => ({ at, name })),
           mapProvider: googleAvailable ? 'google' : 'leaflet',
           routePairProvider: AriCalmBenchmark.mockRoutePairProvider,
           ...extraOptions,
           onExit: () => {
+            benchmarkInstance?.unmount();
+            benchmarkInstance = null;
             benchmarkRoot.hidden = true;
             intro.hidden = false;
             introHeader.hidden = false;
@@ -314,20 +426,62 @@
       if (!savedProgress) return;
       startBenchmark(savedProgress.participantName, {
         initialRoundIndex: savedProgress.roundIndex,
+        initialCompletedRounds: savedProgress.completedRounds || 0,
         skipOnboarding: true
       });
     });
 
     document.addEventListener('click', event => {
+      const cardToggle = event.target.closest('.calm-card-toggle');
+      if (cardToggle) {
+        const overviewCard = cardToggle.closest('[data-overview-card]');
+        const expanded = cardToggle.getAttribute('aria-expanded') !== 'true';
+        overviewCard.dataset.userToggled = 'true';
+        setOverviewCardExpanded(overviewCard, expanded);
+        return;
+      }
+
+      const compactCard = event.target.closest('[data-overview-card].is-compact');
+      if (compactCard && !event.target.closest('button, a, input, textarea, select')) {
+        compactCard.dataset.userToggled = 'true';
+        setOverviewCardExpanded(compactCard, true);
+        return;
+      }
+
+      const cardHead = event.target.closest('.calm-card-head');
+      if (cardHead && !event.target.closest('button, a, input, textarea, select')) {
+        const overviewCard = cardHead.closest('[data-overview-card]');
+        if (overviewCard) {
+          const expanded = !overviewCard.classList.contains('is-compact');
+          overviewCard.dataset.userToggled = 'true';
+          setOverviewCardExpanded(overviewCard, !expanded);
+          return;
+        }
+      }
+
       const trigger = event.target.closest('.calm-disclosure button');
       if (!trigger) return;
       const disclosure = trigger.closest('.calm-disclosure');
+      const overviewCard = trigger.closest('[data-overview-card]');
       const open = !disclosure.classList.contains('is-open');
       trigger.setAttribute('aria-expanded', String(open));
       disclosure.classList.toggle('is-open', open);
+      if (overviewCard) requestAnimationFrame(() => updateOverviewBodyHeight(overviewCard));
+      if (overviewCard) setTimeout(() => updateOverviewBodyHeight(overviewCard), 380);
     });
 
+    window.addEventListener('resize', updateOverviewHeights);
+
     checkResumeState();
+    requestAnimationFrame(updateOverviewHeights);
+    if (new URLSearchParams(window.location.search).get('qa') === 'alignment') {
+      requestAnimationFrame(() => {
+        document.querySelectorAll('[data-overview-card]').forEach(card => {
+          setOverviewCardExpanded(card, false);
+        });
+        setTimeout(checkAlignmentGroups, 420);
+      });
+    }
   </script>
 </body>
 </html>
