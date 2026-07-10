@@ -250,7 +250,7 @@ html {
 }
 
 .calm-card-body-inner h2 {
-  margin-bottom: 22px;
+  margin-bottom: 30px;
 }
 
 .calm-card-body {
@@ -271,7 +271,7 @@ html {
 .calm-card-body-inner {
   min-height: 0;
   overflow: visible;
-  padding-top: 22px;
+  padding-top: 14px;
   padding-bottom: 100px;
 }
 
