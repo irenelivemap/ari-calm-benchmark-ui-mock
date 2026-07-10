@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260710-toggle-affordance-5">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260710-no-toggle-flat-disclosure-1">
   <style>
     body {
       margin: 0;
@@ -42,7 +42,7 @@
 
       <section class="calm-info-grid" aria-label="Test overview">
         <article class="calm-card calm-card--how" data-overview-card>
-          <div class="calm-card-head">
+          <div class="calm-card-head" tabindex="0">
             <div class="calm-card-title">
               <div class="calm-kicker">
                 <span class="calm-icon" data-align-group="intro-how-card-head" aria-hidden="true">
@@ -50,41 +50,38 @@
                 </span>
                 <span data-align-group="intro-how-card-head">How it works</span>
               </div>
+              <h2>3 <span>steps.</span></h2>
             </div>
-            <button class="calm-card-toggle" data-align-group="intro-how-card-head" type="button" aria-expanded="true" aria-controls="how-card-body" aria-label="Collapse How it works"></button>
           </div>
           <div id="how-card-body" class="calm-card-body">
             <div class="calm-card-body-inner">
-            <h2>3 <span>steps.</span></h2>
-            <div class="calm-route-steps">
-              <div class="calm-route-track" aria-hidden="true">
-                <svg class="calm-route-path" viewBox="0 0 100 42" preserveAspectRatio="none">
-                  <path d="M0 22 C 18 13, 32 31, 50 22 C 68 13, 82 31, 100 22"/>
-                </svg>
-                <span class="calm-stop calm-stop--start"></span>
-                <span class="calm-stop calm-stop--mid"></span>
-                <span class="calm-stop calm-stop--end"></span>
-              </div>
-              <div class="calm-step-list">
-                <div><b>Compare</b><span>Look at both routes on the map.</span></div>
-                <div><b>Choose</b><span>Pick the one you would actually take.</span></div>
-                <div><b>Explain</b><span>Tell us why you chose it.</span></div>
+              <div class="calm-route-steps">
+                <div class="calm-route-track" aria-hidden="true">
+                  <svg class="calm-route-path" viewBox="0 0 100 42" preserveAspectRatio="none">
+                    <path d="M0 22 C 18 13, 32 31, 50 22 C 68 13, 82 31, 100 22"/>
+                  </svg>
+                  <span class="calm-stop calm-stop--start"></span>
+                  <span class="calm-stop calm-stop--mid"></span>
+                  <span class="calm-stop calm-stop--end"></span>
+                </div>
+                <div class="calm-step-list">
+                  <div><b>Compare</b><span>Look at both routes on the map.</span></div>
+                  <div><b>Choose</b><span>Pick the one you would actually take.</span></div>
+                  <div><b>Explain</b><span>Tell us why you chose it.</span></div>
+                </div>
               </div>
             </div>
             <div class="calm-disclosure">
               <button type="button" aria-expanded="false" aria-controls="calm-meaning">What do we mean by calm?</button>
               <div id="calm-meaning" class="calm-disclosure-panel" role="region">
-                <div>
-                A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.
-                </div>
+                <div>A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.</div>
               </div>
             </div>
-          </div>
           </div>
         </article>
 
         <article class="calm-card calm-card--session" data-overview-card>
-          <div class="calm-card-head">
+          <div class="calm-card-head" tabindex="0">
             <div class="calm-card-title">
               <div class="calm-kicker">
                 <span class="calm-icon" data-align-group="intro-session-card-head" aria-hidden="true">
@@ -92,25 +89,22 @@
                 </span>
                 <span data-align-group="intro-session-card-head">Session</span>
               </div>
+              <h2>10 <span>comparisons.</span></h2>
             </div>
-            <button class="calm-card-toggle" data-align-group="intro-session-card-head" type="button" aria-expanded="true" aria-controls="session-card-body" aria-label="Collapse Session"></button>
           </div>
           <div id="session-card-body" class="calm-card-body">
             <div class="calm-card-body-inner">
-            <h2>10 <span>comparisons.</span></h2>
-            <div class="calm-session-points">
-              <div><b>About 6-8 min</b></div>
-              <div><b>Best on laptop or desktop</b></div>
+              <div class="calm-session-points">
+                <div><b>About 6-8 min</b></div>
+                <div><b>Best on laptop or desktop</b></div>
+              </div>
             </div>
             <div class="calm-disclosure">
               <button type="button" aria-expanded="false" aria-controls="answers-help">How your answers help</button>
               <div id="answers-help" class="calm-disclosure-panel" role="region">
-                <div>
-                Checks if calm routes feel meaningfully different.
-                </div>
+                <div>Checks if calm routes feel meaningfully different.</div>
               </div>
             </div>
-          </div>
           </div>
         </article>
 
@@ -294,13 +288,11 @@
     }
 
     function setOverviewCardExpanded(card, expanded) {
-      const toggle = card.querySelector('.calm-card-toggle');
       const body = card.querySelector('.calm-card-body');
-      const title = card.classList.contains('calm-card--session') ? 'Session' : 'How it works';
+      const head = card.querySelector('.calm-card-head');
       updateOverviewBodyHeight(card);
       card.classList.toggle('is-compact', !expanded);
-      toggle.setAttribute('aria-expanded', String(expanded));
-      toggle.setAttribute('aria-label', `${expanded ? 'Collapse' : 'Expand'} ${title}`);
+      if (head) head.setAttribute('aria-expanded', String(expanded));
       body.toggleAttribute('aria-hidden', !expanded);
       body.toggleAttribute('inert', !expanded);
       if (expanded) requestAnimationFrame(() => updateOverviewBodyHeight(card));
@@ -432,15 +424,6 @@
     });
 
     document.addEventListener('click', event => {
-      const cardToggle = event.target.closest('.calm-card-toggle');
-      if (cardToggle) {
-        const overviewCard = cardToggle.closest('[data-overview-card]');
-        const expanded = cardToggle.getAttribute('aria-expanded') !== 'true';
-        overviewCard.dataset.userToggled = 'true';
-        setOverviewCardExpanded(overviewCard, expanded);
-        return;
-      }
-
       const compactCard = event.target.closest('[data-overview-card].is-compact');
       if (compactCard && !event.target.closest('button, a, input, textarea, select')) {
         compactCard.dataset.userToggled = 'true';
@@ -468,6 +451,17 @@
       disclosure.classList.toggle('is-open', open);
       if (overviewCard) requestAnimationFrame(() => updateOverviewBodyHeight(overviewCard));
       if (overviewCard) setTimeout(() => updateOverviewBodyHeight(overviewCard), 380);
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const cardHead = event.target.closest('.calm-card-head[tabindex]');
+      if (!cardHead) return;
+      event.preventDefault();
+      const overviewCard = cardHead.closest('[data-overview-card]');
+      if (!overviewCard) return;
+      overviewCard.dataset.userToggled = 'true';
+      setOverviewCardExpanded(overviewCard, overviewCard.classList.contains('is-compact'));
     });
 
     window.addEventListener('resize', updateOverviewHeights);
