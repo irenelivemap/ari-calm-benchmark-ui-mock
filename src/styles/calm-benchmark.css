@@ -247,7 +247,10 @@ html {
 .calm-card-title {
   display: grid;
   min-width: 0;
-  gap: 14px;
+}
+
+.calm-card-body-inner h2 {
+  margin-bottom: 14px;
 }
 
 .calm-card-body {
@@ -294,9 +297,6 @@ html {
   align-items: center;
 }
 
-.calm-card.is-compact .calm-card-title {
-  gap: 0;
-}
 
 .calm-card.is-compact .calm-card-body {
   max-height: 0;
@@ -405,22 +405,6 @@ html {
   letter-spacing: -0.02em;
 }
 
-.calm-card h2 {
-  max-height: 2.2em;
-  overflow: hidden;
-  opacity: 1;
-  transform: translateY(0);
-  transition:
-    max-height 300ms cubic-bezier(.16, 1, .3, 1),
-    opacity 180ms ease,
-    transform 300ms cubic-bezier(.16, 1, .3, 1);
-}
-
-.calm-card.is-compact h2 {
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(-3px);
-}
 
 .calm-card h2 span,
 .calm-start-card h2 span {
