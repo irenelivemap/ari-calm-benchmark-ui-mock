@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260710-disclosure-chevron-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260710-natural-height-1">
   <style>
     body {
       margin: 0;
@@ -290,21 +290,24 @@
     function setOverviewCardExpanded(card, expanded) {
       const body = card.querySelector('.calm-card-body');
       const head = card.querySelector('.calm-card-head');
-      updateOverviewBodyHeight(card);
-      card.classList.toggle('is-compact', !expanded);
+      if (expanded) {
+        card.classList.remove('is-compact');
+        body.style.maxHeight = `${body.scrollHeight}px`;
+        const release = event => {
+          if (event.propertyName !== 'max-height') return;
+          body.style.maxHeight = '';
+          body.removeEventListener('transitionend', release);
+        };
+        body.addEventListener('transitionend', release);
+      } else {
+        body.style.maxHeight = `${body.scrollHeight}px`;
+        void body.offsetHeight;
+        card.classList.add('is-compact');
+        body.style.maxHeight = '';
+      }
       if (head) head.setAttribute('aria-expanded', String(expanded));
       body.toggleAttribute('aria-hidden', !expanded);
       body.toggleAttribute('inert', !expanded);
-      if (expanded) requestAnimationFrame(() => updateOverviewBodyHeight(card));
-    }
-
-    function updateOverviewBodyHeight(card) {
-      const body = card.querySelector('.calm-card-body');
-      body.style.setProperty('--calm-card-body-height', `${body.scrollHeight}px`);
-    }
-
-    function updateOverviewHeights() {
-      document.querySelectorAll('[data-overview-card]').forEach(updateOverviewBodyHeight);
     }
 
     function checkAlignmentGroups({ tolerance = 1, compactOverviewCards = false } = {}) {
@@ -445,12 +448,9 @@
       const trigger = event.target.closest('.calm-disclosure button');
       if (!trigger) return;
       const disclosure = trigger.closest('.calm-disclosure');
-      const overviewCard = trigger.closest('[data-overview-card]');
       const open = !disclosure.classList.contains('is-open');
       trigger.setAttribute('aria-expanded', String(open));
       disclosure.classList.toggle('is-open', open);
-      if (overviewCard) requestAnimationFrame(() => updateOverviewBodyHeight(overviewCard));
-      if (overviewCard) setTimeout(() => updateOverviewBodyHeight(overviewCard), 380);
     });
 
     document.addEventListener('keydown', event => {
@@ -464,10 +464,7 @@
       setOverviewCardExpanded(overviewCard, overviewCard.classList.contains('is-compact'));
     });
 
-    window.addEventListener('resize', updateOverviewHeights);
-
     checkResumeState();
-    requestAnimationFrame(updateOverviewHeights);
     if (new URLSearchParams(window.location.search).get('qa') === 'alignment') {
       requestAnimationFrame(() => {
         document.querySelectorAll('[data-overview-card]').forEach(card => {

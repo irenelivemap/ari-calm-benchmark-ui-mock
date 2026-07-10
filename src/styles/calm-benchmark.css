@@ -216,7 +216,7 @@ html {
 
 .calm-card-body {
   display: block;
-  max-height: var(--calm-card-body-height, 420px);
+  max-height: none;
   min-height: 0;
   overflow: visible;
   opacity: 1;
