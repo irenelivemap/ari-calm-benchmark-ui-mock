@@ -209,13 +209,14 @@ html {
 
 .calm-card-main {
   display: grid;
-  grid-template-rows: 44px minmax(0, 1fr);
-  height: 250px;
+  grid-template-rows: 44px auto;
   gap: 14px;
+  margin-bottom: 14px;
 }
 
 .calm-card-body {
   display: block;
+  flex: 1;
   max-height: none;
   min-height: 0;
   overflow: visible;
@@ -230,7 +231,10 @@ html {
 }
 
 .calm-card-body-inner {
+  display: flex;
   min-height: 0;
+  height: 100%;
+  flex-direction: column;
   overflow: visible;
   padding-top: 14px;
   padding-bottom: 0;
@@ -339,7 +343,7 @@ html {
 
 .calm-disclosure {
   position: relative;
-  margin-top: 18px;
+  margin-top: auto;
   padding-top: 16px;
   border-top: 1px solid rgba(16, 21, 17, 0.18);
 }
@@ -408,7 +412,7 @@ html {
 .calm-disclosure-panel > div {
   min-height: 0;
   overflow: hidden;
-  padding-top: 8px;
+  padding-top: 6px;
 }
 
 .calm-disclosure.is-open .calm-disclosure-panel {
@@ -1197,13 +1201,12 @@ html {
   }
 
   .calm-card-main {
-    height: auto;
     grid-template-rows: auto auto;
     gap: 12px;
+    margin-bottom: 12px;
   }
 
   .calm-disclosure {
-    margin-top: 16px;
     padding-top: 14px;
   }
 
