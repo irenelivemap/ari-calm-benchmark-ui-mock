@@ -2973,7 +2973,6 @@ html {
 
 .ari-onboarding__start:hover {
   background: #fff;
-  transform: translateX(-50%) translateY(-1px);
 }
 
 .ari-btn {
@@ -3015,6 +3014,11 @@ html {
     0 5px 12px rgba(0, 0, 0, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     inset 0 -1px 0 rgba(0, 0, 0, 0.34);
+}
+
+.ari-onboarding__start.ari-btn:hover:not(:disabled),
+.ari-onboarding__start.ari-btn:active:not(:disabled) {
+  transform: translateX(-50%);
 }
 
 .ari-btn:focus-visible {
