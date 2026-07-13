@@ -34,6 +34,8 @@
       routeVisuals: { routeA: [], routeB: [] },
       googleOverlays: [],
       googleRouteVisuals: { routeA: [], routeB: [] },
+      routeVisibility: 1,
+      routeAnimationFrame: null,
       standardTiles: null,
       pair: null,
       assignment: null,
@@ -260,6 +262,52 @@
       else drawLeafletRoutes(pair, assignment);
     }
 
+    function applyRouteVisibility(value) {
+      state.routeVisibility = value;
+      if (state.provider === 'google') {
+        Object.values(state.googleRouteVisuals).flat().forEach(layer => {
+          const baseOpacity = layer.__ariBaseOpacity ?? 0.98;
+          layer.setOptions({ strokeOpacity: baseOpacity * value });
+        });
+        state.googleOverlays.forEach(overlay => {
+          if (!overlay.getPath && typeof overlay.setOpacity === 'function') overlay.setOpacity(value);
+        });
+        return;
+      }
+
+      state.routeLayers?.eachLayer(layer => {
+        const element = typeof layer.getElement === 'function' ? layer.getElement() : null;
+        if (element) element.style.opacity = String(value);
+        else if (typeof layer.setOpacity === 'function') layer.setOpacity(value);
+      });
+    }
+
+    function setRoutesVisible(visible, { animate = true, duration = 220 } = {}) {
+      const target = visible ? 1 : 0;
+      if (state.routeAnimationFrame) cancelAnimationFrame(state.routeAnimationFrame);
+      if (!animate || duration <= 0 || state.routeVisibility === target) {
+        applyRouteVisibility(target);
+        return Promise.resolve();
+      }
+
+      const startValue = state.routeVisibility;
+      const startedAt = performance.now();
+      return new Promise(resolve => {
+        function step(now) {
+          const progress = Math.min(1, (now - startedAt) / duration);
+          const eased = 1 - Math.pow(1 - progress, 4);
+          applyRouteVisibility(startValue + (target - startValue) * eased);
+          if (progress < 1) {
+            state.routeAnimationFrame = requestAnimationFrame(step);
+          } else {
+            state.routeAnimationFrame = null;
+            resolve();
+          }
+        }
+        state.routeAnimationFrame = requestAnimationFrame(step);
+      });
+    }
+
     function getRoutePointRect() {
       const canvasRect = state.canvas.getBoundingClientRect();
       const fallback = new DOMRect(
@@ -334,6 +382,7 @@
     }
 
     function destroy() {
+      if (state.routeAnimationFrame) cancelAnimationFrame(state.routeAnimationFrame);
       if (state.provider === 'leaflet' && state.map) {
         state.map.remove();
       }
@@ -350,6 +399,7 @@
       focusRoute,
       getRoutePointRect,
       hasMap: () => !!state.map,
+      setRoutesVisible,
       zoomIn,
       zoomOut,
       destroy

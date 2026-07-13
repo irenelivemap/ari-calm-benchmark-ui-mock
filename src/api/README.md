@@ -46,4 +46,6 @@ async function progressSink(progress) {
 }
 ```
 
-In the demo, `demo.html` stores answers/progress in `localStorage`. In the product, these functions should call the existing benchmark backend.
+In the current static app, `index.html` stores answers/progress in `localStorage`. In the product, these functions should call the existing benchmark backend.
+
+The production persistence contract, idempotency rules, and dashboard feed are documented in `../../docs/DATA_SAVING.md`.

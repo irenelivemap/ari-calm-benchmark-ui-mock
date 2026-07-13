@@ -89,11 +89,14 @@ Intro page:
 - Avoid repeating the same information in the hero, cards, and start section.
 - The `How it works` and `Session` overview cards are collapsible from the first visit. They start expanded for new testers and collapsed after at least one route has been compared.
 - Compact rows must have a single visible alignment contract: icon, label, and action control share one center line. Hidden expanded content must not leave margins, gaps, or padding inside the compact row.
+- Side-by-side overview cards use explicit animated desktop heights: `420px` expanded and `90px` compact. Below `900px`, both states return to content-driven height.
+- The expanded Session card uses `10+ comparisons.` as a flexible goal, reassures testers with `Every comparison helps. More is even better.`, gives the target duration as `About 6 to 8 min`, confirms `Desktop and mobile` support, and introduces the medal goal with `Become a Cosmic Explorer.` / `Unlock a new medal every 5 comparisons.`
+- Do not add a separate `How your answers help` disclosure to the Session card. Keep its content in one scan-friendly stack.
 
 Alignment QA:
 
 - Elements that must share a center line can opt into the browser check with the same `data-align-group` value.
-- Open `demo.html?qa=alignment` after changing compact rows, headers, HUD pills, or button groups. This QA mode forces overview cards into their compact state before measuring.
+- Open `?qa=alignment` after changing compact rows, headers, HUD pills, or button groups. This QA mode forces overview cards into their compact state before measuring.
 - Run `window.ariCheckAlignment()` in the browser console when checking the current visible state manually.
 - A group fails if its vertical center drift is more than `1px`.
 - If a hidden element is visually collapsed, also collapse its spacing (`gap`, margin, padding, line-height side effects), or remove it from layout.
@@ -102,6 +105,7 @@ Benchmark screen:
 
 - The map owns the full viewport.
 - The question panel overlays the map and can collapse for inspection.
+- The question panel and map controls share the same responsive edge inset: `24px` on desktop and `20px` on mobile, including safe-area insets.
 - The question panel starts collapsed during onboarding.
 - After onboarding ends, the question panel returns to collapsed state so the tester starts with the map.
 - The question panel may expand when the user is ready to answer.
@@ -127,6 +131,7 @@ Fit routes behavior:
 
 - `Fit` should return to the closest useful comparison view.
 - It should keep both routes visible from start to end.
+- When the question panel overlaps the map, Fit measures the available rectangles to its right and below it, chooses the larger useful region, and centers both routes inside that region.
 - It should work after zooming in, zooming out, or panning away.
 - Current onboarding copy:
   - `Fit both routes on screen.`
@@ -183,28 +188,44 @@ Rules:
 - Route progress is status, not an action — `pointer-events: none`, no hover, no cursor.
 - Exit is an icon-only `×` button with accessible label `Exit test`. It must not compete with the route task.
 - The HUD pill and question panel both use dark glass (`rgba(10,12,11,0.88)` + `backdrop-filter: blur`) as a unified overlay system. This is intentional — both are overlay surfaces on the map and should read as the same design language.
-- The HUD pill is `inline-flex` with the exit button on the left, a thin separator, route number, and compact numbered medal targets.
-- Route numbers are zero-padded (`01`, `02` … `10`) for a scoreboard feel.
-- Do not use `Route X / Y` when the target can expand. Use the current route number plus compact numbered medal targets.
-- Do not explain medal names in the active HUD. Show numbered medal targets (`5`, `10`, `15`, `20`) and keep names/explanations on the resume card.
-- Earned HUD medals use the bright metal treatment. Locked medals stay dark. The next target gets a slightly brighter ring.
+- The HUD header keeps the exit button on the left, followed by a five-segment dial whose center shows the current route number, and the panel control. Do not add a separate `Route` label or repeat the route number outside the dial.
+- Route numbers are zero-padded to three digits (`001`, `002` … `010`) for a scoreboard feel.
+- Do not use `Route X / Y` or display the next milestone number beside the current route. Put the current route number inside the five-segment dial and let the segments communicate progress toward the next medal.
+- Do not explain upcoming medal names in the active HUD. The dial's five segments communicate progress, while names remain on the resume card until a medal is actually earned.
+- The medal progress dial shows the current route number in its center and exactly five evenly spaced metallic segments show the active route's position within that five-route stage.
+- Incomplete segments stay dark but visible. Completed segments illuminate in neutral ivory, and only the newest segment briefly brightens. Route orange and green are never used.
+- Route 5, 10, 15, 20, 25, and 30 illuminate all five segments before the next stage appears. After route 30, the dial remains at `30` with all five segments illuminated.
 
 Implemented pattern:
 
 ```
-[ × │ ROUTE 011  5 10 15 20 ]
+[ × │ (004: ●●●●○)  ^ ]
 ```
 
 ## Question Panel Rules
 
 - The map remains the main focus.
 - The panel should be collapsible/minimizable without adding extra text labels.
-- When collapsed, the panel shows a one-line summary of the current question step label and question text, so the tester knows where they are without expanding.
-- Route A and Route B answer buttons use route colors.
-- Other answer buttons use neutral button styling.
+- When collapsed, the panel keeps the same full question wording and typographic treatment so the tester knows where they are without expanding.
+- Q1, Q2, and Q3 share one flat choice-row system: `44px` minimum height, thin separators, no persistent radio/checkbox circles, no gradients or shadows, and a checkmark that appears only after selection.
+- Choice grids use one separator contract: the grid supplies the first line and every row supplies only its bottom line. Individual rows never add a second top border or separator gap.
+- The expanded question panel is one continuous near-black material. Do not create differently colored question or footer rectangles inside it; use spacing, separators, and a restrained scanline texture for hierarchy.
+- Collapsed and expanded states use the same full question copy and typography. Do not add a `Q1`/`Q2`/`Q3` prefix or shorten the collapsed wording.
+- Every active question starts from the same vertical origin below the HUD header. Question blocks do not add their own top divider or top padding; the HUD header owns the single separator.
+- The Q1 title and information control occupy the same coordinates when the panel collapses or expands. Collapsed and expanded states share card padding, header spacing, a `12px` title/action gap, and reset browser-default `legend` padding.
+- Collapsed summaries and expanded question legends use the same normal wrapping rule. Question copy fills the available line width before breaking, and identical copy breaks on the same words in both panel states.
+- Route A and Route B use accessible orange and green label colors on transparent rows. Their hover states retain the label color and add a subtle matching tint; never replace route identity with the generic gray/white hover treatment. When selected, they use muted terracotta or forest-green surfaces with white text and a checkmark to preserve route identity without implying correctness. Neutral answers retain the light selected surface.
 - `Next question` is clearer than `Submit answer` when the user is moving through follow-up questions.
 - `Back` for Q2/Q3 should be near the question flow, not in the global HUD.
 - Q1 should not show optional free text.
+- Q1 does not display a route situation. A small information control beside the question reveals the calm definition only when requested; do not add a separate context row or text label.
+- Q1 keeps that information control beside the question in both panel states. From the collapsed state, selecting it expands the panel and opens the calm definition; selecting the rest of the collapsed card expands with the definition closed.
+- The expanded question panel keeps its HUD header and action row fixed. Only the question content may scroll, and the native scrollbar stays visually hidden; use a subtle content fade to signal additional answers below.
+- Expanding or collapsing the question panel and opening optional question details must preserve the current map center and zoom. Only direct map controls, explicit route fitting, onboarding, or loading a new route pair may change the map camera.
+- Animated expansion must measure the form in its true expanded layout before starting. Animate directly from `0` to that measured height, then release the inline height without changing the rendered size; never measure while the collapsed layout is still active.
+- Single-choice answers remain on the current question after selection. Selecting an answer shows its selected state and enables `Next question`; only pressing that button advances the flow.
+- Q3 uses one concise seven-option checklist beneath `Select all that apply.` The final option is `Other`. After any Q3 option is selected, an optional `Add details (optional)` text box appears for supporting context; it is never required to continue.
+- All answer rows and command buttons are at least `44px` high. Answer and button labels use approximately `0.875rem` on mobile and desktop.
 
 Primary question:
 
@@ -215,24 +236,32 @@ Primary question:
 The dark start card on the intro page has two states that must read as the same surface:
 
 - State 0 (no saved progress): kicker `Start testing`, title `Enter the duel.`, name form on the right.
-- Resume (saved progress): kicker `Welcome back`, title uses the intro number pattern (`4 routes compared.` / `12 routes. Wayfinder.`), progress pips + `Resume →` on the right.
+- Resume (saved progress): kicker `Welcome back, [name]`, title uses the intro number pattern (`4 routes compared.` / `12 routes. Wayfinder.`), progress pips + `Resume →` on the right.
 
 Rules:
 
 - Both states use the intro h2 pattern: bold number in `Outfit`, serif italic phrase in `Newsreader`. No scoreboard numerals, no glow, no all-caps data blocks.
 - Progress pips are neutral white (`rgba(255,255,255,0.82)` done, `0.12` remaining). Never route green/orange — route colors are reserved.
 - The `Resume →` button uses the same neutral bright treatment as `Start test →`.
-- The pips goal is the next milestone (10 → 15 → 20), not a fixed 10. Counting past the goal must keep working.
+- The resume action cluster contains only `Last played [date]`, the progress pips, and `Resume →`. The participant name appears once in the greeting and is not repeated in the action cluster.
+- At standard widths, the action cluster uses no more than about 40% of the card, aligns to the card's right padding, and bottom-aligns with the two-row medal shelf rather than centering against the whole card.
+- At narrow widths, the action cluster stacks below the medal shelf, remains left-aligned, and the Resume button spans the available width.
+- Selecting `Resume →` opens the active question panel immediately. Fresh sessions keep the existing onboarding-led collapsed state.
+- The pips goal is the next milestone (10 → 15 → 20 → 25 → 30), not a fixed 10. Counting past the goal must keep working.
 - There is no `New session` / reset control on the card. Clearing progress is a dev action (localStorage), not a tester affordance.
 - Contrast floor on the dark card: body text at `rgba(255,255,255,0.84)` minimum, small-caps labels at `0.72` minimum. The old `0.55` floor was too low for small text — reserve values below `0.72` for decorative elements only, never for text that must be read.
 
 ## Gamification Rules
 
-- Milestone ranks: 5 `Scout`, 10 `Pathfinder`, 15 `Wayfinder`, 20 `Cartographer`.
-- Medals are letterpress seals: earned = the neutral bright button gradient with ink icon; locked = dark/desaturated seal. Locked medals stay visible — the next empty slot is the motivator.
+- Milestone ranks: 5 `Street Scout`, 10 `Trail Seeker`, 15 `Horizon Chaser`, 20 `World Mapper`, 25 `Star Navigator`, 30 `Cosmic Explorer`.
+- Every medal reserves the same centered two-line label area. The six resume-card medals use a three-by-two shelf at standard widths and switch to two columns at `340px` and below, including equivalent high-zoom layouts. Never shrink, truncate, or horizontally scroll medal names.
+- Medals are letterpress seals. Locked medals stay dark and desaturated; earned medals keep the same seal and icon geometry but gain a tier-specific metallic material: bronze, silver, gold, emerald, diamond-blue, then master-violet. The next empty slot remains visible as the motivator.
+- Earned medal color is an achievement state, not a route identity. Do not reuse the exact Route A orange or Route B green values in the medal palette.
 - Resume-card medals are buttons. The front shows the icon and medal name; tapping/clicking flips the medal to show the route count needed to earn it.
 - Celebration happens in words (serif italic rank in the title), not in effects. No neon, no pulsing glow.
 - Reward count only. Never reward speed — no timers or time-based scores, they bias answers.
+- When a medal is earned, the number in the HUD dial turns edge-on and reveals the colored medal icon. `Unlocked` and the medal name reveal beside the dial; after about 2.3 seconds, the message retracts and the dial turns back to the new current route number.
+- Medal unlock feedback stays inside the existing HUD, never dims the map, moves the camera, blocks interaction, plays sound, or uses confetti. Reduced-motion mode changes state without rotation, and a medal is announced only when its exact comparison threshold is completed.
 
 ## Exit And Progress Rules
 
@@ -243,6 +272,17 @@ Rules:
 - The resume card on the intro page is the post-exit reassurance: landing on it shows nothing was lost.
 - Completed submitted rounds remain submitted.
 - Resuming returns the tester to the exact saved position, including a partially answered round (`questionStep` + `partialAnswer` in the progress payload).
+
+## Round Transition Rules
+
+- Finishing a round must feel different from advancing to another question.
+- After `Finish round`, the question panel keeps its expanded footprint while the old question fades out. `Complete` appears beside the dial and the old route pair fades from the map.
+- The newly earned dial segment flashes hot coral, briefly enlarges, and settles to completed ivory. Existing illuminated segments dim slightly during the flare so the progress change is unmistakable.
+- Hold the coral activation and `Complete` message long enough to register as one beat, approximately `0.9s`, before returning to the normal question state.
+- Coral is a temporary activation state only. It must not remain in the dial or replace the Route A orange identity.
+- The next route pair fades in and the new Q1 fades into the same expanded panel. Finishing a round must never collapse the question panel or change its height.
+- At medal thresholds, the standard round transition resolves first and flows directly into the medal unlock reveal.
+- Keep the complete beat under one second, do not move the map camera beyond fitting the newly loaded pair, and replace fades with immediate state changes when reduced motion is requested.
 
 ## Responsive Rules
 

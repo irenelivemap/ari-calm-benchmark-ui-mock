@@ -15,6 +15,8 @@ Use this checklist when moving the calm benchmark UI into `livemap-routing`.
 - [ ] Implement `routePairProvider`.
 - [ ] Implement `answerSink`.
 - [ ] Implement `progressSink` if testers should be able to save and leave mid-session.
+- [ ] Validate answers and progress against `src/data/calm-benchmark-data.js` before sending.
+- [ ] Send `captureId` as the answer idempotency key.
 - [ ] Verify map pan/zoom works.
 - [ ] Verify `Fit routes` works.
 - [ ] Verify Street View handoff works or replace with the app's real Street View control.
@@ -35,6 +37,11 @@ Use this checklist when moving the calm benchmark UI into `livemap-routing`.
 - [ ] Include stable route IDs for `fast` and `calm`.
 - [ ] Do not expose route labels, scores, time, distance, or calm/fast status to the tester UI.
 - [ ] Store submitted answers.
+- [ ] Reject invalid conditional answers instead of storing incomplete rows.
+- [ ] Make answer submission idempotent by `captureId`.
+- [ ] Upsert unfinished progress by `sessionId`.
+- [ ] Add an NDJSON answer feed for the dashboard.
+- [ ] Add server-side `receivedAt` while preserving `clientTs`.
 - [ ] Store route assignment from answer payload.
 - [ ] Add result analysis for calm chosen vs fast chosen.
 
@@ -51,3 +58,6 @@ Use this checklist when moving the calm benchmark UI into `livemap-routing`.
 - [ ] Q3 appears for Route A, Route B, or Neither.
 - [ ] Submitted answer can be used to identify whether the tester chose the calm route.
 - [ ] UI still works if the calm route is assigned to Route A or Route B.
+- [ ] Resume restores the same session ID, pair ID, A/B assignment, question step, and partial answer.
+- [ ] Retrying one completed round does not create a duplicate answer.
+- [ ] `node --test tests/calm-benchmark-data.test.js` passes.

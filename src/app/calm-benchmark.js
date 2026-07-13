@@ -1,12 +1,20 @@
 (function () {
   const DEFAULT_TOTAL_ROUNDS = 10;
   const ROUTE_FIT_MAX_ZOOM = 19;
+  const QUESTION_COPY = {
+    q1: 'Which route would you choose for this calm walk?',
+    q2: 'Is it worth showing both routes as separate options, one Fast and one Calm?',
+    q3: 'What made the route option(s) less suitable for a calmer walk?'
+  };
+
+  const MEDAL_UNLOCK_FALLBACK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
   const demoPairs = window.AriCalmBenchmarkMockRoutePairs || [];
 
   const routeAColor = '#C84720';
   const routeBColor = '#08784D';
 
   function createId(prefix) {
+    if (window.crypto?.randomUUID) return `${prefix}-${window.crypto.randomUUID()}`;
     return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
   }
 
@@ -37,6 +45,35 @@
     return Promise.resolve();
   }
 
+  function getHudDialProgress(routeNumber, completedRounds, milestones) {
+    const ordered = [...milestones].sort((a, b) => a.at - b.at);
+    if (!ordered.length) return null;
+
+    const finalMilestone = ordered[ordered.length - 1];
+    const allEarned = completedRounds >= finalMilestone.at || routeNumber > finalMilestone.at;
+    let targetIndex = ordered.findIndex(milestone => routeNumber <= milestone.at);
+    if (targetIndex < 0) targetIndex = ordered.length - 1;
+
+    const target = ordered[targetIndex];
+    const stageStart = targetIndex > 0 ? ordered[targetIndex - 1].at : 0;
+    const stageLength = Math.max(1, target.at - stageStart);
+    const stagePosition = allEarned ? stageLength : Math.max(0, routeNumber - stageStart);
+    const illuminated = allEarned
+      ? 5
+      : Math.max(0, Math.min(5, Math.ceil((stagePosition / stageLength) * 5)));
+
+    return {
+      allEarned,
+      illuminated,
+      target,
+      newlyIlluminated: allEarned ? -1 : illuminated - 1
+    };
+  }
+
+  function getEarnedMilestone(completedRounds, milestones) {
+    return milestones.find(milestone => milestone.at === completedRounds) || null;
+  }
+
   function buildShell(root, totalRounds) {
     root.innerHTML = `
       <section class="ari-benchmark" aria-label="ARI calm route benchmark">
@@ -62,68 +99,66 @@
             <div class="ari-card-header">
               <button class="ari-hud-exit" data-action="exit" type="button" aria-label="Exit test — progress is saved" title="Exit — progress is saved">&times;</button>
               <span class="ari-hud-sep" aria-hidden="true"></span>
-              <div class="ari-round-chip"><span class="ari-round-kicker">Route</span> <b data-round-current>001</b></div>
               <div class="ari-hud-medals" data-hud-medals aria-label="Medal progress"></div>
+              <span class="ari-round-complete" data-round-complete aria-live="polite" aria-hidden="true"><span aria-hidden="true">&#10003;</span>Complete</span>
               <span class="ari-save-flash" data-save-flash aria-live="polite">Saved &#10003;</span>
               <button class="ari-panel-handle" data-action="toggle-panel" type="button" aria-expanded="true" aria-label="Minimize question panel" title="Minimize question panel"></button>
             </div>
             <div class="ari-panel-summary" data-panel-summary>
-              <span data-panel-step>Q1</span>
-              <b data-panel-question>Which route would you choose for this calm walk?</b>
+              <b data-panel-question>${QUESTION_COPY.q1}</b>
+              <button class="ari-context-toggle ari-context-toggle--summary" data-action="open-context" type="button" aria-expanded="false" aria-controls="ari-calm-context" aria-label="What do we mean by calm?" title="What do we mean by calm?"><span aria-hidden="true">i</span></button>
             </div>
             <form class="ari-question-stack" data-form>
-              <section class="ari-question-block" data-q1>
-                <div class="ari-kicker">Q1</div>
+              <div class="ari-question-scroll" data-question-scroll>
+                <section class="ari-question-block" data-q1>
                 <fieldset>
-                  <legend>Which route would you choose for this calm walk?</legend>
-                  <details class="ari-context-details">
-                    <summary>Calm walk context</summary>
-                    <p>Imagine you are walking somewhere in the city. You are not rushing, and the walking experience matters more than arriving as fast as possible.</p>
-                    <p><b>Situation:</b> <span data-round-scenario></span></p>
-                  </details>
+                  <legend>
+                    <span>${QUESTION_COPY.q1}</span>
+                    <button class="ari-context-toggle" data-action="toggle-context" type="button" aria-expanded="false" aria-controls="ari-calm-context" aria-label="What do we mean by calm?" title="What do we mean by calm?"><span aria-hidden="true">i</span></button>
+                  </legend>
+                  <div class="ari-context-copy" id="ari-calm-context" hidden>
+                    <p>A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.</p>
+                  </div>
                   <div class="ari-choice-grid ari-choice-grid--two">
                     <label class="ari-choice--route-a"><input type="radio" name="q1Choice" value="route_a">Route A</label>
                     <label class="ari-choice--route-b"><input type="radio" name="q1Choice" value="route_b">Route B</label>
-                    <label><input type="radio" name="q1Choice" value="either">Either one would be fine</label>
-                    <label><input type="radio" name="q1Choice" value="neither">I would choose neither</label>
-                    <label><input type="radio" name="q1Choice" value="hard_to_judge">Hard to judge from the map</label>
+                    <label><input type="radio" name="q1Choice" value="either">Both work well</label>
+                    <label><input type="radio" name="q1Choice" value="neither">Neither works</label>
+                    <label><input type="radio" name="q1Choice" value="hard_to_judge">Hard to judge</label>
                   </div>
                 </fieldset>
-              </section>
+                </section>
 
-              <section class="ari-question-block" data-q2 hidden>
-                <div class="ari-kicker">Q2</div>
+                <section class="ari-question-block" data-q2 hidden>
                 <fieldset>
-                  <legend>Is it worth showing both routes as separate options, one Fast and one Calm?</legend>
+                  <legend>${QUESTION_COPY.q2}</legend>
                   <div class="ari-choice-grid">
                     <label><input type="radio" name="q2Separate" value="yes">Yes</label>
                     <label><input type="radio" name="q2Separate" value="no">No</label>
                     <label><input type="radio" name="q2Separate" value="not_sure">Not sure</label>
                   </div>
                 </fieldset>
-              </section>
+                </section>
 
-              <section class="ari-question-block" data-q3 hidden>
-                <div class="ari-kicker">Q3</div>
+                <section class="ari-question-block" data-q3 hidden>
                 <fieldset>
-                  <legend>What made one or both routes less suitable for this calm situation?</legend>
-                  <div class="ari-choice-grid">
-                    <label><input type="checkbox" name="q3Issues" value="no_issue">No issue</label>
-                    <label><input type="checkbox" name="q3Issues" value="not_calm_enough">Not calm enough</label>
-                    <label><input type="checkbox" name="q3Issues" value="too_similar">Too similar</label>
-                    <label><input type="checkbox" name="q3Issues" value="extra_time_distance_not_worth_it">Extra time/distance not worth it</label>
-                    <label><input type="checkbox" name="q3Issues" value="too_busy">Too busy</label>
+                  <legend>${QUESTION_COPY.q3}</legend>
+                  <p class="ari-question-hint" id="ari-q3-hint">Select all that apply.</p>
+                  <div class="ari-choice-grid" aria-describedby="ari-q3-hint">
                     <label><input type="checkbox" name="q3Issues" value="not_enough_greenery_water">Not enough greenery or water</label>
-                    <label><input type="checkbox" name="q3Issues" value="not_pleasant_interesting">Not pleasant or interesting enough</label>
+                    <label><input type="checkbox" name="q3Issues" value="too_busy_or_crowded">Too busy or crowded</label>
+                    <label><input type="checkbox" name="q3Issues" value="lacks_nice_streets_surroundings">Lacks nice streets or surroundings</label>
+                    <label><input type="checkbox" name="q3Issues" value="extra_time_distance_not_worth_it">Extra time/distance not worth it</label>
+                    <label><input type="checkbox" name="q3Issues" value="too_similar">Too similar to the other route</label>
                     <label><input type="checkbox" name="q3Issues" value="too_complex">Too complex to follow</label>
-                    <label><input type="checkbox" name="q3Issues" value="not_comfortable">Not comfortable to walk</label>
-                    <label><input type="checkbox" name="q3Issues" value="better_route_missing">Better route seems missing</label>
-                    <label><input type="checkbox" name="q3Issues" value="need_more_information">Need more information</label>
                     <label><input type="checkbox" name="q3Issues" value="other">Other</label>
                   </div>
-                  <textarea name="q3Note" placeholder="Tell us more"></textarea>
+                  <div class="ari-question-note" data-q3-note hidden>
+                    <textarea name="q3Note" aria-label="Add optional details about your answer" placeholder="Add details (optional)"></textarea>
+                  </div>
                 </fieldset>
-              </section>
+                </section>
+              </div>
 
               <div class="ari-actions">
                 <button class="ari-btn ari-btn--secondary" data-action="previous" type="button">Back</button>
@@ -167,6 +202,7 @@
     const initialTotalRounds = Math.max(options.totalRounds || DEFAULT_TOTAL_ROUNDS, initialRoundIndex + 1);
     const state = {
       sessionId: options.sessionId || createId('calm-session'),
+      sessionStartedAt: options.sessionStartedAt || new Date().toISOString(),
       participantName: options.participantName || '',
       roundIndex: initialRoundIndex,
       totalRounds: initialTotalRounds,
@@ -176,6 +212,7 @@
       onboardingComplete: !!options.skipOnboarding || initialRoundIndex > 0,
       onboardingStepIndex: 0,
       completedRounds: options.initialCompletedRounds || 0,
+      roundTransitioning: false,
       panelCollapsed: false,
       mapAdapter: null,
       mapProvider: useGoogleMaps ? 'google' : 'leaflet'
@@ -186,13 +223,12 @@
     const progressSink = options.progressSink || consoleProgressSink;
     const onExit = typeof options.onExit === 'function' ? options.onExit : null;
     const milestones = Array.isArray(options.milestones) ? options.milestones : [];
-
     buildShell(root, state.totalRounds);
 
     const els = {
-      currentRound: root.querySelector('[data-round-current]'),
       cardHeader: root.querySelector('.ari-card-header'),
       hudMedals: root.querySelector('[data-hud-medals]'),
+      roundComplete: root.querySelector('[data-round-complete]'),
       mapCanvas: root.querySelector('[data-map-canvas]'),
       onboarding: root.querySelector('[data-onboarding]'),
       onboardingSpotlight: root.querySelector('[data-onboarding-spotlight]'),
@@ -205,13 +241,17 @@
       saveFlash: root.querySelector('[data-save-flash]'),
       questionCard: root.querySelector('[data-question-card]'),
       panelToggle: root.querySelector('[data-action="toggle-panel"]'),
-      panelStep: root.querySelector('[data-panel-step]'),
       panelQuestion: root.querySelector('[data-panel-question]'),
+      collapsedContextToggle: root.querySelector('[data-action="open-context"]'),
       form: root.querySelector('[data-form]'),
+      questionScroll: root.querySelector('[data-question-scroll]'),
       q1: root.querySelector('[data-q1]'),
       q2: root.querySelector('[data-q2]'),
       q3: root.querySelector('[data-q3]'),
-      scenario: root.querySelector('[data-round-scenario]'),
+      q3NoteWrap: root.querySelector('[data-q3-note]'),
+      q3Note: root.querySelector('textarea[name="q3Note"]'),
+      contextToggle: root.querySelector('[data-action="toggle-context"]'),
+      contextCopy: root.querySelector('#ari-calm-context'),
       submit: root.querySelector('[data-submit]'),
       exit: root.querySelector('[data-action="exit"]'),
       previous: root.querySelector('[data-action="previous"]'),
@@ -223,27 +263,47 @@
       closeStreetView: root.querySelector('[data-action="close-street-view"]')
     };
 
+    let medalUnlockTimer = null;
+    let roundTransitionTimer = null;
+
     function canContinueAfterCurrentRound() {
       return options.allowExtraRounds || state.roundIndex < state.totalRounds - 1;
     }
 
     function renderHudMedals() {
       if (!els.hudMedals || !milestones.length) return;
-      const next = milestones.find(milestone => state.completedRounds < milestone.at);
-      els.hudMedals.innerHTML = milestones.map(milestone => {
-        const earned = state.completedRounds >= milestone.at;
-        const isNext = next?.at === milestone.at;
-        const classes = [
-          'ari-hud-medal',
-          earned ? 'is-earned' : '',
-          isNext ? 'is-next' : ''
-        ].filter(Boolean).join(' ');
-        return `<span class="${classes}" title="${milestone.name} at ${milestone.at} routes" aria-label="${milestone.name} medal at ${milestone.at} routes${earned ? ', earned' : ''}">${milestone.at}</span>`;
-      }).join('');
+      const routeNumber = state.roundIndex + 1;
+      const progress = getHudDialProgress(routeNumber, state.completedRounds, milestones);
+      const { allEarned, illuminated, newlyIlluminated, target } = progress;
+      const progressLabel = allEarned
+        ? `Route ${routeNumber}. All medals earned. ${target.name}, 5 of 5 segments illuminated.`
+        : `Route ${routeNumber}. Next medal: ${target.name} at ${target.at} routes. ${illuminated} of 5 segments illuminated.`;
+      els.hudMedals.dataset.target = String(target.at);
+      els.hudMedals.dataset.illuminated = String(illuminated);
+      els.hudMedals.dataset.progressLabel = progressLabel;
+      els.hudMedals.setAttribute('aria-label', progressLabel);
+      els.hudMedals.innerHTML = `
+        <span class="ari-hud-dial ${allEarned ? 'is-complete' : ''}" aria-hidden="true">
+          <span class="ari-hud-dial__segments">
+            ${Array.from({ length: 5 }, (_, index) => {
+              const classes = [
+                'ari-hud-dial__segment',
+                index < illuminated ? 'is-illuminated' : '',
+                state.roundTransitioning && index === newlyIlluminated ? 'is-new' : ''
+              ].filter(Boolean).join(' ');
+              return `<span class="${classes}" style="--segment-index:${index}"></span>`;
+            }).join('')}
+          </span>
+          <span class="ari-hud-dial__flip">
+            <span class="ari-hud-dial__face ari-hud-dial__face--front"><span class="ari-hud-dial__core">${String(routeNumber).padStart(3, '0')}</span></span>
+            <span class="ari-hud-dial__face ari-hud-dial__face--back"><span class="calm-medal__seal ari-hud-dial__medal" data-hud-unlock-icon></span></span>
+          </span>
+        </span>
+        <span class="ari-hud-unlock-copy" aria-live="polite" aria-hidden="true"><small>Unlocked</small><b data-hud-unlock-name></b></span>
+      `;
     }
 
     function updateProgressHud() {
-      els.currentRound.textContent = String(state.roundIndex + 1).padStart(3, '0');
       renderHudMedals();
     }
 
@@ -287,23 +347,60 @@
     function getRouteFitPadding() {
       const isMobile = window.matchMedia('(max-width: 700px)').matches;
       if (!isMobile) {
+        const mapRect = els.mapCanvas.getBoundingClientRect();
+        const panelRect = els.questionCard.getBoundingClientRect();
+        const edgePadding = 44;
+        const panelGap = 24;
+        const overlapsMap = panelRect.right > mapRect.left
+          && panelRect.left < mapRect.right
+          && panelRect.bottom > mapRect.top
+          && panelRect.top < mapRect.bottom;
+
+        if (overlapsMap) {
+          const rightRegionLeft = Math.max(mapRect.left + edgePadding, panelRect.right + panelGap);
+          const rightRegionWidth = Math.max(0, mapRect.right - edgePadding - rightRegionLeft);
+          const rightRegionHeight = Math.max(0, mapRect.height - edgePadding * 2);
+          const belowRegionTop = Math.max(mapRect.top + edgePadding, panelRect.bottom + panelGap);
+          const belowRegionWidth = Math.max(0, mapRect.width - edgePadding * 2);
+          const belowRegionHeight = Math.max(0, mapRect.bottom - edgePadding - belowRegionTop);
+          const rightRegionArea = rightRegionWidth * rightRegionHeight;
+          const belowRegionArea = belowRegionWidth * belowRegionHeight;
+          const useRightRegion = rightRegionWidth >= 280
+            && (belowRegionHeight < 280 || rightRegionArea >= belowRegionArea);
+
+          const top = useRightRegion ? edgePadding : belowRegionTop - mapRect.top;
+          const right = edgePadding;
+          const bottom = edgePadding;
+          const left = useRightRegion ? rightRegionLeft - mapRect.left : edgePadding;
+
+          return {
+            google: { top, right, bottom, left },
+            leaflet: {
+              paddingTopLeft: [left, top],
+              paddingBottomRight: [right, bottom],
+              maxZoom: ROUTE_FIT_MAX_ZOOM
+            }
+          };
+        }
+
         return {
-          google: 44,
-          leaflet: { padding: [44, 44], maxZoom: ROUTE_FIT_MAX_ZOOM }
+          google: edgePadding,
+          leaflet: { padding: [edgePadding, edgePadding], maxZoom: ROUTE_FIT_MAX_ZOOM }
         };
       }
 
-      const lowerSheet = state.panelCollapsed ? 82 : Math.min(Math.round(window.innerHeight * 0.5), 430);
+      const measuredSheet = els.questionCard.getBoundingClientRect().height;
+      const lowerSheet = measuredSheet || (state.panelCollapsed ? 110 : Math.min(Math.round(window.innerHeight * 0.62), 520));
       return {
         google: {
           top: 76,
-          right: 16,
-          bottom: lowerSheet + 10,
-          left: 16
+          right: 20,
+          bottom: lowerSheet + 20,
+          left: 20
         },
         leaflet: {
-          paddingTopLeft: [16, 76],
-          paddingBottomRight: [16, lowerSheet + 10],
+          paddingTopLeft: [20, 76],
+          paddingBottomRight: [20, lowerSheet + 20],
           maxZoom: ROUTE_FIT_MAX_ZOOM
         }
       };
@@ -452,12 +549,60 @@
       window.open(url, '_blank', 'noopener,noreferrer');
     }
 
-    function drawRoutes(pair) {
+    function drawRoutes(pair, { hidden = false } = {}) {
       state.mapAdapter.drawRoutes(pair, state.assignment);
+      if (hidden) state.mapAdapter.setRoutesVisible(false, { animate: false });
       requestAnimationFrame(() => {
         fitRoutes();
         setTimeout(fitRoutes, 180);
       });
+    }
+
+    function motionDelay(duration) {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return Promise.resolve();
+      return new Promise(resolve => {
+        roundTransitionTimer = window.setTimeout(resolve, duration);
+      });
+    }
+
+    async function playRoundTransition(nextRoundIndex, earnedMilestone) {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const panelWasCollapsed = state.panelCollapsed;
+      state.roundTransitioning = true;
+      els.questionCard.classList.add('is-round-transitioning');
+      els.questionCard.classList.add('is-question-switching');
+      els.cardHeader.classList.add('is-round-complete');
+      els.questionCard.setAttribute('aria-busy', 'true');
+      els.roundComplete.setAttribute('aria-hidden', 'false');
+      els.roundComplete.classList.add('is-visible');
+
+      const routeExit = state.mapAdapter.setRoutesVisible(false, {
+        animate: !reduceMotion,
+        duration: 180
+      });
+      await Promise.all([routeExit, motionDelay(200)]);
+
+      if (state.roundIndex >= state.totalRounds - 1) state.totalRounds += 5;
+      await loadRound(nextRoundIndex, {
+        deferRouteReveal: true,
+        panelCollapsed: panelWasCollapsed
+      });
+      els.questionCard.classList.remove('is-question-switching');
+      await motionDelay(140);
+      await state.mapAdapter.setRoutesVisible(true, {
+        animate: !reduceMotion,
+        duration: 260
+      });
+      await motionDelay(320);
+
+      els.roundComplete.classList.remove('is-visible');
+      els.roundComplete.setAttribute('aria-hidden', 'true');
+      state.roundTransitioning = false;
+      els.questionCard.classList.remove('is-question-switching');
+      els.questionCard.classList.remove('is-round-transitioning');
+      els.cardHeader.classList.remove('is-round-complete');
+      els.questionCard.removeAttribute('aria-busy');
+      if (earnedMilestone) showMedalUnlock(earnedMilestone);
     }
 
     function getQ1Choice() {
@@ -479,7 +624,9 @@
     function isStepComplete(step) {
       if (step === 'q1') return !!getQ1Choice();
       if (step === 'q2') return !!els.form.querySelector('input[name="q2Separate"]:checked');
-      if (step === 'q3') return !!els.form.querySelector('input[name="q3Issues"]:checked');
+      if (step === 'q3') {
+        return !!els.form.querySelector('input[name="q3Issues"]:checked');
+      }
       return false;
     }
 
@@ -488,17 +635,11 @@
       const sequence = getQuestionSequence();
       if (!sequence.includes(state.questionStep)) state.questionStep = sequence[0];
       const stepIndex = sequence.indexOf(state.questionStep);
-      const questionMeta = {
-        q1: ['Q1', 'Which route would you choose for this calm walk?'],
-        q2: ['Q2', 'Is it worth showing both routes as separate options?'],
-        q3: ['Q3', 'What made one or both routes less suitable?']
-      }[state.questionStep];
-
       els.q1.hidden = state.questionStep !== 'q1';
       els.q2.hidden = state.questionStep !== 'q2';
       els.q3.hidden = state.questionStep !== 'q3';
-      els.panelStep.textContent = questionMeta[0];
-      els.panelQuestion.textContent = questionMeta[1];
+      els.panelQuestion.textContent = QUESTION_COPY[state.questionStep];
+      syncCollapsedContextToggle();
       els.previous.hidden = stepIndex === 0;
       els.previous.disabled = stepIndex === 0;
       els.submit.disabled = !isStepComplete(state.questionStep);
@@ -515,11 +656,72 @@
         const input = label.querySelector('input');
         label.classList.toggle('is-selected', !!input && input.checked);
       });
+      const hasQ3Selection = !!els.form.querySelector('input[name="q3Issues"]:checked');
+      els.q3NoteWrap.hidden = !hasQ3Selection;
+      els.q3Note.disabled = !hasQ3Selection;
+      requestAnimationFrame(updateQuestionOverflow);
+    }
+
+    function setContextExpanded(expanded) {
+      els.contextToggle.setAttribute('aria-expanded', String(expanded));
+      els.collapsedContextToggle.setAttribute('aria-expanded', String(expanded));
+      els.contextCopy.hidden = !expanded;
+      requestAnimationFrame(updateQuestionOverflow);
+    }
+
+    function syncCollapsedContextToggle() {
+      const isQ1 = state.questionStep === 'q1';
+      const isAvailable = isQ1 && state.panelCollapsed;
+      els.collapsedContextToggle.hidden = !isQ1;
+      els.collapsedContextToggle.tabIndex = isAvailable ? 0 : -1;
+      els.collapsedContextToggle.setAttribute('aria-hidden', String(!isAvailable));
+      els.collapsedContextToggle.setAttribute('aria-expanded', els.contextToggle.getAttribute('aria-expanded'));
+    }
+
+    function resetQuestionScroll() {
+      els.form.scrollTop = 0;
+      els.questionScroll.scrollTop = 0;
+    }
+
+    function updateQuestionOverflow() {
+      const scroll = els.questionScroll;
+      const overflows = scroll.scrollHeight > scroll.clientHeight + 1;
+      const atEnd = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 2;
+      scroll.classList.toggle('has-scroll-overflow', overflows);
+      scroll.classList.toggle('is-at-scroll-end', !overflows || atEnd);
+    }
+
+    function getExpandedFormHeight() {
+      const cardStyles = getComputedStyle(els.questionCard);
+      const formStyles = getComputedStyle(els.form);
+      const actions = els.form.querySelector('.ari-actions');
+      const actionStyles = actions ? getComputedStyle(actions) : null;
+      const actionHeight = actions
+        ? actions.offsetHeight
+          + Number.parseFloat(actionStyles.marginTop || 0)
+          + Number.parseFloat(actionStyles.marginBottom || 0)
+        : 0;
+      const formGap = Number.parseFloat(formStyles.rowGap || formStyles.gap || 0);
+      const contentHeight = els.questionScroll.scrollHeight + actionHeight + formGap;
+      const maxHeight = Number.parseFloat(cardStyles.maxHeight);
+      if (!Number.isFinite(maxHeight)) return contentHeight;
+
+      const headerStyles = getComputedStyle(els.cardHeader);
+      const occupiedHeight = els.cardHeader.offsetHeight
+        + Number.parseFloat(headerStyles.marginTop || 0)
+        + Number.parseFloat(headerStyles.marginBottom || 0)
+        + Number.parseFloat(cardStyles.paddingTop || 0)
+        + Number.parseFloat(cardStyles.paddingBottom || 0);
+
+      return Math.min(contentHeight, Math.max(0, maxHeight - occupiedHeight));
     }
 
     function updatePanelState(collapsed, { animate = false } = {}) {
       const form = els.form;
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      state.panelCollapsed = collapsed;
+      els.questionCard.classList.toggle('is-collapsed', collapsed);
 
       if (animate && !reduceMotion) {
         if (collapsed) {
@@ -532,10 +734,15 @@
             form.style.opacity = '0';
           });
         } else {
-          const targetH = form.scrollHeight;
+          els.questionScroll.classList.remove('has-scroll-overflow');
+          els.questionScroll.classList.add('is-at-scroll-end');
+          form.style.transition = 'none';
+          form.style.height = 'auto';
           form.style.overflow = 'hidden';
-          form.style.height = '0';
           form.style.opacity = '0';
+          const targetH = getExpandedFormHeight();
+          form.style.height = '0';
+          void form.offsetHeight;
           form.style.transition = 'height 340ms cubic-bezier(0.16,1,0.3,1), opacity 220ms ease 50ms';
           requestAnimationFrame(() => {
             form.style.height = targetH + 'px';
@@ -548,6 +755,7 @@
             form.style.transition = '';
             form.style.opacity = '';
             form.removeEventListener('transitionend', onHeightDone);
+            requestAnimationFrame(updateQuestionOverflow);
           }
           form.addEventListener('transitionend', onHeightDone);
         }
@@ -558,17 +766,14 @@
         form.style.transition = '';
       }
 
-      state.panelCollapsed = collapsed;
-      els.questionCard.classList.toggle('is-collapsed', collapsed);
+      els.form.toggleAttribute('inert', collapsed);
+      els.form.setAttribute('aria-hidden', String(collapsed));
       els.panelToggle.setAttribute('aria-expanded', String(!collapsed));
       els.panelToggle.setAttribute('aria-label', collapsed ? 'Expand question panel' : 'Minimize question panel');
       els.panelToggle.setAttribute('title', collapsed ? 'Expand question panel' : 'Minimize question panel');
+      syncCollapsedContextToggle();
       if (!collapsed) {
-        requestAnimationFrame(() => {
-          if (state.mapAdapter.hasMap()) fitRoutes();
-        });
-      } else {
-        requestAnimationFrame(fitRoutes);
+        requestAnimationFrame(updateQuestionOverflow);
       }
     }
 
@@ -582,62 +787,155 @@
       els.saveFlash.classList.add('is-flashing');
     }
 
+    function showMedalUnlock(milestone) {
+      if (!milestone || !els.hudMedals) return;
+      window.clearTimeout(medalUnlockTimer);
+      const tier = milestone.tier || Math.max(1, milestones.indexOf(milestone) + 1);
+      const icon = els.hudMedals.querySelector('[data-hud-unlock-icon]');
+      const name = els.hudMedals.querySelector('[data-hud-unlock-name]');
+      const copy = els.hudMedals.querySelector('.ari-hud-unlock-copy');
+      if (!icon || !name || !copy) return;
+      els.hudMedals.dataset.medalTier = String(tier);
+      icon.innerHTML = milestone.icon || MEDAL_UNLOCK_FALLBACK_ICON;
+      name.textContent = milestone.name;
+      copy.setAttribute('aria-hidden', 'false');
+      els.hudMedals.setAttribute('aria-label', `${milestone.name} medal unlocked. ${els.hudMedals.dataset.progressLabel}`);
+      els.hudMedals.classList.remove('is-unlocking');
+      els.cardHeader.classList.remove('is-medal-unlocking');
+      void els.hudMedals.offsetWidth;
+      els.hudMedals.classList.add('is-unlocking');
+      els.cardHeader.classList.add('is-medal-unlocking');
+      medalUnlockTimer = window.setTimeout(() => {
+        els.hudMedals.classList.remove('is-unlocking');
+        els.cardHeader.classList.remove('is-medal-unlocking');
+        copy.setAttribute('aria-hidden', 'true');
+        els.hudMedals.setAttribute('aria-label', els.hudMedals.dataset.progressLabel || 'Medal progress');
+      }, 2300);
+    }
+
     function readProgress() {
+      const savedAt = new Date().toISOString();
       return {
+        v: 1,
+        type: 'bench-progress',
+        test: 'calm_vs_fast',
+        source: 'calm-benchmark',
+        benchmarkRunId: state.sessionId,
         sessionId: state.sessionId,
+        sessionStartedAt: state.sessionStartedAt,
         participantName: state.participantName,
         roundIndex: state.roundIndex,
         completedRounds: state.completedRounds,
         pairId: state.pair?.pairId,
         routeAssignment: state.assignment,
         questionStep: state.questionStep,
-        partialAnswer: readAnswer(),
-        savedAt: new Date().toISOString()
+        partialAnswer: readAnswer(savedAt),
+        savedAt
       };
     }
 
-    function readAnswer() {
+    function getRouteLabel(slot) {
+      const routeType = slot === 'A' ? state.assignment.routeA : state.assignment.routeB;
+      const route = state.pair.routes[routeType];
+      return {
+        routeId: route.routeId,
+        routeType,
+        source: route.source || null,
+        metadata: route.metadata || null
+      };
+    }
+
+    function readAnswer(createdAt = new Date().toISOString()) {
       const form = new FormData(els.form);
       const q1Choice = form.get('q1Choice');
-      const q2Separate = form.get('q2Separate') || undefined;
+      const q2Separate = form.get('q2Separate') || null;
       const q3Issues = form.getAll('q3Issues');
+      const roundId = `${state.sessionId}-round-${state.roundIndex + 1}`;
       return {
+        v: 1,
+        type: 'bench-ux',
+        test: 'calm_vs_fast',
+        source: 'calm-benchmark',
+        captureId: roundId,
+        benchmarkRunId: state.sessionId,
         sessionId: state.sessionId,
-        roundId: `${state.sessionId}-round-${state.roundIndex + 1}`,
+        sessionStartedAt: state.sessionStartedAt,
+        roundId,
+        roundNumber: state.roundIndex + 1,
         pairId: state.pair.pairId,
         participantName: state.participantName,
+        rater: state.participantName,
         routeAssignment: state.assignment,
         routeAType: state.assignment.routeA,
         routeBType: state.assignment.routeB,
+        labelMap: { A: state.assignment.routeA, B: state.assignment.routeB },
+        labels: { A: getRouteLabel('A'), B: getRouteLabel('B') },
+        origin: state.pair.origin,
+        destination: state.pair.destination,
         q1Choice,
+        choice: q1Choice,
         q2Separate,
         q3Issues,
+        reasons: [...q3Issues],
         q3Note: form.get('q3Note') || '',
         note: '',
-        createdAt: new Date().toISOString()
+        clientTs: createdAt,
+        createdAt
       };
     }
 
-    async function loadRound(index) {
+    function restorePartialAnswer(answer) {
+      if (!answer) return;
+      const values = {
+        q1Choice: answer.q1Choice || answer.choice || null,
+        q2Separate: answer.q2Separate || null
+      };
+      Object.entries(values).forEach(([name, value]) => {
+        els.form.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+          input.checked = input.value === value;
+        });
+      });
+      const selectedIssues = new Set(answer.q3Issues || answer.reasons || []);
+      els.form.querySelectorAll('input[name="q3Issues"]').forEach(input => {
+        input.checked = selectedIssues.has(input.value);
+      });
+      els.q3Note.value = answer.q3Note || answer.note || '';
+    }
+
+    async function loadRound(index, {
+      deferRouteReveal = false,
+      panelCollapsed = true,
+      routeAssignment = null,
+      questionStep = 'q1',
+      partialAnswer = null,
+      expectedPairId = null
+    } = {}) {
       state.roundIndex = index;
+      if (state.onboardingComplete && els.onboarding) els.onboarding.hidden = true;
       if (state.roundIndex > 0) {
         state.onboardingComplete = true;
         if (els.onboarding) els.onboarding.hidden = true;
       }
-      state.assignment = randomAssignment();
+      state.assignment = routeAssignment || randomAssignment();
       state.pair = await routePairProvider({
         sessionId: state.sessionId,
         roundIndex: state.roundIndex
       });
+      if (expectedPairId && state.pair.pairId !== expectedPairId) {
+        throw new Error(`Saved pair ${expectedPairId} does not match loaded pair ${state.pair.pairId}.`);
+      }
       updateProgressHud();
-      els.scenario.textContent = state.pair.scenario || 'No specific situation provided.';
-      state.questionStep = 'q1';
+      state.questionStep = questionStep;
       state.streetViewPoint = null;
       els.streetCard.hidden = true;
       els.form.reset();
-      updatePanelState(!state.onboardingComplete);
+      restorePartialAnswer(partialAnswer);
+      resetQuestionScroll();
+      els.contextToggle.setAttribute('aria-expanded', 'false');
+      els.contextCopy.hidden = true;
+      updatePanelState(panelCollapsed);
       updateQuestionFlow();
-      drawRoutes(state.pair);
+      drawRoutes(state.pair, { hidden: deferRouteReveal });
       if (!state.onboardingComplete) {
         state.onboardingStepIndex = 0;
         requestAnimationFrame(() => {
@@ -651,6 +949,10 @@
       updateQuestionFlow();
       autosave();
     });
+    els.q3Note.addEventListener('input', () => {
+      updateQuestionFlow();
+      autosave();
+    });
     els.form.addEventListener('submit', async event => {
       event.preventDefault();
       const sequence = getQuestionSequence();
@@ -659,22 +961,28 @@
 
       if (stepIndex < sequence.length - 1) {
         state.questionStep = sequence[stepIndex + 1];
+        resetQuestionScroll();
         updateQuestionFlow();
         autosave();
         return;
       }
 
       els.submit.disabled = true;
-      await answerSink(readAnswer());
+      try {
+        await answerSink(readAnswer());
+      } catch (error) {
+        console.error('Could not save calm benchmark answer.', error);
+        updateQuestionFlow();
+        return;
+      }
       state.completedRounds += 1;
+      const earnedMilestone = getEarnedMilestone(state.completedRounds, milestones);
       if (!canContinueAfterCurrentRound()) {
         els.submit.textContent = 'Complete';
       } else {
-        if (state.roundIndex >= state.totalRounds - 1) {
-          state.totalRounds += 5;
-        }
-        await loadRound(state.roundIndex + 1);
+        await playRoundTransition(state.roundIndex + 1, earnedMilestone);
       }
+      if (earnedMilestone && !canContinueAfterCurrentRound()) showMedalUnlock(earnedMilestone);
       autosave();
       flashSaved();
     });
@@ -704,6 +1012,17 @@
       updatePanelState(!state.panelCollapsed, { animate: true });
     });
 
+    els.contextToggle.addEventListener('click', () => {
+      const expanded = els.contextToggle.getAttribute('aria-expanded') === 'true';
+      setContextExpanded(!expanded);
+    });
+
+    els.collapsedContextToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setContextExpanded(true);
+      updatePanelState(false, { animate: true });
+    });
+
     els.cardHeader.addEventListener('click', (e) => {
       if (e.target.closest('[data-action="exit"]')) return;
       if (e.target.closest('[data-action="toggle-panel"]')) return;
@@ -713,15 +1032,22 @@
     els.questionCard.addEventListener('click', (e) => {
       if (!state.panelCollapsed) return;
       if (e.target.closest('[data-action="toggle-panel"]')) return;
+      if (e.target.closest('[data-action="open-context"]')) return;
       if (e.target.closest('[data-action="exit"]')) return;
       updatePanelState(false, { animate: true });
     });
+
+    els.questionScroll.addEventListener('scroll', updateQuestionOverflow, { passive: true });
+    const questionResizeObserver = new ResizeObserver(updateQuestionOverflow);
+    questionResizeObserver.observe(els.questionScroll);
+    Array.from(els.questionScroll.children).forEach(child => questionResizeObserver.observe(child));
 
     els.previous.addEventListener('click', () => {
       const sequence = getQuestionSequence();
       const stepIndex = sequence.indexOf(state.questionStep);
       if (stepIndex > 0) {
         state.questionStep = sequence[stepIndex - 1];
+        resetQuestionScroll();
         updateQuestionFlow();
       }
     });
@@ -751,12 +1077,22 @@
     const resizeController = new AbortController();
     window.addEventListener('resize', () => {
       requestAnimationFrame(renderOnboardingStep);
+      requestAnimationFrame(updateQuestionOverflow);
     }, { signal: resizeController.signal });
 
-    loadRound(state.roundIndex);
+    loadRound(state.roundIndex, {
+      panelCollapsed: !options.initialPanelExpanded,
+      routeAssignment: options.initialRouteAssignment || null,
+      questionStep: options.initialQuestionStep || 'q1',
+      partialAnswer: options.initialPartialAnswer || null,
+      expectedPairId: options.initialPairId || null
+    });
 
     function unmount() {
+      window.clearTimeout(medalUnlockTimer);
+      window.clearTimeout(roundTransitionTimer);
       resizeController.abort();
+      questionResizeObserver.disconnect();
       state.mapAdapter?.destroy();
     }
 
@@ -772,6 +1108,8 @@
       mount,
       mockRoutePairProvider,
       consoleAnswerSink,
-      consoleProgressSink
+      consoleProgressSink,
+      getHudDialProgress,
+      getEarnedMilestone
     };
 })();

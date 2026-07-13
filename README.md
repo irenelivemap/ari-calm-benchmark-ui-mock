@@ -8,8 +8,11 @@ It is intentionally separate from `livemap-routing` for now and should not be cr
 
 ## Repository Structure
 
+- `index.html`
+  Primary application entry point. Opens on the tester intro/start page, then launches the map-first benchmark.
+
 - `demo.html`
-  Standalone demo page. Opens on the tester intro/start page, then launches the map-first benchmark.
+  Compatibility redirect for previously shared preview links.
 
 - `src/app/calm-benchmark.js`
   Framework-agnostic UI module. Exposes `AriCalmBenchmark.mount(root, options)`. Supports a Google Maps adapter when `window.google.maps` is loaded, with Leaflet fallback for private/local use.
@@ -19,6 +22,12 @@ It is intentionally separate from `livemap-routing` for now and should not be cr
 
 - `src/data/mock-route-pairs.js`
   Demo-only route pair data. Replace this with `routePairProvider` in the product.
+
+- `src/data/calm-benchmark-data.js`
+  Versioned answer/progress validation, idempotent local persistence, legacy migration, and dashboard-ready NDJSON export.
+
+- `src/results/calm-results.js`
+  Shared aggregation for the participant-facing community results and the unified internal team dashboard.
 
 - `src/api/`
   Integration notes for route loading, answer saving, and progress saving.
@@ -37,6 +46,9 @@ It is intentionally separate from `livemap-routing` for now and should not be cr
 
 - `docs/ANSWER_SCHEMA.md`
   Answer payload produced by the UI.
+
+- `docs/DATA_SAVING.md`
+  Persistence, verification, production endpoints, and dashboard feed contract.
 
 - `docs/DESIGN.md`
   Design-system rules for layout, color, map controls, onboarding, HUD, and responsive behavior.
@@ -58,7 +70,22 @@ python3 -m http.server 8787 --bind 127.0.0.1
 Then open:
 
 ```text
-http://127.0.0.1:8787/demo.html
+http://127.0.0.1:8787/
+```
+
+Results previews use the same locally saved answer dataset:
+
+```text
+http://127.0.0.1:8787/?view=results&preview=1
+http://127.0.0.1:8787/?view=team-results
+```
+
+Without `preview=1`, Community Results remain locked until the participant has completed 10 comparisons. The team dashboard is intentionally absent from participant navigation; its direct preview route is a prototype for a future authenticated internal route.
+
+Run the data-contract checks with:
+
+```bash
+node --test tests/*.test.js
 ```
 
 ## How to Ingest Into the Product
@@ -84,15 +111,18 @@ AriCalmBenchmark.mount(document.getElementById('calm-benchmark-root'), {
       .then(response => response.json());
   },
   answerSink: async answer => {
-    await fetch('/api/calm-benchmark/answers', {
+    await fetch('/api/v1/benchmarks/calm/answers', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': answer.captureId
+      },
       body: JSON.stringify(answer)
     });
   },
   progressSink: async progress => {
-    await fetch('/api/calm-benchmark/progress', {
-      method: 'POST',
+    await fetch(`/api/v1/benchmarks/calm/sessions/${progress.sessionId}/progress`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(progress)
     });
@@ -110,10 +140,10 @@ The model/backend knows which route is `fast` and which route is `calm`. The tes
 
 The tester UI does not expose Google Maps setup. In a deployed app, the runtime should load Google Maps before mounting the benchmark, the same way `livemap-routing/runtime/js/bench.js` does.
 
-For private local development, `demo.html` can still use Google Maps without storing a key in the repo:
+For private local development, the root page can still use Google Maps without storing a key in the repo:
 
 - set `window.ARI_GOOGLE_MAPS_KEY` before starting the benchmark, or
-- open `demo.html?gmap=YOUR_KEY` once; the key is moved into localStorage and removed from the URL.
+- open `?gmap=YOUR_KEY` once; the key is moved into localStorage and removed from the URL.
 
 If no key is available, the demo uses the Leaflet fallback.
 

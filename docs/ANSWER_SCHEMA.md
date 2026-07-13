@@ -4,10 +4,21 @@ The UI produces one answer payload per submitted round.
 
 ```ts
 type CalmBenchmarkAnswer = {
+  v: 1;
+  type: "bench-ux";
+  test: "calm_vs_fast";
+  source: "calm-benchmark";
+
+  // Stable identifiers. captureId is the idempotency key.
+  captureId: string;
+  benchmarkRunId: string;
   sessionId: string;
+  sessionStartedAt: string;
   roundId: string;
+  roundNumber: number;
   pairId: string;
   participantName: string;
+  rater: string;
 
   // Hidden assignment. The tester does not see this.
   routeAssignment: {
@@ -16,6 +27,17 @@ type CalmBenchmarkAnswer = {
   };
   routeAType: "fast" | "calm";
   routeBType: "fast" | "calm";
+  labelMap: {
+    A: "fast" | "calm";
+    B: "fast" | "calm";
+  };
+  labels: {
+    A: RouteSnapshot;
+    B: RouteSnapshot;
+  };
+
+  origin: { lat: number; lng: number; label?: string };
+  destination: { lat: number; lng: number; label?: string };
 
   q1Choice:
     | "route_a"
@@ -23,29 +45,38 @@ type CalmBenchmarkAnswer = {
     | "either"
     | "neither"
     | "hard_to_judge";
+  choice: CalmBenchmarkAnswer["q1Choice"];
 
   q2Separate?: "yes" | "no" | "not_sure";
 
   q3Issues: Array<
-    | "no_issue"
-    | "not_calm_enough"
-    | "too_similar"
-    | "extra_time_distance_not_worth_it"
-    | "too_busy"
     | "not_enough_greenery_water"
-    | "not_pleasant_interesting"
+    | "too_busy_or_crowded"
+    | "lacks_nice_streets_surroundings"
+    | "extra_time_distance_not_worth_it"
+    | "too_similar"
     | "too_complex"
-    | "not_comfortable"
-    | "better_route_missing"
-    | "need_more_information"
     | "other"
   >;
+  reasons: CalmBenchmarkAnswer["q3Issues"];
 
   q3Note: string;
   note: string;
+  clientTs: string;
   createdAt: string;
 };
+
+type RouteSnapshot = {
+  routeId: string;
+  routeType: "fast" | "calm";
+  source: "google" | "model" | "saved" | "mock" | null;
+  metadata: Record<string, unknown> | null;
+};
 ```
+
+The duplicate field names (`benchmarkRunId` / `sessionId`, `choice` / `q1Choice`, `reasons` / `q3Issues`) are deliberate. The first name in each pair keeps the answer feed compatible with the first ARI benchmark dashboard vocabulary, while the second remains explicit about the calm question flow.
+
+`captureId` is stable for one session round and must be used as the server idempotency key. A retry returns the existing record instead of appending a second answer.
 
 ## Conditional Logic
 
@@ -63,12 +94,13 @@ Q3 is asked only when Q1 is:
 - `route_b`
 - `neither`
 
-The UI currently submits once Q1 has an answer. The backend can choose to require Q2/Q3 more strictly, but that should be a product decision.
+Each applicable question must be completed before the round can be submitted. `q3Note` is optional supporting context and may accompany any Q3 selection, including `other`.
 
 ## Recommended Backend Endpoint
 
 ```http
-POST /api/calm-benchmark/answers
+POST /api/v1/benchmarks/calm/answers
+Idempotency-Key: {captureId}
 Content-Type: application/json
 ```
 
@@ -77,6 +109,15 @@ Body:
 ```ts
 CalmBenchmarkAnswer
 ```
+
+The dashboard feed uses one answer per line:
+
+```http
+GET /api/v1/benchmarks/calm/answers
+Accept: application/x-ndjson
+```
+
+See `DATA_SAVING.md` for progress storage, verification, and dashboard integration.
 
 ## Analysis Examples
 
