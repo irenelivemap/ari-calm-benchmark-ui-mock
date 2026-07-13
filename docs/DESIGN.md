@@ -107,7 +107,7 @@ Benchmark screen:
 - The question panel overlays the map and can collapse for inspection.
 - The question panel and map controls share the same responsive edge inset: `24px` on desktop and `20px` on mobile, including safe-area insets.
 - The question panel starts collapsed during onboarding.
-- After onboarding ends, the question panel returns to collapsed state so the tester starts with the map.
+- After onboarding ends, the question panel remains collapsed so the tester starts with the map.
 - The question panel may expand when the user is ready to answer.
 
 ## Map Control Rules
@@ -134,49 +134,40 @@ Fit routes behavior:
 - When the question panel overlaps the map, Fit measures the available rectangles to its right and below it, chooses the larger useful region, and centers both routes inside that region.
 - It should work after zooming in, zooming out, or panning away.
 - Current onboarding copy:
-  - `Fit both routes on screen.`
-  - `Return to the comparison view.`
+  - `Fit both routes.`
+  - `Use Fit to return to the full comparison.`
 
 Street View:
 
 - Street View should appear from interacting with a route point, not as a permanent extra toggle.
-- If the Street View prompt appears during onboarding, it must remain visible above the onboarding layer.
 
 ## Onboarding Rules
 
 Purpose:
 
 - Teach only the minimum needed to inspect the map and answer.
-- Let users practice on the real controls during onboarding.
+- Reassure testers that they can leave and resume without losing progress.
 
 Behavior:
 
-- Onboarding uses a spotlight and a nearby coach tooltip.
-- The overlay must not block map controls or route interaction.
-- The coach tooltip remains clickable.
-- Users advance with `Got it →` (or `Start round →` on the final step).
-- Users go back by clicking a previously visited dot in the header row.
-- Users skip by clicking the `Skip` text link in the header row.
-- Skipping closes onboarding and keeps the question panel collapsed.
-- The final onboarding step can expand the question panel to show where answers happen.
+- Onboarding is one concise overview, not a step-by-step tour.
+- All essential instructions appear together in one centered dialog.
+- Do not include zoom instructions; standard map zoom controls remain available without explanation.
+- One `Start round →` action closes onboarding and keeps the question panel collapsed.
+- Do not add progress dots, a skip link, moving spotlights, or controls that imply multiple steps.
 
-Spotlight:
+Current onboarding overview:
 
-- Center the spotlight on the actual control, not the container.
-- For compact controls, use about `10px` spotlight padding.
-- Do not let the spotlight get clipped by the viewport.
-- If a control is near an edge, prefer comfortable control margins first, then compact spotlight padding.
+1. `Fit both routes.`
+   `Use Fit to return to the full comparison.`
+2. `Check the street.`
+   `Click either route to open Street View.`
+3. `Choose when ready.`
+   `Open the question card and answer.`
 
-Current onboarding steps:
+Resume reassurance:
 
-1. `Zoom in or out.`
-   `Use + / -, scroll, or pinch when you need to inspect streets more closely.`
-2. `Fit both routes on screen.`
-   `Return to the comparison view.`
-3. `Check the street.`
-   `Click a point on either route to open the Street View prompt.`
-4. `Choose when ready.`
-   `Pick the route you would actually walk, then continue.`
+- `Leave and return. Use × at any time. Your place is saved so you can resume later.`
 
 ## HUD Rules
 
@@ -317,7 +308,7 @@ Check every UI change against this list:
 - Are Route A / Route B colors used only for routes and route choices?
 - Are floating controls at least `20px` from mobile edges and `24px` from desktop edges?
 - Are touch targets at least `44px x 44px`?
-- Does the onboarding teach by letting the user use the real control?
+- Does onboarding show the complete minimum workflow together without adding unnecessary instructions?
 - Does the question panel collapse when map inspection matters?
 - Is there any repeated or unnecessary copy?
 - Does the change work on both laptop and mobile?

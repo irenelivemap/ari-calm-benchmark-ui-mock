@@ -169,16 +169,26 @@
         </main>
 
         <section class="ari-onboarding" data-onboarding aria-label="Before you start">
-          <div class="ari-onboarding__spotlight" data-onboarding-spotlight aria-hidden="true"></div>
-          <div class="ari-onboarding__coach" role="dialog" aria-labelledby="ari-onboarding-title" aria-describedby="ari-onboarding-copy">
-            <div class="ari-onboarding__top">
-              <div class="ari-onboarding__dots" data-onboarding-dots></div>
-              <button class="ari-onboarding__skip" data-action="skip-onboarding" type="button" aria-label="Skip tutorial">Skip</button>
+          <div class="ari-onboarding__coach" role="dialog" aria-modal="true" aria-labelledby="ari-onboarding-title">
+            <p class="ari-onboarding__eyebrow">Before you start</p>
+            <h2 id="ari-onboarding-title">Compare at your own pace.</h2>
+            <div class="ari-onboarding__overview">
+              <div class="ari-onboarding__item">
+                <span aria-hidden="true">1</span>
+                <p><b>Fit both routes.</b><small>Use Fit to return to the full comparison.</small></p>
+              </div>
+              <div class="ari-onboarding__item">
+                <span aria-hidden="true">2</span>
+                <p><b>Check the street.</b><small>Click either route to open Street View.</small></p>
+              </div>
+              <div class="ari-onboarding__item">
+                <span aria-hidden="true">3</span>
+                <p><b>Choose when ready.</b><small>Open the question card and answer.</small></p>
+              </div>
             </div>
-            <h2 id="ari-onboarding-title" data-onboarding-title>Zoom in or out.</h2>
-            <p id="ari-onboarding-copy" data-onboarding-copy>Use + and - when you need to inspect streets more closely.</p>
+            <p class="ari-onboarding__resume"><b>Leave and return.</b> Use × at any time. Your place is saved so you can resume later.</p>
             <div class="ari-onboarding__actions">
-              <button class="ari-btn ari-btn--primary" data-action="next-onboarding" type="button">Got it →</button>
+              <button class="ari-btn ari-btn--primary" data-action="next-onboarding" type="button">Start round →</button>
             </div>
           </div>
         </section>
@@ -210,7 +220,6 @@
       assignment: null,
       questionStep: 'q1',
       onboardingComplete: !!options.skipOnboarding || initialRoundIndex > 0,
-      onboardingStepIndex: 0,
       completedRounds: options.initialCompletedRounds || 0,
       roundTransitioning: false,
       panelCollapsed: false,
@@ -231,12 +240,6 @@
       roundComplete: root.querySelector('[data-round-complete]'),
       mapCanvas: root.querySelector('[data-map-canvas]'),
       onboarding: root.querySelector('[data-onboarding]'),
-      onboardingSpotlight: root.querySelector('[data-onboarding-spotlight]'),
-      onboardingCoach: root.querySelector('.ari-onboarding__coach'),
-      onboardingDots: root.querySelector('[data-onboarding-dots]'),
-      onboardingTitle: root.querySelector('[data-onboarding-title]'),
-      onboardingCopy: root.querySelector('[data-onboarding-copy]'),
-      skipOnboarding: root.querySelector('[data-action="skip-onboarding"]'),
       nextOnboarding: root.querySelector('[data-action="next-onboarding"]'),
       saveFlash: root.querySelector('[data-save-flash]'),
       questionCard: root.querySelector('[data-question-card]'),
@@ -316,34 +319,6 @@
       onRoutePointClick: setStreetViewPoint
     });
 
-    const onboardingSteps = [
-      {
-        id: 'zoom',
-        target: getZoomControlsRect,
-        title: 'Zoom in or out.',
-        copy: 'Use + / -, scroll, or pinch when you need to inspect streets more closely.'
-      },
-      {
-        id: 'fit',
-        target: () => els.fitRoutes,
-        title: 'Fit both routes on screen.',
-        copy: 'Return to the comparison view.'
-      },
-      {
-        id: 'street',
-        target: getStreetViewTeachingRect,
-        title: 'Check the street.',
-        copy: 'Click a point on either route to open the Street View prompt.'
-      },
-      {
-        id: 'answer',
-        target: () => els.questionCard,
-        title: 'Choose when ready.',
-        copy: 'Pick the route you would actually walk, then continue.',
-        final: true
-      }
-    ];
-
     function getRouteFitPadding() {
       const isMobile = window.matchMedia('(max-width: 700px)').matches;
       if (!isMobile) {
@@ -410,124 +385,9 @@
       state.mapAdapter.fitRoutes(getRouteFitPadding());
     }
 
-    function getElementRect(target) {
-      if (!target) return null;
-      if (target instanceof DOMRect || typeof target.left === 'number') return target;
-      if (typeof target.getBoundingClientRect === 'function') return target.getBoundingClientRect();
-      return null;
-    }
-
-    function getCombinedRect(elements) {
-      const rects = elements
-        .filter(Boolean)
-        .map(element => element.getBoundingClientRect())
-        .filter(rect => rect.width && rect.height);
-      if (!rects.length) return null;
-
-      const left = Math.min(...rects.map(rect => rect.left));
-      const top = Math.min(...rects.map(rect => rect.top));
-      const right = Math.max(...rects.map(rect => rect.right));
-      const bottom = Math.max(...rects.map(rect => rect.bottom));
-      return new DOMRect(left, top, right - left, bottom - top);
-    }
-
-    function getZoomControlsRect() {
-      return getCombinedRect([els.zoomIn, els.zoomOut]);
-    }
-
-    function getStreetViewTeachingRect() {
-      return state.mapAdapter.getRoutePointRect();
-    }
-
-    function placeOnboardingStep(targetRect) {
-      const benchmarkRect = root.querySelector('.ari-benchmark').getBoundingClientRect();
-      const localLeft = targetRect.left - benchmarkRect.left;
-      const localTop = targetRect.top - benchmarkRect.top;
-      const isCompactTarget = targetRect.width <= 72 && targetRect.height <= 96;
-      const padding = isCompactTarget ? 10 : 14;
-      const edgeInset = 8;
-      const margin = 14;
-      const gap = 12;
-      const targetCenterX = localLeft + targetRect.width / 2;
-      const targetCenterY = localTop + targetRect.height / 2;
-      const spotlightWidth = Math.min(benchmarkRect.width - edgeInset * 2, targetRect.width + padding * 2);
-      const spotlightHeight = Math.min(benchmarkRect.height - edgeInset * 2, targetRect.height + padding * 2);
-      const spotlightLeft = Math.max(edgeInset, Math.min(benchmarkRect.width - spotlightWidth - edgeInset, targetCenterX - spotlightWidth / 2));
-      const spotlightTop = Math.max(edgeInset, Math.min(benchmarkRect.height - spotlightHeight - edgeInset, targetCenterY - spotlightHeight / 2));
-      const coachWidth = Math.min(310, benchmarkRect.width - margin * 2);
-      const coachHeight = Math.ceil(els.onboardingCoach.getBoundingClientRect().height || 184);
-      const clampLeft = value => Math.max(margin, Math.min(benchmarkRect.width - coachWidth - margin, value));
-      const clampTop = value => Math.max(margin, Math.min(benchmarkRect.height - coachHeight - margin, value));
-      const placeRight = spotlightLeft + spotlightWidth + gap + coachWidth <= benchmarkRect.width - margin;
-      const placeLeft = spotlightLeft - gap - coachWidth >= margin;
-      const placeBelow = spotlightTop + spotlightHeight + gap + coachHeight <= benchmarkRect.height - margin;
-      const placeAbove = spotlightTop - gap - coachHeight >= margin;
-      let coachLeft;
-      let coachTop;
-
-      if (placeRight) {
-        coachLeft = spotlightLeft + spotlightWidth + gap;
-        coachTop = clampTop(spotlightTop);
-      } else if (placeLeft || spotlightLeft > benchmarkRect.width / 2) {
-        coachLeft = clampLeft(spotlightLeft - gap - coachWidth);
-        coachTop = clampTop(spotlightTop);
-      } else if (placeBelow) {
-        coachLeft = clampLeft(spotlightLeft + spotlightWidth / 2 - coachWidth / 2);
-        coachTop = spotlightTop + spotlightHeight + gap;
-      } else if (placeAbove) {
-        coachLeft = clampLeft(spotlightLeft + spotlightWidth / 2 - coachWidth / 2);
-        coachTop = spotlightTop - gap - coachHeight;
-      } else {
-        coachLeft = clampLeft(spotlightLeft + spotlightWidth / 2 - coachWidth / 2);
-        coachTop = clampTop(spotlightTop + spotlightHeight + gap);
-      }
-
-      els.onboarding.style.setProperty('--spot-left', `${spotlightLeft}px`);
-      els.onboarding.style.setProperty('--spot-top', `${spotlightTop}px`);
-      els.onboarding.style.setProperty('--spot-width', `${spotlightWidth}px`);
-      els.onboarding.style.setProperty('--spot-height', `${spotlightHeight}px`);
-      els.onboarding.style.setProperty('--coach-width', `${coachWidth}px`);
-      els.onboarding.style.setProperty('--coach-left', `${coachLeft}px`);
-      els.onboarding.style.setProperty('--coach-top', `${coachTop}px`);
-    }
-
-    function renderOnboardingStep() {
+    function renderOnboarding() {
       if (state.onboardingComplete || els.onboarding.hidden) return;
-      const step = onboardingSteps[state.onboardingStepIndex] || onboardingSteps[0];
-      updatePanelState(step.id !== 'answer');
-      const targetRect = getElementRect(step.target());
-      if (!targetRect) return;
-
-      els.onboarding.dataset.step = step.id;
-      els.onboardingTitle.textContent = step.title;
-      els.onboardingCopy.textContent = step.copy;
-      els.nextOnboarding.textContent = step.final ? 'Start round →' : 'Got it →';
-
-      els.onboardingDots.innerHTML = '';
-      onboardingSteps.forEach((_, i) => {
-        const dot = document.createElement('button');
-        dot.type = 'button';
-        dot.className = 'ari-onboarding__dot';
-        if (i < state.onboardingStepIndex) {
-          dot.classList.add('is-done');
-          dot.setAttribute('aria-label', `Go to step ${i + 1}`);
-          dot.addEventListener('click', () => {
-            state.onboardingStepIndex = i;
-            renderOnboardingStep();
-          });
-        } else if (i === state.onboardingStepIndex) {
-          dot.classList.add('is-current');
-          dot.setAttribute('aria-label', `Step ${i + 1} of ${onboardingSteps.length}`);
-          dot.setAttribute('aria-current', 'step');
-          dot.disabled = true;
-        } else {
-          dot.setAttribute('aria-label', `Step ${i + 1}`);
-          dot.disabled = true;
-        }
-        els.onboardingDots.appendChild(dot);
-      });
-
-      placeOnboardingStep(targetRect);
+      updatePanelState(true);
     }
 
     function finishOnboarding() {
@@ -937,11 +797,7 @@
       updateQuestionFlow();
       drawRoutes(state.pair, { hidden: deferRouteReveal });
       if (!state.onboardingComplete) {
-        state.onboardingStepIndex = 0;
-        requestAnimationFrame(() => {
-          renderOnboardingStep();
-          setTimeout(renderOnboardingStep, 220);
-        });
+        requestAnimationFrame(renderOnboarding);
       }
     }
 
@@ -993,17 +849,6 @@
     });
 
     els.nextOnboarding.addEventListener('click', () => {
-      const isLastStep = state.onboardingStepIndex >= onboardingSteps.length - 1;
-      if (isLastStep) {
-        finishOnboarding();
-        return;
-      }
-
-      state.onboardingStepIndex += 1;
-      renderOnboardingStep();
-    });
-
-    els.skipOnboarding.addEventListener('click', () => {
       finishOnboarding();
     });
 
@@ -1076,7 +921,6 @@
 
     const resizeController = new AbortController();
     window.addEventListener('resize', () => {
-      requestAnimationFrame(renderOnboardingStep);
       requestAnimationFrame(updateQuestionOverflow);
     }, { signal: resizeController.signal });
 
