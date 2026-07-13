@@ -532,7 +532,7 @@
     function finishOnboarding() {
       state.onboardingComplete = true;
       els.onboarding.hidden = true;
-      updatePanelState(true);
+      updatePanelState(false, { animate: true });
     }
 
     function setStreetViewPoint(point) {

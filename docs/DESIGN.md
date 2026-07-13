@@ -153,7 +153,7 @@ Behavior:
 - Onboarding uses simultaneous contextual coachmarks, not a step-by-step tour.
 - All essential instructions appear at the same time beside the UI they explain.
 - Do not include zoom instructions; standard map zoom controls remain available without explanation.
-- One `Start round →` action closes onboarding and keeps the question panel collapsed.
+- One `Start round →` action closes onboarding and smoothly expands the question panel so the tester can answer immediately.
 - Do not add progress dots, a skip link, or controls that imply multiple steps.
 - Coachmarks and their target outlines reposition to avoid collisions on desktop and mobile.
 - The dimming layer has real transparent cutouts so highlighted controls remain at full brightness.
