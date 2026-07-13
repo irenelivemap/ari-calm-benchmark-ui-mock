@@ -75,6 +75,7 @@
   }
 
   function buildShell(root, totalRounds) {
+    const onboardingMaskId = createId('ari-onboarding-mask');
     root.innerHTML = `
       <section class="ari-benchmark" aria-label="ARI calm route benchmark">
         <main class="ari-benchmark__grid">
@@ -170,6 +171,18 @@
 
         <section class="ari-onboarding" data-onboarding role="dialog" aria-modal="true" aria-labelledby="ari-onboarding-title">
           <h2 class="ari-visually-hidden" id="ari-onboarding-title">Before you start</h2>
+          <svg class="ari-onboarding__scrim" data-onboarding-scrim aria-hidden="true">
+            <defs>
+              <mask id="${onboardingMaskId}" maskUnits="userSpaceOnUse">
+                <rect data-onboarding-mask-base x="0" y="0" fill="white"></rect>
+                <rect data-onboarding-cutout="fit" fill="black"></rect>
+                <rect data-onboarding-cutout="street" fill="black"></rect>
+                <rect data-onboarding-cutout="answer" fill="black"></rect>
+                <rect data-onboarding-cutout="exit" fill="black"></rect>
+              </mask>
+            </defs>
+            <rect data-onboarding-scrim-fill x="0" y="0" mask="url(#${onboardingMaskId})"></rect>
+          </svg>
 
           <div class="ari-onboarding__target" data-onboarding-target="fit" aria-hidden="true"></div>
           <div class="ari-onboarding__target" data-onboarding-target="street" aria-hidden="true"></div>
@@ -243,6 +256,9 @@
       roundComplete: root.querySelector('[data-round-complete]'),
       mapCanvas: root.querySelector('[data-map-canvas]'),
       onboarding: root.querySelector('[data-onboarding]'),
+      onboardingMaskBase: root.querySelector('[data-onboarding-mask-base]'),
+      onboardingScrimFill: root.querySelector('[data-onboarding-scrim-fill]'),
+      onboardingCutouts: Array.from(root.querySelectorAll('[data-onboarding-cutout]')),
       onboardingTargets: Array.from(root.querySelectorAll('[data-onboarding-target]')),
       onboardingCoachmarks: Array.from(root.querySelectorAll('[data-onboarding-coachmark]')),
       nextOnboarding: root.querySelector('[data-action="next-onboarding"]'),
@@ -416,7 +432,7 @@
     }
 
     function placeOnboardingCoachmark(coachmark, targetRect, preferredPlacements, occupied, bounds) {
-      const gap = 14;
+      const gap = 18;
       const margin = 14;
       const coachRect = coachmark.getBoundingClientRect();
       const width = coachRect.width;
@@ -451,6 +467,10 @@
       if (state.onboardingComplete || els.onboarding.hidden) return;
       const overlayRect = els.onboarding.getBoundingClientRect();
       if (!overlayRect.width || !overlayRect.height) return;
+      els.onboardingMaskBase.setAttribute('width', String(overlayRect.width));
+      els.onboardingMaskBase.setAttribute('height', String(overlayRect.height));
+      els.onboardingScrimFill.setAttribute('width', String(overlayRect.width));
+      els.onboardingScrimFill.setAttribute('height', String(overlayRect.height));
       const isMobile = window.matchMedia('(max-width: 700px)').matches;
       const sourceTargets = {
         fit: els.fitRoutes,
@@ -477,7 +497,8 @@
         const sourceRect = getOnboardingRect(sourceTargets[name]);
         const target = els.onboardingTargets.find(item => item.dataset.onboardingTarget === name);
         const coachmark = els.onboardingCoachmarks.find(item => item.dataset.onboardingCoachmark === name);
-        if (!sourceRect || !target || !coachmark) return;
+        const cutout = els.onboardingCutouts.find(item => item.dataset.onboardingCutout === name);
+        if (!sourceRect || !target || !coachmark || !cutout) return;
         const padding = name === 'answer' ? 6 : 8;
         const expanded = expandRect(new DOMRect(
           sourceRect.left - overlayRect.left,
@@ -491,6 +512,12 @@
         target.style.setProperty('--target-width', `${expanded.width}px`);
         target.style.setProperty('--target-height', `${expanded.height}px`);
         target.dataset.kind = name;
+        cutout.setAttribute('x', String(expanded.left));
+        cutout.setAttribute('y', String(expanded.top));
+        cutout.setAttribute('width', String(expanded.width));
+        cutout.setAttribute('height', String(expanded.height));
+        cutout.setAttribute('rx', String(name === 'street' ? expanded.width / 2 : name === 'answer' ? 12 : 18));
+        cutout.setAttribute('ry', String(name === 'street' ? expanded.height / 2 : name === 'answer' ? 12 : 18));
         placeOnboardingCoachmark(coachmark, expanded, preferences[name], occupied, overlayRect);
       });
     }

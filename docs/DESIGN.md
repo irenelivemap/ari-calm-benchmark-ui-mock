@@ -156,6 +156,9 @@ Behavior:
 - One `Start round →` action closes onboarding and keeps the question panel collapsed.
 - Do not add progress dots, a skip link, or controls that imply multiple steps.
 - Coachmarks and their target outlines reposition to avoid collisions on desktop and mobile.
+- The dimming layer has real transparent cutouts so highlighted controls remain at full brightness.
+- Coachmarks use an ivory border, strong connector, and a single synchronized entrance pulse for visibility.
+- `Start round →` is a prominent bottom-center dock on desktop and remains top-center on mobile to avoid the question card.
 
 Current onboarding overview:
 
