@@ -150,24 +150,21 @@ Purpose:
 
 Behavior:
 
-- Onboarding is one concise overview, not a step-by-step tour.
-- All essential instructions appear together in one centered dialog.
+- Onboarding uses simultaneous contextual coachmarks, not a step-by-step tour.
+- All essential instructions appear at the same time beside the UI they explain.
 - Do not include zoom instructions; standard map zoom controls remain available without explanation.
 - One `Start round →` action closes onboarding and keeps the question panel collapsed.
-- Do not add progress dots, a skip link, moving spotlights, or controls that imply multiple steps.
+- Do not add progress dots, a skip link, or controls that imply multiple steps.
+- Coachmarks and their target outlines reposition to avoid collisions on desktop and mobile.
 
 Current onboarding overview:
 
-1. `Fit both routes.`
-   `Use Fit to return to the full comparison.`
-2. `Check the street.`
-   `Click either route to open Street View.`
-3. `Choose when ready.`
-   `Open the question card and answer.`
+1. Beside Fit: `Fit both routes` / `Return to the full comparison.`
+2. Beside a route point: `Check the street` / `Click either route for Street View.`
+3. Beside the question card: `Answer when ready` / `Open the question card.`
+4. Beside Exit: `Leave anytime` / `Your place is saved.`
 
-Resume reassurance:
-
-- `Leave and return. Use × at any time. Your place is saved so you can resume later.`
+Resume reassurance is attached directly to the `×` exit control instead of appearing as detached explanatory copy.
 
 ## HUD Rules
 

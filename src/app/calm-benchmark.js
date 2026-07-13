@@ -168,29 +168,32 @@
           </aside>
         </main>
 
-        <section class="ari-onboarding" data-onboarding aria-label="Before you start">
-          <div class="ari-onboarding__coach" role="dialog" aria-modal="true" aria-labelledby="ari-onboarding-title">
-            <p class="ari-onboarding__eyebrow">Before you start</p>
-            <h2 id="ari-onboarding-title">Compare at your own pace.</h2>
-            <div class="ari-onboarding__overview">
-              <div class="ari-onboarding__item">
-                <span aria-hidden="true">1</span>
-                <p><b>Fit both routes.</b><small>Use Fit to return to the full comparison.</small></p>
-              </div>
-              <div class="ari-onboarding__item">
-                <span aria-hidden="true">2</span>
-                <p><b>Check the street.</b><small>Click either route to open Street View.</small></p>
-              </div>
-              <div class="ari-onboarding__item">
-                <span aria-hidden="true">3</span>
-                <p><b>Choose when ready.</b><small>Open the question card and answer.</small></p>
-              </div>
-            </div>
-            <p class="ari-onboarding__resume"><b>Leave and return.</b> Use × at any time. Your place is saved so you can resume later.</p>
-            <div class="ari-onboarding__actions">
-              <button class="ari-btn ari-btn--primary" data-action="next-onboarding" type="button">Start round →</button>
-            </div>
+        <section class="ari-onboarding" data-onboarding role="dialog" aria-modal="true" aria-labelledby="ari-onboarding-title">
+          <h2 class="ari-visually-hidden" id="ari-onboarding-title">Before you start</h2>
+
+          <div class="ari-onboarding__target" data-onboarding-target="fit" aria-hidden="true"></div>
+          <div class="ari-onboarding__target" data-onboarding-target="street" aria-hidden="true"></div>
+          <div class="ari-onboarding__target" data-onboarding-target="answer" aria-hidden="true"></div>
+          <div class="ari-onboarding__target" data-onboarding-target="exit" aria-hidden="true"></div>
+
+          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="fit">
+            <b>Fit both routes</b>
+            <span>Return to the full comparison.</span>
           </div>
+          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="street">
+            <b>Check the street</b>
+            <span>Click either route for Street View.</span>
+          </div>
+          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="answer">
+            <b>Answer when ready</b>
+            <span>Open the question card.</span>
+          </div>
+          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="exit">
+            <b>Leave anytime</b>
+            <span>Your place is saved.</span>
+          </div>
+
+          <button class="ari-btn ari-btn--primary ari-onboarding__start" data-action="next-onboarding" type="button">Start round →</button>
         </section>
 
       </section>
@@ -240,6 +243,8 @@
       roundComplete: root.querySelector('[data-round-complete]'),
       mapCanvas: root.querySelector('[data-map-canvas]'),
       onboarding: root.querySelector('[data-onboarding]'),
+      onboardingTargets: Array.from(root.querySelectorAll('[data-onboarding-target]')),
+      onboardingCoachmarks: Array.from(root.querySelectorAll('[data-onboarding-coachmark]')),
       nextOnboarding: root.querySelector('[data-action="next-onboarding"]'),
       saveFlash: root.querySelector('[data-save-flash]'),
       questionCard: root.querySelector('[data-question-card]'),
@@ -385,9 +390,116 @@
       state.mapAdapter.fitRoutes(getRouteFitPadding());
     }
 
+    function getOnboardingRect(target) {
+      if (!target) return null;
+      if (typeof target.left === 'number') return target;
+      if (typeof target.getBoundingClientRect === 'function') return target.getBoundingClientRect();
+      return null;
+    }
+
+    function expandRect(rect, padding) {
+      return new DOMRect(
+        rect.left - padding,
+        rect.top - padding,
+        rect.width + padding * 2,
+        rect.height + padding * 2
+      );
+    }
+
+    function rectanglesOverlap(a, b, gap = 10) {
+      return !(
+        a.right + gap <= b.left ||
+        a.left >= b.right + gap ||
+        a.bottom + gap <= b.top ||
+        a.top >= b.bottom + gap
+      );
+    }
+
+    function placeOnboardingCoachmark(coachmark, targetRect, preferredPlacements, occupied, bounds) {
+      const gap = 14;
+      const margin = 14;
+      const coachRect = coachmark.getBoundingClientRect();
+      const width = coachRect.width;
+      const height = coachRect.height;
+      const centerX = targetRect.left + targetRect.width / 2;
+      const centerY = targetRect.top + targetRect.height / 2;
+      const positions = {
+        right: { left: targetRect.right + gap, top: centerY - height / 2 },
+        left: { left: targetRect.left - width - gap, top: centerY - height / 2 },
+        bottom: { left: centerX - width / 2, top: targetRect.bottom + gap },
+        top: { left: centerX - width / 2, top: targetRect.top - height - gap }
+      };
+
+      const candidates = preferredPlacements.map(placement => {
+        const position = positions[placement];
+        const left = Math.max(margin, Math.min(bounds.width - width - margin, position.left));
+        const top = Math.max(margin, Math.min(bounds.height - height - margin, position.top));
+        const rect = { left, top, right: left + width, bottom: top + height };
+        const collisions = occupied.filter(item => rectanglesOverlap(rect, item)).length;
+        const displacement = Math.abs(left - position.left) + Math.abs(top - position.top);
+        return { placement, left, top, rect, score: collisions * 10000 + displacement };
+      });
+      const chosen = candidates.sort((a, b) => a.score - b.score)[0];
+
+      coachmark.dataset.placement = chosen.placement;
+      coachmark.style.setProperty('--coach-left', `${chosen.left}px`);
+      coachmark.style.setProperty('--coach-top', `${chosen.top}px`);
+      occupied.push(chosen.rect);
+    }
+
+    function positionOnboarding() {
+      if (state.onboardingComplete || els.onboarding.hidden) return;
+      const overlayRect = els.onboarding.getBoundingClientRect();
+      if (!overlayRect.width || !overlayRect.height) return;
+      const isMobile = window.matchMedia('(max-width: 700px)').matches;
+      const sourceTargets = {
+        fit: els.fitRoutes,
+        street: state.mapAdapter.getRoutePointRect(),
+        answer: els.questionCard,
+        exit: els.exit
+      };
+      const preferences = isMobile
+        ? {
+            fit: ['left', 'bottom', 'top'],
+            street: ['right', 'left', 'bottom', 'top'],
+            answer: ['top', 'right', 'left'],
+            exit: ['right', 'top', 'left']
+          }
+        : {
+            fit: ['left', 'bottom', 'top'],
+            street: ['right', 'left', 'bottom', 'top'],
+            answer: ['right', 'top', 'bottom'],
+            exit: ['right', 'bottom', 'top']
+          };
+      const occupied = [];
+
+      ['exit', 'fit', 'answer', 'street'].forEach(name => {
+        const sourceRect = getOnboardingRect(sourceTargets[name]);
+        const target = els.onboardingTargets.find(item => item.dataset.onboardingTarget === name);
+        const coachmark = els.onboardingCoachmarks.find(item => item.dataset.onboardingCoachmark === name);
+        if (!sourceRect || !target || !coachmark) return;
+        const padding = name === 'answer' ? 6 : 8;
+        const expanded = expandRect(new DOMRect(
+          sourceRect.left - overlayRect.left,
+          sourceRect.top - overlayRect.top,
+          sourceRect.width,
+          sourceRect.height
+        ), padding);
+
+        target.style.setProperty('--target-left', `${expanded.left}px`);
+        target.style.setProperty('--target-top', `${expanded.top}px`);
+        target.style.setProperty('--target-width', `${expanded.width}px`);
+        target.style.setProperty('--target-height', `${expanded.height}px`);
+        target.dataset.kind = name;
+        placeOnboardingCoachmark(coachmark, expanded, preferences[name], occupied, overlayRect);
+      });
+    }
+
     function renderOnboarding() {
       if (state.onboardingComplete || els.onboarding.hidden) return;
       updatePanelState(true);
+      requestAnimationFrame(positionOnboarding);
+      setTimeout(positionOnboarding, 240);
     }
 
     function finishOnboarding() {
@@ -921,6 +1033,7 @@
 
     const resizeController = new AbortController();
     window.addEventListener('resize', () => {
+      requestAnimationFrame(positionOnboarding);
       requestAnimationFrame(updateQuestionOverflow);
     }, { signal: resizeController.signal });
 
