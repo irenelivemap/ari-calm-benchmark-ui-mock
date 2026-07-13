@@ -2828,15 +2828,12 @@ html {
   width: min(218px, calc(100% - 28px));
   border-radius: 10px;
   padding: 14px 16px;
-  border: 1px solid rgba(246, 245, 238, 0.72);
-  background:
-    radial-gradient(120% 90% at 90% 0%, rgba(255, 255, 255, 0.08), transparent 42%),
-    linear-gradient(180deg, rgba(16, 18, 17, 0.98), rgba(8, 9, 9, 0.98));
-  color: #fff;
+  border: 1px solid rgba(16, 21, 17, 0.88);
+  background: #efeee6;
+  color: #101511;
   box-shadow:
-    0 0 0 3px rgba(8, 9, 9, 0.36),
-    0 18px 42px rgba(8, 9, 9, 0.46),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    0 0 0 3px rgba(246, 245, 238, 0.2),
+    0 16px 38px rgba(8, 9, 9, 0.38);
   pointer-events: none;
   animation: ari-onboarding-enter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -2872,7 +2869,7 @@ html {
 }
 
 .ari-onboarding__coachmark b {
-  color: #fff;
+  color: #101511;
   font-size: 0.9rem;
   font-weight: 800;
   line-height: 1.25;
@@ -2880,7 +2877,7 @@ html {
 
 .ari-onboarding__coachmark span {
   margin-top: 4px;
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(16, 21, 17, 0.72);
   font-size: 0.76rem;
   font-weight: 600;
   line-height: 1.35;
@@ -3050,6 +3047,26 @@ html {
     0 16px 34px rgba(0, 0, 0, 0.34),
     inset 0 2px 0 rgba(255, 255, 255, 0.92),
     inset 0 -4px 0 rgba(16, 21, 17, 0.18);
+}
+
+.ari-onboarding__start.ari-btn--primary {
+  border: 2px solid #101511;
+  background: #fff;
+  box-shadow:
+    0 0 0 5px rgba(246, 245, 238, 0.42),
+    0 0 0 8px rgba(8, 9, 9, 0.58),
+    0 16px 36px rgba(8, 9, 9, 0.36),
+    inset 0 -3px 0 rgba(16, 21, 17, 0.16);
+}
+
+.ari-onboarding__start.ari-btn--primary:hover:not(:disabled) {
+  border-color: #101511;
+  background: #fff;
+  box-shadow:
+    0 0 0 6px rgba(246, 245, 238, 0.5),
+    0 0 0 9px rgba(8, 9, 9, 0.62),
+    0 18px 40px rgba(8, 9, 9, 0.4),
+    inset 0 -3px 0 rgba(16, 21, 17, 0.14);
 }
 
 .ari-btn--primary:disabled {
@@ -3977,6 +3994,22 @@ html {
     min-height: 40px;
     padding: 8px 18px;
     font-size: 0.84rem;
+  }
+
+  .ari-onboarding__start.ari-btn--primary {
+    box-shadow:
+      0 0 0 3px rgba(246, 245, 238, 0.42),
+      0 0 0 5px rgba(8, 9, 9, 0.58),
+      0 12px 28px rgba(8, 9, 9, 0.34),
+      inset 0 -3px 0 rgba(16, 21, 17, 0.16);
+  }
+
+  .ari-onboarding__start.ari-btn--primary:hover:not(:disabled) {
+    box-shadow:
+      0 0 0 4px rgba(246, 245, 238, 0.5),
+      0 0 0 6px rgba(8, 9, 9, 0.62),
+      0 14px 30px rgba(8, 9, 9, 0.38),
+      inset 0 -3px 0 rgba(16, 21, 17, 0.14);
   }
 }
 

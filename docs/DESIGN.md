@@ -157,7 +157,8 @@ Behavior:
 - Do not add progress dots, a skip link, or controls that imply multiple steps.
 - Coachmarks and their target outlines reposition to avoid collisions on desktop and mobile.
 - The dimming layer has real transparent cutouts so highlighted controls remain at full brightness.
-- Coachmarks use an ivory border, strong connector, and a single synchronized entrance pulse for visibility.
+- Coachmarks use flat warm-ivory surfaces with dark text, strong connectors, and a single synchronized entrance pulse so guidance cannot be mistaken for the dark application UI.
+- `Start round →` remains a brighter, raised pill with a heavy dark frame so it reads as the action rather than another coachmark.
 - `Start round →` is a prominent bottom-center dock on desktop and remains top-center on mobile to avoid the question card.
 - Initial route fitting is immediate and runs once before onboarding settles; opening or closing onboarding must not pan or refit the map.
 
