@@ -72,7 +72,7 @@
       state.routeLayers = L.featureGroup().addTo(state.map);
     }
 
-    function fitRoutes(fitPadding) {
+    function fitRoutes(fitPadding, { animate = true } = {}) {
       ensure();
       if (state.provider === 'google') {
         if (!state.googleOverlays.length) return;
@@ -95,7 +95,10 @@
 
       if (!state.routeLayers?.getLayers().length) return;
       state.map.invalidateSize();
-      state.map.fitBounds(state.routeLayers.getBounds(), fitPadding.leaflet);
+      state.map.fitBounds(state.routeLayers.getBounds(), {
+        ...fitPadding.leaflet,
+        animate
+      });
     }
 
     function isNearLeafletRoute(containerPoint) {

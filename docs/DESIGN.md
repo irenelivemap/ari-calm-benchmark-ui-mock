@@ -159,6 +159,7 @@ Behavior:
 - The dimming layer has real transparent cutouts so highlighted controls remain at full brightness.
 - Coachmarks use an ivory border, strong connector, and a single synchronized entrance pulse for visibility.
 - `Start round →` is a prominent bottom-center dock on desktop and remains top-center on mobile to avoid the question card.
+- Initial route fitting is immediate and runs once before onboarding settles; opening or closing onboarding must not pan or refit the map.
 
 Current onboarding overview:
 

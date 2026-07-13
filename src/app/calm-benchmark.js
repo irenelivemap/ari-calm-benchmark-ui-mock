@@ -402,8 +402,8 @@
       };
     }
 
-    function fitRoutes() {
-      state.mapAdapter.fitRoutes(getRouteFitPadding());
+    function fitRoutes({ animate = true } = {}) {
+      state.mapAdapter.fitRoutes(getRouteFitPadding(), { animate });
     }
 
     function getOnboardingRect(target) {
@@ -533,7 +533,6 @@
       state.onboardingComplete = true;
       els.onboarding.hidden = true;
       updatePanelState(true);
-      requestAnimationFrame(fitRoutes);
     }
 
     function setStreetViewPoint(point) {
@@ -552,8 +551,7 @@
       state.mapAdapter.drawRoutes(pair, state.assignment);
       if (hidden) state.mapAdapter.setRoutesVisible(false, { animate: false });
       requestAnimationFrame(() => {
-        fitRoutes();
-        setTimeout(fitRoutes, 180);
+        fitRoutes({ animate: state.onboardingComplete });
       });
     }
 
@@ -1043,7 +1041,7 @@
       state.mapAdapter.zoomOut();
     });
 
-    els.fitRoutes.addEventListener('click', fitRoutes);
+    els.fitRoutes.addEventListener('click', () => fitRoutes());
     els.openStreetView.addEventListener('click', openStreetView);
     els.closeStreetView.addEventListener('click', () => {
       els.streetCard.hidden = true;
