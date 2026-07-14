@@ -481,8 +481,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-intro-header-context,
-.calm-intro-header-actions,
-.calm-challenge-dialog__meta {
+.calm-intro-header-actions {
   display: flex;
   align-items: center;
 }
@@ -494,11 +493,6 @@ html.is-challenge-dialog-open {
 
 .calm-intro-header-actions {
   gap: 10px;
-}
-
-.calm-challenge-dialog__meta {
-  justify-content: flex-end;
-  gap: 14px;
 }
 
 .calm-test-reset {
@@ -2515,7 +2509,7 @@ html.is-challenge-dialog-open {
 
 .calm-challenge-dialog__head {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto 44px;
+  grid-template-columns: minmax(0, 1fr) 44px;
   align-items: center;
   gap: 20px;
   min-height: 78px;
@@ -2533,18 +2527,6 @@ html.is-challenge-dialog-open {
   letter-spacing: 0.08em;
   line-height: 1;
   text-transform: uppercase;
-}
-
-.calm-challenge-dialog__player {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 0.82rem;
-  font-weight: 700;
-  font-family: var(--ari-arcade-font);
-  letter-spacing: 0.06em;
-  line-height: 1.2;
-  text-transform: uppercase;
-  font-variant-numeric: tabular-nums;
 }
 
 .calm-challenge-dialog__body {
@@ -3288,18 +3270,6 @@ html.is-challenge-dialog-open {
 
   .calm-challenge-dialog__head h2 {
     font-size: 0.82rem;
-  }
-
-  .calm-challenge-dialog__player {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    font-size: 0.76rem;
-  }
-
-  .calm-challenge-dialog__meta {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-content: space-between;
   }
 
   .calm-challenge-dialog__close {

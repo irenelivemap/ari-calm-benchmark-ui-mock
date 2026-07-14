@@ -43,9 +43,6 @@
         <div class="calm-challenge-dialog__title">
           <h2 id="challenge-dialog-title">ARI Route Arcade</h2>
         </div>
-        <div class="calm-challenge-dialog__meta">
-          <p class="calm-challenge-dialog__player" id="challenge-player-status">Player 1 · New game</p>
-        </div>
         <button class="calm-challenge-dialog__close" id="challenge-dialog-close" type="button" aria-label="Close challenge menu">&times;</button>
       </header>
       <div class="calm-challenge-dialog__body">
@@ -831,11 +828,7 @@
         try { progress = dataRepositories[challenge]?.getLatestProgress() || null; } catch (error) { console.error(error); }
       }
       const count = progress?.completedRounds || 0;
-      const participantName = (progress?.participantName || '').trim();
       updateChallengePreview(count);
-      document.getElementById('challenge-player-status').textContent = progress
-        ? `Player ${participantName || '1'}`
-        : 'Player 1 · New game';
       document.getElementById('challenge-action').textContent = progress ? 'Resume →' : 'Play →';
     }
 
@@ -1067,8 +1060,6 @@
           played = `Last played ${isToday ? 'today' : saved.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
         }
         document.getElementById('resume-meta-line').textContent = played;
-        document.getElementById('challenge-player-status').textContent = `Player ${participantName || '1'}`;
-
         const pipsEl = document.getElementById('resume-pips');
         pipsEl.innerHTML = '';
         for (let i = 0; i < goal; i++) {
@@ -1108,7 +1099,6 @@
       } else {
         updateChallengePreview(0);
         document.getElementById('challenge-action').textContent = 'Play →';
-        document.getElementById('challenge-player-status').textContent = 'Player 1 · New game';
         document.getElementById('start-kicker-text').textContent = 'Start testing';
         document.getElementById('start-h2').innerHTML = `Enter the <span>duel.</span>`;
       }
