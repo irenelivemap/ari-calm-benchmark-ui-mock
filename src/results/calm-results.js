@@ -75,6 +75,7 @@
   function filterAnswers(answers, filters = {}) {
     return (answers || []).map(normalizeRow).filter(row => {
       if (filters.participant && row.participant !== filters.participant) return false;
+      if (filters.sessionId && row.sessionId !== filters.sessionId) return false;
       if (filters.outcome && row.outcome !== filters.outcome) return false;
       if (filters.reason && !row.reasons.includes(filters.reason)) return false;
       if (filters.pairId && row.pairId !== filters.pairId) return false;
@@ -132,6 +133,23 @@
     };
   }
 
+  function createPreferenceSnapshot(answers, options = {}) {
+    const batchSize = Math.max(1, Number(options.batchSize) || 5);
+    const rows = filterAnswers(answers, options.filters || {});
+    const releasedTotal = Math.floor(rows.length / batchSize) * batchSize;
+    const releasedAnswers = rows.slice(0, releasedTotal).map(row => row.raw);
+    const releasedSummary = aggregateAnswers(releasedAnswers);
+
+    return {
+      total: rows.length,
+      releasedTotal,
+      nextReleaseAt: releasedTotal + batchSize,
+      calmPercent: releasedTotal
+        ? Math.round((releasedSummary.outcomeCounts.calm / releasedSummary.total) * 100)
+        : null
+    };
+  }
+
   return {
     OUTCOMES,
     Q2_CHOICES,
@@ -141,6 +159,7 @@
     selectedRouteType,
     normalizeRow,
     filterAnswers,
-    aggregateAnswers
+    aggregateAnswers,
+    createPreferenceSnapshot
   };
 });

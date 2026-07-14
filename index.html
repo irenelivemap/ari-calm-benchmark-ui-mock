@@ -6,9 +6,9 @@
   <title>ARI Calm Benchmark</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260713-ivory-coachmarks-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260714-fixed-medal-axis-4">
   <style>
     body {
       margin: 0;
@@ -20,12 +20,86 @@
 <body>
   <header class="calm-intro-header">
     <div class="calm-intro-wrap calm-intro-header-row">
-      <nav class="calm-tabs" aria-label="Benchmark sections">
-        <button type="button" data-view="testing" aria-current="page">Testing</button>
-        <button type="button" data-view="results">Community Results</button>
-      </nav>
+      <div class="calm-intro-header-context">
+        <button class="calm-challenge-menu" id="challenge-menu" type="button" aria-haspopup="dialog" aria-controls="challenge-dialog">
+          <span>Challenges</span>
+          <strong>Fast vs Calm</strong>
+          <i aria-hidden="true"></i>
+        </button>
+        <button class="calm-test-reset" data-reset-test-data type="button">Reset test data</button>
+      </div>
+      <div class="calm-intro-header-actions">
+        <nav class="calm-tabs" aria-label="Benchmark sections">
+          <button type="button" data-view="testing" aria-current="page">Compare</button>
+          <button type="button" data-view="results">Results</button>
+        </nav>
+      </div>
     </div>
   </header>
+
+  <dialog class="calm-challenge-dialog" id="challenge-dialog" aria-labelledby="challenge-dialog-title">
+    <div class="calm-challenge-dialog__shell">
+      <header class="calm-challenge-dialog__head">
+        <div class="calm-challenge-dialog__title">
+          <h2 id="challenge-dialog-title">ARI Route Arcade</h2>
+        </div>
+        <div class="calm-challenge-dialog__meta">
+          <p class="calm-challenge-dialog__player" id="challenge-player-status">Player 1 · New game</p>
+        </div>
+        <button class="calm-challenge-dialog__close" id="challenge-dialog-close" type="button" aria-label="Close challenge menu">&times;</button>
+      </header>
+      <div class="calm-challenge-dialog__body">
+        <div class="calm-challenge-stage">
+          <svg class="calm-challenge-route-layer" id="challenge-route-layer" aria-hidden="true" preserveAspectRatio="none">
+            <path class="calm-route-duel calm-route-duel--a calm-route-duel--base calm-route-duel--transport" id="challenge-route-a-base" pathLength="1" />
+            <path class="calm-route-duel calm-route-duel--b calm-route-duel--base calm-route-duel--transport" id="challenge-route-b-base" pathLength="1" />
+            <path class="calm-route-duel calm-route-duel--a calm-route-duel--base calm-route-duel--dock" id="challenge-route-a-dock-base" pathLength="1" />
+            <path class="calm-route-duel calm-route-duel--b calm-route-duel--base calm-route-duel--dock" id="challenge-route-b-dock-base" pathLength="1" />
+            <path class="calm-route-duel calm-route-duel--a calm-route-duel--trace calm-route-duel--transport" id="challenge-route-a-trace" pathLength="1" />
+            <path class="calm-route-duel calm-route-duel--b calm-route-duel--trace calm-route-duel--transport" id="challenge-route-b-trace" pathLength="1" />
+            <path class="calm-route-duel calm-route-duel--a calm-route-duel--trace calm-route-duel--dock" id="challenge-route-a-dock-trace" pathLength="1" />
+            <path class="calm-route-duel calm-route-duel--b calm-route-duel--trace calm-route-duel--dock" id="challenge-route-b-dock-trace" pathLength="1" />
+            <circle class="calm-route-circuit__port calm-route-circuit__port--a" id="challenge-route-port-a" r="6" />
+            <circle class="calm-route-circuit__port calm-route-circuit__port--b" id="challenge-route-port-b" r="6" />
+          </svg>
+          <section class="calm-challenge-select" aria-labelledby="challenge-select-title">
+            <h3 class="calm-challenge-pane-label" id="challenge-select-title">Select challenge</h3>
+            <nav class="calm-challenge-list" aria-label="Route challenges">
+              <button class="calm-challenge-option" type="button" aria-label="ARI Fast vs Google, coming soon" disabled>
+                <span class="calm-challenge-option__cursor" aria-hidden="true"></span>
+                <span class="calm-challenge-option__name">ARI Fast vs Google</span>
+                <strong>Soon</strong>
+              </button>
+              <button class="calm-challenge-option is-available is-selected" id="challenge-calm" data-challenge="calm" type="button" aria-label="ARI Fast vs ARI Calm, ready" aria-current="true">
+                <span class="calm-challenge-option__cursor" aria-hidden="true"></span>
+                <span class="calm-challenge-option__name">ARI Fast vs ARI Calm</span>
+                <strong>Ready</strong>
+              </button>
+              <button class="calm-challenge-option" type="button" aria-label="ARI Fast vs ARI Safe, coming soon" disabled>
+                <span class="calm-challenge-option__cursor" aria-hidden="true"></span>
+                <span class="calm-challenge-option__name">ARI Fast vs ARI Safe</span>
+                <strong>Soon</strong>
+              </button>
+            </nav>
+          </section>
+
+          <section class="calm-challenge-preview" aria-labelledby="challenge-preview-title">
+            <h3 class="calm-challenge-pane-label" id="challenge-preview-title">Player status</h3>
+            <div class="calm-challenge-preview__rank">
+              <span class="calm-challenge-preview__rank-medal" id="challenge-preview-current-medal" data-medal-tier="0" aria-hidden="true"></span>
+              <div class="calm-challenge-preview__rank-copy" id="challenge-preview-rank-copy">
+                <strong id="challenge-preview-status">New player</strong>
+                <p id="challenge-preview-progress">0 routes &middot; First medal at 5</p>
+              </div>
+            </div>
+            <footer class="calm-challenge-dialog__controls">
+              <button id="challenge-calm-action" type="button">Play &rarr;</button>
+            </footer>
+          </section>
+        </div>
+      </div>
+    </div>
+  </dialog>
 
   <main id="calm-intro" class="calm-intro">
     <div class="calm-intro-wrap">
@@ -149,10 +223,10 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="./src/data/mock-route-pairs.js?v=20260709-structure-1"></script>
-  <script src="./src/data/calm-benchmark-data.js?v=20260713-data-contract-1"></script>
-  <script src="./src/results/calm-results.js?v=20260713-results-surfaces-1"></script>
+  <script src="./src/data/calm-benchmark-data.js?v=20260714-test-reset-1"></script>
+  <script src="./src/results/calm-results.js?v=20260713-live-results-1"></script>
   <script src="./src/maps/map-adapter.js?v=20260713-stable-onboarding-1"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260713-open-question-1"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260713-live-results-2"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -161,11 +235,33 @@
     const teamResults = document.getElementById('team-results');
     const teamResultsContent = document.getElementById('team-results-content');
     const benchmarkRoot = document.getElementById('calm-benchmark-root');
+    const challengeDialog = document.getElementById('challenge-dialog');
+    const challengeDialogClose = document.getElementById('challenge-dialog-close');
+    const challengeMenu = document.getElementById('challenge-menu');
+    const challengeStage = document.querySelector('.calm-challenge-stage');
+    const challengeList = document.querySelector('.calm-challenge-list');
+    const challengePreview = document.querySelector('.calm-challenge-preview');
+    const challengeRouteLayer = document.getElementById('challenge-route-layer');
+    const challengeRoutePaths = {
+      a: {
+        transport: [document.getElementById('challenge-route-a-base'), document.getElementById('challenge-route-a-trace')],
+        dock: [document.getElementById('challenge-route-a-dock-base'), document.getElementById('challenge-route-a-dock-trace')]
+      },
+      b: {
+        transport: [document.getElementById('challenge-route-b-base'), document.getElementById('challenge-route-b-trace')],
+        dock: [document.getElementById('challenge-route-b-dock-base'), document.getElementById('challenge-route-b-dock-trace')]
+      }
+    };
+    const challengeRoutePorts = {
+      a: document.getElementById('challenge-route-port-a'),
+      b: document.getElementById('challenge-route-port-b')
+    };
     const participantInput = document.getElementById('participant-name');
     const startButton = document.getElementById('start-test');
     const GOOGLE_KEY_STORAGE = 'ari-calm-benchmark-google-maps-key';
     const ANSWERS_STORAGE = 'ari-calm-benchmark-answers';
     const PROGRESS_STORAGE = 'ari-calm-benchmark-progress';
+    const CHALLENGE_STORAGE = 'ari-route-benchmark-selected-challenge';
     const dataRepository = AriCalmBenchmarkData.createLocalRepository(localStorage, {
       legacyAnswersKey: ANSWERS_STORAGE,
       legacyProgressKey: PROGRESS_STORAGE
@@ -175,8 +271,20 @@
     let savedProgress = null;
     let activePage = 'testing';
     let teamFilters = { participant: '', outcome: '', reason: '' };
+    let challengeRouteTimer = null;
+    let challengeMedalTimer = null;
+    let challengeRouteResizeFrame = null;
+    let challengeRouteObserver = null;
 
     const urlParams = new URLSearchParams(window.location.search);
+    let freshPreviewMode = urlParams.get('fresh') === '1' || urlParams.get('preview') === 'fresh';
+    const requestedChallenge = urlParams.get('game');
+    let selectedChallenge = freshPreviewMode
+      ? null
+      : requestedChallenge === 'calm'
+      ? 'calm'
+      : localStorage.getItem(CHALLENGE_STORAGE) === 'calm' ? 'calm' : null;
+    if (selectedChallenge) localStorage.setItem(CHALLENGE_STORAGE, selectedChallenge);
     const urlGoogleKey = urlParams.get('gmap');
     if (urlGoogleKey) {
       localStorage.setItem(GOOGLE_KEY_STORAGE, urlGoogleKey);
@@ -196,6 +304,22 @@
 
     function percentage(count, total) {
       return total ? Math.round((count / total) * 100) : 0;
+    }
+
+    function getLiveResultSnapshots(sessionId, completedRounds = 0) {
+      const answers = dataRepository.getSnapshot().answers;
+      const personal = AriCalmResults.createPreferenceSnapshot(answers, {
+        filters: { sessionId },
+        batchSize: 5
+      });
+      personal.total = Math.max(personal.total, completedRounds);
+      if (personal.calmPercent === null) {
+        personal.nextReleaseAt = (Math.floor(personal.total / 5) + 1) * 5;
+      }
+      return {
+        personal,
+        community: AriCalmResults.createPreferenceSnapshot(answers, { batchSize: 5 })
+      };
     }
 
     function formatUpdated(value) {
@@ -443,15 +567,215 @@
     ];
     const DEMO_INITIAL_ROUNDS = MILESTONES[MILESTONES.length - 1].at;
 
+    function updateChallengePreview(count) {
+      const rank = [...MILESTONES].reverse().find(milestone => count >= milestone.at) || null;
+      const earnedCount = MILESTONES.filter(milestone => count >= milestone.at).length;
+      const nextMilestone = MILESTONES.find(milestone => count < milestone.at) || null;
+      const statusLabel = rank ? rank.name : 'New player';
+      const routeLabel = `${count} route${count === 1 ? '' : 's'}`;
+      const progressLabel = nextMilestone
+        ? `${routeLabel} · ${count === 0 ? 'First' : 'Next'} medal at ${nextMilestone.at}`
+        : `${routeLabel} · ${earnedCount}/${MILESTONES.length} medals`;
+      const currentMedal = document.getElementById('challenge-preview-current-medal');
+      const preview = document.querySelector('.calm-challenge-preview');
+
+      document.getElementById('challenge-preview-status').textContent = statusLabel;
+      document.getElementById('challenge-preview-progress').textContent = progressLabel;
+      preview.classList.toggle('is-complete', !nextMilestone);
+      currentMedal.dataset.medalTier = String(rank ? MILESTONES.indexOf(rank) + 1 : 0);
+      currentMedal.classList.toggle('is-earned', !!rank);
+      currentMedal.innerHTML = (rank || MILESTONES[0]).icon;
+    }
+
+    function setChallengeRouteGeometry(paths, value) {
+      paths.forEach(path => path.setAttribute('d', value));
+    }
+
+    function scheduleChallengeRouteCircuitUpdate() {
+      if (!challengeDialog.open) return;
+      cancelAnimationFrame(challengeRouteResizeFrame);
+      challengeRouteResizeFrame = requestAnimationFrame(() => updateChallengeRouteCircuit());
+    }
+
+    function updateChallengeRouteCircuit({ animate = false } = {}) {
+      if (!challengeDialog.open) return;
+      const selectedOption = challengeList.querySelector('.calm-challenge-option.is-selected:not(:disabled)');
+      const currentMedal = document.getElementById('challenge-preview-current-medal');
+      if (!selectedOption || !currentMedal) return;
+
+      const point = value => Math.round(value * 10) / 10;
+      const getStageLayoutRect = element => {
+        let left = 0;
+        let top = 0;
+        let current = element;
+
+        while (current && current !== challengeStage) {
+          left += current.offsetLeft || 0;
+          top += current.offsetTop || 0;
+          current = current.offsetParent;
+        }
+
+        if (current !== challengeStage) {
+          const stageBounds = challengeStage.getBoundingClientRect();
+          const bounds = element.getBoundingClientRect();
+          left = bounds.left - stageBounds.left;
+          top = bounds.top - stageBounds.top;
+        }
+
+        const width = element.offsetWidth;
+        const height = element.offsetHeight;
+        return { left, top, right: left + width, bottom: top + height, width, height };
+      };
+
+      const optionRect = getStageLayoutRect(selectedOption);
+      const previewRect = getStageLayoutRect(challengePreview);
+      const challengeOptions = [...challengeList.querySelectorAll('.calm-challenge-option')];
+      const middleOption = challengeOptions[Math.floor(challengeOptions.length / 2)] || selectedOption;
+      const middleOptionRect = getStageLayoutRect(middleOption);
+      const isStacked = previewRect.top > optionRect.bottom + 8;
+
+      if (isStacked) {
+        challengePreview.style.removeProperty('--challenge-medal-anchor-y');
+      } else {
+        const anchorY = point(middleOptionRect.top + middleOptionRect.height / 2 - previewRect.top);
+        challengePreview.style.setProperty('--challenge-medal-anchor-y', `${anchorY}px`);
+      }
+
+      const medalRect = getStageLayoutRect(currentMedal);
+      if (!challengeStage.clientWidth || !challengeStage.clientHeight || !medalRect.width) return;
+
+      const width = point(challengeStage.clientWidth);
+      const height = point(challengeStage.clientHeight);
+      const startX = point(optionRect.right - 1);
+      const startY = point(optionRect.top + optionRect.height / 2);
+      const medalLeft = point(medalRect.left);
+      const medalTop = point(medalRect.top);
+      const medalX = point(medalRect.left + medalRect.width / 2);
+      const medalY = point(medalRect.top + medalRect.height / 2);
+      const laneHalfGap = point(Math.max(6, Math.min(9, medalRect.height * 0.1)));
+      const startA = { x: startX, y: point(startY - laneHalfGap) };
+      const startB = { x: startX, y: point(startY + laneHalfGap) };
+      let transportA;
+      let transportB;
+      let dockA;
+      let dockB;
+
+      if (isStacked) {
+        const railA = point(width - 5);
+        const railB = point(width - 17);
+        const previewTop = point(previewRect.top);
+        const endHalfGap = point(medalRect.width * 0.24);
+        const endY = point(medalTop + Math.max(4, medalRect.height * 0.08));
+        const fanY = point(medalTop - Math.max(14, medalRect.height * 0.22));
+        const dockStartY = point(Math.min(fanY - 12, Math.max(previewTop + 30, fanY - Math.max(26, medalRect.height * 0.46))));
+        const previewEntryY = point(Math.max(previewTop + 22, Math.min(dockStartY - 12, previewTop + 42)));
+        const dockAStartX = point(medalX - laneHalfGap);
+        const dockBStartX = point(medalX + laneHalfGap);
+
+        transportA = `M ${startA.x} ${startA.y} L ${railA} ${startA.y} L ${railA} ${point(previewEntryY - laneHalfGap)} L ${dockAStartX} ${point(previewEntryY - laneHalfGap)} L ${dockAStartX} ${dockStartY}`;
+        transportB = `M ${startB.x} ${startB.y} L ${railB} ${startB.y} L ${railB} ${point(previewEntryY + laneHalfGap)} L ${dockBStartX} ${point(previewEntryY + laneHalfGap)} L ${dockBStartX} ${dockStartY}`;
+        dockA = `M ${dockAStartX} ${dockStartY} L ${point(medalX - endHalfGap)} ${fanY} L ${point(medalX - endHalfGap)} ${endY}`;
+        dockB = `M ${dockBStartX} ${dockStartY} L ${point(medalX + endHalfGap)} ${fanY} L ${point(medalX + endHalfGap)} ${endY}`;
+      } else {
+        const dividerX = point(previewRect.left);
+        const dockHalfGap = point(Math.max(laneHalfGap, medalRect.height * 0.22));
+        const endHalfGap = point(Math.min(dockHalfGap, medalRect.height * 0.24));
+        const endX = point(medalLeft + Math.max(4, medalRect.width * 0.08));
+        const fanX = point(medalLeft - Math.max(18, medalRect.width * 0.28));
+        const desiredDockStartX = point(fanX - Math.max(36, medalRect.width * 0.55));
+        const dockStartX = point(Math.min(fanX - 14, Math.max(dividerX + 48, desiredDockStartX)));
+        const dockAY = point(medalY - laneHalfGap);
+        const dockBY = point(medalY + laneHalfGap);
+
+        const createTransportPath = (start, dockY) => {
+          const availableWidth = dockStartX - start.x;
+          if (Math.abs(start.y - dockY) < 1 || availableWidth < 36) {
+            return `M ${start.x} ${start.y} L ${dockStartX} ${dockY}`;
+          }
+
+          const leadX = point(start.x + availableWidth * 0.18);
+          const bendStartX = point(start.x + availableWidth * 0.38);
+          const bendEndX = point(start.x + availableWidth * 0.72);
+          return `M ${start.x} ${start.y} L ${leadX} ${start.y} L ${bendStartX} ${start.y} L ${bendEndX} ${dockY} L ${dockStartX} ${dockY}`;
+        };
+
+        transportA = createTransportPath(startA, dockAY);
+        transportB = createTransportPath(startB, dockBY);
+        dockA = `M ${dockStartX} ${dockAY} L ${fanX} ${point(medalY - dockHalfGap)} L ${endX} ${point(medalY - endHalfGap)}`;
+        dockB = `M ${dockStartX} ${dockBY} L ${fanX} ${point(medalY + dockHalfGap)} L ${endX} ${point(medalY + endHalfGap)}`;
+      }
+
+      const applyGeometry = () => {
+        challengeRouteLayer.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        challengeRouteLayer.dataset.layout = isStacked ? 'stacked' : 'split';
+        setChallengeRouteGeometry(challengeRoutePaths.a.transport, transportA);
+        setChallengeRouteGeometry(challengeRoutePaths.b.transport, transportB);
+        setChallengeRouteGeometry(challengeRoutePaths.a.dock, dockA);
+        setChallengeRouteGeometry(challengeRoutePaths.b.dock, dockB);
+        challengeRoutePorts.a.setAttribute('cx', startA.x);
+        challengeRoutePorts.a.setAttribute('cy', startA.y);
+        challengeRoutePorts.b.setAttribute('cx', startB.x);
+        challengeRoutePorts.b.setAttribute('cy', startB.y);
+        challengeRouteLayer.classList.remove('is-retracting', 'is-routing');
+
+        if (!animate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        void challengeRouteLayer.getBoundingClientRect();
+        challengeRouteLayer.classList.add('is-routing');
+        window.clearTimeout(challengeMedalTimer);
+        challengeMedalTimer = window.setTimeout(() => {
+          currentMedal.classList.remove('is-route-powered');
+          void currentMedal.offsetWidth;
+          currentMedal.classList.add('is-route-powered');
+          challengeMedalTimer = window.setTimeout(() => currentMedal.classList.remove('is-route-powered'), 700);
+        }, 650);
+      };
+
+      window.clearTimeout(challengeRouteTimer);
+      if (animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        challengeRouteLayer.classList.add('is-retracting');
+        challengeRouteTimer = window.setTimeout(applyGeometry, 140);
+      } else {
+        applyGeometry();
+      }
+    }
+
+    function setChallengeOptionSelected(option, { animate = true } = {}) {
+      if (!option || option.disabled || !option.classList.contains('is-available')) return;
+      challengeList.querySelectorAll('.calm-challenge-option').forEach(candidate => {
+        const isSelected = candidate === option;
+        candidate.classList.toggle('is-selected', isSelected);
+        if (isSelected) candidate.setAttribute('aria-current', 'true');
+        else candidate.removeAttribute('aria-current');
+      });
+      updateChallengeRouteCircuit({ animate });
+    }
+
     function checkResumeState() {
       let progress = null;
-      try { progress = dataRepository.getLatestProgress(); } catch (error) { console.error(error); }
+      if (!freshPreviewMode) {
+        try { progress = dataRepository.getLatestProgress(); } catch (error) { console.error(error); }
+      }
 
       const hasProgress = !!(progress && progress.sessionId && progress.savedAt);
 
       const card = document.querySelector('.calm-start-card');
       const shelf = document.getElementById('medal-shelf');
       const infoGrid = document.querySelector('.calm-info-grid');
+      const count = hasProgress ? progress.completedRounds || 0 : 0;
+      const rank = [...MILESTONES].reverse().find(milestone => count >= milestone.at) || null;
+      const rankTier = rank ? MILESTONES.indexOf(rank) + 1 : 0;
+      const previousRankTier = Number(card.dataset.rankTier || 0);
+      const rankWasReady = card.dataset.rankReady === 'true';
+
+      card.dataset.rankTier = String(rankTier);
+      card.dataset.rankReady = 'true';
+      card.setAttribute('aria-label', rank ? `${rank.name} progress` : hasProgress ? 'Route comparison progress' : 'Start testing');
+      if (rankWasReady && rankTier > previousRankTier) {
+        card.classList.remove('is-rank-shifting');
+        void card.offsetWidth;
+        card.classList.add('is-rank-shifting');
+        window.setTimeout(() => card.classList.remove('is-rank-shifting'), 1700);
+      }
 
       document.getElementById('start-form').classList.toggle('calm-hidden', !!hasProgress);
       document.getElementById('resume-right').classList.toggle('calm-hidden', !hasProgress);
@@ -470,8 +794,8 @@
 
       if (hasProgress) {
         savedProgress = progress;
-        const count = progress.completedRounds || 0;
-        const rank = [...MILESTONES].reverse().find(m => count >= m.at) || null;
+        updateChallengePreview(count);
+        document.getElementById('challenge-calm-action').textContent = 'Resume →';
         const next = MILESTONES.find(m => count < m.at) || null;
         const goal = next ? next.at : MILESTONES[MILESTONES.length - 1].at;
 
@@ -490,6 +814,7 @@
           played = `Last played ${isToday ? 'today' : saved.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
         }
         document.getElementById('resume-meta-line').textContent = played;
+        document.getElementById('challenge-player-status').textContent = `Player ${participantName || '1'}`;
 
         const pipsEl = document.getElementById('resume-pips');
         pipsEl.innerHTML = '';
@@ -528,6 +853,9 @@
           shelf.appendChild(medal);
         });
       } else {
+        updateChallengePreview(0);
+        document.getElementById('challenge-calm-action').textContent = 'Play →';
+        document.getElementById('challenge-player-status').textContent = 'Player 1 · New game';
         document.getElementById('start-kicker-text').textContent = 'Start testing';
         document.getElementById('start-h2').innerHTML = `Enter the <span>duel.</span>`;
       }
@@ -604,7 +932,58 @@
 
     window.ariCheckAlignment = checkAlignmentGroups;
 
+    function openChallengeDialog({ required = false } = {}) {
+      challengeDialog.dataset.required = String(required);
+      challengeDialogClose.hidden = required;
+      setChallengeOptionSelected(document.getElementById('challenge-calm'), { animate: false });
+      document.documentElement.classList.add('is-challenge-dialog-open');
+      document.body.classList.add('is-challenge-dialog-open');
+      if (!challengeDialog.open) challengeDialog.showModal();
+      requestAnimationFrame(() => requestAnimationFrame(() => updateChallengeRouteCircuit({ animate: true })));
+    }
+
+    function resetTestData() {
+      document.querySelectorAll('[data-reset-test-data]').forEach(button => {
+        button.disabled = true;
+        button.textContent = 'Resetting…';
+      });
+      dataRepository.clear();
+      localStorage.removeItem(CHALLENGE_STORAGE);
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.search = '';
+      cleanUrl.hash = '';
+      window.location.replace(cleanUrl.href);
+    }
+
+    function selectChallenge(challenge) {
+      if (challenge !== 'calm') return;
+      const challengeChanged = selectedChallenge !== challenge;
+      selectedChallenge = challenge;
+      localStorage.setItem(CHALLENGE_STORAGE, challenge);
+      const next = new URL(window.location.href);
+      next.searchParams.set('game', challenge);
+      window.history.replaceState({}, '', `${next.pathname}${next.search}${next.hash}`);
+      challengeDialog.classList.add('is-launching');
+      const finishSelection = () => {
+        challengeDialog.close();
+        challengeDialog.classList.remove('is-launching');
+        if (challengeChanged) showPage('testing');
+      };
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        finishSelection();
+      } else {
+        window.setTimeout(finishSelection, 220);
+      }
+    }
+
     async function startBenchmark(participantName, extraOptions = {}) {
+      if (freshPreviewMode) {
+        freshPreviewMode = false;
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.delete('fresh');
+        nextUrl.searchParams.delete('preview');
+        window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+      }
       const googleKey = window.ARI_GOOGLE_MAPS_KEY || localStorage.getItem(GOOGLE_KEY_STORAGE) || '';
       if (googleKey) localStorage.setItem(GOOGLE_KEY_STORAGE, googleKey);
       const googleAvailable = await loadGoogleMaps(googleKey).catch(error => {
@@ -643,7 +1022,8 @@
           progressSink: async progress => {
             dataRepository.saveProgress(progress);
             console.log('Demo progress payload:', progress);
-          }
+          },
+          resultsProvider: ({ sessionId, completedRounds }) => getLiveResultSnapshots(sessionId, completedRounds)
         });
         benchmarkMounted = true;
       }
@@ -683,6 +1063,44 @@
       if (!button) return;
       showPage(button.dataset.view);
     });
+
+    challengeMenu.addEventListener('click', () => openChallengeDialog());
+    document.querySelectorAll('[data-reset-test-data]').forEach(button => button.addEventListener('click', resetTestData));
+    challengeDialogClose.addEventListener('click', () => challengeDialog.close());
+    challengeList.addEventListener('click', event => {
+      const option = event.target.closest('.calm-challenge-option');
+      if (!option || option.disabled || !option.classList.contains('is-available')) return;
+      setChallengeOptionSelected(option);
+      document.getElementById('challenge-calm-action').focus();
+    });
+    document.getElementById('challenge-calm-action').addEventListener('click', () => {
+      const selectedOption = challengeList.querySelector('.calm-challenge-option.is-selected:not(:disabled)');
+      selectChallenge(selectedOption?.dataset.challenge || 'calm');
+    });
+    challengeDialog.addEventListener('close', () => {
+      window.clearTimeout(challengeRouteTimer);
+      window.clearTimeout(challengeMedalTimer);
+      challengeRouteLayer.classList.remove('is-retracting', 'is-routing');
+      document.getElementById('challenge-preview-current-medal').classList.remove('is-route-powered');
+      document.documentElement.classList.remove('is-challenge-dialog-open');
+      document.body.classList.remove('is-challenge-dialog-open');
+    });
+    challengeDialog.addEventListener('cancel', event => {
+      if (challengeDialog.dataset.required === 'true') event.preventDefault();
+    });
+    window.addEventListener('resize', scheduleChallengeRouteCircuitUpdate);
+    if ('ResizeObserver' in window) {
+      challengeRouteObserver = new ResizeObserver(scheduleChallengeRouteCircuitUpdate);
+      [
+        challengeStage,
+        challengeList,
+        challengePreview,
+        document.getElementById('challenge-preview-current-medal'),
+        document.getElementById('challenge-preview-rank-copy'),
+        ...challengeList.querySelectorAll('.calm-challenge-option')
+      ].forEach(element => challengeRouteObserver.observe(element));
+    }
+    document.fonts?.ready.then(scheduleChallengeRouteCircuitUpdate);
 
     communityResults.addEventListener('click', event => {
       if (event.target.closest('[data-results-action="continue"]')) showPage('testing');
@@ -745,6 +1163,9 @@
     checkResumeState();
     const requestedView = urlParams.get('view');
     showPage(requestedView === 'team-results' ? 'team-results' : requestedView === 'results' ? 'results' : 'testing', { updateUrl: false });
+    if (!selectedChallenge && requestedView !== 'team-results') {
+      requestAnimationFrame(() => openChallengeDialog({ required: true }));
+    }
 
     window.ariCalmData = {
       verify: () => dataRepository.verify(),

@@ -105,6 +105,17 @@
               <span class="ari-save-flash" data-save-flash aria-live="polite">Saved &#10003;</span>
               <button class="ari-panel-handle" data-action="toggle-panel" type="button" aria-expanded="true" aria-label="Minimize question panel" title="Minimize question panel"></button>
             </div>
+            <div class="ari-live-results" data-live-results aria-live="polite">
+              <span class="ari-live-results__group">
+                <small>Your results</small>
+                <b data-personal-result>0 compared</b>
+              </span>
+              <span class="ari-live-results__divider" aria-hidden="true"></span>
+              <span class="ari-live-results__group">
+                <small><span class="ari-live-results__signal" aria-hidden="true"></span>Live benchmark</small>
+                <b data-community-result>0 compared</b>
+              </span>
+            </div>
             <div class="ari-panel-summary" data-panel-summary>
               <b data-panel-question>${QUESTION_COPY.q1}</b>
               <button class="ari-context-toggle ari-context-toggle--summary" data-action="open-context" type="button" aria-expanded="false" aria-controls="ari-calm-context" aria-label="What do we mean by calm?" title="What do we mean by calm?"><span aria-hidden="true">i</span></button>
@@ -246,6 +257,7 @@
     const routePairProvider = options.routePairProvider || mockRoutePairProvider;
     const answerSink = options.answerSink || consoleAnswerSink;
     const progressSink = options.progressSink || consoleProgressSink;
+    const resultsProvider = typeof options.resultsProvider === 'function' ? options.resultsProvider : null;
     const onExit = typeof options.onExit === 'function' ? options.onExit : null;
     const milestones = Array.isArray(options.milestones) ? options.milestones : [];
     buildShell(root, state.totalRounds);
@@ -263,6 +275,9 @@
       onboardingCoachmarks: Array.from(root.querySelectorAll('[data-onboarding-coachmark]')),
       nextOnboarding: root.querySelector('[data-action="next-onboarding"]'),
       saveFlash: root.querySelector('[data-save-flash]'),
+      liveResults: root.querySelector('[data-live-results]'),
+      personalResult: root.querySelector('[data-personal-result]'),
+      communityResult: root.querySelector('[data-community-result]'),
       questionCard: root.querySelector('[data-question-card]'),
       panelToggle: root.querySelector('[data-action="toggle-panel"]'),
       panelQuestion: root.querySelector('[data-panel-question]'),
@@ -289,6 +304,9 @@
 
     let medalUnlockTimer = null;
     let roundTransitionTimer = null;
+    let resultsRefreshTimer = null;
+    let resultsRequestId = 0;
+    let releasedResultCounts = { personal: 0, community: 0 };
 
     function canContinueAfterCurrentRound() {
       return options.allowExtraRounds || state.roundIndex < state.totalRounds - 1;
@@ -329,6 +347,63 @@
 
     function updateProgressHud() {
       renderHudMedals();
+    }
+
+    function formatResultSnapshot(snapshot) {
+      const total = Math.max(0, Number(snapshot?.total) || 0);
+      const calmPercent = Number.isFinite(snapshot?.calmPercent) ? snapshot.calmPercent : null;
+      if (calmPercent === null) {
+        if (!total) return '0 compared';
+        return `${total} · update at ${Math.max(5, Number(snapshot?.nextReleaseAt) || 5)}`;
+      }
+      return `${total} · ARI Calm ${calmPercent}%`;
+    }
+
+    async function updateLiveResults({ announce = false } = {}) {
+      if (!els.liveResults || !resultsProvider) {
+        if (els.liveResults) els.liveResults.hidden = true;
+        return;
+      }
+
+      const requestId = ++resultsRequestId;
+      let result;
+      try {
+        result = await Promise.resolve(resultsProvider({
+          sessionId: state.sessionId,
+          completedRounds: state.completedRounds
+        }));
+      } catch (error) {
+        console.warn('Could not refresh live benchmark results.', error);
+        return;
+      }
+      if (requestId !== resultsRequestId || !result) return;
+
+      const personal = result.personal || {};
+      const community = result.community || {};
+      els.liveResults.hidden = false;
+      els.personalResult.textContent = formatResultSnapshot(personal);
+      els.communityResult.textContent = formatResultSnapshot(community);
+      els.liveResults.setAttribute(
+        'aria-label',
+        `Your results: ${els.personalResult.textContent}. Live benchmark: ${els.communityResult.textContent}. Preference scores update every five comparisons.`
+      );
+
+      const releasedChanged = Number(personal.releasedTotal || 0) > releasedResultCounts.personal
+        || Number(community.releasedTotal || 0) > releasedResultCounts.community;
+      releasedResultCounts = {
+        personal: Number(personal.releasedTotal || 0),
+        community: Number(community.releasedTotal || 0)
+      };
+
+      if (announce && releasedChanged) {
+        window.clearTimeout(resultsRefreshTimer);
+        els.liveResults.classList.remove('is-refreshing');
+        void els.liveResults.offsetWidth;
+        els.liveResults.classList.add('is-refreshing');
+        resultsRefreshTimer = window.setTimeout(() => {
+          els.liveResults?.classList.remove('is-refreshing');
+        }, 1200);
+      }
     }
 
     state.mapAdapter = mapTools.createMapAdapter({
@@ -922,6 +997,7 @@
         throw new Error(`Saved pair ${expectedPairId} does not match loaded pair ${state.pair.pairId}.`);
       }
       updateProgressHud();
+      await updateLiveResults();
       state.questionStep = questionStep;
       state.streetViewPoint = null;
       els.streetCard.hidden = true;
@@ -969,6 +1045,7 @@
         return;
       }
       state.completedRounds += 1;
+      await updateLiveResults({ announce: true });
       const earnedMilestone = getEarnedMilestone(state.completedRounds, milestones);
       if (!canContinueAfterCurrentRound()) {
         els.submit.textContent = 'Complete';
@@ -1073,6 +1150,7 @@
     function unmount() {
       window.clearTimeout(medalUnlockTimer);
       window.clearTimeout(roundTransitionTimer);
+      window.clearTimeout(resultsRefreshTimer);
       resizeController.abort();
       questionResizeObserver.disconnect();
       state.mapAdapter?.destroy();

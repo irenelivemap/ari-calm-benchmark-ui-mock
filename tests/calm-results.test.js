@@ -52,3 +52,38 @@ test('filters the unified dashboard without mutating public totals', () => {
   assert.equal(Results.aggregateAnswers(answers, { participant: 'Alex' }).total, 1);
   assert.equal(Results.aggregateAnswers(answers, { reason: 'too_complex' }).rows[0].participant, 'Alex');
 });
+
+test('releases preference percentages only in complete five-comparison batches', () => {
+  const answers = Array.from({ length: 7 }, (_, index) => answer({
+    captureId: `capture-${index + 1}`,
+    q1Choice: index < 3 ? 'route_a' : index === 3 ? 'route_b' : 'either'
+  }));
+
+  assert.deepEqual(Results.createPreferenceSnapshot(answers), {
+    total: 7,
+    releasedTotal: 5,
+    nextReleaseAt: 10,
+    calmPercent: 60
+  });
+});
+
+test('creates separate personal and community snapshots from the same answer feed', () => {
+  const answers = [
+    answer({ captureId: 'capture-1', sessionId: 'session-1' }),
+    answer({ captureId: 'capture-2', sessionId: 'session-1' }),
+    answer({ captureId: 'capture-3', sessionId: 'session-1' }),
+    answer({ captureId: 'capture-4', sessionId: 'session-1' }),
+    answer({ captureId: 'capture-5', sessionId: 'session-1', q1Choice: 'route_b' }),
+    answer({ captureId: 'capture-6', sessionId: 'session-2' })
+  ];
+
+  assert.deepEqual(Results.createPreferenceSnapshot(answers, {
+    filters: { sessionId: 'session-1' }
+  }), {
+    total: 5,
+    releasedTotal: 5,
+    nextReleaseAt: 10,
+    calmPercent: 80
+  });
+  assert.equal(Results.createPreferenceSnapshot(answers).total, 6);
+});

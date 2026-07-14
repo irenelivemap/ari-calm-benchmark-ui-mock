@@ -84,6 +84,24 @@ Rules:
 
 Intro page:
 
+- The benchmark family uses one shared header: a `Challenges` context menu on the left and `Compare | Results` views on the right.
+- The challenge chooser is a reusable full-screen opening state, not a separate route. It opens automatically only when no challenge has been selected, then remains available through the header menu.
+- While the chooser is open, its off-white canvas and dark cabinet surface preserve continuity with the benchmark while fully replacing its content. No benchmark, header, map, or page scrollbar remains visible behind it.
+- Direct benchmark links such as `?game=calm` bypass the first-visit chooser. Returning visitors reopen the last selected challenge.
+- The chooser is one continuous arcade stage rather than a web-style menu beside a preview card. Challenge selection is the primary task, Play or Resume is the primary command, and player progress is secondary context.
+- On desktop, the stage uses a `60 / 40` structure: a vertical challenge list on the left and an unframed player-status pane on the right. The cabinet header and its divider provide the outer structure; the stage does not add another enclosing card or outline. On mobile, the same content stacks in task order: challenges, status, then Play or Resume.
+- Challenge keys use full comparison names: `ARI Fast vs Google`, `ARI Fast vs ARI Calm`, and `ARI Fast vs ARI Safe`. The selected available key uses a powered split orange/green surface, a bright frame, an arcade cursor, and `Ready`. Unavailable keys use raised graphite surfaces that are visibly distinct from the cabinet, with readable labels and a quiet `Soon` state.
+- The player-status pane never repeats the selected challenge. It shows the current medal, rank, and one concise progress line. Before the final medal the line combines routes with the next medal threshold; after completion it combines routes with the medal count.
+- Challenge order never changes. The medal stays aligned to the center of the middle challenge key, even when the top or bottom key is selected. The route animation begins at two output ports on the selected key, travels as a parallel paired cable, then enters the fixed medal dock. Top and bottom selections use mirrored cable geometry; only the upstream transport cable reroutes.
+- The medal, route endpoints, and rank copy are measured from the rendered layout. Route geometry stays inside the medal's vertical footprint in the status pane, and the rank copy below it is an explicit no-route zone. This keeps longer future rank names clear without masking collisions behind text.
+- On stacked mobile layouts, the circuit uses the stage's outer rail to avoid crossing the remaining challenge keys, then enters a fixed symmetrical top dock above the medal.
+- Opening the chooser draws both routes once, then uses a slow moving trace to keep the screen in attract mode. A confirmed selection retracts and redraws only the transport cable, leaves the medal dock stable, then gives the medal one restrained power pulse. Hover never moves the circuit. Reduced-motion mode shows the completed route immediately without looping or pulsing motion.
+- All challenges share one vertical selector. Fast vs Calm is selected; Fast vs Google and Fast vs Safe remain visible as disabled `Soon` options until their flows exist.
+- The stage has exactly one ivory Play or Resume command. It is intentionally distinct from the dark challenge keys.
+- Selection is communicated by the cursor and active frame only. Do not add `Select a challenge`, `Selected challenge`, or `Selected` labels, and do not repeat the selected challenge inside the CRT.
+- `fresh.html` is the non-destructive QA entry point. It previews a new player without deleting locally saved sessions.
+- During the current single-tester design phase, `Reset test data` appears only in the intro header, immediately to the right of the challenge menu. It clears local answers, progress, participant state, medals, and challenge selection in one step, then returns to the true first screen. It preserves the map API configuration and must be removed before production testing.
+- Switching challenges must preserve existing progress. Results and comparison views always belong to the currently selected challenge.
 - Header, intro text, cards, and start card must share the same content width.
 - On mobile, the session card appears before the start card.
 - Avoid repeating the same information in the hero, cards, and start section.
@@ -91,6 +109,9 @@ Intro page:
 - Compact rows must have a single visible alignment contract: icon, label, and action control share one center line. Hidden expanded content must not leave margins, gaps, or padding inside the compact row.
 - Side-by-side overview cards use explicit animated desktop heights: `420px` expanded and `90px` compact. Below `900px`, both states return to content-driven height.
 - The expanded Session card uses `10+ comparisons.` as a flexible goal, reassures testers with `Every comparison helps. More is even better.`, gives the target duration as `About 6 to 8 min`, confirms `Desktop and mobile` support, and introduces the medal goal with `Become a Cosmic Explorer.` / `Unlock a new medal every 5 comparisons.`
+- The resume card is an evolving rank world. It begins as the near-black arcade cabinet, then progressively gains street geometry, a traced trail, a horizon, map contours, constellations, and a cosmic field as medals are earned.
+- Rank motifs remain low-contrast behind the content and never change the card layout or ivory action. The latest rank controls the surface tint, border light, progress color, and title accent.
+- Crossing a medal threshold reveals the new world layer outward from that medal's position once. Reloading or revisiting an already earned tier must not replay the animation, and reduced-motion users receive the final state immediately.
 - Do not add a separate `How your answers help` disclosure to the Session card. Keep its content in one scan-friendly stack.
 
 Alignment QA:
@@ -194,6 +215,16 @@ Implemented pattern:
 ```
 [ × │ (004: ●●●●○)  ^ ]
 ```
+
+### Live Result Rail
+
+- A slim, non-interactive status rail sits below the HUD header in both collapsed and expanded question states.
+- `Your results` is scoped to the current session. `Live benchmark` uses every available completed comparison.
+- Comparison counts update immediately. ARI Calm preference percentages update only in complete batches of five comparisons so one answer never reveals the hidden identity of an individual route.
+- Before the first complete batch, the rail shows the current count and the next percentage update point.
+- Percentages use every completed comparison in the denominator, including neutral and uncertain answers.
+- The rail uses neutral ivory and white only. Route A orange and Route B green remain reserved for route identity.
+- The rail is status, not navigation: no hover treatment, pointer cursor, or button container.
 
 ## Question Panel Rules
 

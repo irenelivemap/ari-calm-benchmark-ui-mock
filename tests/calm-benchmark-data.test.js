@@ -19,6 +19,10 @@ class MemoryStorage {
   setItem(key, value) {
     this.values.set(key, String(value));
   }
+
+  removeItem(key) {
+    this.values.delete(key);
+  }
 }
 
 function validAnswer(overrides = {}) {
@@ -149,4 +153,22 @@ test('exports dashboard-ready newline-delimited JSON', () => {
   assert.equal(rows[0].type, 'bench-ux');
   assert.equal(rows[0].test, 'calm_vs_fast');
   assert.equal(rows[1].captureId, 'calm-session-123-round-2');
+});
+
+test('clears the current dataset and legacy test records', () => {
+  const storage = new MemoryStorage();
+  const repository = createLocalRepository(storage);
+  repository.saveAnswer(validAnswer());
+  repository.saveProgress(validProgress());
+  storage.setItem('ari-calm-benchmark-answers', JSON.stringify([validAnswer()]));
+  storage.setItem('ari-calm-benchmark-progress', JSON.stringify(validProgress()));
+
+  assert.equal(repository.clear().status, 'cleared');
+  assert.equal(storage.getItem('ari-calm-benchmark-answers'), null);
+  assert.equal(storage.getItem('ari-calm-benchmark-progress'), null);
+  assert.deepEqual(repository.verify().stats, {
+    sessions: 0,
+    progressRecords: 0,
+    answers: 0
+  });
 });

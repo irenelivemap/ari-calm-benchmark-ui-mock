@@ -400,6 +400,19 @@
       return readDataset().answers.map(answer => JSON.stringify(answer)).join('\n');
     }
 
+    function clear() {
+      if (typeof storage.removeItem === 'function') {
+        storage.removeItem(storageKey);
+        storage.removeItem(legacyAnswersKey);
+        storage.removeItem(legacyProgressKey);
+      } else {
+        storage.setItem(legacyAnswersKey, '[]');
+        storage.setItem(legacyProgressKey, 'null');
+      }
+      writeDataset(emptyDataset());
+      return { status: 'cleared' };
+    }
+
     return {
       storageKey,
       saveAnswer,
@@ -407,7 +420,8 @@
       getLatestProgress,
       getSnapshot,
       verify,
-      exportAnswerJsonl
+      exportAnswerJsonl,
+      clear
     };
   }
 
