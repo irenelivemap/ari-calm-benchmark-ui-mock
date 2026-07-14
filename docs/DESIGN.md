@@ -216,16 +216,6 @@ Implemented pattern:
 [ × │ (004: ●●●●○)  ^ ]
 ```
 
-### Live Result Rail
-
-- A slim, non-interactive status rail sits below the HUD header in both collapsed and expanded question states.
-- `Your results` is scoped to the current session. `Live benchmark` uses every available completed comparison.
-- Comparison counts update immediately. ARI Calm preference percentages update only in complete batches of five comparisons so one answer never reveals the hidden identity of an individual route.
-- Before the first complete batch, the rail shows the current count and the next percentage update point.
-- Percentages use every completed comparison in the denominator, including neutral and uncertain answers.
-- The rail uses neutral ivory and white only. Route A orange and Route B green remain reserved for route identity.
-- The rail is status, not navigation: no hover treatment, pointer cursor, or button container.
-
 ## Question Panel Rules
 
 - The map remains the main focus.

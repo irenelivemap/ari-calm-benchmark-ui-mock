@@ -4938,73 +4938,6 @@ html.is-challenge-dialog-open {
   border-bottom-color: rgba(255, 255, 255, 0.16);
 }
 
-.ari-live-results {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  min-height: 36px;
-  margin: -2px 0 12px;
-  color: rgba(255, 255, 255, 0.84);
-  pointer-events: none;
-}
-
-.ari-live-results[hidden] {
-  display: none;
-}
-
-.ari-live-results__group {
-  display: grid;
-  min-width: 0;
-  gap: 1px;
-}
-
-.ari-live-results__group small {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1.1;
-}
-
-.ari-live-results__group b {
-  overflow: hidden;
-  color: rgba(255, 255, 255, 0.94);
-  font-size: 0.76rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ari-live-results__divider {
-  width: 1px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.ari-live-results__signal {
-  width: 5px;
-  height: 5px;
-  flex: none;
-  border-radius: 50%;
-  background: #e8e6da;
-  box-shadow: 0 0 0 2px rgba(232, 230, 218, 0.12);
-}
-
-.ari-live-results.is-refreshing .ari-live-results__group b {
-  animation: ari-live-results-refresh 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes ari-live-results-refresh {
-  0% { color: #fff; text-shadow: 0 0 12px rgba(255, 255, 255, 0.72); }
-  35% { color: #fff; text-shadow: 0 0 7px rgba(255, 255, 255, 0.44); }
-  100% { color: rgba(255, 255, 255, 0.94); text-shadow: none; }
-}
-
 .ari-card-header:hover .ari-panel-handle {
   background: transparent;
 }
@@ -5768,10 +5701,6 @@ html.is-challenge-dialog-open {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ari-live-results.is-refreshing .ari-live-results__group b {
-    animation: none;
-  }
-
   .ari-onboarding__coachmark,
   .ari-onboarding__target {
     animation: none;

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260714-fixed-medal-axis-4">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260714-remove-live-rail-1">
   <style>
     body {
       margin: 0;
@@ -226,7 +226,7 @@
   <script src="./src/data/calm-benchmark-data.js?v=20260714-test-reset-1"></script>
   <script src="./src/results/calm-results.js?v=20260713-live-results-1"></script>
   <script src="./src/maps/map-adapter.js?v=20260713-stable-onboarding-1"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260713-live-results-2"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260714-remove-live-rail-1"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -304,22 +304,6 @@
 
     function percentage(count, total) {
       return total ? Math.round((count / total) * 100) : 0;
-    }
-
-    function getLiveResultSnapshots(sessionId, completedRounds = 0) {
-      const answers = dataRepository.getSnapshot().answers;
-      const personal = AriCalmResults.createPreferenceSnapshot(answers, {
-        filters: { sessionId },
-        batchSize: 5
-      });
-      personal.total = Math.max(personal.total, completedRounds);
-      if (personal.calmPercent === null) {
-        personal.nextReleaseAt = (Math.floor(personal.total / 5) + 1) * 5;
-      }
-      return {
-        personal,
-        community: AriCalmResults.createPreferenceSnapshot(answers, { batchSize: 5 })
-      };
     }
 
     function formatUpdated(value) {
@@ -1022,8 +1006,7 @@
           progressSink: async progress => {
             dataRepository.saveProgress(progress);
             console.log('Demo progress payload:', progress);
-          },
-          resultsProvider: ({ sessionId, completedRounds }) => getLiveResultSnapshots(sessionId, completedRounds)
+          }
         });
         benchmarkMounted = true;
       }
