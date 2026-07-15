@@ -92,21 +92,22 @@ Replace `answerSink` and `progressSink`. Keep the record shapes and idempotency 
 
 ## Live Route Pairs
 
-The Fast vs Calm challenge generates random route pairs the way the `livemap-routing` bench does: it draws a random origin and destination inside the central-Zurich sampling polygon (400 m to 3000 m apart) and requests `foot_fast` and `foot_calm` from the routing facade in one call.
+Both active challenges generate random route pairs the way the `livemap-routing` bench does: a random origin and destination is drawn inside the central-Zurich sampling polygon (400 m to 3000 m apart).
+
+- **Fast vs Calm** requests `foot_fast` and `foot_calm` from the routing facade in one call.
+- **Fast vs Google Fast** requests `foot_fast` from the facade and the Google walking route from the Directions SDK at run time, so it needs both a reachable facade and a configured Google Maps key. Matchups where the two engines snap the endpoints more than 40 m apart are redrawn (fairness gate). Google geometry is never persisted: cached rounds store only our route, metrics, and Google's snapped endpoints, and the Google path is re-fetched live on resume.
 
 - Default endpoint: `POST /api/v1/routing/route` on the same origin.
 - Point at another deployment once with `?api=https://host/api/v1/routing`; the base is kept in local storage.
-- When the facade is unreachable (for example on GitHub Pages), the challenge falls back to the mock fixtures and logs a console warning.
+- When the facade is unreachable (for example on GitHub Pages) or, for the Google challenge, no Maps key is configured, the challenge falls back to the mock fixtures and logs a console warning.
 - Generated pairs are cached per session, so retrying or resuming a round loads the identical pair.
 - For local end-to-end testing, run the livemap-routing service (GraphHopper on port 8989), then `npm run start:live`: it serves the UI and proxies `/api/v1/routing/*` to the service same-origin, so no CORS setup is needed.
-
-Fast vs Google Fast still uses fixtures: Google route geometry must come from the Directions SDK at run time and is a separate integration.
 
 ## Map Providers
 
 The base map is **MapLibre GL** with the LiveMap style (`map.paas.livemap.sh` + the LiveMap basemap), imported from the `livemap-routing` runtime. It falls back to a public OpenFreeMap style when the LiveMap endpoints are unreachable, and to Leaflet when MapLibre itself is not loaded.
 
-A configured Google Maps key no longer switches the base map: it only loads the Google SDK so the embedded **Street View** inspector works. Hosts that explicitly want a Google base map can still pass `mapProvider: "google"` to `AriCalmBenchmark.mount`.
+A configured Google Maps key does not switch the base map for Fast vs Calm: it loads the Google SDK so the embedded **Street View** inspector works. The one exception is **Fast vs Google Fast** with live data, which renders on a Google base map because Google Directions content must be displayed on a Google map (Maps ToS). Hosts can also request a Google base map explicitly through `mapProvider: "google"` on `AriCalmBenchmark.mount`.
 
 ## Google Maps
 

@@ -5,6 +5,12 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   const DEFAULT_API_BASE = '/api/v1/routing';
   const DEFAULT_STORAGE_KEY = 'ari-benchmark-route-pairs-v1';
+  const DEFAULT_GOOGLE_STORAGE_KEY = 'ari-fast-google-benchmark-route-pairs-v1';
+
+  /** O/D pairs whose two engines snap the start or end more than this far apart
+   *  are unfair matchups — the engines disagree on where the trip begins/ends —
+   *  and are redrawn. Imported from the livemap-routing bench. */
+  const SNAP_AGREE_MAX_M = 40;
 
   /**
    * Hand-drawn central-Zurich sampling region for random origin/destination
@@ -180,6 +186,98 @@
     };
   }
 
+  /* ------------------------------------------------------ google directions
+   *
+   * Google's route geometry is never persisted (Maps ToS): caches keep only
+   * metrics, snapped endpoints, and our own route. The Google path is re-fetched
+   * live from the stored snapped endpoints whenever a cached round is loaded,
+   * mirroring how the livemap-routing bench reproduces routes in review.
+   */
+
+  /** Pinned DirectionsService request so re-fetches reproduce the same route.
+   *  Every result-shaping option is explicit; WALKING has no departureTime. */
+  function googleDirectionsRequest(origin, destination, walkingMode) {
+    return {
+      origin,
+      destination,
+      travelMode: walkingMode,
+      provideRouteAlternatives: false,
+      avoidFerries: false,
+      avoidHighways: false,
+      avoidTolls: false
+    };
+  }
+
+  /** Read a Google LatLng (accessor methods) or a plain {lat,lng} into [lng, lat]. */
+  function lngLatOf(latLng) {
+    if (!latLng) return null;
+    const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng;
+    const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;
+    return Number.isFinite(lng) && Number.isFinite(lat) ? [lng, lat] : null;
+  }
+
+  /** Metrics, snapped endpoints, and in-memory path of a Google DirectionsRoute. */
+  function summarizeGoogleRoute(gRoute) {
+    const legs = (gRoute && gRoute.legs) || [];
+    let distanceMeters = 0;
+    let durationSeconds = 0;
+    let steps = 0;
+    for (const leg of legs) {
+      distanceMeters += leg.distance?.value || 0;
+      durationSeconds += leg.duration?.value || 0;
+      steps += leg.steps?.length || 0;
+    }
+    const coordinates = ((gRoute && gRoute.overview_path) || [])
+      .map(lngLatOf)
+      .filter(Boolean);
+    return {
+      distanceMeters,
+      durationSeconds,
+      steps,
+      snapStart: lngLatOf(legs[0]?.start_location) || coordinates[0] || null,
+      snapEnd: lngLatOf(legs[legs.length - 1]?.end_location) || coordinates[coordinates.length - 1] || null,
+      coordinates
+    };
+  }
+
+  /** True when either endpoint's engine snap gap exceeds `max` meters. Unknown
+   *  gaps never trip it: only measured disagreements reject a matchup. */
+  function snapTooFar(oursLngLats, googleSummary, max = SNAP_AGREE_MAX_M) {
+    if (!Array.isArray(oursLngLats) || !oursLngLats.length) return false;
+    const start = googleSummary?.snapStart
+      ? metersBetween(oursLngLats[0], googleSummary.snapStart)
+      : null;
+    const end = googleSummary?.snapEnd
+      ? metersBetween(oursLngLats[oursLngLats.length - 1], googleSummary.snapEnd)
+      : null;
+    return (start != null && start > max) || (end != null && end > max);
+  }
+
+  function hasGoogleDirections() {
+    return typeof window !== 'undefined' && !!window.google?.maps?.DirectionsService;
+  }
+
+  /** Default Directions transport: the Maps JS SDK already loaded on the page. */
+  function createBrowserDirectionsProvider() {
+    let service = null;
+    return function browserDirections(origin, destination) {
+      const maps = window.google?.maps;
+      if (!maps?.DirectionsService) {
+        return Promise.reject(new Error('Google Maps SDK is not loaded.'));
+      }
+      service ||= new maps.DirectionsService();
+      return new Promise((resolve, reject) => {
+        service.route(
+          googleDirectionsRequest(origin, destination, maps.TravelMode.WALKING),
+          (result, status) => {
+            if (status === 'OK' && result?.routes?.[0]) resolve(result.routes[0]);
+            else reject(new Error(`Google Directions: ${status}`));
+          }
+        );
+      });
+    };
+  }
+
   /**
    * Random route-pair provider against the LiveMap routing facade
    * (`POST {apiBase}/route`), imported from the livemap-routing runtime bench.
@@ -305,14 +403,233 @@
     };
   }
 
+  /**
+   * Random route-pair provider for the Fast vs Google Fast challenge: ARI's
+   * `foot_fast` comes from the routing facade, Google's walking route from the
+   * Directions SDK at run time. Pairs are persisted per session WITHOUT the
+   * Google geometry (Maps ToS): a cached round stores our route, the candidate
+   * points, Google's snapped endpoints, and metrics; loading it re-fetches the
+   * Google path live from those snapped endpoints so the request snapping is a
+   * no-op and the tester sees the same matchup.
+   */
+  function createLivemapGoogleRoutePairProvider(options = {}) {
+    const apiBase = options.apiBase ?? DEFAULT_API_BASE;
+    const fastProfile = options.fastProfile || 'foot_fast';
+    const polygon = options.polygon === undefined ? ZURICH_POLYGON : options.polygon;
+    const bbox = options.bbox || (polygon ? bboxOfPolygon(polygon) : ZURICH_BBOX);
+    const rng = options.rng || Math.random;
+    const maxTries = options.maxTries ?? MAX_OD_TRIES;
+    const maxRouteErrors = options.maxRouteErrors ?? MAX_ROUTE_ERRORS;
+    const snapAgreeMaxMeters = options.snapAgreeMaxMeters ?? SNAP_AGREE_MAX_M;
+    const fetchImpl = options.fetchImpl || (typeof fetch !== 'undefined' ? fetch.bind(globalThis) : null);
+    const directionsProvider = options.directionsProvider
+      || (typeof window !== 'undefined' ? createBrowserDirectionsProvider() : null);
+    const directionsAvailable = options.directionsAvailable || hasGoogleDirections;
+    const fallbackProvider = options.fallbackProvider || null;
+    const storage = options.storage !== undefined
+      ? options.storage
+      : typeof localStorage !== 'undefined' ? localStorage : null;
+    const storageKey = options.storageKey || DEFAULT_GOOGLE_STORAGE_KEY;
+    const warn = options.onWarning || (message => console.warn(`[ARI route pairs] ${message}`));
+
+    let apiUnavailable = false;
+    const memoryPairs = new Map();
+
+    function readCache(sessionId) {
+      if (!storage) return { sessionId, rounds: {} };
+      try {
+        const stored = JSON.parse(storage.getItem(storageKey) || 'null');
+        if (stored && stored.sessionId === sessionId && stored.rounds) return stored;
+      } catch (error) {
+        warn(`Ignoring unreadable pair cache: ${error.message}`);
+      }
+      return { sessionId, rounds: {} };
+    }
+
+    function writeCache(cache) {
+      if (!storage) return;
+      try {
+        storage.setItem(storageKey, JSON.stringify(cache));
+      } catch (error) {
+        warn(`Could not persist generated pair: ${error.message}`);
+      }
+    }
+
+    async function fetchFastRoute(points) {
+      const response = await fetchImpl(`${apiBase}/route`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ points, profiles: [fastProfile], details: true })
+      });
+      const data = await response.json();
+      const route = (data.routes || []).find(item => item.profile === fastProfile);
+      if (!response.ok || data.status !== 'ok' || !route?.geometry?.coordinates?.length) {
+        const message = data.routeErrors?.[0]?.message || data.message || `HTTP ${response.status}`;
+        const error = new Error(message);
+        error.routeError = response.ok || response.status < 500;
+        throw error;
+      }
+      return route;
+    }
+
+    function buildGooglePair(points, fastRoute, googleSummary) {
+      const pairId = pairIdFromPoints(points);
+      const fastGeometry = toLatLngTuples(fastRoute.geometry.coordinates);
+      return {
+        pairId,
+        origin: { lat: fastGeometry[0][0], lng: fastGeometry[0][1] },
+        destination: {
+          lat: fastGeometry[fastGeometry.length - 1][0],
+          lng: fastGeometry[fastGeometry.length - 1][1]
+        },
+        routes: {
+          livemap_fast: {
+            routeId: `${pairId}-${fastProfile}`,
+            source: 'livemap_fast',
+            metadata: {
+              profile: fastProfile,
+              distanceMeters: fastRoute.distanceMeters ?? fastRoute.distance ?? null,
+              durationSeconds: fastRoute.timeMillis != null
+                ? Math.round(fastRoute.timeMillis / 1000)
+                : null,
+              resolvedBucket: fastRoute.resolvedBucket || null
+            },
+            geometry: fastGeometry
+          },
+          google: {
+            routeId: `${pairId}-google`,
+            source: 'google',
+            metadata: {
+              distanceMeters: googleSummary.distanceMeters,
+              durationSeconds: googleSummary.durationSeconds,
+              steps: googleSummary.steps
+            },
+            geometry: toLatLngTuples(googleSummary.coordinates)
+          }
+        }
+      };
+    }
+
+    /** Storable form of a pair: everything except the Google path (Maps ToS). */
+    function persistableEntry(points, pair, googleSummary) {
+      const stored = JSON.parse(JSON.stringify(pair));
+      stored.routes.google.geometry = null;
+      return {
+        points,
+        googleSnapStart: googleSummary.snapStart,
+        googleSnapEnd: googleSummary.snapEnd,
+        pair: stored
+      };
+    }
+
+    async function restoreCachedEntry(entry) {
+      const [startLng, startLat] = entry.googleSnapStart || entry.points[0];
+      const [endLng, endLat] = entry.googleSnapEnd || entry.points[1];
+      const gRoute = await directionsProvider(
+        { lat: startLat, lng: startLng },
+        { lat: endLat, lng: endLng }
+      );
+      const summary = summarizeGoogleRoute(gRoute);
+      const pair = JSON.parse(JSON.stringify(entry.pair));
+      pair.routes.google.geometry = toLatLngTuples(summary.coordinates);
+      pair.routes.google.metadata = {
+        distanceMeters: summary.distanceMeters,
+        durationSeconds: summary.durationSeconds,
+        steps: summary.steps
+      };
+      return pair;
+    }
+
+    async function generatePair() {
+      if (!fetchImpl) throw new Error('No fetch implementation available.');
+      let routeErrors = 0;
+      for (let attempt = 0; attempt < maxTries; attempt++) {
+        const candidate = pickRandomOdCandidate(bbox, rng, { polygon });
+        if (!candidate) continue;
+        let fastRoute;
+        let gRoute;
+        try {
+          [fastRoute, gRoute] = await Promise.all([
+            fetchFastRoute(candidate.points),
+            directionsProvider(
+              { lat: candidate.origin.lat, lng: candidate.origin.lng },
+              { lat: candidate.destination.lat, lng: candidate.destination.lng }
+            )
+          ]);
+        } catch (error) {
+          if (!error.routeError && !/Directions/.test(error.message)) throw error;
+          routeErrors += 1;
+          if (routeErrors >= maxRouteErrors) {
+            throw new Error(`Route engines rejected ${routeErrors} pairs in a row (${error.message}).`);
+          }
+          continue;
+        }
+        const summary = summarizeGoogleRoute(gRoute);
+        if (summary.coordinates.length < 2) {
+          routeErrors += 1;
+          if (routeErrors >= maxRouteErrors) {
+            throw new Error('Google Directions responses were missing route geometry.');
+          }
+          continue;
+        }
+        // Fairness gate: when the two engines snap the trip endpoints too far
+        // apart they are routing different trips — draw another pair.
+        if (snapTooFar(fastRoute.geometry.coordinates, summary, snapAgreeMaxMeters)) continue;
+        return { points: candidate.points, fastRoute, summary };
+      }
+      throw new Error(`No comparable pair found in ${maxTries} draws.`);
+    }
+
+    async function useFallback({ sessionId, roundIndex }, reason) {
+      if (!fallbackProvider) throw reason;
+      warn(`Falling back to fixture pairs: ${reason.message}`);
+      return fallbackProvider({ sessionId, roundIndex });
+    }
+
+    return async function routePairProvider({ sessionId, roundIndex }) {
+      const memoryKey = `${sessionId}:${roundIndex}`;
+      if (memoryPairs.has(memoryKey)) return memoryPairs.get(memoryKey);
+
+      if (!directionsProvider || !directionsAvailable()) {
+        return useFallback({ sessionId, roundIndex }, new Error('Google Directions is not available (no Maps key configured).'));
+      }
+      if (apiUnavailable) {
+        return useFallback({ sessionId, roundIndex }, new Error('Routing API marked unavailable.'));
+      }
+
+      const cache = readCache(sessionId);
+      const cached = cache.rounds[roundIndex];
+      if (cached) {
+        const pair = await restoreCachedEntry(cached);
+        memoryPairs.set(memoryKey, pair);
+        return pair;
+      }
+
+      let generated;
+      try {
+        generated = await generatePair();
+      } catch (error) {
+        apiUnavailable = true;
+        return useFallback({ sessionId, roundIndex }, error);
+      }
+      const pair = buildGooglePair(generated.points, generated.fastRoute, generated.summary);
+      memoryPairs.set(memoryKey, pair);
+      cache.rounds[roundIndex] = persistableEntry(generated.points, pair, generated.summary);
+      writeCache(cache);
+      return pair;
+    };
+  }
+
   return {
     ZURICH_POLYGON,
     ZURICH_BBOX,
     MIN_OD_METERS,
     MAX_OD_METERS,
     MAX_OD_TRIES,
+    SNAP_AGREE_MAX_M,
     DEFAULT_API_BASE,
     DEFAULT_STORAGE_KEY,
+    DEFAULT_GOOGLE_STORAGE_KEY,
     bboxOfPolygon,
     pointInPolygon,
     metersBetween,
@@ -321,6 +638,10 @@
     pairIdFromPoints,
     toLatLngTuples,
     buildRoutePair,
-    createLivemapRoutePairProvider
+    googleDirectionsRequest,
+    summarizeGoogleRoute,
+    snapTooFar,
+    createLivemapRoutePairProvider,
+    createLivemapGoogleRoutePairProvider
   };
 });

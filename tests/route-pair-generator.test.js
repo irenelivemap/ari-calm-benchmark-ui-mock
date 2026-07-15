@@ -157,6 +157,127 @@ test('falls back to fixtures once when the facade is unreachable', async () => {
   assert.equal(fallbackCount, 2);
 });
 
+function googlePoint(lng, lat) {
+  return { lng: () => lng, lat: () => lat };
+}
+
+function googleRoute({ startLng = 8.54, startLat = 47.377, endLng = 8.544, endLat = 47.373 } = {}) {
+  return {
+    legs: [{
+      distance: { value: 1740 },
+      duration: { value: 1240 },
+      steps: [{}, {}, {}],
+      start_location: googlePoint(startLng, startLat),
+      end_location: googlePoint(endLng, endLat)
+    }],
+    overview_path: [
+      googlePoint(startLng, startLat),
+      googlePoint(8.542, 47.3748),
+      googlePoint(endLng, endLat)
+    ]
+  };
+}
+
+function googleProviderOptions(overrides = {}) {
+  return {
+    rng: sequenceRng([0.45, 0.5, 0.55, 0.62]),
+    storage: new MemoryStorage(),
+    onWarning: () => {},
+    directionsAvailable: () => true,
+    fetchImpl: async () => okFacadeResponse(),
+    directionsProvider: async () => googleRoute(),
+    ...overrides
+  };
+}
+
+test('builds a live Fast vs Google pair from the facade and Directions', async () => {
+  const provider = Generator.createLivemapGoogleRoutePairProvider(googleProviderOptions());
+  const pair = await provider({ sessionId: 'session-g', roundIndex: 0 });
+
+  assert.deepEqual(Object.keys(pair.routes).sort(), ['google', 'livemap_fast']);
+  assert.equal(pair.routes.livemap_fast.source, 'livemap_fast');
+  assert.equal(pair.routes.google.source, 'google');
+  assert.deepEqual(pair.routes.google.geometry[0], [47.377, 8.54]);
+  assert.equal(pair.routes.google.metadata.durationSeconds, 1240);
+  assert.equal(pair.routes.google.metadata.steps, 3);
+  assert.equal(pair.routes.livemap_fast.metadata.profile, 'foot_fast');
+});
+
+test('never persists Google geometry in the pair cache', async () => {
+  const storage = new MemoryStorage();
+  const provider = Generator.createLivemapGoogleRoutePairProvider(
+    googleProviderOptions({ storage })
+  );
+  await provider({ sessionId: 'session-g', roundIndex: 0 });
+
+  const cache = JSON.parse(storage.getItem(Generator.DEFAULT_GOOGLE_STORAGE_KEY));
+  const entry = cache.rounds[0];
+  assert.equal(entry.pair.routes.google.geometry, null);
+  assert.ok(Array.isArray(entry.pair.routes.livemap_fast.geometry));
+  assert.ok(entry.googleSnapStart);
+  assert.ok(entry.googleSnapEnd);
+});
+
+test('restores a cached Google round by re-fetching the path live', async () => {
+  const storage = new MemoryStorage();
+  let facadeCalls = 0;
+  let directionsCalls = 0;
+  const options = googleProviderOptions({
+    storage,
+    fetchImpl: async () => {
+      facadeCalls += 1;
+      return okFacadeResponse();
+    },
+    directionsProvider: async () => {
+      directionsCalls += 1;
+      return googleRoute();
+    }
+  });
+
+  const provider = Generator.createLivemapGoogleRoutePairProvider(options);
+  const first = await provider({ sessionId: 'session-g', roundIndex: 0 });
+  assert.deepEqual([facadeCalls, directionsCalls], [1, 1]);
+
+  const resumedProvider = Generator.createLivemapGoogleRoutePairProvider(options);
+  const resumed = await resumedProvider({ sessionId: 'session-g', roundIndex: 0 });
+  assert.deepEqual([facadeCalls, directionsCalls], [1, 2]);
+  assert.equal(resumed.pairId, first.pairId);
+  assert.deepEqual(resumed.routes.livemap_fast.geometry, first.routes.livemap_fast.geometry);
+  assert.ok(resumed.routes.google.geometry.length >= 2);
+});
+
+test('redraws the pair when the engines snap endpoints too far apart', async () => {
+  let directionsCalls = 0;
+  const provider = Generator.createLivemapGoogleRoutePairProvider(googleProviderOptions({
+    directionsProvider: async () => {
+      directionsCalls += 1;
+      return directionsCalls === 1
+        ? googleRoute({ startLat: 47.379 })
+        : googleRoute();
+    }
+  }));
+
+  const pair = await provider({ sessionId: 'session-g', roundIndex: 0 });
+  assert.equal(directionsCalls, 2);
+  assert.match(pair.pairId, /^zurich-random-/);
+});
+
+test('falls back to fixtures when the Google SDK is not available', async () => {
+  let facadeCalls = 0;
+  const provider = Generator.createLivemapGoogleRoutePairProvider(googleProviderOptions({
+    directionsAvailable: () => false,
+    fetchImpl: async () => {
+      facadeCalls += 1;
+      return okFacadeResponse();
+    },
+    fallbackProvider: async ({ roundIndex }) => ({ pairId: `fixture-${roundIndex}`, routes: {} })
+  }));
+
+  const pair = await provider({ sessionId: 'session-g', roundIndex: 0 });
+  assert.equal(pair.pairId, 'fixture-0');
+  assert.equal(facadeCalls, 0);
+});
+
 test('redraws unroutable pairs before giving up on the facade', async () => {
   let fetchCount = 0;
   const provider = Generator.createLivemapRoutePairProvider({

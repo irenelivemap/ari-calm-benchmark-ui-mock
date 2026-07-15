@@ -117,7 +117,7 @@ Production integration should replace adapters, not rewrite the question UI:
 - `progressSink(progress)`
 - `mapProvider: "google" | "maplibre" | "leaflet"`
 
-The Fast vs Calm challenge already wires `routePairProvider` to `AriRoutePairGenerator.createLivemapRoutePairProvider`. The routing API base resolves from `window.ARI_ROUTING_API`, then a stored `?api=` override, then same-origin `/api/v1/routing`.
+Both active challenges wire `routePairProvider` to `AriRoutePairGenerator`: Fast vs Calm uses `createLivemapRoutePairProvider` (both profiles from the facade), Fast vs Google Fast uses `createLivemapGoogleRoutePairProvider` (facade `foot_fast` + Google Directions at run time, never persisting Google geometry). The routing API base resolves from `window.ARI_ROUTING_API`, then a stored `?api=` override, then same-origin `/api/v1/routing`.
 
 Contracts are documented in [`DATA_CONTRACT.md`](DATA_CONTRACT.md), [`ANSWER_SCHEMA.md`](ANSWER_SCHEMA.md), and [`DATA_SAVING.md`](DATA_SAVING.md).
 

@@ -225,7 +225,7 @@
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
   <script src="./src/data/calm-benchmark-data.js?v=20260714-fast-google-ui-3"></script>
   <script src="./src/results/calm-results.js?v=20260713-live-results-1"></script>
-  <script src="./src/api/route-pair-generator.js?v=20260715-live-route-pairs-1"></script>
+  <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
   <script src="./src/maps/map-adapter.js?v=20260715-live-route-pairs-1"></script>
   <script src="./src/app/calm-benchmark.js?v=20260715-live-route-pairs-1"></script>
   <script>
@@ -265,6 +265,7 @@
     const CHALLENGE_STORAGE = 'ari-route-benchmark-selected-challenge';
     const ROUTING_API_STORAGE = 'ari-benchmark-routing-api';
     const CALM_ROUTE_PAIR_CACHE = 'ari-calm-benchmark-route-pairs-v1';
+    const GOOGLE_ROUTE_PAIR_CACHE = 'ari-fast-google-benchmark-route-pairs-v1';
     const routingApiParam = new URLSearchParams(window.location.search).get('api');
     if (routingApiParam) localStorage.setItem(ROUTING_API_STORAGE, routingApiParam);
     const routingApiBase = window.ARI_ROUTING_API
@@ -320,10 +321,14 @@
           },
           uncertainChoices: ['not_sure']
         },
-        routePairProvider: AriCalmBenchmark.createMockRoutePairProvider(
-          window.AriFastGoogleMockRoutePairs || [],
-          'Fast versus Google mock route pairs'
-        )
+        routePairProvider: AriRoutePairGenerator.createLivemapGoogleRoutePairProvider({
+          apiBase: routingApiBase,
+          storageKey: GOOGLE_ROUTE_PAIR_CACHE,
+          fallbackProvider: AriCalmBenchmark.createMockRoutePairProvider(
+            window.AriFastGoogleMockRoutePairs || [],
+            'Fast versus Google mock route pairs'
+          )
+        })
       },
       calm: {
         key: 'calm',
@@ -1208,6 +1213,7 @@
       Object.values(dataRepositories).forEach(repository => repository.clear());
       localStorage.removeItem(CHALLENGE_STORAGE);
       localStorage.removeItem(CALM_ROUTE_PAIR_CACHE);
+      localStorage.removeItem(GOOGLE_ROUTE_PAIR_CACHE);
       const cleanUrl = new URL(window.location.href);
       cleanUrl.search = '';
       cleanUrl.hash = '';
@@ -1266,9 +1272,14 @@
           totalRounds: Math.max(DEMO_INITIAL_ROUNDS, (extraOptions.initialRoundIndex || 0) + 1),
           allowExtraRounds: true,
           milestones: MILESTONES.map(({ at, name, icon }, index) => ({ at, name, icon, tier: index + 1 })),
-          mapProvider: AriCalmBenchmarkMaps.hasMapLibre()
-            ? 'maplibre'
-            : googleAvailable ? 'google' : 'leaflet',
+          // Google Directions content must render on a Google map (Maps ToS),
+          // so the Fast vs Google challenge switches base map when live data
+          // is possible. Other challenges stay on the LiveMap MapLibre style.
+          mapProvider: activeChallenge === 'google' && googleAvailable
+            ? 'google'
+            : AriCalmBenchmarkMaps.hasMapLibre()
+              ? 'maplibre'
+              : googleAvailable ? 'google' : 'leaflet',
           benchmark: activeConfig.benchmark,
           routePairProvider: activeConfig.routePairProvider,
           ...extraOptions,

@@ -30,11 +30,13 @@ the newer follow-ups.
 - [ ] If the benchmark stays on GitHub Pages long-term, either add CORS headers
       for `irenelivemap.github.io` to the routing facade deployment or accept
       that live pairs remain a local/deployed-host feature.
-- [ ] Wire the Fast vs Google Fast challenge to live data: `livemap_fast` from
+- [x] Wire the Fast vs Google Fast challenge to live data: `livemap_fast` from
       the routing facade plus Google routes from the Directions SDK at run time.
-      Google geometry must never be persisted (ToS) — reuse the fingerprint
-      approach from `livemap-routing`'s `bench-logic.js` (distance/time/steps +
-      polyline digest, snapped endpoints, snap-fairness gate).
+      Google geometry is never persisted — caches keep metrics and snapped
+      endpoints only, and the snap-fairness gate (40 m) redraws unfair matchups.
+- [ ] Browser pass of the live Fast vs Google flow (needs facade + Maps key):
+      pair loads, both routes render on the Google base map, resume re-fetches
+      the Google path, fixture fallback still works without a key.
 
 ## Housekeeping
 
