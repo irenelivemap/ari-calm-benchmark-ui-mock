@@ -229,7 +229,7 @@
           center: { lat: 47.377, lng: 8.54 },
           zoom: 13,
           clickableIcons: true,
-          fullscreenControl: true,
+          fullscreenControl: false,
           mapTypeControl: false,
           streetViewControl: false,
           zoomControl: false,
