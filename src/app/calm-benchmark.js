@@ -182,14 +182,23 @@
                 <button data-action="zoom-out" type="button" aria-label="Zoom out">-</button>
               </div>
               <div class="ari-map__tools" aria-label="Map tools">
-                <button class="ari-icon-btn ari-icon-btn--fit" data-action="fit-routes" type="button" aria-label="See full routes" title="See full routes"><span aria-hidden="true"></span></button>
-                <button class="ari-icon-btn ari-icon-btn--street" data-action="toggle-street-view" type="button" aria-label="Turn on Street View" title="Street View" aria-controls="${streetViewerId}" aria-pressed="false">
+                <button class="ari-icon-btn ari-icon-btn--fit" data-action="fit-routes" type="button" aria-label="Fit both routes" title="Fit both routes">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="5" r="1"></circle>
-                    <path d="m9 20 3-6 3 6"></path>
-                    <path d="m6 8 6 2 6-2"></path>
-                    <path d="M12 10v4"></path>
+                    <polyline points="9 3 9 9 3 9"></polyline>
+                    <polyline points="15 3 15 9 21 9"></polyline>
+                    <polyline points="9 21 9 15 3 15"></polyline>
+                    <polyline points="15 21 15 15 21 15"></polyline>
                   </svg>
+                </button>
+                <button class="ari-street-toggle" data-action="toggle-street-view" type="button" aria-label="Turn on Street View" title="Street View" aria-controls="${streetViewerId}" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="4.5" r="2"></circle>
+                    <path d="M12 7v5"></path>
+                    <path d="M8.5 9.5h7"></path>
+                    <path d="m12 12-2.5 7.5"></path>
+                    <path d="m12 12 2.5 7.5"></path>
+                  </svg>
+                  <span>Street View</span>
                 </button>
               </div>
               <div class="ari-street-mode-hint" data-street-mode-hint role="status" hidden>

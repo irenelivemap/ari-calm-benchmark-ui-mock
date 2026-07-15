@@ -4024,15 +4024,15 @@ html.is-challenge-dialog-open {
   top: var(--ari-map-control-inset, 24px);
   z-index: 2;
   display: grid;
+  justify-items: end;
   gap: var(--ari-map-control-gap, 10px);
 }
 
 .ari-map__tools button {
   position: relative;
-  width: var(--ari-map-control-size, 44px);
   height: var(--ari-map-control-size, 44px);
   border: 0;
-  border-radius: 50%;
+  border-radius: 999px;
   padding: 0;
   background: rgba(255, 255, 255, 0.92);
   color: var(--ari-ink);
@@ -4060,23 +4060,17 @@ html.is-challenge-dialog-open {
   outline-offset: 3px;
 }
 
-.ari-icon-btn--fit span {
-  position: absolute;
-  inset: 12px;
-  background:
-    linear-gradient(currentColor, currentColor) left top / 7px 2px no-repeat,
-    linear-gradient(currentColor, currentColor) left top / 2px 7px no-repeat,
-    linear-gradient(currentColor, currentColor) right top / 7px 2px no-repeat,
-    linear-gradient(currentColor, currentColor) right top / 2px 7px no-repeat,
-    linear-gradient(currentColor, currentColor) left bottom / 7px 2px no-repeat,
-    linear-gradient(currentColor, currentColor) left bottom / 2px 7px no-repeat,
-    linear-gradient(currentColor, currentColor) right bottom / 7px 2px no-repeat,
-    linear-gradient(currentColor, currentColor) right bottom / 2px 7px no-repeat;
+.ari-map__tools .ari-icon-btn {
+  width: var(--ari-map-control-size, 44px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.ari-icon-btn--street svg {
-  width: 22px;
-  height: 22px;
+.ari-map__tools svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
@@ -4084,7 +4078,19 @@ html.is-challenge-dialog-open {
   stroke-linejoin: round;
 }
 
-.ari-map__tools .ari-icon-btn--street.is-active {
+/* Street View is a mode switch, not a camera control: it reads as a labeled
+   pill so testers know it changes what tapping the map does. */
+.ari-street-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px 0 11px;
+  font: 700 0.76rem/1 var(--ari-font);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.ari-map__tools .ari-street-toggle.is-active {
   border-color: rgba(16, 21, 17, 0.36);
   background: var(--ari-ink);
   color: #fff;
@@ -5779,16 +5785,14 @@ html.is-challenge-dialog-open {
   }
 
   .ari-map__tools button {
-    width: var(--ari-map-control-size);
     height: var(--ari-map-control-size);
     border: 1px solid rgba(255, 255, 255, 0.14);
-    padding: 0;
     background: rgba(16, 18, 17, 0.9);
     color: #fff;
     box-shadow: 0 12px 24px rgba(16, 21, 17, 0.22), inset 0 -2px 0 rgba(0, 0, 0, 0.28);
   }
 
-  .ari-map__tools .ari-icon-btn--street.is-active {
+  .ari-map__tools .ari-street-toggle.is-active {
     border-color: rgba(16, 21, 17, 0.3);
     background: #f6f5ee;
     color: var(--ari-ink);
