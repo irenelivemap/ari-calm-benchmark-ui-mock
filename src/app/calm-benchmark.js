@@ -177,10 +177,6 @@
           <section class="ari-map-card" aria-label="Route map">
             <div class="ari-map" data-map>
               <div class="ari-map__canvas" data-map-canvas aria-label="Interactive route comparison map"></div>
-              <div class="ari-map__zoom" aria-label="Map zoom controls">
-                <button data-action="zoom-in" type="button" aria-label="Zoom in">+</button>
-                <button data-action="zoom-out" type="button" aria-label="Zoom out">-</button>
-              </div>
               <div class="ari-map__tools" aria-label="Map tools">
                 <button class="ari-icon-btn ari-icon-btn--fit" data-action="fit-routes" type="button" aria-label="Fit both routes" title="Fit both routes">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -402,8 +398,7 @@
       submit: root.querySelector('[data-submit]'),
       exit: root.querySelector('[data-action="exit"]'),
       previous: root.querySelector('[data-action="previous"]'),
-      zoomIn: root.querySelector('[data-action="zoom-in"]'),
-      zoomOut: root.querySelector('[data-action="zoom-out"]'),
+      mapTools: root.querySelector('.ari-map__tools'),
       fitRoutes: root.querySelector('[data-action="fit-routes"]'),
       streetViewToggle: root.querySelector('[data-action="toggle-street-view"]'),
       streetViewHint: root.querySelector('[data-street-mode-hint]'),
@@ -470,6 +465,7 @@
       routeAColor,
       routeBColor,
       maxFitZoom: ROUTE_FIT_MAX_ZOOM,
+      toolsElement: els.mapTools,
       onRoutePointClick: setStreetViewPoint
     });
 
@@ -683,6 +679,10 @@
       updatePanelState(true);
       requestAnimationFrame(positionOnboarding);
       setTimeout(positionOnboarding, 240);
+      // The map tools are adopted into the provider's control container once
+      // the map is ready (async for MapLibre); reposition after that settles.
+      setTimeout(positionOnboarding, 1200);
+      setTimeout(positionOnboarding, 2600);
     }
 
     function finishOnboarding() {
@@ -827,9 +827,14 @@
      *  tester ever enables the mode, fading out on later activations. */
     function showStreetHint() {
       window.clearTimeout(streetHintTimer);
-      const pillWidth = els.streetViewToggle.offsetWidth || 44;
-      els.streetViewHint.style.right =
-        `calc(${pillWidth}px + max(var(--ari-map-control-inset, 24px), env(safe-area-inset-right, 0px)) + var(--ari-map-control-gap, 10px))`;
+      // The pill lives inside the provider's control stack, so measure where
+      // it actually rendered instead of assuming an inset.
+      const mapRect = els.mapShell.getBoundingClientRect();
+      const pillRect = els.streetViewToggle.getBoundingClientRect();
+      if (mapRect.width && pillRect.width) {
+        els.streetViewHint.style.right = `${Math.round(mapRect.right - pillRect.left + 10)}px`;
+        els.streetViewHint.style.top = `${Math.round(pillRect.top - mapRect.top)}px`;
+      }
       els.streetViewHint.classList.remove('is-fading');
       els.streetViewHint.hidden = false;
       let seen = false;
@@ -1563,13 +1568,6 @@
         resetQuestionScroll();
         updateQuestionFlow();
       }
-    });
-
-    els.zoomIn.addEventListener('click', () => {
-      state.mapAdapter.zoomIn();
-    });
-    els.zoomOut.addEventListener('click', () => {
-      state.mapAdapter.zoomOut();
     });
 
     els.fitRoutes.addEventListener('click', () => fitRoutes());

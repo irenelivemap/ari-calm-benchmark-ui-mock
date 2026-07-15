@@ -68,6 +68,7 @@
       routeAColor: options.routeAColor,
       routeBColor: options.routeBColor,
       maxFitZoom: options.maxFitZoom,
+      toolsElement: options.toolsElement || null,
       onRoutePointClick: options.onRoutePointClick,
       map: null,
       routeLayers: null,
@@ -109,6 +110,16 @@
         map.remove();
         return;
       }
+      if (state.toolsElement) {
+        map.addControl({
+          onAdd() {
+            state.toolsElement.classList.add('maplibregl-ctrl');
+            return state.toolsElement;
+          },
+          onRemove() {}
+        }, 'top-right');
+      }
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
       state.map = map;
     }
 
@@ -240,9 +251,17 @@
           mapTypeControl: false,
           streetViewControl: false,
           zoomControl: false,
+          cameraControl: true,
+          cameraControlOptions: { position: google.maps.ControlPosition.RIGHT_TOP },
           scaleControl: true,
           gestureHandling: 'greedy'
         });
+        if (state.toolsElement) {
+          // Benchmark actions join Google's own control layout: the tools box
+          // occupies the top-right slot and the native camera control stacks
+          // beneath it along the right edge.
+          state.map.controls[google.maps.ControlPosition.TOP_RIGHT].push(state.toolsElement);
+        }
         return;
       }
 
@@ -256,6 +275,16 @@
         zoomSnap: 0.25
       });
       state.standardTiles.addTo(state.map);
+      if (state.toolsElement) {
+        const ToolsControl = L.Control.extend({
+          onAdd() {
+            L.DomEvent.disableClickPropagation(state.toolsElement);
+            return state.toolsElement;
+          }
+        });
+        new ToolsControl({ position: 'topright' }).addTo(state.map);
+      }
+      L.control.zoom({ position: 'topright' }).addTo(state.map);
       state.routeLayers = L.featureGroup().addTo(state.map);
     }
 

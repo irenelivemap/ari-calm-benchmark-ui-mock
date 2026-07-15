@@ -3994,38 +3994,25 @@ html.is-challenge-dialog-open {
   background: var(--ari-green-deep);
 }
 
-.ari-map__zoom {
-  position: absolute;
-  right: var(--ari-map-control-inset, 24px);
-  top: calc(var(--ari-map-control-inset, 24px) + 2 * var(--ari-map-control-size, 44px) + 2 * var(--ari-map-control-gap, 10px));
-  z-index: 2;
-  display: grid;
-  gap: var(--ari-map-control-gap, 10px);
-}
-
-.ari-map__zoom button {
-  width: var(--ari-map-control-size, 44px);
-  height: var(--ari-map-control-size, 44px);
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--ari-ink);
-  box-shadow: 0 8px 24px rgba(16, 21, 17, 0.12);
-  cursor: pointer;
-  font-size: 1.15rem;
-  font-weight: 700;
-  transition: transform 140ms ease, background 140ms ease, box-shadow 140ms ease;
-  touch-action: manipulation;
-}
-
+/* Benchmark map actions live inside the provider's own control stack
+   (top-right), above the provider's native camera/zoom controls. */
 .ari-map__tools {
-  position: absolute;
-  right: var(--ari-map-control-inset, 24px);
-  top: var(--ari-map-control-inset, 24px);
-  z-index: 2;
   display: grid;
   justify-items: end;
   gap: var(--ari-map-control-gap, 10px);
+  margin: 12px 12px 0 0;
+}
+
+.maplibregl-ctrl.ari-map__tools,
+.leaflet-control.ari-map__tools {
+  margin-top: 10px;
+  margin-right: 10px;
+}
+
+/* Until the adapter adopts the tools into the provider's control container
+   they are a direct child of the map shell; keep them out of view there. */
+.ari-map > .ari-map__tools {
+  visibility: hidden;
 }
 
 .ari-map__tools button {
@@ -4042,19 +4029,16 @@ html.is-challenge-dialog-open {
   touch-action: manipulation;
 }
 
-.ari-map__zoom button:hover,
 .ari-map__tools button:hover {
   transform: translateY(-1px);
   background: #fff;
   box-shadow: 0 10px 28px rgba(16, 21, 17, 0.18);
 }
 
-.ari-map__zoom button:active,
 .ari-map__tools button:active {
   transform: translateY(1px);
 }
 
-.ari-map__zoom button:focus-visible,
 .ari-map__tools button:focus-visible {
   outline: 3px solid rgba(16, 21, 17, 0.72);
   outline-offset: 3px;
@@ -4254,12 +4238,6 @@ html.is-challenge-dialog-open {
 
   .ari-map.is-street-split .ari-map__canvas {
     inset: 0 var(--ari-sv-split, 65%) 0 0;
-  }
-
-  /* Map controls follow the map into its left column. */
-  .ari-map.is-street-split .ari-map__zoom,
-  .ari-map.is-street-split .ari-map__tools {
-    right: calc(var(--ari-sv-split, 65%) + var(--ari-map-control-inset, 24px));
   }
 
   .ari-street-divider {
@@ -5200,16 +5178,6 @@ html.is-challenge-dialog-open {
   border-radius: 0;
 }
 
-.ari-map__zoom {
-  top: calc(var(--ari-map-control-inset) + 2 * var(--ari-map-control-size) + 2 * var(--ari-map-control-gap));
-  right: var(--ari-map-control-inset);
-}
-
-.ari-map__tools {
-  top: var(--ari-map-control-inset);
-  right: var(--ari-map-control-inset);
-}
-
 .ari-map__tools button {
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.94);
@@ -5766,25 +5734,8 @@ html.is-challenge-dialog-open {
     border-radius: 0;
   }
 
-  .ari-map__zoom {
-    top: calc(68px + 2 * var(--ari-map-control-size) + 2 * var(--ari-map-control-gap));
-    right: max(var(--ari-map-control-inset), env(safe-area-inset-right, 0px));
-    gap: var(--ari-map-control-gap);
-  }
-
-  .ari-map__zoom button {
-    width: var(--ari-map-control-size);
-    height: var(--ari-map-control-size);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(16, 18, 17, 0.9);
-    color: #fff;
-    box-shadow: 0 12px 24px rgba(16, 21, 17, 0.22), inset 0 -2px 0 rgba(0, 0, 0, 0.28);
-    font-size: 1rem;
-  }
-
   .ari-map__tools {
-    top: 68px;
-    right: max(var(--ari-map-control-inset), env(safe-area-inset-right, 0px));
+    margin-top: 68px;
     gap: var(--ari-map-control-gap);
   }
 
@@ -5868,7 +5819,6 @@ html.is-challenge-dialog-open {
     display: none;
   }
 
-  .ari-map.is-street-split .ari-map__zoom,
   .ari-map.is-street-split .ari-map__tools,
   .ari-map.is-street-split .ari-street-mode-hint {
     display: none;

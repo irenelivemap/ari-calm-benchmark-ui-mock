@@ -135,17 +135,19 @@ Benchmark screen:
 
 Map controls must be comfortable to use and not stick to the browser edge.
 
+Placement:
+
+- Fit and the Street View pill embed in the map provider's native top-right control stack, above the provider's own camera/zoom controls, so all map controls read as one column. The provider's standard corner margins govern them there.
+- Zoom and camera movement are always the provider's native controls (Google camera control, MapLibre navigation control, Leaflet zoom control). Do not reintroduce custom zoom buttons.
+
 Spacing:
 
-- Desktop/laptop map controls: `24px` from the viewport/map edge.
-- Mobile map controls: `20px` from the viewport/map edge.
-- Never place floating map controls closer than `16px` to an edge.
-- Use `10px` gap between stacked map controls.
+- Floating overlay surfaces (question panel, hints, dividers): `24px` from the viewport/map edge on desktop, `20px` on mobile, never closer than `16px`.
+- Use `10px` gap between stacked benchmark controls.
 
 Size:
 
-- Map buttons should be at least `44px x 44px`.
-- This applies to zoom, fit routes, and similar controls.
+- Benchmark-owned map buttons should be at least `44px x 44px`; native provider controls keep their native sizing.
 - Keep the hit area comfortable even if the icon is visually small.
 
 Fit routes behavior:
