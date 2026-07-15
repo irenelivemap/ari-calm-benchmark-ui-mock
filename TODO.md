@@ -1,6 +1,33 @@
 # To Do
 
 Working list from the live route-pairs and Street View integration (July 2026).
+
+## Handoff state (2026-07-15)
+
+Everything below is on `main` and live-tested locally against a running
+`livemap-routing` service unless marked as needing a check:
+
+- Both challenges generate live random Zurich route pairs (`route-pair-generator.js`);
+  fixtures remain the automatic fallback. Local end-to-end setup:
+  build/run the routing service (port 8989), then `npm run start:live`.
+- Street View: works from any map point; split layout (map left, panorama
+  right; stacked on mobile) with a draggable, per-device-persistent divider;
+  seam glides open/shut with an eased camera restore.
+- Map controls: zoom/camera are provider-native everywhere; Fit and the
+  text-only `Street View` pill are adopted into the provider's top-right
+  control container.
+
+Needs a visual check on a real browser (not yet verified):
+
+- [ ] Google map: control column order — tools box top-right, Google camera
+      D-pad below it. If they collide, reposition via
+      `google.maps.ControlPosition` in `map-adapter.js` `ensure()`.
+- [ ] MapLibre map: native navigation control sits beneath Fit/pill; tools
+      adopt correctly after the async style load (onboarding coachmarks
+      reposition at 1.2s/2.6s to cover this).
+- [ ] Street View split on mobile: divider drag, pill/hint placement, and
+      the question card staying hidden until Back to map.
+
 Production-readiness items that were already tracked stay in
 [`docs/INTEGRATION_CHECKLIST.md`](docs/INTEGRATION_CHECKLIST.md); this list covers
 the newer follow-ups.
