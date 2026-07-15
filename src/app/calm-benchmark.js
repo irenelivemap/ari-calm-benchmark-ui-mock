@@ -692,6 +692,7 @@
 
     const SPLIT_STORAGE_KEY = 'ari-benchmark-street-split-v1';
     let splitResizeFrame = null;
+    let splitTween = null;
 
     function isMobileViewport() {
       return window.matchMedia('(max-width: 700px)').matches;
@@ -712,6 +713,8 @@
     }
 
     function applyStoredSplit() {
+      els.mapShell.style.removeProperty('--ari-sv-split');
+      els.mapShell.style.removeProperty('--ari-sv-split-m');
       const stored = readStoredSplit();
       if (Number.isFinite(stored.desktop)) {
         els.mapShell.style.setProperty('--ari-sv-split', `${stored.desktop}%`);
@@ -719,6 +722,34 @@
       if (Number.isFinite(stored.mobile)) {
         els.mapShell.style.setProperty('--ari-sv-split-m', `${stored.mobile}%`);
       }
+    }
+
+    /** Tween the split seam like an automated drag: the same live provider
+     *  resizes per frame that manual dragging uses. */
+    function animateSplitShare(from, to, duration, onDone) {
+      cancelSplitTween();
+      const prop = isMobileViewport() ? '--ari-sv-split-m' : '--ari-sv-split';
+      const startedAt = performance.now();
+      const ease = t => 1 - Math.pow(1 - t, 4);
+      const step = now => {
+        const progress = Math.min(1, (now - startedAt) / duration);
+        const value = from + (to - from) * ease(progress);
+        els.mapShell.style.setProperty(prop, `${value}%`);
+        state.mapAdapter?.notifyResize();
+        if (progress < 1) {
+          splitTween = requestAnimationFrame(step);
+        } else {
+          splitTween = null;
+          if (onDone) onDone();
+        }
+      };
+      splitTween = requestAnimationFrame(step);
+    }
+
+    function cancelSplitTween() {
+      if (!splitTween) return;
+      cancelAnimationFrame(splitTween);
+      splitTween = null;
     }
 
     function clampPanoShare(share, mobile) {
@@ -821,12 +852,23 @@
       requestAnimationFrame(() => els.streetViewer.classList.add('is-visible'));
       requestAnimationFrame(() => els.closeStreetView.focus({ preventScroll: true }));
       if (!alreadySplit) {
-        // The canvas just shrank into the map column: let the provider pick up
-        // the new size, then refit both routes into it.
-        requestAnimationFrame(() => {
-          state.mapAdapter.notifyResize();
-          fitRoutes({ animate: false });
-        });
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const mobile = isMobileViewport();
+        const targetShare = currentPanoShare(mobile);
+        if (reduceMotion) {
+          requestAnimationFrame(() => {
+            state.mapAdapter.notifyResize();
+            fitRoutes({ animate: false });
+          });
+        } else {
+          // The seam glides open: the panorama takes its room in one motion.
+          els.mapShell.style.setProperty(mobile ? '--ari-sv-split-m' : '--ari-sv-split', '0%');
+          animateSplitShare(0, targetShare, 320, () => {
+            state.mapAdapter.notifyResize();
+            fitRoutes({ animate: false });
+            settleSplitPanorama();
+          });
+        }
       }
     }
 
@@ -838,32 +880,50 @@
       streetViewPositionListener = null;
     }
 
-    function closeStreetView({ immediate = false, restoreMap = true, restoreFocus = true } = {}) {
-      streetViewRequestId += 1;
-      removeStreetViewPositionListener();
-      if (state.streetViewPanorama) state.streetViewPanorama.setVisible(false);
-      state.streetViewOpen = false;
-      const wasSplit = els.mapShell.classList.contains('is-street-split');
+    function finalizeSplitTeardown() {
       els.mapShell.classList.remove('is-street-split');
       els.benchmark.classList.remove('is-street-view-open');
       els.streetDivider.hidden = true;
       els.streetViewer.classList.remove('is-visible');
+      els.streetViewer.hidden = true;
+      applyStoredSplit();
+    }
+
+    function closeStreetView({ immediate = false, restoreMap = true, restoreFocus = true } = {}) {
+      streetViewRequestId += 1;
+      removeStreetViewPositionListener();
+      cancelSplitTween();
+      if (state.streetViewPanorama) state.streetViewPanorama.setVisible(false);
+      state.streetViewOpen = false;
+      const wasSplit = els.mapShell.classList.contains('is-street-split');
       els.streetViewer.setAttribute('aria-hidden', 'true');
       window.clearTimeout(streetViewCloseTimer);
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (immediate || reduceMotion) els.streetViewer.hidden = true;
-      else streetViewCloseTimer = window.setTimeout(() => { els.streetViewer.hidden = true; }, 190);
       const savedMapState = restoreMap ? state.streetViewMapState : null;
       state.streetViewMapState = null;
-      if (wasSplit || savedMapState) {
-        requestAnimationFrame(() => {
-          if (!state.mapAdapter) return;
-          if (wasSplit) state.mapAdapter.notifyResize();
-          if (savedMapState) state.mapAdapter.restoreViewState(savedMapState);
-        });
-      }
       setStreetViewMode(false);
       if (restoreFocus) requestAnimationFrame(() => els.streetViewToggle.focus({ preventScroll: true }));
+
+      if (!wasSplit || immediate || reduceMotion) {
+        finalizeSplitTeardown();
+        if (wasSplit || savedMapState) {
+          requestAnimationFrame(() => {
+            if (!state.mapAdapter) return;
+            if (wasSplit) state.mapAdapter.notifyResize();
+            if (savedMapState) state.mapAdapter.restoreViewState(savedMapState);
+          });
+        }
+        return;
+      }
+
+      // The seam glides shut: the map takes the room back in one continuous
+      // motion, then the camera eases home instead of teleporting.
+      animateSplitShare(currentPanoShare(isMobileViewport()), 0, 300, () => {
+        finalizeSplitTeardown();
+        if (!state.mapAdapter) return;
+        state.mapAdapter.notifyResize();
+        if (savedMapState) state.mapAdapter.restoreViewState(savedMapState, { animate: true });
+      });
     }
 
     function openStreetView(point) {
@@ -1552,6 +1612,8 @@
       window.clearTimeout(medalUnlockTimer);
       window.clearTimeout(roundTransitionTimer);
       window.clearTimeout(streetViewCloseTimer);
+      cancelSplitTween();
+      if (splitResizeFrame) cancelAnimationFrame(splitResizeFrame);
       removeStreetViewPositionListener();
       if (state.streetViewPanorama) state.streetViewPanorama.setVisible(false);
       resizeController.abort();

@@ -781,20 +781,31 @@
       };
     }
 
-    function restoreViewState(viewState) {
+    function restoreViewState(viewState, { animate = false } = {}) {
       if (!viewState) return;
       if (state.provider === 'maplibre') {
         return whenMapLibreReady(map => {
-          map.jumpTo({
+          const target = {
             center: [viewState.center.lng, viewState.center.lat],
             zoom: viewState.zoom
-          });
+          };
+          if (animate) map.easeTo({ ...target, duration: 320 });
+          else map.jumpTo(target);
         });
       }
       ensure();
       if (state.provider === 'google') {
-        state.map.setCenter(viewState.center);
-        state.map.setZoom(viewState.zoom);
+        if (animate) {
+          state.map.panTo(viewState.center);
+          state.map.setZoom(viewState.zoom);
+        } else {
+          state.map.setCenter(viewState.center);
+          state.map.setZoom(viewState.zoom);
+        }
+        return;
+      }
+      if (animate) {
+        state.map.setView(viewState.center, viewState.zoom, { animate: true, duration: 0.32 });
         return;
       }
       state.map.setView(viewState.center, viewState.zoom, { animate: false });
