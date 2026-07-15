@@ -762,6 +762,10 @@ html.is-challenge-dialog-open {
   gap: 16px;
 }
 
+.calm-card--how.has-no-disclosure .calm-card-main {
+  height: 300px;
+}
+
 .calm-card-body {
   display: block;
   max-height: none;
@@ -3156,6 +3160,10 @@ html.is-challenge-dialog-open {
 
   .calm-info-grid {
     grid-template-columns: 1fr;
+  }
+
+  .calm-card--how.has-no-disclosure .calm-card-main {
+    height: auto;
   }
 
   .calm-card,

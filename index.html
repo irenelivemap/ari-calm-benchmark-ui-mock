@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260715-hero-width-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260715-google-overview-1">
   <style>
     body {
       margin: 0;
@@ -270,8 +270,8 @@
         documentTitle: 'ARI Fast vs Google Fast Benchmark',
         heroQuestion: 'Which route works better as the Fast route?',
         heroCopy: 'Imagine you need to walk somewhere in the city efficiently. Compare both options as routes you would need to follow yourself.',
-        definitionQuestion: 'What makes a good Fast route?',
-        definitionAnswer: 'A route that gets you there quickly while staying direct, clear, and practical to follow.',
+        definitionQuestion: null,
+        definitionAnswer: null,
         testId: 'ari_fast_vs_google',
         storageKey: 'ari-fast-google-benchmark-dataset-v1',
         benchmark: {
@@ -391,8 +391,14 @@
       document.getElementById('challenge-menu-label').textContent = activeConfig.menuLabel;
       document.getElementById('benchmark-hero-question').textContent = activeConfig.heroQuestion;
       document.getElementById('benchmark-hero-copy').textContent = activeConfig.heroCopy;
-      document.getElementById('benchmark-definition-question').textContent = activeConfig.definitionQuestion;
-      document.getElementById('benchmark-definition-answer').textContent = activeConfig.definitionAnswer;
+      const definition = document.querySelector('.calm-disclosure');
+      const hasDefinition = Boolean(activeConfig.definitionQuestion && activeConfig.definitionAnswer);
+      document.querySelector('.calm-card--how').classList.toggle('has-no-disclosure', !hasDefinition);
+      definition.hidden = !hasDefinition;
+      if (hasDefinition) {
+        document.getElementById('benchmark-definition-question').textContent = activeConfig.definitionQuestion;
+        document.getElementById('benchmark-definition-answer').textContent = activeConfig.definitionAnswer;
+      }
     }
 
     function percentage(count, total) {
