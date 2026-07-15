@@ -1,45 +1,93 @@
-# Calm Benchmark Data Saving
+# Benchmark Data Saving
 
-The calm benchmark follows the same useful separation as the first ARI Fast vs Google benchmark:
+The benchmark separates completed answers from resumable progress:
 
-1. The benchmark writes one appendable record per completed comparison.
-2. A separate progress record preserves an unfinished session.
-3. A dashboard reads newline-delimited answer records from a data endpoint or snapshot.
+1. A completed comparison appends one idempotent answer record.
+2. An unfinished session upserts one progress record.
+3. Results read the same challenge dataset and never maintain a second answer source.
 
-The browser demo uses the same contract through `src/data/calm-benchmark-data.js` and stores a versioned dataset in `localStorage`. Production should replace only the transport, not the record shape.
+The browser prototype implements this contract in `src/data/calm-benchmark-data.js` with local storage. Production should replace the transport while preserving record shape and validation.
 
-## Storage Model
+## Challenge Datasets
+
+Challenges do not share progress or answers.
+
+| Challenge | Test ID | Local storage key |
+| --- | --- | --- |
+| Fast vs Calm | `calm_vs_fast` | `ari-calm-benchmark-dataset-v1` |
+| Fast vs Google Fast | `ari_fast_vs_google` | `ari-fast-google-benchmark-dataset-v1` |
+
+The `Reset test data` control currently clears both datasets. It exists for the single-tester design phase and must be removed before production research.
+
+## Dataset Shape
 
 ```ts
-type CalmBenchmarkDatasetV1 = {
+type BenchmarkDatasetV1 = {
   v: 1;
-  type: "calm-benchmark-dataset";
-  test: "calm_vs_fast";
+  type: "calm-benchmark-dataset"; // Historical type retained for compatibility.
+  test: "calm_vs_fast" | "ari_fast_vs_google";
   updatedAt: string;
   sessions: Record<string, SessionSummary>;
-  progressBySessionId: Record<string, CalmBenchmarkProgressV1>;
-  answers: CalmBenchmarkAnswerV1[];
+  progressBySessionId: Record<string, BenchmarkProgressV1>;
+  answers: BenchmarkAnswerV1[];
 };
 ```
 
-Completed comparisons are append-only and idempotent by `captureId`. Repeating the same request must return the existing record rather than append a duplicate.
+Completed answers are append-only and idempotent by `captureId`. Progress is an upsert by `sessionId`.
 
-Progress is an upsert by `sessionId`. It preserves:
+## Save Interfaces
 
-- original session ID and start time
-- current round and completed count
-- current route pair ID
-- hidden A/B assignment
-- current question step
-- partial answers
-- latest save timestamp
+The benchmark shell receives persistence adapters when mounted:
 
-## Dashboard Compatibility
+```js
+AriCalmBenchmark.mount(root, {
+  answerSink: async answer => {
+    // Persist one completed answer.
+  },
+  progressSink: async progress => {
+    // Upsert the current unfinished session.
+  }
+});
+```
 
-Answer records intentionally retain the field vocabulary used by the earlier dashboard:
+In `index.html`, these adapters call the active challenge's local repository. Production adapters should call authenticated backend endpoints.
+
+## Proposed Production Endpoints
+
+```http
+POST /api/v1/benchmarks/{testId}/answers
+Idempotency-Key: {captureId}
+Content-Type: application/json
+```
+
+```http
+PUT /api/v1/benchmarks/{testId}/sessions/{sessionId}/progress
+Content-Type: application/json
+```
+
+```http
+GET /api/v1/benchmarks/{testId}/sessions/{sessionId}/progress
+```
+
+```http
+GET /api/v1/benchmarks/{testId}/answers
+Accept: application/x-ndjson
+```
+
+The server should:
+
+- validate the challenge's conditional questions
+- enforce idempotency by `captureId`
+- upsert progress by `sessionId`
+- preserve `clientTs` and add a server `receivedAt`
+- preserve the hidden route assignment and route snapshots
+- reject records whose `test` does not match the endpoint
+
+## Dashboard Feed
+
+The answer feed is newline-delimited JSON, one completed answer per line. Records retain the first benchmark's compatibility vocabulary:
 
 - `type: "bench-ux"`
-- `test: "calm_vs_fast"`
 - `benchmarkRunId`
 - `captureId`
 - `rater`
@@ -49,39 +97,11 @@ Answer records intentionally retain the field vocabulary used by the earlier das
 - `labelMap.A` / `labelMap.B`
 - `clientTs`
 
-Calm-specific aliases such as `sessionId`, `q1Choice`, `q2Separate`, and `q3Issues` remain present so analysis does not have to infer the question flow.
-
-The dashboard feed should be returned as NDJSON:
-
-```http
-GET /api/v1/benchmarks/calm/answers
-Accept: application/x-ndjson
-```
-
-Each line is one `CalmBenchmarkAnswerV1` object. The static dashboard can cache a snapshot exactly as the ARI Fast dashboard does, while a refresh service reads the newest endpoint data.
-
-## Production Endpoints
-
-```http
-POST /api/v1/benchmarks/calm/answers
-Idempotency-Key: {captureId}
-Content-Type: application/json
-```
-
-```http
-PUT /api/v1/benchmarks/calm/sessions/{sessionId}/progress
-Content-Type: application/json
-```
-
-```http
-GET /api/v1/benchmarks/calm/sessions/{sessionId}/progress
-```
-
-The server should add `receivedAt` and preserve the client `createdAt` / `clientTs`. It must validate conditional questions before accepting a completed answer.
+Current aliases such as `sessionId`, `participantName`, `q1Choice`, and `q3Issues` remain present.
 
 ## Verification
 
-In the demo browser console:
+The browser exposes helpers for the active challenge:
 
 ```js
 ariCalmData.verify()
@@ -89,10 +109,14 @@ ariCalmData.snapshot()
 ariCalmData.exportJsonl()
 ```
 
+`ariCalmData` is a historical global name. Its methods always target the challenge selected when the page loaded.
+
 Automated checks:
 
 ```bash
-node --test tests/calm-benchmark-data.test.js
+npm test
 ```
 
-Verification covers schema validity, conditional questions, duplicate submissions, partial progress, migration from the previous localStorage keys, and JSONL export.
+Tests cover validation, challenge-specific conditional questions, duplicate submissions, partial progress, legacy migration, NDJSON export, and results aggregation.
+
+See [`ANSWER_SCHEMA.md`](ANSWER_SCHEMA.md) for record fields.

@@ -1,35 +1,69 @@
-# Calm Benchmark Answer Schema
+# Benchmark Answer Schema
 
-The UI produces one answer payload per submitted round.
+The shared benchmark shell produces one answer record per completed comparison. Challenge configuration changes the allowed choices and follow-up questions, not the common record envelope.
+
+## Completed Answer
 
 ```ts
-type CalmBenchmarkAnswer = {
+type RouteType = "fast" | "calm" | "livemap_fast" | "google";
+
+type Q1Choice =
+  | "route_a"
+  | "route_b"
+  | "either"
+  | "neither"
+  | "hard_to_judge"
+  | "both_work_well"
+  | "both_work_poorly"
+  | "not_sure";
+
+type Q3Issue =
+  // Fast vs Calm
+  | "not_enough_greenery_water"
+  | "too_busy_or_crowded"
+  | "lacks_nice_streets_surroundings"
+  | "extra_time_distance_not_worth_it"
+  | "too_similar"
+  | "too_complex"
+  | "other"
+  // Fast vs Google Fast
+  | "longer_time"
+  | "longer_distance"
+  | "misses_shortcut"
+  | "unclear_shortcut"
+  | "misses_nicer_route"
+  | "lacks_amenities"
+  // Accepted legacy values from the first Fast benchmark
+  | "more_elevation"
+  | "more_stairs"
+  | "more_turns"
+  | "crossing_friction";
+
+type BenchmarkAnswerV1 = {
   v: 1;
   type: "bench-ux";
-  test: "calm_vs_fast";
-  source: "calm-benchmark";
+  test: "calm_vs_fast" | "ari_fast_vs_google";
+  source: "calm-benchmark" | "fast-google-benchmark";
 
-  // Stable identifiers. captureId is the idempotency key.
-  captureId: string;
-  benchmarkRunId: string;
+  captureId: string;          // Idempotency key.
+  benchmarkRunId: string;     // Compatibility alias of sessionId.
   sessionId: string;
-  sessionStartedAt: string;
+  sessionStartedAt: string;   // ISO timestamp.
   roundId: string;
-  roundNumber: number;
+  roundNumber: number;        // One-based.
   pairId: string;
   participantName: string;
-  rater: string;
+  rater: string;              // Compatibility alias of participantName.
 
-  // Hidden assignment. The tester does not see this.
   routeAssignment: {
-    routeA: "fast" | "calm";
-    routeB: "fast" | "calm";
+    routeA: RouteType;
+    routeB: RouteType;
   };
-  routeAType: "fast" | "calm";
-  routeBType: "fast" | "calm";
+  routeAType: RouteType;
+  routeBType: RouteType;
   labelMap: {
-    A: "fast" | "calm";
-    B: "fast" | "calm";
+    A: RouteType;
+    B: RouteType;
   };
   labels: {
     A: RouteSnapshot;
@@ -39,106 +73,107 @@ type CalmBenchmarkAnswer = {
   origin: { lat: number; lng: number; label?: string };
   destination: { lat: number; lng: number; label?: string };
 
-  q1Choice:
-    | "route_a"
-    | "route_b"
-    | "either"
-    | "neither"
-    | "hard_to_judge";
-  choice: CalmBenchmarkAnswer["q1Choice"];
-
-  q2Separate?: "yes" | "no" | "not_sure";
-
-  q3Issues: Array<
-    | "not_enough_greenery_water"
-    | "too_busy_or_crowded"
-    | "lacks_nice_streets_surroundings"
-    | "extra_time_distance_not_worth_it"
-    | "too_similar"
-    | "too_complex"
-    | "other"
-  >;
-  reasons: CalmBenchmarkAnswer["q3Issues"];
-
+  q1Choice: Q1Choice;
+  choice: Q1Choice;            // Compatibility alias of q1Choice.
+  q2Separate: "yes" | "no" | "not_sure" | null;
+  q3Issues: Q3Issue[];
+  reasons: Q3Issue[];          // Compatibility alias of q3Issues.
   q3Note: string;
-  note: string;
+  note: string;                // Compatibility alias.
+
   clientTs: string;
   createdAt: string;
 };
 
 type RouteSnapshot = {
   routeId: string;
-  routeType: "fast" | "calm";
-  source: "google" | "model" | "saved" | "mock" | null;
+  routeType: RouteType;
+  source: string | null;
   metadata: Record<string, unknown> | null;
 };
 ```
 
-The duplicate field names (`benchmarkRunId` / `sessionId`, `choice` / `q1Choice`, `reasons` / `q3Issues`) are deliberate. The first name in each pair keeps the answer feed compatible with the first ARI benchmark dashboard vocabulary, while the second remains explicit about the calm question flow.
+The duplicate names (`benchmarkRunId` / `sessionId`, `choice` / `q1Choice`, `reasons` / `q3Issues`) preserve compatibility with the first ARI benchmark dashboard while keeping the current question flow explicit.
 
-`captureId` is stable for one session round and must be used as the server idempotency key. A retry returns the existing record instead of appending a second answer.
+## Challenge Rules
 
-## Conditional Logic
+### Fast vs Calm
 
-Q1 is always asked.
-
-Q2 is asked only when Q1 is:
+Q1 choices:
 
 - `route_a`
 - `route_b`
-- `either`
+- `either` (Both work well)
+- `neither` (Neither works)
+- `hard_to_judge`
 
-Q3 is asked only when Q1 is:
+Follow-ups:
+
+| Q1 choice | Q2 | Q3 |
+| --- | --- | --- |
+| `route_a`, `route_b` | Required | Required |
+| `either` | Required | Empty |
+| `neither` | Empty | Required |
+| `hard_to_judge` | Empty | Empty |
+
+### Fast vs Google Fast
+
+Q1 choices:
 
 - `route_a`
 - `route_b`
-- `neither`
+- `both_work_well`
+- `both_work_poorly`
+- `not_sure` (I don't know)
 
-Each applicable question must be completed before the round can be submitted. `q3Note` is optional supporting context and may accompany any Q3 selection, including `other`.
+Follow-ups:
 
-## Recommended Backend Endpoint
+| Q1 choice | Q2 | Q3 |
+| --- | --- | --- |
+| `route_a`, `route_b` | Empty | Required |
+| `both_work_poorly` | Empty | Required |
+| `both_work_well`, `not_sure` | Empty | Empty |
 
-```http
-POST /api/v1/benchmarks/calm/answers
-Idempotency-Key: {captureId}
-Content-Type: application/json
-```
+When Q3 is required, at least one issue must be selected. `q3Note` is optional supporting text.
 
-Body:
+## Progress Record
+
+Unfinished sessions use the same answer shape as a partial record:
 
 ```ts
-CalmBenchmarkAnswer
-```
-
-The dashboard feed uses one answer per line:
-
-```http
-GET /api/v1/benchmarks/calm/answers
-Accept: application/x-ndjson
-```
-
-See `DATA_SAVING.md` for progress storage, verification, and dashboard integration.
-
-## Analysis Examples
-
-To know whether the tester chose the calm route:
-
-```js
-const visibleChoiceToRouteType = {
-  route_a: answer.routeAType,
-  route_b: answer.routeBType
+type BenchmarkProgressV1 = {
+  v: 1;
+  type: "bench-progress";
+  test: BenchmarkAnswerV1["test"];
+  source: BenchmarkAnswerV1["source"];
+  benchmarkRunId: string;
+  sessionId: string;
+  participantName: string;
+  sessionStartedAt: string;
+  roundIndex: number;          // Zero-based current round.
+  completedRounds: number;
+  pairId: string | null;
+  routeAssignment: BenchmarkAnswerV1["routeAssignment"] | null;
+  questionStep: "q1" | "q2" | "q3";
+  partialAnswer: Partial<BenchmarkAnswerV1> | null;
+  savedAt: string;
 };
-
-const choseCalm =
-  answer.q1Choice === "route_a" && answer.routeAType === "calm" ||
-  answer.q1Choice === "route_b" && answer.routeBType === "calm";
 ```
 
-To identify routes that are not meaningfully different:
+## Idempotency
+
+`captureId` is stable for one session round and must be used as the server idempotency key. Retrying the same completed comparison returns the existing record instead of appending a duplicate.
+
+## Analysis Example
+
+Decode a visible route choice without exposing provider identity to the tester:
 
 ```js
-const notWorthShowingSeparately =
-  answer.q2Separate === "no" ||
-  answer.q3Issues.includes("too_similar") ||
-  answer.q1Choice === "either";
+function selectedRouteType(answer) {
+  if (answer.q1Choice === 'route_a') return answer.labelMap.A;
+  if (answer.q1Choice === 'route_b') return answer.labelMap.B;
+  return null;
+}
 ```
+
+See [`DATA_SAVING.md`](DATA_SAVING.md) for persistence and production transport.

@@ -1,164 +1,111 @@
-# ARI Calm Benchmark UI Ingest Package
+# ARI Route Benchmark UI
 
-Intended private repo name: `irenelivemap/ari-calm-benchmark-ui-mock`.
+Static, map-first UI for blinded route-comparison research. The same benchmark shell currently supports:
 
-This package is an implementation-ready frontend slice for the ARI calm-route benchmark.
+- **Fast vs Calm**: ARI Fast compared with ARI Calm.
+- **Fast vs Google Fast**: ARI Fast compared with Google Fast.
+- **Fast vs Safe**: visible in the chooser as a planned challenge, not yet playable.
 
-It is intentionally separate from `livemap-routing` for now and should not be created as a GitHub fork. Nothing here modifies the team repo or the deployed `tbt-routing` app. The goal is to give the routing engineer a clean UI integration target: provide fast/calm route geometries in the expected contract, and the UI can render the blinded A/B test.
+Testers see only Route A and Route B. The hidden provider assignment is stored with each answer for later analysis.
 
-## Repository Structure
+## Live Preview
 
-- `index.html`
-  Primary application entry point. Opens on the tester intro/start page, then launches the map-first benchmark.
+- [Challenge chooser](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/)
+- [Fast vs Calm](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/?game=calm)
+- [Fast vs Google Fast](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/?game=google)
+- [Fresh-player preview](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/fresh.html)
 
-- `demo.html`
-  Compatibility redirect for previously shared preview links.
+## Local Setup
 
-- `src/app/calm-benchmark.js`
-  Framework-agnostic UI module. Exposes `AriCalmBenchmark.mount(root, options)`. Supports a Google Maps adapter when `window.google.maps` is loaded, with Leaflet fallback for private/local use.
+Requirements:
 
-- `src/styles/calm-benchmark.css`
-  Styles for the map-first layout, question panel, controls, and Leaflet hardening.
-
-- `src/data/mock-route-pairs.js`
-  Demo-only route pair data. Replace this with `routePairProvider` in the product.
-
-- `src/data/calm-benchmark-data.js`
-  Versioned answer/progress validation, idempotent local persistence, legacy migration, and dashboard-ready NDJSON export.
-
-- `src/results/calm-results.js`
-  Shared aggregation for the participant-facing community results and the unified internal team dashboard.
-
-- `src/api/`
-  Integration notes for route loading, answer saving, and progress saving.
-
-- `src/maps/`
-  Map adapter implementation and integration notes for replacing the demo map with the product map.
-
-- `src/maps/map-adapter.js`
-  The current Leaflet/Google map adapter used by the demo.
-
-- `src/answers/`
-  Notes on answer handling and hidden route assignment.
-
-- `docs/DATA_CONTRACT.md`
-  Route pair contract the backend/model should return.
-
-- `docs/ANSWER_SCHEMA.md`
-  Answer payload produced by the UI.
-
-- `docs/DATA_SAVING.md`
-  Persistence, verification, production endpoints, and dashboard feed contract.
-
-- `docs/DESIGN.md`
-  Design-system rules for layout, color, map controls, onboarding, HUD, and responsive behavior.
-
-- `docs/PRODUCT.md`
-  Product intent, tester task, and success criteria.
-
-- `docs/INTEGRATION_CHECKLIST.md`
-  Practical checklist for moving this UI into `livemap-routing`.
-
-## How to Run Locally
-
-From this folder:
+- Node.js 18 or newer for tests.
+- Python 3 for the zero-dependency local server.
 
 ```bash
-python3 -m http.server 8787 --bind 127.0.0.1
+git clone https://github.com/irenelivemap/ari-calm-benchmark-ui-mock.git
+cd ari-calm-benchmark-ui-mock
+npm start
 ```
 
-Then open:
+Open <http://127.0.0.1:8765/>.
 
-```text
-http://127.0.0.1:8787/
-```
-
-Results previews use the same locally saved answer dataset:
-
-```text
-http://127.0.0.1:8787/?view=results&preview=1
-http://127.0.0.1:8787/?view=team-results
-```
-
-Without `preview=1`, Community Results remain locked until the participant has completed 10 comparisons. The team dashboard is intentionally absent from participant navigation; its direct preview route is a prototype for a future authenticated internal route.
-
-Run the data-contract checks with:
+Run the complete test suite:
 
 ```bash
-node --test tests/*.test.js
+npm test
 ```
 
-## How to Ingest Into the Product
+There is no build step and no package installation is required.
 
-1. Copy/adapt `src/app/calm-benchmark.js` and `src/styles/calm-benchmark.css` into the frontend/static app.
-2. Load Leaflet before mounting the benchmark UI.
-3. Create a route in the app, for example `/bench/calm` or `/calm-benchmark`.
-4. Add a root element:
+## Entry Points
 
-```html
-<div id="calm-benchmark-root"></div>
+| URL | Use |
+| --- | --- |
+| `/?game=calm` | Fast vs Calm challenge. |
+| `/?game=google` | Fast vs Google Fast challenge. |
+| `/fresh.html` | New-player QA preview without deleting saved browser data. |
+| `/demo.html` | Compatibility redirect for previously shared links. |
+| `/?view=results&preview=1` | Unlocked community-results preview. |
+| `/?view=team-results` | Direct internal-results prototype. |
+
+## Repository Map
+
+```text
+index.html                         Page shell, challenge config, intro, results, wiring
+src/app/calm-benchmark.js          Shared active-benchmark UI and question state
+src/maps/map-adapter.js            Leaflet and Google Maps adapter
+src/data/calm-benchmark-data.js    Validation, local persistence, export
+src/data/mock-*.js                 Demo route-pair fixtures
+src/results/calm-results.js        Pure results aggregation
+src/styles/calm-benchmark.css      Complete visual system
+tests/                             Node tests for data and results behavior
+docs/                              Product, design, architecture, and data contracts
 ```
 
-5. Mount the UI:
+The `calm-*` filenames are historical. They now power the full benchmark family and are retained for compatibility.
 
-```js
-AriCalmBenchmark.mount(document.getElementById('calm-benchmark-root'), {
-  participantName,
-  totalRounds: 10,
-  mapProvider: window.google?.maps ? 'google' : 'leaflet',
-  routePairProvider: async ({ sessionId, roundIndex }) => {
-    return fetch(`/api/calm-benchmark/pairs?sessionId=${sessionId}&round=${roundIndex}`)
-      .then(response => response.json());
-  },
-  answerSink: async answer => {
-    await fetch('/api/v1/benchmarks/calm/answers', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Idempotency-Key': answer.captureId
-      },
-      body: JSON.stringify(answer)
-    });
-  },
-  progressSink: async progress => {
-    await fetch(`/api/v1/benchmarks/calm/sessions/${progress.sessionId}/progress`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(progress)
-    });
-  }
-});
-```
+For a detailed module map and data flow, read [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). All documentation is indexed in [`docs/README.md`](docs/README.md).
 
-## Integration Principle
+## Common Changes
 
-The UI is blinded.
+### Change challenge copy or questions
 
-The model/backend knows which route is `fast` and which route is `calm`. The tester sees only `Route A` and `Route B`. The UI stores the hidden assignment in the answer payload so analysis can later determine whether the calm route was preferred or perceived as meaningfully different.
+Edit `CHALLENGE_CONFIGS` in `index.html`. Challenge-specific test IDs, route types, question options, follow-up rules, and result labels belong there.
 
-## Google Maps Mode
+### Change shared benchmark behavior
 
-The tester UI does not expose Google Maps setup. In a deployed app, the runtime should load Google Maps before mounting the benchmark, the same way `livemap-routing/runtime/js/bench.js` does.
+Edit `src/app/calm-benchmark.js`. This module owns the map-first round flow, onboarding, HUD, questions, Street View mode, progress payloads, and answer payloads.
 
-For private local development, the root page can still use Google Maps without storing a key in the repo:
+### Change the map implementation
 
-- set `window.ARI_GOOGLE_MAPS_KEY` before starting the benchmark, or
-- open `?gmap=YOUR_KEY` once; the key is moved into localStorage and removed from the URL.
+Use the adapter interface in `src/maps/map-adapter.js`. The shell accepts Leaflet or Google Maps and should not depend on provider-specific map objects.
 
-If no key is available, the demo uses the Leaflet fallback.
+### Connect real route data
 
-## Map Requirements
+Replace the mock `routePairProvider`; do not edit the fixtures into a production source. The route input is documented in [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md).
 
-This UI expects real route geometries as latitude/longitude points. It handles:
+### Connect production persistence
 
-- drawing both routes
-- start/end markers
-- pan and zoom
-- fit-to-routes
-- Street View handoff from a clicked route point
-- optional progress save on exit
-- a minimizable question panel for map inspection
-- first-round onboarding and explicit exit confirmation
-- full-screen map-first desktop layout
+Replace `answerSink` and `progressSink`. Keep the record shapes and idempotency rules in [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
 
-The routing engineer does not need to implement the questions or UI behavior. They only need to provide route pairs in the route-pair contract and connect the map/data sinks described in `src/api/` and `src/maps/`.
+## Google Maps
+
+The app uses Leaflet by default. Google Maps mode is enabled only when the runtime loads `window.google.maps`.
+
+For private local testing, either:
+
+- set `window.ARI_GOOGLE_MAPS_KEY` before the benchmark starts, or
+- open `?gmap=YOUR_KEY` once; the app moves the key to local storage and removes it from the URL.
+
+Never commit an API key.
+
+## Project Rules
+
+- Preserve blinding: provider names must not appear on Route A/B in the active test.
+- Keep orange and green reserved for Route A and Route B.
+- Use `fresh.html` instead of deleting browser data during ordinary visual QA.
+- Update tests and relevant docs when changing question logic or stored records.
+- Verify both active challenge URLs after shared UI changes.
+
+New contributors should read [`CONTEXT.md`](CONTEXT.md). Coding agents should also read [`AGENTS.md`](AGENTS.md).

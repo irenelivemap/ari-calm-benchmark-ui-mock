@@ -1,15 +1,28 @@
-# Calm Benchmark Route Pair Contract
+# Route Pair Contract
 
-The UI expects one route pair per round.
+The shared benchmark shell requests one route pair per comparison through `routePairProvider`.
 
-The backend/model should return a `CalmBenchmarkPair` object.
+## Common Shape
 
 ```ts
-type LatLngTuple = [number, number]; // [lat, lng]
+type LatLngTuple = [latitude: number, longitude: number];
 
-type CalmBenchmarkPair = {
+type RouteType = "fast" | "calm" | "livemap_fast" | "google";
+
+type RouteOption = {
+  routeId: string;
+  geometry: LatLngTuple[];
+  source?: "google" | "model" | "saved" | "mock" | "livemap_fast";
+  metadata?: {
+    distanceMeters?: number;
+    durationSeconds?: number;
+    [key: string]: unknown;
+  };
+};
+
+type BenchmarkRoutePair = {
   pairId: string;
-  scenario: string;
+  scenario?: string;
   origin: {
     lat: number;
     lng: number;
@@ -20,29 +33,32 @@ type CalmBenchmarkPair = {
     lng: number;
     label?: string;
   };
-  routes: {
-    fast: {
-      routeId: string;
-      geometry: LatLngTuple[];
-      source?: "google" | "model" | "saved" | "mock";
-      metadata?: Record<string, unknown>;
-    };
-    calm: {
-      routeId: string;
-      geometry: LatLngTuple[];
-      source?: "model" | "saved" | "mock";
-      metadata?: Record<string, unknown>;
-    };
-  };
+  routes: Record<RouteType, RouteOption>;
 };
 ```
 
-## Example
+Only the two route keys configured for the active challenge are required.
+
+| Challenge | Required route keys | Test ID |
+| --- | --- | --- |
+| Fast vs Calm | `fast`, `calm` | `calm_vs_fast` |
+| Fast vs Google Fast | `livemap_fast`, `google` | `ari_fast_vs_google` |
+
+## Provider Interface
+
+```js
+async function routePairProvider({ sessionId, roundIndex }) {
+  return benchmarkRoutePair;
+}
+```
+
+`pairId` and both route IDs must be stable. Retrying a round should return the same logical pair unless the backend explicitly invalidates it.
+
+## Example: Fast vs Google Fast
 
 ```json
 {
-  "pairId": "zurich-limmat-evening-01",
-  "scenario": "An evening walk home along the Limmat, no particular rush.",
+  "pairId": "zurich-hb-bellevue-01",
   "origin": {
     "lat": 47.37818,
     "lng": 8.54018,
@@ -54,53 +70,52 @@ type CalmBenchmarkPair = {
     "label": "Bellevue"
   },
   "routes": {
-    "fast": {
-      "routeId": "fast-demo-01",
-      "source": "model",
+    "livemap_fast": {
+      "routeId": "ari-fast-01",
+      "source": "livemap_fast",
+      "metadata": {
+        "distanceMeters": 1680,
+        "durationSeconds": 1210
+      },
       "geometry": [
         [47.37818, 8.54018],
-        [47.37692, 8.54072],
-        [47.37573, 8.54122]
+        [47.37573, 8.54122],
+        [47.36665, 8.54437]
       ]
     },
-    "calm": {
-      "routeId": "calm-demo-01",
-      "source": "model",
+    "google": {
+      "routeId": "google-fast-01",
+      "source": "google",
+      "metadata": {
+        "distanceMeters": 1740,
+        "durationSeconds": 1240
+      },
       "geometry": [
         [47.37818, 8.54018],
-        [47.37742, 8.53874],
-        [47.37618, 8.53762]
+        [47.37618, 8.53762],
+        [47.36665, 8.54437]
       ]
     }
   }
 }
 ```
 
-## Important Rules
+## Invariants
 
-- Geometry must be ordered from origin to destination.
-- Geometry must use latitude/longitude coordinates, not `[lng, lat]`.
-- The UI can accept extra route metadata, but it will not display time, distance, calm score, or route type to the tester.
-- The UI randomizes the assignment to `Route A` / `Route B`.
-- The answer payload includes the hidden assignment so analysis can recover which visible route was fast/calm.
+- Geometry is ordered from origin to destination.
+- Geometry uses `[latitude, longitude]`, not GeoJSON `[longitude, latitude]`.
+- Each geometry contains at least two valid points.
+- The two routes have different route types and stable route IDs.
+- The shell randomizes provider routes into visible Route A / Route B slots.
+- Provider identity, time, distance, and hidden scores are not displayed in the first question.
+- Metadata is stored with the answer's route snapshots and may support later questions or analysis.
 
-## Future Backend Endpoint Shape
+## Production Endpoint
 
-Recommended:
+A possible challenge-neutral endpoint is:
 
 ```http
-GET /api/calm-benchmark/pairs?sessionId={sessionId}&round={roundIndex}
+GET /api/v1/benchmarks/{testId}/pairs?sessionId={sessionId}&round={roundIndex}
 ```
 
-Response:
-
-```ts
-CalmBenchmarkPair
-```
-
-The endpoint can source pairs from:
-
-- saved route corpus
-- generated origin/destination pairs
-- model-produced calm alternatives
-- manually curated test cases
+The backend may source route pairs from a saved corpus, generated origins/destinations, model output, Google routes, or curated research fixtures. The UI should not care which source produced them.

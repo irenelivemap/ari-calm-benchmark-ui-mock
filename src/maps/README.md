@@ -1,6 +1,6 @@
-# Map Integration Surface
+# Map Adapter
 
-The benchmark UI should not depend on where the map comes from. It needs a map capable of:
+The shared benchmark UI should not depend on where the map comes from. It needs a map capable of:
 
 - drawing Route A and Route B
 - drawing start and destination markers
@@ -9,7 +9,7 @@ The benchmark UI should not depend on where the map comes from. It needs a map c
 - enabling route-point targeting only while Street View mode is active
 - preserving and restoring the exact map camera around Street View inspection
 
-The current implementation lives in `src/maps/map-adapter.js`. It supports Leaflet for local/private use and Google Maps when `window.google.maps` is already loaded. When this moves into `livemap-routing`, this is the part that should be replaced or adapted to use the production map implementation from the existing benchmark.
+The current implementation lives in `map-adapter.js`. It supports Leaflet for local/private use and Google Maps when `window.google.maps` is already loaded. Production integration should replace or adapt this module while preserving the interface below.
 
 ## Required map actions
 
@@ -28,7 +28,7 @@ getViewState()
 restoreViewState(viewState)
 ```
 
-The adapter receives `onRoutePointClick` when it is created. Normal map gestures remain unchanged until the app calls `setStreetViewEnabled(true)`. While active, the adapter exposes a forgiving route hit area and reports `{ lat, lng, routeKey }` to the app. The app owns the embedded Street View viewer and always disables the mode when the viewer closes.
+The adapter receives `onRoutePointClick` when it is created. Normal map gestures remain unchanged until the app calls `setStreetViewEnabled(true)`. While active, the adapter exposes a forgiving route hit area and reports `{ lat, lng, routeKey }` to the app. The shared shell owns the embedded Street View viewer and always disables the mode when the viewer closes.
 
 ## Coordinate rule
 

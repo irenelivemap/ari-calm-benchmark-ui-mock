@@ -1,63 +1,79 @@
-# Integration Checklist
+# Production Integration Checklist
 
-Use this checklist when moving the calm benchmark UI into `livemap-routing`.
+Use this checklist when connecting the shared benchmark UI to `livemap-routing` or another production host. Do not modify the external host repository from this prototype unless that work is explicitly requested.
+
+## Choose the Challenge
+
+- [ ] Confirm the challenge test ID and route types.
+- [ ] Confirm the exact question copy, choices, and follow-up rules.
+- [ ] Add or update the profile in `CHALLENGE_CONFIGS` in `index.html`.
+- [ ] Keep provider names hidden from active Route A/B labels.
 
 ## Frontend
 
-- [ ] Add Leaflet CSS/JS or use the app's existing map bundle.
-- [ ] Copy/adapt `src/styles/calm-benchmark.css`.
-- [ ] Copy/adapt `src/app/calm-benchmark.js`.
-- [ ] Copy/adapt or replace `src/maps/map-adapter.js`.
-- [ ] Create a route, for example `/bench/calm` or `/calm-benchmark`.
-- [ ] Add a root element for the benchmark UI.
-- [ ] Mount with `AriCalmBenchmark.mount(...)`.
-- [ ] Pass the participant name from the start screen/session.
-- [ ] Implement `routePairProvider`.
-- [ ] Implement `answerSink`.
-- [ ] Implement `progressSink` if testers should be able to save and leave mid-session.
-- [ ] Validate answers and progress against `src/data/calm-benchmark-data.js` before sending.
-- [ ] Send `captureId` as the answer idempotency key.
-- [ ] Verify map pan/zoom works.
-- [ ] Verify `Fit routes` works.
-- [ ] Verify Street View handoff works or replace with the app's real Street View control.
-- [ ] Verify Save progress persists completed and current-round state.
-- [ ] Verify the question panel can be minimized and expanded.
-- [ ] Verify Exit test explains whether completed/current rounds are saved.
-- [ ] Verify Route A / Route B remain blinded.
-- [ ] Verify Q2/Q3 conditional display.
-- [ ] Verify answer payload includes hidden route assignment.
+- [ ] Load the benchmark CSS and browser modules.
+- [ ] Provide a root element for `AriCalmBenchmark.mount(...)`.
+- [ ] Pass the participant identity from the host session.
+- [ ] Implement `routePairProvider` against the real route source.
+- [ ] Implement `answerSink` against production persistence.
+- [ ] Implement `progressSink` when sessions must resume across devices or browsers.
+- [ ] Select or replace the map adapter.
+- [ ] Remove the design-phase `Reset test data` control.
+- [ ] Keep the internal team-results route out of participant navigation.
 
-## Backend / Routing Model
+## Route Provider
 
-- [ ] Create route pair endpoint returning `CalmBenchmarkPair`.
-- [ ] Ensure each pair includes both `fast` and `calm` geometries.
-- [ ] Ensure geometry order is `[lat, lng]`.
-- [ ] Ensure geometry is ordered origin to destination.
-- [ ] Include stable `pairId`.
-- [ ] Include stable route IDs for `fast` and `calm`.
-- [ ] Do not expose route labels, scores, time, distance, or calm/fast status to the tester UI.
-- [ ] Store submitted answers.
-- [ ] Reject invalid conditional answers instead of storing incomplete rows.
+- [ ] Return the route keys required by the active challenge.
+- [ ] Use `[latitude, longitude]` geometry ordered from origin to destination.
+- [ ] Provide stable `pairId` and route IDs.
+- [ ] Return the same logical pair when retrying one session round.
+- [ ] Include metadata needed for later analysis without exposing it in Q1.
+- [ ] Validate that both geometries contain at least two valid points.
+
+## Persistence
+
+- [ ] Validate answers and progress with the same rules as `src/data/calm-benchmark-data.js`.
 - [ ] Make answer submission idempotent by `captureId`.
-- [ ] Upsert unfinished progress by `sessionId`.
-- [ ] Add an NDJSON answer feed for the dashboard.
-- [ ] Add server-side `receivedAt` while preserving `clientTs`.
-- [ ] Store route assignment from answer payload.
-- [ ] Add result analysis for calm chosen vs fast chosen.
+- [ ] Upsert progress by `sessionId`.
+- [ ] Preserve the hidden A/B assignment.
+- [ ] Preserve route snapshots and provider metadata.
+- [ ] Reject records whose `test` does not match the endpoint.
+- [ ] Add server-side `receivedAt` while preserving client timestamps.
+- [ ] Expose an authenticated NDJSON or equivalent answer feed for analysis.
+
+## Map Behavior
+
+- [ ] Draw both routes with the existing orange/green visible-slot colors.
+- [ ] Preserve pan, pinch, scroll, double-click, and zoom behavior.
+- [ ] Fit both routes within the area not covered by the question panel.
+- [ ] Keep Fit independent from the tester's manual camera state until pressed.
+- [ ] Enable route-point targeting only while Street View mode is active.
+- [ ] Restore the exact map camera and question state after Street View closes.
+- [ ] Provide an in-app unavailable state instead of opening an external fallback tab.
 
 ## Acceptance Criteria
 
-- [ ] Tester can inspect both routes clearly on a large map.
-- [ ] Tester can zoom and pan the map.
-- [ ] Tester can fit both routes back into view.
-- [ ] Tester can open Street View when they need more visual context.
-- [ ] Tester can minimize the question panel to focus on the map.
-- [ ] Tester can save progress before leaving the session.
-- [ ] Tester can submit Q1.
-- [ ] Q2 appears for Route A, Route B, or Either.
-- [ ] Q3 appears for Route A, Route B, or Neither.
-- [ ] Submitted answer can be used to identify whether the tester chose the calm route.
-- [ ] UI still works if the calm route is assigned to Route A or Route B.
-- [ ] Resume restores the same session ID, pair ID, A/B assignment, question step, and partial answer.
-- [ ] Retrying one completed round does not create a duplicate answer.
-- [ ] `node --test tests/calm-benchmark-data.test.js` passes.
+- [ ] A new participant can start without team context.
+- [ ] A returning participant resumes the same session, pair, assignment, question step, and partial answer.
+- [ ] Route A/B assignment is randomized and remains blinded.
+- [ ] The active challenge shows the correct question flow.
+- [ ] Retrying a completed comparison does not create a duplicate answer.
+- [ ] Leaving mid-round saves progress without submitting an incomplete answer.
+- [ ] Community and team results decode choices from the hidden assignment correctly.
+- [ ] Both active challenge URLs work on desktop and mobile.
+- [ ] Keyboard focus, contrast, touch targets, and reduced motion meet `DESIGN.md`.
+- [ ] `npm test` passes.
+
+## Challenge-specific Checks
+
+### Fast vs Calm
+
+- [ ] Route keys are `fast` and `calm`.
+- [ ] Q2 is required only for Route A, Route B, or Both work well.
+- [ ] Q3 is required only for Route A, Route B, or Neither works.
+
+### Fast vs Google Fast
+
+- [ ] Route keys are `livemap_fast` and `google`.
+- [ ] No Q2 is shown.
+- [ ] Q3 is required only for Route A, Route B, or Both work poorly.

@@ -1,21 +1,21 @@
-# ARI Calm Benchmark Design System
+# ARI Route Benchmark Design System
 
-This document captures the design rules for the ARI calm-route benchmark UI. Use it before creating, reviewing, or changing interface elements in this repo.
+This document captures the design rules shared by the ARI route benchmark family. Use it before creating, reviewing, or changing interface elements in this repo. Challenge-specific copy and question logic live in `CHALLENGE_CONFIGS` in `index.html`; the visual and interaction system is shared.
 
 ## Product Intent
 
-This is a map-first blinded benchmark for calm walking routes. Testers compare Route A and Route B without knowing which route is fast or calm, then answer which route they would actually choose for a calm walking situation.
+This is a map-first blinded benchmark family. Testers compare Route A and Route B without knowing which provider produced either route, then answer the question defined by the active challenge.
 
-The interface should help testers inspect the routes clearly, make a confident choice, and answer with minimal friction.
+Fast vs Calm asks which route better fits a calm walk. Fast vs Google Fast asks which route works better as a fast route. The interface should help testers inspect routes clearly, make a confident choice, and answer with minimal friction in either challenge.
 
 ## Design Principles
 
 - Map first: the map and the two routes are the primary task surface.
-- Calm, not cluttered: reduce copy and controls unless they directly help the test.
+- Focused, not cluttered: reduce copy and controls unless they directly help the test.
 - Arcade, but subtle: use a compact game/HUD feeling without making the UI noisy or gimmicky.
 - Clear affordances: buttons must look clickable; status text must not look clickable.
 - Route colors are reserved: orange and green belong to Route A / Route B and route answer buttons only.
-- Progressive disclosure: definitions, data-use context, and extra guidance should be available without crowding the main task.
+- Progressive disclosure: challenge context and extra guidance should appear only when they help the active task.
 - Mobile and laptop both matter: desktop/laptop is primary, but mobile must be readable and usable without excessive scrolling.
 
 ## Visual Direction
@@ -96,7 +96,7 @@ Intro page:
 - The medal, route endpoints, and rank copy are measured from the rendered layout. Route geometry stays inside the medal's vertical footprint in the status pane, and the rank copy below it is an explicit no-route zone. This keeps longer future rank names clear without masking collisions behind text.
 - On stacked mobile layouts, the circuit uses the stage's outer rail to avoid crossing the remaining challenge keys, then enters a fixed symmetrical top dock above the medal.
 - Opening the chooser draws both routes once, then uses a slow moving trace to keep the screen in attract mode. A confirmed selection retracts and redraws only the transport cable, leaves the medal dock stable, then gives the medal one restrained power pulse. Hover never moves the circuit. Reduced-motion mode shows the completed route immediately without looping or pulsing motion.
-- All challenges share one vertical selector. Fast vs Calm is selected; Fast vs Google and Fast vs Safe remain visible as disabled `Soon` options until their flows exist.
+- All challenges share one vertical selector. Fast vs Calm and Fast vs Google Fast are playable. Fast vs Safe remains visible as a disabled `Soon` option until its flow exists.
 - The stage has exactly one ivory Play or Resume command. It is intentionally distinct from the dark challenge keys.
 - Selection is communicated by the cursor and active frame only. Do not add `Select a challenge`, `Selected challenge`, or `Selected` labels, and do not repeat the selected challenge inside the CRT.
 - `fresh.html` is the non-destructive QA entry point. It previews a new player without deleting locally saved sessions.
@@ -127,9 +127,9 @@ Benchmark screen:
 - The map owns the full viewport.
 - The question panel overlays the map and can collapse for inspection.
 - The question panel and map controls share the same responsive edge inset: `24px` on desktop and `20px` on mobile, including safe-area insets.
-- The question panel starts collapsed during onboarding.
-- After onboarding ends, the question panel remains collapsed so the tester starts with the map.
-- The question panel may expand when the user is ready to answer.
+- The question panel starts collapsed while onboarding coachmarks identify the map controls.
+- Pressing `Start round →` closes onboarding and expands the question panel.
+- After onboarding, the tester can collapse or expand the panel without changing the map camera.
 
 ## Map Control Rules
 
