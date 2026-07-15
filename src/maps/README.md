@@ -6,7 +6,8 @@ The benchmark UI should not depend on where the map comes from. It needs a map c
 - drawing start and destination markers
 - panning and zooming
 - fitting both routes into the closest useful comparison view
-- detecting route-point interaction for Street View handoff
+- enabling route-point targeting only while Street View mode is active
+- preserving and restoring the exact map camera around Street View inspection
 
 The current implementation lives in `src/maps/map-adapter.js`. It supports Leaflet for local/private use and Google Maps when `window.google.maps` is already loaded. When this moves into `livemap-routing`, this is the part that should be replaced or adapted to use the production map implementation from the existing benchmark.
 
@@ -20,9 +21,14 @@ zoomOut()
 getRoutePointRect()
 focusRoute(routeKey)
 hasMap()
+setStreetViewEnabled(enabled)
+setStreetViewPosition(point, routeKey)
+clearStreetViewPosition()
+getViewState()
+restoreViewState(viewState)
 ```
 
-The adapter receives `onRoutePointClick` when it is created. The app owns the actual Street View URL handoff after the adapter reports that a route point was clicked.
+The adapter receives `onRoutePointClick` when it is created. Normal map gestures remain unchanged until the app calls `setStreetViewEnabled(true)`. While active, the adapter exposes a forgiving route hit area and reports `{ lat, lng, routeKey }` to the app. The app owns the embedded Street View viewer and always disables the mode when the viewer closes.
 
 ## Coordinate rule
 

@@ -172,3 +172,32 @@ test('clears the current dataset and legacy test records', () => {
     answers: 0
   });
 });
+
+test('stores ARI Fast versus Google Fast preview records with their own route types and test id', () => {
+  const storage = new MemoryStorage();
+  const repository = createLocalRepository(storage, {
+    storageKey: 'ari-fast-google-benchmark-dataset-v1',
+    testId: 'ari_fast_vs_google',
+    legacyAnswersKey: 'ari-fast-google-benchmark-answers',
+    legacyProgressKey: 'ari-fast-google-benchmark-progress'
+  });
+  const answer = validAnswer({
+    test: 'ari_fast_vs_google',
+    source: 'fast-google-benchmark',
+    routeAssignment: { routeA: 'livemap_fast', routeB: 'google' },
+    labels: {
+      A: { routeId: 'ari-fast-1', routeType: 'livemap_fast', source: 'livemap_fast' },
+      B: { routeId: 'google-fast-1', routeType: 'google', source: 'google' }
+    },
+    q1Choice: 'route_a',
+    q2Separate: null,
+    q3Issues: ['misses_nicer_route']
+  });
+
+  assert.equal(repository.saveAnswer(answer).status, 'saved');
+  const snapshot = repository.getSnapshot();
+  assert.equal(snapshot.test, 'ari_fast_vs_google');
+  assert.equal(snapshot.answers[0].labelMap.A, 'livemap_fast');
+  assert.equal(snapshot.answers[0].q3Issues[0], 'misses_nicer_route');
+  assert.equal(repository.verify().valid, true);
+});
