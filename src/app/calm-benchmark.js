@@ -196,6 +196,7 @@
                 <b>Street View on</b>
                 <span>Select any point on the map.</span>
               </div>
+              <div class="ari-street-divider" data-street-divider role="separator" tabindex="0" aria-label="Resize the Street View split" hidden><span aria-hidden="true"></span></div>
               <section class="ari-street-viewer" id="${streetViewerId}" data-street-viewer aria-label="Street View" aria-hidden="true" hidden>
                 <header class="ari-street-viewer__header">
                   <button class="ari-street-viewer__back" data-action="close-street-view" type="button">
@@ -405,6 +406,7 @@
       fitRoutes: root.querySelector('[data-action="fit-routes"]'),
       streetViewToggle: root.querySelector('[data-action="toggle-street-view"]'),
       streetViewHint: root.querySelector('[data-street-mode-hint]'),
+      streetDivider: root.querySelector('[data-street-divider]'),
       streetViewer: root.querySelector('[data-street-viewer]'),
       streetPanorama: root.querySelector('[data-street-panorama]'),
       streetStatus: root.querySelector('[data-street-status]'),
@@ -688,6 +690,98 @@
       updatePanelState(false, { animate: true });
     }
 
+    const SPLIT_STORAGE_KEY = 'ari-benchmark-street-split-v1';
+    let splitResizeFrame = null;
+
+    function isMobileViewport() {
+      return window.matchMedia('(max-width: 700px)').matches;
+    }
+
+    function readStoredSplit() {
+      try {
+        return JSON.parse(localStorage.getItem(SPLIT_STORAGE_KEY) || '{}') || {};
+      } catch (_) {
+        return {};
+      }
+    }
+
+    function writeStoredSplit(stored) {
+      try {
+        localStorage.setItem(SPLIT_STORAGE_KEY, JSON.stringify(stored));
+      } catch (_) { /* private mode: the split simply resets next visit */ }
+    }
+
+    function applyStoredSplit() {
+      const stored = readStoredSplit();
+      if (Number.isFinite(stored.desktop)) {
+        els.mapShell.style.setProperty('--ari-sv-split', `${stored.desktop}%`);
+      }
+      if (Number.isFinite(stored.mobile)) {
+        els.mapShell.style.setProperty('--ari-sv-split-m', `${stored.mobile}%`);
+      }
+    }
+
+    function clampPanoShare(share, mobile) {
+      if (mobile) return Math.min(70, Math.max(30, share));
+      const width = els.mapShell.getBoundingClientRect().width || 1200;
+      const maxShare = Math.min(85, 100 - (300 / width) * 100);
+      return Math.min(maxShare, Math.max(40, share));
+    }
+
+    function currentPanoShare(mobile) {
+      const inline = parseFloat(els.mapShell.style.getPropertyValue(mobile ? '--ari-sv-split-m' : '--ari-sv-split'));
+      if (Number.isFinite(inline)) return inline;
+      if (mobile) return 58;
+      return window.matchMedia('(max-width: 1100px)').matches ? 55 : 65;
+    }
+
+    function scheduleSplitResize() {
+      if (splitResizeFrame) return;
+      splitResizeFrame = requestAnimationFrame(() => {
+        splitResizeFrame = null;
+        state.mapAdapter?.notifyResize();
+      });
+    }
+
+    function settleSplitPanorama() {
+      if (state.streetViewPanorama && window.google?.maps?.event) {
+        google.maps.event.trigger(state.streetViewPanorama, 'resize');
+      }
+    }
+
+    function setPanoShare(share, { persist = false } = {}) {
+      const mobile = isMobileViewport();
+      const clamped = clampPanoShare(share, mobile);
+      els.mapShell.style.setProperty(mobile ? '--ari-sv-split-m' : '--ari-sv-split', `${clamped}%`);
+      els.streetDivider.setAttribute('aria-valuenow', String(Math.round(clamped)));
+      scheduleSplitResize();
+      if (persist) {
+        const stored = readStoredSplit();
+        stored[mobile ? 'mobile' : 'desktop'] = Math.round(clamped * 10) / 10;
+        writeStoredSplit(stored);
+      }
+      return clamped;
+    }
+
+    function resetSplit() {
+      const mobile = isMobileViewport();
+      els.mapShell.style.removeProperty(mobile ? '--ari-sv-split-m' : '--ari-sv-split');
+      const stored = readStoredSplit();
+      delete stored[mobile ? 'mobile' : 'desktop'];
+      writeStoredSplit(stored);
+      els.streetDivider.setAttribute('aria-valuenow', String(Math.round(currentPanoShare(mobile))));
+      scheduleSplitResize();
+      settleSplitPanorama();
+    }
+
+    function syncSplitDivider() {
+      const mobile = isMobileViewport();
+      els.streetDivider.setAttribute('aria-orientation', mobile ? 'horizontal' : 'vertical');
+      els.streetDivider.setAttribute('aria-valuemin', mobile ? '30' : '40');
+      els.streetDivider.setAttribute('aria-valuemax', mobile ? '70' : '85');
+      els.streetDivider.setAttribute('aria-valuenow', String(Math.round(currentPanoShare(mobile))));
+    }
+
     function updateStreetViewModeUi() {
       const enabled = state.streetViewMode;
       els.streetViewToggle.classList.toggle('is-active', enabled);
@@ -720,6 +814,8 @@
       const alreadySplit = els.mapShell.classList.contains('is-street-split');
       els.mapShell.classList.add('is-street-split');
       els.benchmark.classList.add('is-street-view-open');
+      els.streetDivider.hidden = false;
+      syncSplitDivider();
       els.streetViewer.hidden = false;
       els.streetViewer.setAttribute('aria-hidden', 'false');
       requestAnimationFrame(() => els.streetViewer.classList.add('is-visible'));
@@ -750,6 +846,7 @@
       const wasSplit = els.mapShell.classList.contains('is-street-split');
       els.mapShell.classList.remove('is-street-split');
       els.benchmark.classList.remove('is-street-view-open');
+      els.streetDivider.hidden = true;
       els.streetViewer.classList.remove('is-visible');
       els.streetViewer.setAttribute('aria-hidden', 'true');
       window.clearTimeout(streetViewCloseTimer);
@@ -1385,6 +1482,44 @@
       setStreetViewMode(!state.streetViewMode);
     });
     els.closeStreetView.addEventListener('click', () => closeStreetView());
+
+    els.streetDivider.addEventListener('pointerdown', event => {
+      if (!state.streetViewOpen) return;
+      event.preventDefault();
+      els.streetDivider.setPointerCapture(event.pointerId);
+      els.streetDivider.classList.add('is-dragging');
+    });
+    els.streetDivider.addEventListener('pointermove', event => {
+      if (!els.streetDivider.hasPointerCapture?.(event.pointerId)) return;
+      const rect = els.mapShell.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const share = isMobileViewport()
+        ? ((event.clientY - rect.top) / rect.height) * 100
+        : ((rect.right - event.clientX) / rect.width) * 100;
+      setPanoShare(share);
+    });
+    const endSplitDrag = event => {
+      if (!els.streetDivider.hasPointerCapture?.(event.pointerId)) return;
+      els.streetDivider.releasePointerCapture(event.pointerId);
+      els.streetDivider.classList.remove('is-dragging');
+      setPanoShare(currentPanoShare(isMobileViewport()), { persist: true });
+      settleSplitPanorama();
+    };
+    els.streetDivider.addEventListener('pointerup', endSplitDrag);
+    els.streetDivider.addEventListener('pointercancel', endSplitDrag);
+    els.streetDivider.addEventListener('dblclick', resetSplit);
+    els.streetDivider.addEventListener('keydown', event => {
+      const mobile = isMobileViewport();
+      let delta = 0;
+      if (event.key === (mobile ? 'ArrowUp' : 'ArrowRight')) delta = -2;
+      if (event.key === (mobile ? 'ArrowDown' : 'ArrowLeft')) delta = 2;
+      if (!delta) return;
+      event.preventDefault();
+      setPanoShare(currentPanoShare(mobile) + delta, { persist: true });
+      settleSplitPanorama();
+    });
+
+    applyStoredSplit();
 
     els.form.querySelectorAll('.ari-choice--route-a, .ari-choice--route-b').forEach(label => {
       const key = label.classList.contains('ari-choice--route-a') ? 'routeA' : 'routeB';
