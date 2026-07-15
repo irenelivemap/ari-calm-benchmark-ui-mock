@@ -17,6 +17,7 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 - `src/api/route-pair-generator.js` owns random route-pair generation against the routing facade. Keep its fixture fallback working; GitHub Pages has no backend.
 - `src/app/runtime.js` owns base-path and challenge URL behavior. Preserve both clean `/routing/*` paths and legacy `?game=` preview links.
 - `src/data/benchmark-transport.js` owns production HTTP delivery and its local outbox. Never allow older queued progress to overwrite newer progress.
+- `server/data-api.js` owns server-side persistence. It must validate with `src/data/calm-benchmark-data.js`, stay append-only for answers, and never accept a record whose `test` does not match the endpoint.
 - Never commit a Google Maps API key. Local Google Maps setup is described in `README.md`.
 - Do not reset or rewrite a tester's browser data during visual QA. Use `fresh.html` for a non-destructive new-player preview.
 - Keep the current static/no-build architecture unless the project owner explicitly approves a migration.

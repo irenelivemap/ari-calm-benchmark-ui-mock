@@ -21,12 +21,15 @@ Blockers — the link does not exist until these are done (owner: infrastructure
 
 Blocker — without this the campaign collects nothing (owner: backend):
 
-5. [ ] Implement and deploy the benchmark data API from
-       [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md): idempotent
-       `POST /{testId}/answers`, `PUT .../progress`. Natural home: alongside
-       `/api/v1/field` in the routing service. Then set `ARI_DATA_API_BASE`
-       and `DATA_UPSTREAM`. Until then every public answer stays in the
-       tester's browser.
+5. [x] Implement the benchmark data API: `server/data-api.js` +
+       `deploy/data-api.Dockerfile` (file-backed reference implementation of
+       [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md), validated with the same
+       rules as the browser).
+       [ ] Deploy it with a persistent `/data` volume and set
+       `ARI_DATA_API_BASE` + `DATA_UPSTREAM` on the main container (owner:
+       infrastructure). Until then every public answer stays in the tester's
+       browser. The routing team can later port it into the Java service
+       without changing the contract.
 
 Quality gate before posting (owner: Irene, ~1-2 hours on the live URL):
 
@@ -120,6 +123,6 @@ the newer follow-ups.
       env injection are the approved delivery paths.
 - [ ] Revisit the sampling region and the 400–3000 m distance gate once real
       testers give feedback on pair difficulty and walk length.
-- [ ] Implement and connect the shared benchmark data API before public launch.
-      The frontend transport and retry outbox are ready; `ARI_DATA_API_BASE`
-      must not remain empty for a LinkedIn campaign.
+- [x] Implement the shared benchmark data API (`server/data-api.js`); connect
+      it in the deployment before public launch — `ARI_DATA_API_BASE` must not
+      remain empty for a LinkedIn campaign.

@@ -68,9 +68,10 @@ src/app/runtime.js                 Runtime configuration and public URL handling
 src/data/mock-*.js                 Demo route-pair fixtures
 src/results/calm-results.js        Pure results aggregation
 src/styles/calm-benchmark.css      Complete visual system
+server/data-api.js                 File-backed benchmark persistence service
 tests/                             Node tests for data and results behavior
 docs/                              Product, design, architecture, and data contracts
-deploy/                            Caddy container configuration and handoff
+deploy/                            Caddy + data API container configuration and handoff
 ```
 
 The `calm-*` filenames are historical. They now power the full benchmark family and are retained for compatibility.
@@ -97,7 +98,9 @@ Replace the mock `routePairProvider`; do not edit the fixtures into a production
 
 ### Connect production persistence
 
-Set `ARI_DATA_API_BASE` in the deployment. The app keeps local persistence as a safety layer and sends records through `src/data/benchmark-transport.js`, which queues failed writes for retry. Keep the endpoint contract and idempotency rules in [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
+Set `ARI_DATA_API_BASE` in the deployment. The app keeps local persistence as a safety layer and sends records through `src/data/benchmark-transport.js`, which queues failed writes for retry. `server/data-api.js` is the ready-to-deploy server side of that contract. Keep the endpoint contract and idempotency rules in [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
+
+To exercise the full loop locally: `node server/data-api.js` in one terminal, then `ARI_DATA_API_BASE=/api/v1/benchmarks npm start` — the dev server proxies `/api/v1/benchmarks/*` to the local data API and injects the base into the runtime config.
 
 ## Production Deployment
 

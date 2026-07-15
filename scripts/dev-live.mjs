@@ -19,7 +19,10 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const PORT = Number(process.env.PORT || 8765);
 const ROUTING_ORIGIN = process.env.LIVEMAP_ROUTING_ORIGIN || 'http://127.0.0.1:8989';
+const DATA_ORIGIN = process.env.ARI_DATA_ORIGIN || 'http://127.0.0.1:8090';
+const DATA_API_BASE = process.env.ARI_DATA_API_BASE || '';
 const PROXY_PREFIX = '/api/v1/routing';
+const DATA_PROXY_PREFIX = '/api/v1/benchmarks';
 const PUBLIC_BASE_PATH = '/routing';
 
 const CONTENT_TYPES = {
@@ -35,8 +38,8 @@ const CONTENT_TYPES = {
   '.md': 'text/markdown; charset=utf-8'
 };
 
-async function proxyToFacade(request, response, pathname) {
-  const target = `${ROUTING_ORIGIN}${pathname}`;
+async function proxyToFacade(request, response, pathname, origin = ROUTING_ORIGIN) {
+  const target = `${origin}${pathname}`;
   const chunks = [];
   for await (const chunk of request) chunks.push(chunk);
   try {
@@ -54,7 +57,7 @@ async function proxyToFacade(request, response, pathname) {
     response.writeHead(502, { 'Content-Type': 'application/json' });
     response.end(JSON.stringify({
       status: 'error',
-      message: `Routing facade unreachable at ${ROUTING_ORIGIN}: ${error.message}`
+      message: `Upstream unreachable at ${origin}: ${error.message}`
     }));
   }
 }
@@ -68,6 +71,14 @@ async function serveStatic(response, pathname) {
     : isPublicPath
       ? publicRelative || 'index.html'
       : pathname === '/' ? 'index.html' : pathname.slice(1);
+  // Mirror the Caddy env injection: with ARI_DATA_API_BASE set, the local
+  // preview exercises the real HTTP transport against the local data API.
+  if (relative === 'runtime-config.js' && DATA_API_BASE) {
+    response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' });
+    return response.end(
+      `window.ARI_RUNTIME_CONFIG = Object.assign({ dataApiBase: ${JSON.stringify(DATA_API_BASE)} }, window.ARI_RUNTIME_CONFIG || {});\n`
+    );
+  }
   const filePath = normalize(join(ROOT, relative));
   if (!filePath.startsWith(normalize(ROOT))) {
     response.writeHead(403);
@@ -89,6 +100,7 @@ async function serveStatic(response, pathname) {
 http.createServer((request, response) => {
   const { pathname } = new URL(request.url, `http://127.0.0.1:${PORT}`);
   if (pathname.startsWith(PROXY_PREFIX)) return proxyToFacade(request, response, pathname);
+  if (pathname.startsWith(DATA_PROXY_PREFIX)) return proxyToFacade(request, response, pathname, DATA_ORIGIN);
   if (pathname === PUBLIC_BASE_PATH) {
     response.writeHead(308, { Location: `${PUBLIC_BASE_PATH}/` });
     return response.end();

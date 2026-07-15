@@ -54,7 +54,9 @@ In `index.html`, these adapters always call the active challenge's local reposit
 
 Queued answers deduplicate by `captureId`. Queued progress deduplicates by test and session, so only the newest unsent state survives. A newer successful progress write removes any older queued version before the outbox flushes.
 
-## Proposed Production Endpoints
+## Production Endpoints
+
+`server/data-api.js` is the reference implementation of these endpoints (packaged by `deploy/data-api.Dockerfile`): file-backed, zero-dependency, validating with the same module the browser uses.
 
 ```http
 POST /api/v1/benchmarks/{testId}/answers

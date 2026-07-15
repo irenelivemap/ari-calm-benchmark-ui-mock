@@ -46,3 +46,22 @@ PUT  /api/v1/benchmarks/{testId}/sessions/{sessionId}/progress
 Failed writes stay in a local outbox and retry on the next save, page load, or `online` event. The server must enforce answer idempotency using the `Idempotency-Key` header.
 
 Do not launch the public LinkedIn campaign while `ARI_DATA_API_BASE` is empty: comparisons would remain only in each participant's browser.
+
+## Data API Service
+
+`server/data-api.js` in this repository implements the contract above:
+idempotent answers, progress upserts, and the NDJSON answer feed, validated
+with the same rules the browser uses. It is file-backed and zero-dependency.
+
+Build it from [`data-api.Dockerfile`](data-api.Dockerfile) and run it with a
+persistent volume mounted at `/data`. Then set on the main container:
+
+- `DATA_UPSTREAM` = the data API's internal origin (it listens on `8090`)
+- `ARI_DATA_API_BASE` = `/api/v1/benchmarks`
+
+The proxy route in the main Caddyfile is already in place and stays dormant
+until `ARI_DATA_API_BASE` is set. Records land in `/data` as
+`{testId}-answers.ndjson` (append-only) and `{testId}-progress.json` — back up
+that volume. The endpoint is unauthenticated by design for the research phase;
+it accepts only records that pass full challenge validation. The routing team
+can later port the contract into the Java service without any frontend change.
