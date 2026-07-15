@@ -4133,6 +4133,11 @@ html.is-challenge-dialog-open {
   font-size: 0.76rem;
   line-height: 1.25;
   pointer-events: none;
+  transition: opacity 240ms ease;
+}
+
+.ari-street-mode-hint.is-fading {
+  opacity: 0;
 }
 
 .ari-street-mode-hint[hidden] {

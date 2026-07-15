@@ -195,7 +195,6 @@
                 </button>
               </div>
               <div class="ari-street-mode-hint" data-street-mode-hint role="status" hidden>
-                <b>Street View on</b>
                 <span>Select any point on the map.</span>
               </div>
               <div class="ari-street-divider" data-street-divider role="separator" tabindex="0" aria-label="Resize the Street View split" hidden><span aria-hidden="true"></span></div>
@@ -815,13 +814,51 @@
       els.streetDivider.setAttribute('aria-valuenow', String(Math.round(currentPanoShare(mobile))));
     }
 
+    const STREET_HINT_SEEN_KEY = 'ari-benchmark-street-hint-seen-v1';
+    let streetHintTimer = null;
+
+    function hideStreetHint() {
+      window.clearTimeout(streetHintTimer);
+      els.streetViewHint.classList.remove('is-fading');
+      els.streetViewHint.hidden = true;
+    }
+
+    /** Show the mode instruction beside the pill: persistent the first time a
+     *  tester ever enables the mode, fading out on later activations. */
+    function showStreetHint() {
+      window.clearTimeout(streetHintTimer);
+      const pillWidth = els.streetViewToggle.offsetWidth || 44;
+      els.streetViewHint.style.right =
+        `calc(${pillWidth}px + max(var(--ari-map-control-inset, 24px), env(safe-area-inset-right, 0px)) + var(--ari-map-control-gap, 10px))`;
+      els.streetViewHint.classList.remove('is-fading');
+      els.streetViewHint.hidden = false;
+      let seen = false;
+      try { seen = localStorage.getItem(STREET_HINT_SEEN_KEY) === '1'; } catch (_) { /* fine */ }
+      if (!seen) {
+        try { localStorage.setItem(STREET_HINT_SEEN_KEY, '1'); } catch (_) { /* fine */ }
+        return;
+      }
+      streetHintTimer = window.setTimeout(() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          hideStreetHint();
+          return;
+        }
+        els.streetViewHint.classList.add('is-fading');
+        streetHintTimer = window.setTimeout(hideStreetHint, 260);
+      }, 4000);
+    }
+
     function updateStreetViewModeUi() {
       const enabled = state.streetViewMode;
       els.streetViewToggle.classList.toggle('is-active', enabled);
       els.streetViewToggle.setAttribute('aria-pressed', String(enabled));
       els.streetViewToggle.setAttribute('aria-label', enabled ? 'Turn off Street View' : 'Turn on Street View');
       els.streetViewToggle.title = enabled ? 'Turn off Street View' : 'Street View';
-      els.streetViewHint.hidden = !enabled || state.streetViewOpen;
+      if (enabled && !state.streetViewOpen) {
+        if (els.streetViewHint.hidden) showStreetHint();
+      } else {
+        hideStreetHint();
+      }
       state.mapAdapter.setStreetViewEnabled(enabled);
     }
 
@@ -1614,6 +1651,7 @@
       window.clearTimeout(medalUnlockTimer);
       window.clearTimeout(roundTransitionTimer);
       window.clearTimeout(streetViewCloseTimer);
+      window.clearTimeout(streetHintTimer);
       cancelSplitTween();
       if (splitResizeFrame) cancelAnimationFrame(splitResizeFrame);
       removeStreetViewPositionListener();

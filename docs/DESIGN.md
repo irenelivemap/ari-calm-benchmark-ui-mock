@@ -161,7 +161,8 @@ Fit routes behavior:
 Street View:
 
 - Street View is an explicit map mode so ordinary pan, pinch, double-click, and zoom gestures stay unchanged.
-- Because it is a mode switch rather than a camera control, Street View is a text-only 44px pill labeled `Street View` directly beneath Fit, with a clearly inverted active state. No figure icon — it read as the accessibility symbol. Activating the pill reveals the concise instruction `Street View on` / `Select any point on the map.`
+- Because it is a mode switch rather than a camera control, Street View is a text-only 44px pill labeled `Street View` directly beneath Fit, with a clearly inverted active state. No figure icon — it read as the accessibility symbol.
+- Activating the pill reveals one instruction line beside it: `Select any point on the map.` The lit pill alone carries the on state — never repeat "Street View on" next to it. The hint offsets by the pill's measured width so it can never overlap the control, stays persistent the first time a tester ever enables the mode, and fades after about 4 seconds on later activations (instantly hidden under reduced motion).
 - Fit uses the inward-arrows fit-to-content glyph. Never use outward fullscreen corners for Fit; they promise fullscreen, not framing.
 - Any map tap is actionable while the mode is active. Both routes keep a forgiving invisible hit area, without changing their visible geometry, so near-route taps keep their route identity.
 - Selecting a point opens a split inspection layout: on desktop the panorama fills the right 65% (55% below 1100px wide) while the live comparison map keeps a full-height left column; on mobile the panorama takes the top 58% with the map below it. The map column keeps both routes, the moving position marker, and its map controls, and tapping another map point retargets the panorama without losing the saved camera.
