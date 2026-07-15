@@ -127,4 +127,4 @@ Never commit an API key.
 - Update tests and relevant docs when changing question logic or stored records.
 - Verify both active challenge URLs after shared UI changes.
 
-New contributors should read [`CONTEXT.md`](CONTEXT.md). Coding agents should also read [`AGENTS.md`](AGENTS.md).
+New contributors should read [`CONTEXT.md`](CONTEXT.md). Coding agents should also read [`AGENTS.md`](AGENTS.md). Open follow-ups are tracked in [`TODO.md`](TODO.md).
