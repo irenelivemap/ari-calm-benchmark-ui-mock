@@ -80,6 +80,42 @@ test('replaces queued progress for the same session', async () => {
   assert.equal(transport.getPendingCount(), 1);
 });
 
+test('records queued during an in-flight flush survive it', async () => {
+  const storage = new MemoryStorage();
+  let releaseFlush;
+  const gate = new Promise(resolve => { releaseFlush = resolve; });
+  let mode = 'fail';
+  const transport = createHttpTransport({
+    baseUrl: '/api/v1/benchmarks',
+    storage,
+    fetchImpl: async () => {
+      if (mode === 'fail') return { ok: false, status: 503 };
+      if (mode === 'slow-ok') {
+        await gate;
+        return { ok: true, status: 200 };
+      }
+      return { ok: true, status: 200 };
+    }
+  });
+
+  await transport.saveAnswer(answer);
+  assert.equal(transport.getPendingCount(), 1);
+
+  mode = 'slow-ok';
+  const flushing = transport.flush();
+  mode = 'fail';
+  await transport.saveProgress(progress);
+  assert.equal(transport.getPendingCount(), 2);
+
+  mode = 'slow-ok';
+  releaseFlush();
+  await flushing;
+
+  assert.equal(transport.getPendingCount(), 1);
+  const queue = JSON.parse(storage.getItem('ari-benchmark-http-outbox-v1'));
+  assert.equal(queue[0].kind, 'progress');
+});
+
 test('a newer successful progress write removes the older queued write', async () => {
   const storage = new MemoryStorage();
   let available = false;

@@ -73,17 +73,23 @@
     async function flush() {
       if (flushing) return flushing;
       flushing = (async () => {
-        const queue = readQueue(storage, queueKey);
-        const remaining = [];
+        const snapshot = readQueue(storage, queueKey);
+        const deliveredAt = new Map();
         let delivered = 0;
-        for (const item of queue) {
+        for (const item of snapshot) {
           try {
             await deliver(item);
+            deliveredAt.set(item.key, item.queuedAt);
             delivered += 1;
-          } catch (_) {
-            remaining.push(item);
-          }
+          } catch (_) { /* stays queued */ }
         }
+        // Merge against the live queue instead of writing the snapshot back:
+        // records enqueued while this flush was in flight must survive, and a
+        // record re-queued with a newer payload must not be dropped just
+        // because its older version was delivered.
+        const remaining = readQueue(storage, queueKey).filter(item =>
+          deliveredAt.get(item.key) !== item.queuedAt
+        );
         writeQueue(storage, queueKey, remaining);
         return { delivered, remaining: remaining.length };
       })().finally(() => { flushing = null; });
