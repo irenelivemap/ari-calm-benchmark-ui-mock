@@ -98,6 +98,7 @@ The Fast vs Calm challenge generates random route pairs the way the `livemap-rou
 - Point at another deployment once with `?api=https://host/api/v1/routing`; the base is kept in local storage.
 - When the facade is unreachable (for example on GitHub Pages), the challenge falls back to the mock fixtures and logs a console warning.
 - Generated pairs are cached per session, so retrying or resuming a round loads the identical pair.
+- For local end-to-end testing, run the livemap-routing service (GraphHopper on port 8989), then `npm run start:live`: it serves the UI and proxies `/api/v1/routing/*` to the service same-origin, so no CORS setup is needed.
 
 Fast vs Google Fast still uses fixtures: Google route geometry must come from the Directions SDK at run time and is a separate integration.
 
