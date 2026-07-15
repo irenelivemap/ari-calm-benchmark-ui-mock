@@ -17,10 +17,7 @@ Testers see only Route A and Route B. The hidden provider assignment is stored w
 
 ## Local Setup
 
-Requirements:
-
-- Node.js 18 or newer for tests.
-- Python 3 for the zero-dependency local server.
+Node.js 18 or newer is required for the server and tests.
 
 ```bash
 git clone https://github.com/irenelivemap/ari-calm-benchmark-ui-mock.git
@@ -29,6 +26,12 @@ npm start
 ```
 
 Open <http://127.0.0.1:8765/>.
+
+The local server also previews the future public paths:
+
+- <http://127.0.0.1:8765/routing/>
+- <http://127.0.0.1:8765/routing/fast-vs-google>
+- <http://127.0.0.1:8765/routing/fast-vs-calm>
 
 Run the complete test suite:
 
@@ -44,6 +47,9 @@ There is no build step and no package installation is required.
 | --- | --- |
 | `/?game=calm` | Fast vs Calm challenge. |
 | `/?game=google` | Fast vs Google Fast challenge. |
+| `/routing/` | Production-path preview of the challenge selector. |
+| `/routing/fast-vs-google` | Clean public Fast vs Google path. |
+| `/routing/fast-vs-calm` | Clean public Fast vs Calm path. |
 | `/fresh.html` | New-player QA preview without deleting saved browser data. |
 | `/demo.html` | Compatibility redirect for previously shared links. |
 | `/?view=results&preview=1` | Unlocked community-results preview. |
@@ -57,11 +63,14 @@ src/app/calm-benchmark.js          Shared active-benchmark UI and question state
 src/maps/map-adapter.js            MapLibre, Leaflet, and Google Maps adapter
 src/api/route-pair-generator.js    Random Zurich route pairs from the LiveMap routing facade
 src/data/calm-benchmark-data.js    Validation, local persistence, export
+src/data/benchmark-transport.js    Production HTTP delivery and offline outbox
+src/app/runtime.js                 Runtime configuration and public URL handling
 src/data/mock-*.js                 Demo route-pair fixtures
 src/results/calm-results.js        Pure results aggregation
 src/styles/calm-benchmark.css      Complete visual system
 tests/                             Node tests for data and results behavior
 docs/                              Product, design, architecture, and data contracts
+deploy/                            Caddy container configuration and handoff
 ```
 
 The `calm-*` filenames are historical. They now power the full benchmark family and are retained for compatibility.
@@ -88,7 +97,13 @@ Replace the mock `routePairProvider`; do not edit the fixtures into a production
 
 ### Connect production persistence
 
-Replace `answerSink` and `progressSink`. Keep the record shapes and idempotency rules in [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
+Set `ARI_DATA_API_BASE` in the deployment. The app keeps local persistence as a safety layer and sends records through `src/data/benchmark-transport.js`, which queues failed writes for retry. Keep the endpoint contract and idempotency rules in [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
+
+## Production Deployment
+
+The prepared container serves the future public experience at `https://game.livemap.sh/routing/`. It uses clean challenge paths, hides development controls, reads the Google key from runtime configuration, and proxies routing requests same-origin. See [`deploy/README.md`](deploy/README.md) for the minimal infrastructure handoff.
+
+The LinkedIn preview image is [`assets/ari-route-arcade-social.png`](assets/ari-route-arcade-social.png). Its editable source is [`tools/social-preview.html`](tools/social-preview.html).
 
 ## Live Route Pairs
 
@@ -98,7 +113,7 @@ Both active challenges generate random route pairs the way the `livemap-routing`
 - **Fast vs Google Fast** requests `foot_fast` from the facade and the Google walking route from the Directions SDK at run time, so it needs both a reachable facade and a configured Google Maps key. Matchups where the two engines snap the endpoints more than 40 m apart are redrawn (fairness gate). Google geometry is never persisted: cached rounds store only our route, metrics, and Google's snapped endpoints, and the Google path is re-fetched live on resume.
 
 - Default endpoint: `POST /api/v1/routing/route` on the same origin.
-- Point at another deployment once with `?api=https://host/api/v1/routing`; the base is kept in local storage.
+- In preview mode, point at another deployment once with `?api=https://host/api/v1/routing`; the base is kept in local storage. Production disables query-based configuration.
 - When the facade is unreachable (for example on GitHub Pages) or, for the Google challenge, no Maps key is configured, the challenge falls back to the mock fixtures and logs a console warning.
 - Generated pairs are cached per session, so retrying or resuming a round loads the identical pair.
 - For local end-to-end testing, run the livemap-routing service (GraphHopper on port 8989), then `npm run start:live`: it serves the UI and proxies `/api/v1/routing/*` to the service same-origin, so no CORS setup is needed.

@@ -4,6 +4,39 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ARI Route Benchmark</title>
+  <meta name="description" content="Compare routes, reveal better journeys, and help ARI learn what makes a route work.">
+  <meta name="theme-color" content="#101511">
+  <link rel="canonical" href="https://game.livemap.sh/routing/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="LiveMap">
+  <meta property="og:title" content="ARI Route Arcade">
+  <meta property="og:description" content="Choose the better route and help build more human journeys.">
+  <meta property="og:url" content="https://game.livemap.sh/routing/">
+  <meta property="og:image" content="https://game.livemap.sh/routing/assets/ari-route-arcade-social.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="627">
+  <meta property="og:image:alt" content="ARI Route Arcade with two colorful routes converging on a navigation medal">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ARI Route Arcade">
+  <meta name="twitter:description" content="Choose the better route and help build more human journeys.">
+  <meta name="twitter:image" content="https://game.livemap.sh/routing/assets/ari-route-arcade-social.png">
+  <script src="./runtime-config.js"></script>
+  <script>
+    (function () {
+      const configured = String(window.ARI_RUNTIME_CONFIG?.basePath || '').replace(/^\/+|\/+$/g, '');
+      const inferred = window.location.pathname.split('/').filter(Boolean).includes('routing') ? 'routing' : '';
+      const baseSegment = configured || inferred;
+      if (!baseSegment) return;
+      const marker = `/${baseSegment}`;
+      const markerIndex = window.location.pathname.indexOf(marker);
+      const basePath = markerIndex >= 0
+        ? window.location.pathname.slice(0, markerIndex + marker.length)
+        : marker;
+      const base = document.createElement('base');
+      base.href = `${basePath.replace(/\/$/, '')}/`;
+      document.head.append(base);
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -221,9 +254,11 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" crossorigin=""></script>
+  <script src="./src/app/runtime.js?v=20260715-production-ready-1"></script>
   <script src="./src/data/mock-route-pairs.js?v=20260709-structure-1"></script>
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
   <script src="./src/data/calm-benchmark-data.js?v=20260714-fast-google-ui-3"></script>
+  <script src="./src/data/benchmark-transport.js?v=20260715-production-ready-1"></script>
   <script src="./src/results/calm-results.js?v=20260713-live-results-1"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
   <script src="./src/maps/map-adapter.js?v=20260715-native-controls-1"></script>
@@ -259,6 +294,11 @@
     };
     const participantInput = document.getElementById('participant-name');
     const startButton = document.getElementById('start-test');
+    const runtimeConfig = AriBenchmarkRuntime.resolveConfig(window);
+    document.documentElement.dataset.ariEnvironment = runtimeConfig.production ? 'production' : 'preview';
+    if (!runtimeConfig.showReset) {
+      document.querySelectorAll('[data-reset-test-data]').forEach(button => button.remove());
+    }
     const GOOGLE_KEY_STORAGE = 'ari-calm-benchmark-google-maps-key';
     const ANSWERS_STORAGE = 'ari-calm-benchmark-answers';
     const PROGRESS_STORAGE = 'ari-calm-benchmark-progress';
@@ -266,11 +306,28 @@
     const ROUTING_API_STORAGE = 'ari-benchmark-routing-api';
     const CALM_ROUTE_PAIR_CACHE = 'ari-calm-benchmark-route-pairs-v1';
     const GOOGLE_ROUTE_PAIR_CACHE = 'ari-fast-google-benchmark-route-pairs-v1';
-    const routingApiParam = new URLSearchParams(window.location.search).get('api');
+    const initialUrlParams = new URLSearchParams(window.location.search);
+    if (!runtimeConfig.allowQueryConfig) {
+      let removedPreviewConfig = false;
+      ['api', 'gmap', 'fresh', 'preview', 'qa'].forEach(parameter => {
+        if (!initialUrlParams.has(parameter)) return;
+        initialUrlParams.delete(parameter);
+        removedPreviewConfig = true;
+      });
+      if (removedPreviewConfig) {
+        const cleanSearch = initialUrlParams.toString();
+        const cleanUrl = `${window.location.pathname}${cleanSearch ? `?${cleanSearch}` : ''}${window.location.hash}`;
+        window.history.replaceState({}, '', cleanUrl);
+      }
+    }
+    const routingApiParam = runtimeConfig.allowQueryConfig ? initialUrlParams.get('api') : null;
     if (routingApiParam) localStorage.setItem(ROUTING_API_STORAGE, routingApiParam);
-    const routingApiBase = window.ARI_ROUTING_API
-      || localStorage.getItem(ROUTING_API_STORAGE)
-      || AriRoutePairGenerator.DEFAULT_API_BASE;
+    const routingApiBase = runtimeConfig.production
+      ? runtimeConfig.routingApiBase
+      : routingApiParam
+        || localStorage.getItem(ROUTING_API_STORAGE)
+        || runtimeConfig.routingApiBase
+        || AriRoutePairGenerator.DEFAULT_API_BASE;
     const CHALLENGE_CONFIGS = {
       google: {
         key: 'google',
@@ -360,8 +417,9 @@
     let challengeRouteObserver = null;
 
     const urlParams = new URLSearchParams(window.location.search);
-    let freshPreviewMode = urlParams.get('fresh') === '1' || urlParams.get('preview') === 'fresh';
-    const requestedChallenge = urlParams.get('game');
+    let freshPreviewMode = !runtimeConfig.production
+      && (urlParams.get('fresh') === '1' || urlParams.get('preview') === 'fresh');
+    const requestedChallenge = AriBenchmarkRuntime.resolveChallenge(window.location, runtimeConfig);
     const storedChallenge = localStorage.getItem(CHALLENGE_STORAGE);
     let selectedChallenge = freshPreviewMode
       ? null
@@ -385,8 +443,18 @@
       })
     };
     const dataRepository = dataRepositories[activeChallenge];
+    const remoteTransport = runtimeConfig.dataApiBase
+      ? AriBenchmarkTransport.createHttpTransport({
+          baseUrl: runtimeConfig.dataApiBase,
+          storage: localStorage
+        })
+      : null;
+    if (remoteTransport) {
+      void remoteTransport.flush();
+      window.addEventListener('online', () => void remoteTransport.flush());
+    }
     if (selectedChallenge) localStorage.setItem(CHALLENGE_STORAGE, selectedChallenge);
-    const urlGoogleKey = urlParams.get('gmap');
+    const urlGoogleKey = runtimeConfig.allowQueryConfig ? urlParams.get('gmap') : null;
     if (urlGoogleKey) {
       localStorage.setItem(GOOGLE_KEY_STORAGE, urlGoogleKey);
       urlParams.delete('gmap');
@@ -1206,6 +1274,7 @@
     }
 
     function resetTestData() {
+      if (!runtimeConfig.showReset) return;
       document.querySelectorAll('[data-reset-test-data]').forEach(button => {
         button.disabled = true;
         button.textContent = 'Resetting…';
@@ -1216,10 +1285,7 @@
       localStorage.removeItem(GOOGLE_ROUTE_PAIR_CACHE);
       localStorage.removeItem('ari-benchmark-street-split-v1');
       localStorage.removeItem('ari-benchmark-street-hint-seen-v1');
-      const cleanUrl = new URL(window.location.href);
-      cleanUrl.search = '';
-      cleanUrl.hash = '';
-      window.location.replace(cleanUrl.href);
+      window.location.replace(AriBenchmarkRuntime.rootUrl(window.location, runtimeConfig).href);
     }
 
     function selectChallenge(challenge) {
@@ -1227,8 +1293,7 @@
       const challengeChanged = activeChallenge !== challenge;
       selectedChallenge = challenge;
       localStorage.setItem(CHALLENGE_STORAGE, challenge);
-      const next = new URL(window.location.href);
-      next.searchParams.set('game', challenge);
+      const next = AriBenchmarkRuntime.challengeUrl(window.location, challenge, runtimeConfig);
       challengeDialog.classList.add('is-launching');
       const finishSelection = () => {
         if (challengeChanged) {
@@ -1255,8 +1320,8 @@
         nextUrl.searchParams.delete('preview');
         window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
       }
-      const googleKey = window.ARI_GOOGLE_MAPS_KEY || localStorage.getItem(GOOGLE_KEY_STORAGE) || '';
-      if (googleKey) localStorage.setItem(GOOGLE_KEY_STORAGE, googleKey);
+      const googleKey = runtimeConfig.googleMapsKey || localStorage.getItem(GOOGLE_KEY_STORAGE) || '';
+      if (googleKey && !runtimeConfig.production) localStorage.setItem(GOOGLE_KEY_STORAGE, googleKey);
       const googleAvailable = await loadGoogleMaps(googleKey).catch(error => {
         console.warn(error);
         return false;
@@ -1295,12 +1360,16 @@
           },
           answerSink: async answer => {
             const result = dataRepository.saveAnswer(answer);
-            console.log('Benchmark answer payload:', answer);
-            console.log('Benchmark answer save:', result.status);
+            const delivery = remoteTransport ? await remoteTransport.saveAnswer(answer) : null;
+            if (!runtimeConfig.production) {
+              console.log('Benchmark answer payload:', answer);
+              console.log('Benchmark answer save:', result.status, delivery?.status || 'local-only');
+            }
           },
           progressSink: async progress => {
             dataRepository.saveProgress(progress);
-            console.log('Benchmark progress payload:', progress);
+            if (remoteTransport) await remoteTransport.saveProgress(progress);
+            if (!runtimeConfig.production) console.log('Benchmark progress payload:', progress);
           }
         });
         benchmarkMounted = true;
@@ -1441,8 +1510,11 @@
     applyChallengeUi();
     checkResumeState();
     const requestedView = urlParams.get('view');
-    showPage(requestedView === 'team-results' ? 'team-results' : requestedView === 'results' ? 'results' : 'testing', { updateUrl: false });
-    if (!selectedChallenge && requestedView !== 'team-results') {
+    const initialView = requestedView === 'team-results' && runtimeConfig.enableTeamResults
+      ? 'team-results'
+      : requestedView === 'results' ? 'results' : 'testing';
+    showPage(initialView, { updateUrl: false });
+    if (!selectedChallenge && initialView !== 'team-results') {
       requestAnimationFrame(() => openChallengeDialog({ required: true }));
     }
 

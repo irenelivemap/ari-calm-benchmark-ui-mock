@@ -16,6 +16,10 @@ Everything below is on `main` and live-tested locally against a running
 - Map controls: zoom/camera are provider-native everywhere; Fit and the
   text-only `Street View` pill are adopted into the provider's top-right
   control container.
+- Production host support is prepared for `game.livemap.sh/routing`: clean
+  challenge paths, environment-backed runtime configuration, a same-origin
+  routing proxy, production-only UI rules, LinkedIn metadata, and an HTTP
+  persistence outbox.
 
 Needs a visual check on a real browser (not yet verified):
 
@@ -35,15 +39,12 @@ the newer follow-ups.
 ## Street View rollout
 
 - [ ] Restrict the shared Google Maps browser key by HTTP referrer in the Google
-      Cloud console. It currently answers from any origin. Suggested allowlist:
-      `*.livemap.sh`, `irenelivemap.github.io`, `127.0.0.1:8765`.
+      Cloud console. It currently answers from any origin. Required public host:
+      `https://game.livemap.sh/*`; keep only the local/preview origins still used.
       Owner: whoever manages the Google Cloud project / `LIVEMAP_GOOGLE_MAPS_KEY`.
-- [ ] Decide the tester-facing hosting for Street View sessions:
-      keep GitHub Pages with one-time `?gmap=` key links, or deploy the benchmark
-      next to the `livemap-routing` runtime so the key is env-injected
-      (`LIVEMAP_GOOGLE_MAPS_KEY` → config pattern) and links stay key-free.
-      Deploying next to the runtime also gives live route pairs in production
-      because the routing facade becomes same-origin.
+- [x] Choose a tester-facing host architecture: prepare the benchmark for
+      `game.livemap.sh/routing`, with runtime-injected configuration and a
+      same-origin routing proxy. See `deploy/README.md`.
 - [ ] Verify the Street View flow in a real browser once the key is configured:
       panorama opens from a route tap on both routes, exact camera and question
       state restore on `Back to map`, the mobile full-screen layer, the
@@ -54,9 +55,8 @@ the newer follow-ups.
 - [ ] Verify the MapLibre map and random-pair flow in a real browser
       (`npm run start:live` next to a running routing service). The integration
       was verified headlessly against the live facade; a visual pass is pending.
-- [ ] If the benchmark stays on GitHub Pages long-term, either add CORS headers
-      for `irenelivemap.github.io` to the routing facade deployment or accept
-      that live pairs remain a local/deployed-host feature.
+- [x] Avoid a public CORS dependency by proxying routing calls through
+      `game.livemap.sh`; GitHub Pages remains a fixture-backed preview only.
 - [x] Wire the Fast vs Google Fast challenge to live data: `livemap_fast` from
       the routing facade plus Google routes from the Directions SDK at run time.
       Google geometry is never persisted — caches keep metrics and snapped
@@ -71,3 +71,6 @@ the newer follow-ups.
       env injection are the approved delivery paths.
 - [ ] Revisit the sampling region and the 400–3000 m distance gate once real
       testers give feedback on pair difficulty and walk length.
+- [ ] Implement and connect the shared benchmark data API before public launch.
+      The frontend transport and retry outbox are ready; `ARI_DATA_API_BASE`
+      must not remain empty for a LinkedIn campaign.

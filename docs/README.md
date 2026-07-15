@@ -11,5 +11,6 @@ Start with the document that matches the change you are making.
 | [`ANSWER_SCHEMA.md`](ANSWER_SCHEMA.md) | Completed answer and progress record shapes. |
 | [`DATA_SAVING.md`](DATA_SAVING.md) | Local persistence, idempotency, verification, and production transport. |
 | [`INTEGRATION_CHECKLIST.md`](INTEGRATION_CHECKLIST.md) | Steps for connecting real routes and backend endpoints. |
+| [`../deploy/README.md`](../deploy/README.md) | Public host, container, runtime environment, and minimal infrastructure handoff. |
 
 Repository-wide terminology is defined in [`../CONTEXT.md`](../CONTEXT.md). Agent-specific working rules are in [`../AGENTS.md`](../AGENTS.md).

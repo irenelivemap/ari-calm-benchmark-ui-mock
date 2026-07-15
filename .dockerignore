@@ -1,0 +1,7 @@
+.git
+.gitignore
+.impeccable
+node_modules
+tests
+*.log
+*.patch

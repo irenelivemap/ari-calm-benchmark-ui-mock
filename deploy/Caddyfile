@@ -1,0 +1,60 @@
+{
+	auto_https off
+}
+
+:8080 {
+	encode zstd gzip
+
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	# The browser calls this same-origin path. Caddy forwards it server-side,
+	# so the routing service does not need public CORS headers.
+	handle /api/v1/routing* {
+		reverse_proxy {$ROUTING_UPSTREAM:https://tbt-routing.paas.livemap.sh} {
+			header_up Host {upstream_hostport}
+		}
+	}
+
+	# This route is dormant until ARI_DATA_API_BASE points the browser at it.
+	handle /api/v1/benchmarks* {
+		reverse_proxy {$DATA_UPSTREAM:http://127.0.0.1:8090}
+	}
+
+	# Environment-backed browser configuration. The Google browser key is
+	# intentionally visible to the browser and must be HTTP-referrer restricted.
+	handle /routing/runtime-config.js {
+		header Content-Type "text/javascript; charset=utf-8"
+		header Cache-Control "no-store"
+		respond `window.ARI_RUNTIME_CONFIG = {
+			production: true,
+			basePath: "/routing",
+			publicUrl: "https://game.livemap.sh/routing/",
+			routingApiBase: "/api/v1/routing",
+			dataApiBase: "{$ARI_DATA_API_BASE:}",
+			googleMapsKey: "{$ARI_GOOGLE_MAPS_KEY:}",
+			allowQueryConfig: false,
+			showReset: false,
+			enableTeamResults: false
+		}		;` 200
+	}
+
+	redir / /routing/ 308
+	redir /routing /routing/ 308
+
+	@challenge_trailing path_regexp challenge_trailing ^/routing/(fast-vs-google|fast-vs-calm)/$
+	redir @challenge_trailing /routing/{re.challenge_trailing.1} 308
+
+	handle_path /routing/* {
+		root * {$APP_ROOT:/srv/ari-route-arcade}
+		try_files {path} /index.html
+		header X-Content-Type-Options "nosniff"
+		header Referrer-Policy "strict-origin-when-cross-origin"
+		file_server
+	}
+
+	handle {
+		respond 404
+	}
+}

@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1200, initial-scale=1">
+  <title>ARI Route Arcade social preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 1200px; height: 627px; margin: 0; overflow: hidden; }
+    body {
+      display: grid;
+      place-items: center;
+      background: #f4f5f2;
+      color: #f8f7ef;
+      font-family: Outfit, Arial, sans-serif;
+    }
+    .cabinet {
+      position: relative;
+      width: 1080px;
+      height: 507px;
+      overflow: hidden;
+      border: 2px solid #28342d;
+      border-radius: 20px;
+      background-color: #08100b;
+      background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.026) 0 1px, transparent 1px 5px);
+      box-shadow: 0 28px 70px rgba(20, 36, 27, .18);
+    }
+    .cabinet::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      box-shadow: inset 0 0 70px rgba(0, 0, 0, .42);
+    }
+    header {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 78px;
+      padding: 0 38px;
+      border-bottom: 1px solid #28342d;
+      font-family: "Space Mono", monospace;
+      font-size: 15px;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+    header span:last-child { color: #b7c2bb; }
+    main {
+      position: relative;
+      z-index: 1;
+      height: 427px;
+      padding: 50px 48px 36px;
+    }
+    .copy { position: relative; z-index: 3; width: 610px; }
+    .eyebrow {
+      margin: 0 0 14px;
+      color: #b7c2bb;
+      font-family: "Space Mono", monospace;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 600px;
+      margin: 0;
+      font-size: 64px;
+      line-height: .98;
+      letter-spacing: 0;
+    }
+    .sub {
+      margin: 20px 0 0;
+      color: #d9dfdb;
+      font-size: 22px;
+      line-height: 1.35;
+    }
+    .modes {
+      display: flex;
+      gap: 10px;
+      margin-top: 28px;
+    }
+    .modes span {
+      padding: 10px 14px;
+      border: 1px solid #5d6a62;
+      background: #121b15;
+      font-family: "Space Mono", monospace;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    .field {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .field svg { width: 100%; height: 100%; overflow: visible; }
+    .route {
+      fill: none;
+      stroke-width: 9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .route-a { stroke: #d34b25; }
+    .route-b { stroke: #07845a; }
+    .trace {
+      fill: none;
+      stroke: rgba(255,255,255,.28);
+      stroke-width: 2;
+      stroke-dasharray: 8 18;
+    }
+    .medal {
+      position: absolute;
+      right: 75px;
+      top: 95px;
+      display: grid;
+      place-items: center;
+      width: 150px;
+      height: 150px;
+      border: 4px solid #ece7ce;
+      border-radius: 50%;
+      background: repeating-conic-gradient(from 0deg, #1b5c4b 0deg 7deg, #0d3026 7deg 14deg);
+      box-shadow: 0 0 0 10px #193228, 0 0 38px rgba(115, 232, 191, .34);
+    }
+    .medal svg { width: 70px; height: 70px; stroke: #f8f7ef; }
+    .medal-copy {
+      position: absolute;
+      right: 40px;
+      top: 266px;
+      width: 220px;
+      text-align: center;
+      font-family: "Space Mono", monospace;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+    .marker {
+      fill: #f8f7ef;
+      stroke-width: 6;
+    }
+    .marker-a { stroke: #d34b25; }
+    .marker-b { stroke: #07845a; }
+  </style>
+</head>
+<body>
+  <section class="cabinet" aria-label="ARI Route Arcade">
+    <header><span>LiveMap</span><span>Play · Compare · Improve</span></header>
+    <main>
+      <div class="copy">
+        <p class="eyebrow">Route intelligence, powered by people</p>
+        <h1>ARI Route Arcade</h1>
+        <p class="sub">Which route would you choose?</p>
+        <div class="modes"><span>Fast vs Google</span><span>Fast vs Calm</span></div>
+      </div>
+      <div class="field" aria-hidden="true">
+        <svg viewBox="0 0 1080 427" preserveAspectRatio="none">
+          <path class="route route-a" d="M50 390 L210 330 L300 350 L430 285 L545 320 L660 260 L790 265 L875 195" />
+          <path class="trace" d="M50 390 L210 330 L300 350 L430 285 L545 320 L660 260 L790 265 L875 195" />
+          <path class="route route-b" d="M50 415 L180 375 L300 395 L430 350 L560 380 L665 315 L785 305 L875 220" />
+          <path class="trace" d="M50 415 L180 375 L300 395 L430 350 L560 380 L665 315 L785 305 L875 220" />
+          <circle class="marker marker-a" cx="50" cy="390" r="9" />
+          <circle class="marker marker-b" cx="50" cy="415" r="9" />
+        </svg>
+      </div>
+      <div class="medal" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 48V15c13-7 25 8 40 0v25c-15 8-27-7-40 0" />
+        </svg>
+      </div>
+      <div class="medal-copy">Build better routes</div>
+    </main>
+  </section>
+</body>
+</html>

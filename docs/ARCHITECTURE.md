@@ -20,10 +20,16 @@ src/app/calm-benchmark.js
         |      with mock fixtures as offline fallback
         |
         +--> answerSink / progressSink
-               local repository now, production transport later
+               local repository + optional HTTP transport/outbox
 
 src/data/calm-benchmark-data.js
   validation + idempotent local repository + NDJSON export
+
+src/data/benchmark-transport.js
+  production HTTP delivery + retryable local outbox
+
+src/app/runtime.js
+  environment configuration + clean/legacy URL resolution
 
 src/results/calm-results.js
   shared pure aggregation for community and team result views
@@ -38,6 +44,9 @@ Historical `calm-*` filenames are retained to avoid breaking shared links and in
 | `/` | Opens the saved challenge or the challenge chooser for a new browser. |
 | `/?game=calm` | Opens Fast vs Calm directly. |
 | `/?game=google` | Opens Fast vs Google Fast directly. |
+| `/routing/` | Production-path challenge selector. |
+| `/routing/fast-vs-google` | Clean public Fast vs Google path. |
+| `/routing/fast-vs-calm` | Clean public Fast vs Calm path. |
 | `/fresh.html` | Non-destructive new-player preview. Existing local data is ignored, not deleted. |
 | `/demo.html` | Compatibility redirect for older shared links. |
 | `/?view=results&preview=1` | Community results preview without the normal release lock. |
@@ -90,6 +99,14 @@ Owns random route-pair generation, imported from the `livemap-routing` guided bl
 
 Owns record normalization, validation, migration, idempotency, local persistence, verification, and NDJSON export. It is browser-compatible and CommonJS-compatible so Node tests can exercise the same implementation.
 
+### `src/data/benchmark-transport.js`
+
+Owns optional production delivery. Answers use `POST` plus `Idempotency-Key`; progress uses an idempotent `PUT`. Failed requests enter a local outbox. Answers deduplicate by capture ID and progress deduplicates by test/session so only the newest queued state survives.
+
+### `src/app/runtime.js`
+
+Owns environment defaults, `/routing/` base-path inference, clean challenge slugs, and compatibility with the existing `?game=` links. Production settings arrive through `runtime-config.js`, which the Caddy deployment renders from environment values.
+
 ### `src/results/calm-results.js`
 
 Owns pure result normalization and aggregation. It must not read DOM state or storage directly.
@@ -100,12 +117,12 @@ UI fixtures only. They model the route-pair contract and must never become the p
 
 ## Runtime Flow
 
-1. `index.html` resolves the challenge from `?game=`, saved selection, or the chooser.
+1. `index.html` resolves the challenge from a clean path, `?game=`, saved selection, or the chooser.
 2. It creates a challenge-specific local repository.
 3. Start or Resume calls `AriCalmBenchmark.mount` with the challenge configuration and adapters.
 4. The shell requests a route pair and randomizes its hidden assignment to Route A/B.
-5. A completed comparison is validated and saved through `answerSink`.
-6. An unfinished state is validated and upserted through `progressSink`.
+5. A completed comparison is validated and saved locally, then delivered through the optional HTTP transport.
+6. An unfinished state is locally upserted and remotely sent through the same retryable transport.
 7. Result views read the same challenge dataset and aggregate it through `AriCalmResults`.
 
 ## Extension Points
@@ -130,3 +147,4 @@ Contracts are documented in [`DATA_CONTRACT.md`](DATA_CONTRACT.md), [`ANSWER_SCH
 - Each challenge has a separate test ID and local storage key.
 - The static/no-build shape is intentional for rapid sharing through GitHub Pages.
 - Google Maps keys are runtime configuration and must never be committed.
+- Production is not launch-ready while `ARI_DATA_API_BASE` is empty; public answers would remain browser-local.

@@ -6,7 +6,7 @@ The benchmark separates completed answers from resumable progress:
 2. An unfinished session upserts one progress record.
 3. Results read the same challenge dataset and never maintain a second answer source.
 
-The browser prototype implements this contract in `src/data/calm-benchmark-data.js` with local storage. Production should replace the transport while preserving record shape and validation.
+The browser implements this contract in `src/data/calm-benchmark-data.js` with local storage. When runtime configuration supplies `dataApiBase`, `src/data/benchmark-transport.js` also delivers the same validated records to production endpoints.
 
 ## Challenge Datasets
 
@@ -50,7 +50,9 @@ AriCalmBenchmark.mount(root, {
 });
 ```
 
-In `index.html`, these adapters call the active challenge's local repository. Production adapters should call authenticated backend endpoints.
+In `index.html`, these adapters always call the active challenge's local repository first. Production additionally calls the HTTP transport. Failed requests enter `ari-benchmark-http-outbox-v1` and retry without interrupting the participant.
+
+Queued answers deduplicate by `captureId`. Queued progress deduplicates by test and session, so only the newest unsent state survives. A newer successful progress write removes any older queued version before the outbox flushes.
 
 ## Proposed Production Endpoints
 

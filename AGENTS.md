@@ -15,11 +15,14 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 - Keep shared active-benchmark behavior in `src/app/calm-benchmark.js`. The historical filename is retained for compatibility and powers every challenge.
 - Treat `src/data/mock-*.js` as fixtures only. Production data must enter through `routePairProvider`.
 - `src/api/route-pair-generator.js` owns random route-pair generation against the routing facade. Keep its fixture fallback working; GitHub Pages has no backend.
+- `src/app/runtime.js` owns base-path and challenge URL behavior. Preserve both clean `/routing/*` paths and legacy `?game=` preview links.
+- `src/data/benchmark-transport.js` owns production HTTP delivery and its local outbox. Never allow older queued progress to overwrite newer progress.
 - Never commit a Google Maps API key. Local Google Maps setup is described in `README.md`.
 - Do not reset or rewrite a tester's browser data during visual QA. Use `fresh.html` for a non-destructive new-player preview.
 - Keep the current static/no-build architecture unless the project owner explicitly approves a migration.
 - After editing `index.html`, CSS, or browser JavaScript, update the corresponding asset query string in `index.html` when browser caching could hide the change.
 - Do not modify the external `livemap-routing/runtime/demo.html` from this repository.
+- Keep production environment values in `deploy/Caddyfile` runtime configuration. Never hardcode a real Google key or backend credential.
 
 ## Required Checks
 

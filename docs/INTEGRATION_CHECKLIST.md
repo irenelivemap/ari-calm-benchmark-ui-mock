@@ -11,15 +11,26 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 ## Frontend
 
-- [ ] Load the benchmark CSS and browser modules.
-- [ ] Provide a root element for `AriCalmBenchmark.mount(...)`.
+- [x] Load the benchmark CSS and browser modules.
+- [x] Provide a root element for `AriCalmBenchmark.mount(...)`.
 - [ ] Pass the participant identity from the host session.
-- [ ] Implement `routePairProvider` against the real route source.
+- [x] Implement `routePairProvider` against the real route source.
 - [ ] Implement `answerSink` against production persistence.
 - [ ] Implement `progressSink` when sessions must resume across devices or browsers.
-- [ ] Select or replace the map adapter.
-- [ ] Remove the design-phase `Reset test data` control.
-- [ ] Keep the internal team-results route out of participant navigation.
+- [x] Select or replace the map adapter.
+- [x] Remove the design-phase `Reset test data` control in production mode.
+- [x] Keep the internal team-results route out of participant navigation in production mode.
+
+## Public Host
+
+- [x] Prepare `/routing/`, `/routing/fast-vs-google`, and `/routing/fast-vs-calm`.
+- [x] Proxy routing calls through the public host at `/api/v1/routing`.
+- [x] Disable query-based API, Google key, reset, and QA overrides in production.
+- [x] Add LinkedIn/Open Graph metadata and a social preview image.
+- [ ] Deploy the prepared container with the infrastructure team's deployment permissions.
+- [ ] Point `game.livemap.sh` DNS at that deployment.
+- [ ] Provide a browser-restricted Google Maps key for `https://game.livemap.sh/*`.
+- [ ] Connect `ARI_DATA_API_BASE` before collecting public responses.
 
 ## Route Provider
 
@@ -63,6 +74,9 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Both active challenge URLs work on desktop and mobile.
 - [ ] Keyboard focus, contrast, touch targets, and reduced motion meet `DESIGN.md`.
 - [ ] `npm test` passes.
+- [ ] `https://game.livemap.sh/routing/` loads without a path redirect loop.
+- [ ] Both clean challenge URLs survive a direct page refresh.
+- [ ] A real routing request succeeds through the same-origin public proxy.
 
 ## Challenge-specific Checks
 

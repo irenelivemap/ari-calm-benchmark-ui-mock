@@ -20,6 +20,7 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const PORT = Number(process.env.PORT || 8765);
 const ROUTING_ORIGIN = process.env.LIVEMAP_ROUTING_ORIGIN || 'http://127.0.0.1:8989';
 const PROXY_PREFIX = '/api/v1/routing';
+const PUBLIC_BASE_PATH = '/routing';
 
 const CONTENT_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -59,7 +60,14 @@ async function proxyToFacade(request, response, pathname) {
 }
 
 async function serveStatic(response, pathname) {
-  const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
+  const isPublicPath = pathname === PUBLIC_BASE_PATH || pathname.startsWith(`${PUBLIC_BASE_PATH}/`);
+  const publicRelative = isPublicPath ? pathname.slice(PUBLIC_BASE_PATH.length).replace(/^\//, '') : '';
+  const cleanChallenge = ['fast-vs-google', 'fast-vs-calm'].includes(publicRelative.replace(/\/$/, ''));
+  const relative = cleanChallenge
+    ? 'index.html'
+    : isPublicPath
+      ? publicRelative || 'index.html'
+      : pathname === '/' ? 'index.html' : pathname.slice(1);
   const filePath = normalize(join(ROOT, relative));
   if (!filePath.startsWith(normalize(ROOT))) {
     response.writeHead(403);
@@ -81,8 +89,17 @@ async function serveStatic(response, pathname) {
 http.createServer((request, response) => {
   const { pathname } = new URL(request.url, `http://127.0.0.1:${PORT}`);
   if (pathname.startsWith(PROXY_PREFIX)) return proxyToFacade(request, response, pathname);
+  if (pathname === PUBLIC_BASE_PATH) {
+    response.writeHead(308, { Location: `${PUBLIC_BASE_PATH}/` });
+    return response.end();
+  }
+  if (/^\/routing\/(fast-vs-google|fast-vs-calm)\/$/.test(pathname)) {
+    response.writeHead(308, { Location: pathname.replace(/\/$/, '') });
+    return response.end();
+  }
   return serveStatic(response, pathname);
 }).listen(PORT, '127.0.0.1', () => {
   console.log(`Benchmark UI on http://127.0.0.1:${PORT}/?game=calm`);
+  console.log(`Public-path preview on http://127.0.0.1:${PORT}${PUBLIC_BASE_PATH}/fast-vs-google`);
   console.log(`Proxying ${PROXY_PREFIX}/* to ${ROUTING_ORIGIN}`);
 });

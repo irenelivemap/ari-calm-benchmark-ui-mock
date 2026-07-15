@@ -4,7 +4,7 @@
   "private": true,
   "description": "Static UI prototype for blinded ARI route-comparison benchmarks.",
   "scripts": {
-    "start": "python3 -m http.server 8765 --bind 127.0.0.1",
+    "start": "node scripts/dev-live.mjs",
     "start:live": "node scripts/dev-live.mjs",
     "test": "node --test tests/*.test.js",
     "check": "npm test"
