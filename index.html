@@ -291,7 +291,7 @@
             { value: 'route_b', label: 'Route B', className: 'ari-choice--route-b' },
             { value: 'both_work_well', label: 'Both work well' },
             { value: 'both_work_poorly', label: 'Both work poorly' },
-            { value: 'not_sure', label: 'Hard to judge' }
+            { value: 'not_sure', label: "I don't know" }
           ],
           q2Options: [],
           q3Options: [
@@ -483,7 +483,7 @@
         ['Google Fast', outcomeCounts.google, 'google'],
         ['Both work well', outcomeCounts.both_work_well, 'both_work_well'],
         ['Both work poorly', outcomeCounts.both_work_poorly, 'both_work_poorly'],
-        ['Hard to judge', outcomeCounts.not_sure, 'not_sure']
+        ["I don't know", outcomeCounts.not_sure, 'not_sure']
       ];
       const reasonEntries = activeConfig.benchmark.q3Options
         .map(option => [option.label, reasonCounts[option.value], option.value])
@@ -609,7 +609,7 @@
       const choice = answer.q1Choice || answer.choice;
       if (choice === 'both_work_well') return 'Both work well';
       if (choice === 'both_work_poorly') return 'Both work poorly';
-      if (choice === 'not_sure') return 'Hard to judge';
+      if (choice === 'not_sure') return "I don't know";
       if (choice !== 'route_a' && choice !== 'route_b') return 'Unknown';
       const slot = choice === 'route_a' ? 'A' : 'B';
       const provider = answer.labelMap?.[slot] || answer.labels?.[slot]?.routeType;
