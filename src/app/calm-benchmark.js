@@ -70,7 +70,9 @@
       ...DEFAULT_BENCHMARK_CONFIG,
       ...config,
       questions: { ...DEFAULT_QUESTION_COPY, ...(config.questions || {}) },
-      context: { ...DEFAULT_BENCHMARK_CONFIG.context, ...(config.context || {}) },
+      context: config.context === null
+        ? null
+        : { ...DEFAULT_BENCHMARK_CONFIG.context, ...(config.context || {}) },
       routeTypes: Array.isArray(config.routeTypes) && config.routeTypes.length === 2
         ? [...config.routeTypes]
         : [...DEFAULT_BENCHMARK_CONFIG.routeTypes],
@@ -161,6 +163,14 @@
     const onboardingMaskId = createId('ari-onboarding-mask');
     const contextId = createId('ari-route-context');
     const streetViewerId = createId('ari-street-viewer');
+    const contextSummaryMarkup = benchmark.context ? `
+      <button class="ari-context-toggle ari-context-toggle--summary" data-action="open-context" type="button" aria-expanded="false" aria-controls="${contextId}" aria-label="${escapeHtml(benchmark.context.label)}" title="${escapeHtml(benchmark.context.label)}"><span aria-hidden="true">i</span></button>` : '';
+    const contextToggleMarkup = benchmark.context ? `
+      <button class="ari-context-toggle" data-action="toggle-context" type="button" aria-expanded="false" aria-controls="${contextId}" aria-label="${escapeHtml(benchmark.context.label)}" title="${escapeHtml(benchmark.context.label)}"><span aria-hidden="true">i</span></button>` : '';
+    const contextCopyMarkup = benchmark.context ? `
+      <div class="ari-context-copy" id="${contextId}" data-context-copy hidden>
+        <p>${escapeHtml(benchmark.context.copy)}</p>
+      </div>` : '';
     root.innerHTML = `
       <section class="ari-benchmark" aria-label="${escapeHtml(benchmark.ariaLabel)}">
         <main class="ari-benchmark__grid">
@@ -220,7 +230,7 @@
             </div>
             <div class="ari-panel-summary" data-panel-summary>
               <b data-panel-question>${escapeHtml(benchmark.questions.q1)}</b>
-              <button class="ari-context-toggle ari-context-toggle--summary" data-action="open-context" type="button" aria-expanded="false" aria-controls="${contextId}" aria-label="${escapeHtml(benchmark.context.label)}" title="${escapeHtml(benchmark.context.label)}"><span aria-hidden="true">i</span></button>
+              ${contextSummaryMarkup}
             </div>
             <form class="ari-question-stack" data-form>
               <div class="ari-question-scroll" data-question-scroll>
@@ -228,11 +238,9 @@
                 <fieldset>
                   <legend>
                     <span>${escapeHtml(benchmark.questions.q1)}</span>
-                    <button class="ari-context-toggle" data-action="toggle-context" type="button" aria-expanded="false" aria-controls="${contextId}" aria-label="${escapeHtml(benchmark.context.label)}" title="${escapeHtml(benchmark.context.label)}"><span aria-hidden="true">i</span></button>
+                    ${contextToggleMarkup}
                   </legend>
-                  <div class="ari-context-copy" id="${contextId}" data-context-copy hidden>
-                    <p>${escapeHtml(benchmark.context.copy)}</p>
-                  </div>
+                  ${contextCopyMarkup}
                   <div class="ari-choice-grid ari-choice-grid--two">
                     ${renderChoiceOptions(benchmark.q1Options, { name: 'q1Choice' })}
                   </div>
@@ -902,13 +910,15 @@
     }
 
     function setContextExpanded(expanded) {
+      if (!els.contextToggle || !els.contextCopy) return;
       els.contextToggle.setAttribute('aria-expanded', String(expanded));
-      els.collapsedContextToggle.setAttribute('aria-expanded', String(expanded));
+      els.collapsedContextToggle?.setAttribute('aria-expanded', String(expanded));
       els.contextCopy.hidden = !expanded;
       requestAnimationFrame(updateQuestionOverflow);
     }
 
     function syncCollapsedContextToggle() {
+      if (!els.collapsedContextToggle || !els.contextToggle) return;
       const isQ1 = state.questionStep === 'q1';
       const isAvailable = isQ1 && state.panelCollapsed;
       els.collapsedContextToggle.hidden = !isQ1;
@@ -1169,8 +1179,7 @@
       els.form.reset();
       restorePartialAnswer(partialAnswer);
       resetQuestionScroll();
-      els.contextToggle.setAttribute('aria-expanded', 'false');
-      els.contextCopy.hidden = true;
+      setContextExpanded(false);
       updatePanelState(panelCollapsed);
       updateQuestionFlow();
       drawRoutes(state.pair, { hidden: deferRouteReveal });
@@ -1235,12 +1244,12 @@
       updatePanelState(!state.panelCollapsed, { animate: true });
     });
 
-    els.contextToggle.addEventListener('click', () => {
+    els.contextToggle?.addEventListener('click', () => {
       const expanded = els.contextToggle.getAttribute('aria-expanded') === 'true';
       setContextExpanded(!expanded);
     });
 
-    els.collapsedContextToggle.addEventListener('click', (e) => {
+    els.collapsedContextToggle?.addEventListener('click', (e) => {
       e.stopPropagation();
       setContextExpanded(true);
       updatePanelState(false, { animate: true });

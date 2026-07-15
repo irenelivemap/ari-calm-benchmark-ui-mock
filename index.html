@@ -227,7 +227,7 @@
   <script src="./src/data/calm-benchmark-data.js?v=20260714-fast-google-ui-3"></script>
   <script src="./src/results/calm-results.js?v=20260713-live-results-1"></script>
   <script src="./src/maps/map-adapter.js?v=20260714-street-view-mode-2"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260714-street-view-mode-1"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260715-google-context-1"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -285,10 +285,7 @@
             q2: 'Would both routes work well as Fast options?',
             q3: 'What made the other route worse as a Fast route?'
           },
-          context: {
-            label: 'What makes a good Fast route?',
-            copy: 'A route that gets you there quickly while staying direct, clear, and practical to follow.'
-          },
+          context: null,
           q1Options: [
             { value: 'route_a', label: 'Route A', className: 'ari-choice--route-a' },
             { value: 'route_b', label: 'Route B', className: 'ari-choice--route-b' },
