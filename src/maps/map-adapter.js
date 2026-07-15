@@ -157,6 +157,23 @@
     }
 
     function drawMaplibreRoutes(map, pair, assignment) {
+      if (!state.streetHandlerBound) {
+        state.streetHandlerBound = true;
+        map.on('click', event => {
+          if (!state.streetViewEnabled) return;
+          const hitLayers = ['ari-route-a-hit', 'ari-route-b-hit'].filter(id => map.getLayer(id));
+          const feature = hitLayers.length
+            ? map.queryRenderedFeatures(event.point, { layers: hitLayers })[0]
+            : null;
+          state.onRoutePointClick({
+            lat: event.lngLat.lat,
+            lng: event.lngLat.lng,
+            routeKey: feature
+              ? feature.layer.id === 'ari-route-b-hit' ? 'routeB' : 'routeA'
+              : null
+          });
+        });
+      }
       const routeA = normalizeLatLngs(pair.routes[assignment.routeA].geometry);
       const routeB = normalizeLatLngs(pair.routes[assignment.routeB].geometry);
       const dataByRoute = { routeA: maplibreLineData(routeA), routeB: maplibreLineData(routeB) };
@@ -184,16 +201,6 @@
               'line-opacity': layer.opacity * (layer.kind === 'hit' ? 1 : state.routeVisibility)
             }
           });
-          if (layer.kind === 'hit') {
-            map.on('click', layer.id, event => {
-              if (!state.streetViewEnabled || !event.lngLat) return;
-              state.onRoutePointClick({
-                lat: event.lngLat.lat,
-                lng: event.lngLat.lng,
-                routeKey: layer.route
-              });
-            });
-          }
         }
         if (layer.kind !== 'hit') {
           state.maplibreVisuals[layer.route].push({
@@ -321,15 +328,26 @@
     function bindRoutePointClicks() {
       if (state.streetHandlerBound) return;
       state.streetHandlerBound = true;
-      if (state.provider === 'google') return;
+      if (state.provider === 'google') {
+        // Route hit-area polylines swallow their own clicks, so this fires
+        // only for points away from both routes.
+        state.map.addListener('click', event => {
+          if (!state.streetViewEnabled || !event.latLng) return;
+          state.onRoutePointClick({
+            lat: event.latLng.lat(),
+            lng: event.latLng.lng(),
+            routeKey: null
+          });
+        });
+        return;
+      }
       state.map.on('click', event => {
         if (!state.streetViewEnabled) return;
         const nearest = getNearestLeafletRoute(event.containerPoint);
-        if (!nearest) return;
         state.onRoutePointClick({
           lat: event.latlng.lat,
           lng: event.latlng.lng,
-          routeKey: nearest.routeKey
+          routeKey: nearest ? nearest.routeKey : null
         });
       });
     }
@@ -675,7 +693,9 @@
     }
 
     function setStreetViewPosition(point, routeKey = 'routeA') {
-      const color = routeKey === 'routeB' ? state.routeBColor : state.routeAColor;
+      const color = routeKey === 'routeB'
+        ? state.routeBColor
+        : routeKey === 'routeA' ? state.routeAColor : '#101511';
       if (state.provider === 'maplibre') {
         return whenMapLibreReady(map => {
           if (!state.streetViewEnabled) return;

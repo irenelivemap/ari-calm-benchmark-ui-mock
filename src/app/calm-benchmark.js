@@ -194,7 +194,7 @@
               </div>
               <div class="ari-street-mode-hint" data-street-mode-hint role="status" hidden>
                 <b>Street View on</b>
-                <span>Select a point on either route.</span>
+                <span>Select any point on the map.</span>
               </div>
               <section class="ari-street-viewer" id="${streetViewerId}" data-street-viewer aria-label="Street View" aria-hidden="true" hidden>
                 <header class="ari-street-viewer__header">
@@ -304,7 +304,7 @@
           </div>
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="street">
             <b>Explore the street</b>
-            <span>Turn on Street View, then select a point.</span>
+            <span>Turn on Street View, then select any point.</span>
           </div>
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="answer">
             <b>Answer when ready</b>
@@ -729,11 +729,17 @@
       if (!point || !state.streetViewMode) return;
       const requestId = ++streetViewRequestId;
       state.streetViewPoint = { lat: Number(point.lat), lng: Number(point.lng) };
-      state.streetViewRoute = point.routeKey === 'routeB' ? 'routeB' : 'routeA';
+      state.streetViewRoute = point.routeKey === 'routeB' || point.routeKey === 'routeA'
+        ? point.routeKey
+        : null;
       state.streetViewMapState = state.mapAdapter.getViewState();
       state.streetViewOpen = true;
-      els.streetViewer.dataset.route = state.streetViewRoute === 'routeB' ? 'b' : 'a';
-      els.streetRoute.textContent = state.streetViewRoute === 'routeB' ? 'Route B' : 'Route A';
+      els.streetViewer.dataset.route = state.streetViewRoute === 'routeB'
+        ? 'b'
+        : state.streetViewRoute === 'routeA' ? 'a' : 'map';
+      els.streetRoute.textContent = state.streetViewRoute === 'routeB'
+        ? 'Route B'
+        : state.streetViewRoute === 'routeA' ? 'Route A' : 'Map point';
       state.mapAdapter.setStreetViewPosition(state.streetViewPoint, state.streetViewRoute);
       setStreetViewStatus('Loading Street View', 'Looking for imagery near this point.', { loading: true });
       showStreetViewer();
@@ -776,7 +782,7 @@
           if (status === zeroStatus) {
             setStreetViewStatus(
               'No imagery near this point',
-              'Go back to the map and try another point on either route.',
+              'Go back to the map and try another point.',
               { loading: false }
             );
           } else {

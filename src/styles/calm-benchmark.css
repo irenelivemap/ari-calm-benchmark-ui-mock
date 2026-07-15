@@ -4264,6 +4264,10 @@ html.is-challenge-dialog-open {
   background: var(--ari-green);
 }
 
+.ari-street-viewer[data-route="map"] .ari-street-viewer__identity strong::before {
+  background: rgba(255, 255, 255, 0.32);
+}
+
 .ari-street-viewer__body,
 .ari-street-panorama {
   position: absolute;

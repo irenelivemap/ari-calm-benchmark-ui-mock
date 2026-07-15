@@ -47,7 +47,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Preserve pan, pinch, scroll, double-click, and zoom behavior.
 - [ ] Fit both routes within the area not covered by the question panel.
 - [ ] Keep Fit independent from the tester's manual camera state until pressed.
-- [ ] Enable route-point targeting only while Street View mode is active.
+- [ ] Enable Street View point targeting only while the mode is active; near-route taps keep their route identity, other taps are neutral map points.
 - [ ] Restore the exact map camera and question state after Street View closes.
 - [ ] Provide an in-app unavailable state instead of opening an external fallback tab.
 
