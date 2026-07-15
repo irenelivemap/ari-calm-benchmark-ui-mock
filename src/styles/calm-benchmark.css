@@ -4083,8 +4083,7 @@ html.is-challenge-dialog-open {
 .ari-street-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 14px 0 11px;
+  padding: 0 15px;
   font: 700 0.76rem/1 var(--ari-font);
   letter-spacing: 0.01em;
   white-space: nowrap;

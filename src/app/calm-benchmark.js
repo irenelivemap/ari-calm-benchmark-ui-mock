@@ -191,13 +191,6 @@
                   </svg>
                 </button>
                 <button class="ari-street-toggle" data-action="toggle-street-view" type="button" aria-label="Turn on Street View" title="Street View" aria-controls="${streetViewerId}" aria-pressed="false">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="4.5" r="2"></circle>
-                    <path d="M12 7v5"></path>
-                    <path d="M8.5 9.5h7"></path>
-                    <path d="m12 12-2.5 7.5"></path>
-                    <path d="m12 12 2.5 7.5"></path>
-                  </svg>
                   <span>Street View</span>
                 </button>
               </div>
