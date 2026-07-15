@@ -370,6 +370,8 @@
     buildShell(root, state.totalRounds, benchmark);
 
     const els = {
+      benchmark: root.querySelector('.ari-benchmark'),
+      mapShell: root.querySelector('[data-map]'),
       cardHeader: root.querySelector('.ari-card-header'),
       hudMedals: root.querySelector('[data-hud-medals]'),
       roundComplete: root.querySelector('[data-round-complete]'),
@@ -470,6 +472,15 @@
 
     function getRouteFitPadding() {
       const isMobile = window.matchMedia('(max-width: 700px)').matches;
+      if (state.streetViewOpen) {
+        // Split layout: the canvas is already resized to the map column, so a
+        // plain edge inset fits both routes into the visible region.
+        const inset = isMobile ? 16 : 32;
+        return {
+          google: inset,
+          leaflet: { padding: [inset, inset], maxZoom: ROUTE_FIT_MAX_ZOOM }
+        };
+      }
       if (!isMobile) {
         const mapRect = els.mapCanvas.getBoundingClientRect();
         const panelRect = els.questionCard.getBoundingClientRect();
@@ -692,10 +703,21 @@
 
     function showStreetViewer() {
       window.clearTimeout(streetViewCloseTimer);
+      const alreadySplit = els.mapShell.classList.contains('is-street-split');
+      els.mapShell.classList.add('is-street-split');
+      els.benchmark.classList.add('is-street-view-open');
       els.streetViewer.hidden = false;
       els.streetViewer.setAttribute('aria-hidden', 'false');
       requestAnimationFrame(() => els.streetViewer.classList.add('is-visible'));
       requestAnimationFrame(() => els.closeStreetView.focus({ preventScroll: true }));
+      if (!alreadySplit) {
+        // The canvas just shrank into the map column: let the provider pick up
+        // the new size, then refit both routes into it.
+        requestAnimationFrame(() => {
+          state.mapAdapter.notifyResize();
+          fitRoutes({ animate: false });
+        });
+      }
     }
 
     function removeStreetViewPositionListener() {
@@ -711,16 +733,24 @@
       removeStreetViewPositionListener();
       if (state.streetViewPanorama) state.streetViewPanorama.setVisible(false);
       state.streetViewOpen = false;
+      const wasSplit = els.mapShell.classList.contains('is-street-split');
+      els.mapShell.classList.remove('is-street-split');
+      els.benchmark.classList.remove('is-street-view-open');
       els.streetViewer.classList.remove('is-visible');
       els.streetViewer.setAttribute('aria-hidden', 'true');
       window.clearTimeout(streetViewCloseTimer);
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (immediate || reduceMotion) els.streetViewer.hidden = true;
       else streetViewCloseTimer = window.setTimeout(() => { els.streetViewer.hidden = true; }, 190);
-      if (restoreMap && state.streetViewMapState) {
-        state.mapAdapter.restoreViewState(state.streetViewMapState);
-      }
+      const savedMapState = restoreMap ? state.streetViewMapState : null;
       state.streetViewMapState = null;
+      if (wasSplit || savedMapState) {
+        requestAnimationFrame(() => {
+          if (!state.mapAdapter) return;
+          if (wasSplit) state.mapAdapter.notifyResize();
+          if (savedMapState) state.mapAdapter.restoreViewState(savedMapState);
+        });
+      }
       setStreetViewMode(false);
       if (restoreFocus) requestAnimationFrame(() => els.streetViewToggle.focus({ preventScroll: true }));
     }
@@ -732,7 +762,9 @@
       state.streetViewRoute = point.routeKey === 'routeB' || point.routeKey === 'routeA'
         ? point.routeKey
         : null;
-      state.streetViewMapState = state.mapAdapter.getViewState();
+      // Save the camera only when entering Street View; retargeting from the
+      // split map keeps the original pre-inspection view for Back to map.
+      if (!state.streetViewOpen) state.streetViewMapState = state.mapAdapter.getViewState();
       state.streetViewOpen = true;
       els.streetViewer.dataset.route = state.streetViewRoute === 'routeB'
         ? 'b'

@@ -801,6 +801,17 @@
       state.map.invalidateSize({ pan: false });
     }
 
+    /** Tell the map its container was resized (e.g. the Street View split). */
+    function notifyResize() {
+      if (state.provider === 'maplibre') return whenMapLibreReady(map => map.resize());
+      if (!state.map) return;
+      if (state.provider === 'google') {
+        google.maps.event.trigger(state.map, 'resize');
+        return;
+      }
+      state.map.invalidateSize({ pan: false });
+    }
+
     function zoomIn() {
       if (state.provider === 'maplibre') return whenMapLibreReady(map => map.zoomIn());
       ensure();
@@ -839,6 +850,7 @@
       getRoutePointRect,
       getViewState,
       hasMap: () => !!state.map,
+      notifyResize,
       restoreViewState,
       setStreetViewEnabled,
       setStreetViewPosition,

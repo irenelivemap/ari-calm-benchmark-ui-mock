@@ -4175,6 +4175,50 @@ html.is-challenge-dialog-open {
   transform: none;
 }
 
+/* Street View split: the panorama takes the stage while the live comparison
+   map keeps a full-height column, so the selected point never loses its
+   relationship to the two routes. */
+@media (min-width: 701px) {
+  .ari-map.is-street-split .ari-street-viewer {
+    top: 0;
+    right: auto;
+    bottom: 0;
+    left: 0;
+    width: 65%;
+    min-width: 0;
+    border: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 0;
+    box-shadow: 18px 0 44px rgba(8, 9, 9, 0.28);
+    transform: translateX(-14px);
+  }
+
+  .ari-map.is-street-split .ari-street-viewer.is-visible {
+    transform: none;
+  }
+
+  .ari-map.is-street-split .ari-map__canvas {
+    inset: 0 0 0 65%;
+  }
+
+  /* The question card sits over the panorama in split mode and must stay
+     answerable above it. */
+  .ari-benchmark.is-street-view-open .ari-question-card {
+    z-index: 55;
+  }
+}
+
+/* Narrow laptops: keep the map column at a useful width. */
+@media (min-width: 701px) and (max-width: 1100px) {
+  .ari-map.is-street-split .ari-street-viewer {
+    width: 55%;
+  }
+
+  .ari-map.is-street-split .ari-map__canvas {
+    inset: 0 0 0 55%;
+  }
+}
+
 .ari-street-viewer__header {
   min-height: 62px;
   display: flex;
@@ -5723,6 +5767,26 @@ html.is-challenge-dialog-open {
 
   .ari-street-viewer__body {
     top: calc(62px + env(safe-area-inset-top, 0px));
+  }
+
+  /* Mobile split: panorama on top, the live comparison map below it. */
+  .ari-map.is-street-split .ari-street-viewer {
+    bottom: 42%;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .ari-map.is-street-split .ari-map__canvas {
+    inset: 58% 0 0 0;
+  }
+
+  .ari-benchmark.is-street-view-open .ari-question-card {
+    display: none;
+  }
+
+  .ari-map.is-street-split .ari-map__zoom,
+  .ari-map.is-street-split .ari-map__tools,
+  .ari-map.is-street-split .ari-street-mode-hint {
+    display: none;
   }
 
   .ari-map__note {
