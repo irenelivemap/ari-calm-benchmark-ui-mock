@@ -750,19 +750,42 @@
       }
 
       state.streetViewService ||= new maps.StreetViewService();
-      const request = { location: state.streetViewPoint, radius: 80 };
-      if (maps.StreetViewPreference?.NEAREST) request.preference = maps.StreetViewPreference.NEAREST;
-      if (maps.StreetViewSource?.OUTDOOR) request.source = maps.StreetViewSource.OUTDOOR;
+      const okStatus = maps.StreetViewStatus?.OK || 'OK';
+      const zeroStatus = maps.StreetViewStatus?.ZERO_RESULTS || 'ZERO_RESULTS';
+      // Search close-by outdoor imagery first, then widen once before giving
+      // up so clicks on quiet segments still land on the nearest covered street.
+      const searchAttempts = [
+        { radius: 80, outdoorOnly: true },
+        { radius: 250, outdoorOnly: false }
+      ];
 
-      state.streetViewService.getPanorama(request, (data, status) => {
+      const requestPanorama = attemptIndex => {
+        const attempt = searchAttempts[attemptIndex];
+        const request = { location: state.streetViewPoint, radius: attempt.radius };
+        if (maps.StreetViewPreference?.NEAREST) request.preference = maps.StreetViewPreference.NEAREST;
+        if (attempt.outdoorOnly && maps.StreetViewSource?.OUTDOOR) request.source = maps.StreetViewSource.OUTDOOR;
+
+        state.streetViewService.getPanorama(request, (data, status) => {
         if (requestId !== streetViewRequestId || !state.streetViewOpen) return;
-        const okStatus = maps.StreetViewStatus?.OK || 'OK';
         if (status !== okStatus || !data?.location?.latLng) {
-          setStreetViewStatus(
-            'No imagery near this point',
-            'Go back to the map and try another point on either route.',
-            { loading: false }
-          );
+          if (attemptIndex < searchAttempts.length - 1) {
+            requestPanorama(attemptIndex + 1);
+            return;
+          }
+          console.warn(`[ARI street view] getPanorama returned "${status}" near`, state.streetViewPoint);
+          if (status === zeroStatus) {
+            setStreetViewStatus(
+              'No imagery near this point',
+              'Go back to the map and try another point on either route.',
+              { loading: false }
+            );
+          } else {
+            setStreetViewStatus(
+              'Street View request failed',
+              `Google answered "${status}". Check the browser console and the Maps key configuration.`,
+              { loading: false }
+            );
+          }
           return;
         }
 
@@ -797,7 +820,10 @@
             state.streetViewRoute
           );
         });
-      });
+        });
+      };
+
+      requestPanorama(0);
     }
 
     function setStreetViewPoint(point) {
