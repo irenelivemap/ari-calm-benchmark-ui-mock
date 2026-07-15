@@ -33,13 +33,16 @@
       routeLayers: null,
       routeVisuals: { routeA: [], routeB: [] },
       googleOverlays: [],
+      googleHitAreas: [],
       googleRouteVisuals: { routeA: [], routeB: [] },
       routeVisibility: 1,
       routeAnimationFrame: null,
       standardTiles: null,
       pair: null,
       assignment: null,
-      streetHandlerBound: false
+      streetHandlerBound: false,
+      streetViewEnabled: false,
+      streetViewMarker: null
     };
 
     function ensure() {
@@ -101,51 +104,52 @@
       });
     }
 
-    function isNearLeafletRoute(containerPoint) {
-      if (!state.pair || !state.assignment) return false;
+    function getNearestLeafletRoute(containerPoint) {
+      if (!state.pair || !state.assignment) return null;
       const routes = [
-        normalizeLatLngs(state.pair.routes[state.assignment.routeA].geometry),
-        normalizeLatLngs(state.pair.routes[state.assignment.routeB].geometry)
+        {
+          routeKey: 'routeA',
+          geometry: normalizeLatLngs(state.pair.routes[state.assignment.routeA].geometry)
+        },
+        {
+          routeKey: 'routeB',
+          geometry: normalizeLatLngs(state.pair.routes[state.assignment.routeB].geometry)
+        }
       ];
-      return routes.some(route => route.slice(1).some((point, index) => {
-        const start = state.map.latLngToContainerPoint(route[index]);
-        const end = state.map.latLngToContainerPoint(point);
-        return pointToSegmentDistance(containerPoint, start, end) <= 32;
-      }));
-    }
+      let nearest = null;
 
-    function isNearLatLngRoute(latLng) {
-      if (!state.pair || !state.assignment) return false;
-      const clickPoint = { x: latLng.lng, y: latLng.lat };
-      const routes = [
-        normalizeLatLngs(state.pair.routes[state.assignment.routeA].geometry).map(point => ({ x: point[1], y: point[0] })),
-        normalizeLatLngs(state.pair.routes[state.assignment.routeB].geometry).map(point => ({ x: point[1], y: point[0] }))
-      ];
-      return routes.some(route => route.slice(1).some((point, index) => {
-        return pointToSegmentDistance(clickPoint, route[index], point) <= 0.00055;
-      }));
+      routes.forEach(({ routeKey, geometry }) => {
+        geometry.slice(1).forEach((point, index) => {
+          const start = state.map.latLngToContainerPoint(geometry[index]);
+          const end = state.map.latLngToContainerPoint(point);
+          const distance = pointToSegmentDistance(containerPoint, start, end);
+          if (!nearest || distance < nearest.distance) nearest = { routeKey, distance };
+        });
+      });
+
+      return nearest && nearest.distance <= 32 ? nearest : null;
     }
 
     function bindRoutePointClicks() {
       if (state.streetHandlerBound) return;
       state.streetHandlerBound = true;
-      if (state.provider === 'google') {
-        state.map.addListener('click', event => {
-          const point = { lat: event.latLng.lat(), lng: event.latLng.lng() };
-          if (isNearLatLngRoute(point)) state.onRoutePointClick(point);
-        });
-        return;
-      }
+      if (state.provider === 'google') return;
       state.map.on('click', event => {
-        if (isNearLeafletRoute(event.containerPoint)) {
-          state.onRoutePointClick(event.latlng);
-        }
+        if (!state.streetViewEnabled) return;
+        const nearest = getNearestLeafletRoute(event.containerPoint);
+        if (!nearest) return;
+        state.onRoutePointClick({
+          lat: event.latlng.lat,
+          lng: event.latlng.lng,
+          routeKey: nearest.routeKey
+        });
       });
     }
 
     function drawGoogleRoutes(pair, assignment) {
       state.googleOverlays.forEach(overlay => overlay.setMap(null));
       state.googleOverlays = [];
+      state.googleHitAreas = [];
 
       const routeA = normalizeLatLngs(pair.routes[assignment.routeA].geometry).map(toLatLngObject);
       const routeB = normalizeLatLngs(pair.routes[assignment.routeB].geometry).map(toLatLngObject);
@@ -155,41 +159,67 @@
         map: state.map,
         strokeColor: '#ffffff',
         strokeOpacity: 0.82,
-        strokeWeight: 15
+        strokeWeight: 15,
+        clickable: false
       });
       const routeBCase = new google.maps.Polyline({
         path: routeB,
         map: state.map,
         strokeColor: '#ffffff',
         strokeOpacity: 0.82,
-        strokeWeight: 15
+        strokeWeight: 15,
+        clickable: false
       });
       const routeALine = new google.maps.Polyline({
         path: routeA,
         map: state.map,
         strokeColor: state.routeAColor,
         strokeOpacity: 0.98,
-        strokeWeight: 9
+        strokeWeight: 9,
+        clickable: false
       });
       const routeBLine = new google.maps.Polyline({
         path: routeB,
         map: state.map,
         strokeColor: state.routeBColor,
         strokeOpacity: 0.98,
-        strokeWeight: 6
+        strokeWeight: 6,
+        clickable: false
       });
       [routeACase, routeBCase, routeALine, routeBLine].forEach(layer => {
         layer.__ariBaseWeight = layer.strokeWeight || 7;
         layer.__ariBaseOpacity = layer.strokeOpacity ?? 0.98;
-        layer.addListener('click', event => {
-          state.onRoutePointClick({ lat: event.latLng.lat(), lng: event.latLng.lng() });
-        });
       });
+
+      function createStreetHitArea(path, routeKey, color) {
+        const hitArea = new google.maps.Polyline({
+          path,
+          map: state.map,
+          strokeColor: color,
+          strokeOpacity: 0.01,
+          strokeWeight: 32,
+          clickable: state.streetViewEnabled,
+          zIndex: 40
+        });
+        hitArea.addListener('click', event => {
+          if (!state.streetViewEnabled) return;
+          state.onRoutePointClick({
+            lat: event.latLng.lat(),
+            lng: event.latLng.lng(),
+            routeKey
+          });
+        });
+        return hitArea;
+      }
+
+      const routeAHitArea = createStreetHitArea(routeA, 'routeA', state.routeAColor);
+      const routeBHitArea = createStreetHitArea(routeB, 'routeB', state.routeBColor);
 
       const startMarker = new google.maps.Marker({
         position: { lat: pair.origin.lat, lng: pair.origin.lng },
         map: state.map,
         title: 'Start',
+        clickable: false,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 8,
@@ -203,6 +233,7 @@
         position: { lat: pair.destination.lat, lng: pair.destination.lng },
         map: state.map,
         title: 'Destination',
+        clickable: false,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 9,
@@ -217,7 +248,17 @@
         routeA: [routeACase, routeALine],
         routeB: [routeBCase, routeBLine]
       };
-      state.googleOverlays.push(routeACase, routeBCase, routeALine, routeBLine, startMarker, endMarker);
+      state.googleHitAreas = [routeAHitArea, routeBHitArea];
+      state.googleOverlays.push(
+        routeACase,
+        routeBCase,
+        routeALine,
+        routeBLine,
+        routeAHitArea,
+        routeBHitArea,
+        startMarker,
+        endMarker
+      );
     }
 
     function drawLeafletRoutes(pair, assignment) {
@@ -242,12 +283,37 @@
       const routeBCase = L.polyline(routeB, { color: '#ffffff', weight: 15, opacity: 0.82, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 15, __ariBaseOpacity: 0.82 }).addTo(state.routeLayers);
       const routeALine = L.polyline(routeA, { color: state.routeAColor, weight: 9, opacity: 0.98, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 9, __ariBaseOpacity: 0.98 }).addTo(state.routeLayers);
       const routeBLine = L.polyline(routeB, { color: state.routeBColor, weight: 6, opacity: 0.98, lineCap: 'round', lineJoin: 'round', __ariBaseWeight: 6, __ariBaseOpacity: 0.98 }).addTo(state.routeLayers);
-      [routeACase, routeBCase, routeALine, routeBLine].forEach(layer => {
+      const routeAHitArea = L.polyline(routeA, {
+        color: state.routeAColor,
+        weight: 32,
+        opacity: 0.01,
+        lineCap: 'round',
+        lineJoin: 'round',
+        className: 'ari-street-hit-area',
+        bubblingMouseEvents: false
+      }).addTo(state.routeLayers);
+      const routeBHitArea = L.polyline(routeB, {
+        color: state.routeBColor,
+        weight: 32,
+        opacity: 0.01,
+        lineCap: 'round',
+        lineJoin: 'round',
+        className: 'ari-street-hit-area',
+        bubblingMouseEvents: false
+      }).addTo(state.routeLayers);
+      [
+        { layer: routeAHitArea, routeKey: 'routeA' },
+        { layer: routeBHitArea, routeKey: 'routeB' }
+      ].forEach(({ layer, routeKey }) => {
         layer.on('click', event => {
-          state.onRoutePointClick(event.latlng);
+          if (!state.streetViewEnabled) return;
+          state.onRoutePointClick({
+            lat: event.latlng.lat,
+            lng: event.latlng.lng,
+            routeKey
+          });
         });
       });
-
       state.routeVisuals = {
         routeA: [routeACase, routeALine],
         routeB: [routeBCase, routeBLine]
@@ -372,6 +438,95 @@
       });
     }
 
+    function setStreetViewEnabled(enabled) {
+      state.streetViewEnabled = !!enabled;
+      state.canvas.classList.toggle('is-street-view-mode', state.streetViewEnabled);
+      state.googleHitAreas.forEach(layer => {
+        layer.setOptions({ clickable: state.streetViewEnabled });
+      });
+    }
+
+    function clearStreetViewPosition() {
+      if (!state.streetViewMarker) return;
+      if (state.provider === 'google') state.streetViewMarker.setMap(null);
+      else state.streetViewMarker.remove();
+      state.streetViewMarker = null;
+    }
+
+    function setStreetViewPosition(point, routeKey = 'routeA') {
+      ensure();
+      const color = routeKey === 'routeB' ? state.routeBColor : state.routeAColor;
+      if (state.provider === 'google') {
+        if (!state.streetViewMarker) {
+          state.streetViewMarker = new google.maps.Marker({
+            map: state.map,
+            clickable: false,
+            zIndex: 80,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 9,
+              fillColor: color,
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 3
+            }
+          });
+        }
+        state.streetViewMarker.setIcon({
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 9,
+          fillColor: color,
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 3
+        });
+        state.streetViewMarker.setPosition(point);
+        state.streetViewMarker.setMap(state.map);
+        return;
+      }
+
+      if (!state.streetViewMarker) {
+        state.streetViewMarker = L.circleMarker([point.lat, point.lng], {
+          radius: 9,
+          color: '#ffffff',
+          weight: 3,
+          fillColor: color,
+          fillOpacity: 1,
+          interactive: false
+        }).addTo(state.map);
+      } else {
+        state.streetViewMarker.setLatLng([point.lat, point.lng]);
+        state.streetViewMarker.setStyle({ fillColor: color });
+      }
+    }
+
+    function getViewState() {
+      ensure();
+      const center = state.map.getCenter();
+      if (state.provider === 'google') {
+        return {
+          center: { lat: center.lat(), lng: center.lng() },
+          zoom: state.map.getZoom()
+        };
+      }
+      return {
+        center: [center.lat, center.lng],
+        zoom: state.map.getZoom()
+      };
+    }
+
+    function restoreViewState(viewState) {
+      if (!viewState) return;
+      ensure();
+      if (state.provider === 'google') {
+        state.map.setCenter(viewState.center);
+        state.map.setZoom(viewState.zoom);
+        return;
+      }
+      state.map.setView(viewState.center, viewState.zoom, { animate: false });
+      state.map.invalidateSize({ pan: false });
+    }
+
     function zoomIn() {
       ensure();
       if (state.provider === 'google') state.map.setZoom(state.map.getZoom() + 1);
@@ -386,6 +541,7 @@
 
     function destroy() {
       if (state.routeAnimationFrame) cancelAnimationFrame(state.routeAnimationFrame);
+      clearStreetViewPosition();
       if (state.provider === 'leaflet' && state.map) {
         state.map.remove();
       }
@@ -393,6 +549,7 @@
       state.routeLayers = null;
       state.standardTiles = null;
       state.googleOverlays = [];
+      state.googleHitAreas = [];
     }
 
     return {
@@ -401,7 +558,12 @@
       fitRoutes,
       focusRoute,
       getRoutePointRect,
+      getViewState,
       hasMap: () => !!state.map,
+      restoreViewState,
+      setStreetViewEnabled,
+      setStreetViewPosition,
+      clearStreetViewPosition,
       setRoutesVisible,
       zoomIn,
       zoomOut,

@@ -1,10 +1,52 @@
 (function () {
   const DEFAULT_TOTAL_ROUNDS = 10;
   const ROUTE_FIT_MAX_ZOOM = 19;
-  const QUESTION_COPY = {
+  const DEFAULT_QUESTION_COPY = {
     q1: 'Which route would you choose for this calm walk?',
     q2: 'Is it worth showing both routes as separate options, one Fast and one Calm?',
     q3: 'What made the route option(s) less suitable for a calmer walk?'
+  };
+
+  const DEFAULT_BENCHMARK_CONFIG = {
+    testId: 'calm_vs_fast',
+    source: 'calm-benchmark',
+    sessionPrefix: 'calm-session',
+    ariaLabel: 'ARI calm route benchmark',
+    routeTypes: ['fast', 'calm'],
+    questions: DEFAULT_QUESTION_COPY,
+    context: {
+      label: 'What do we mean by calm?',
+      copy: 'A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.'
+    },
+    q1Options: [
+      { value: 'route_a', label: 'Route A', className: 'ari-choice--route-a' },
+      { value: 'route_b', label: 'Route B', className: 'ari-choice--route-b' },
+      { value: 'either', label: 'Both work well' },
+      { value: 'neither', label: 'Neither works' },
+      { value: 'hard_to_judge', label: 'Hard to judge' }
+    ],
+    q2Options: [
+      { value: 'yes', label: 'Yes' },
+      { value: 'no', label: 'No' },
+      { value: 'not_sure', label: 'Not sure' }
+    ],
+    q3Options: [
+      { value: 'not_enough_greenery_water', label: 'Not enough greenery or water' },
+      { value: 'too_busy_or_crowded', label: 'Too busy or crowded' },
+      { value: 'lacks_nice_streets_surroundings', label: 'Lacks nice streets or surroundings' },
+      { value: 'extra_time_distance_not_worth_it', label: 'Extra time/distance not worth it' },
+      { value: 'too_similar', label: 'Too similar to the other route' },
+      { value: 'too_complex', label: 'Too complex to follow' },
+      { value: 'other', label: 'Other' }
+    ],
+    followUps: {
+      route_a: ['q2', 'q3'],
+      route_b: ['q2', 'q3'],
+      either: ['q2'],
+      neither: ['q3'],
+      hard_to_judge: []
+    },
+    uncertainChoices: ['hard_to_judge']
   };
 
   const MEDAL_UNLOCK_FALLBACK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
@@ -13,27 +55,68 @@
   const routeAColor = '#C84720';
   const routeBColor = '#08784D';
 
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function normalizeBenchmarkConfig(config = {}) {
+    config = config || {};
+    return {
+      ...DEFAULT_BENCHMARK_CONFIG,
+      ...config,
+      questions: { ...DEFAULT_QUESTION_COPY, ...(config.questions || {}) },
+      context: { ...DEFAULT_BENCHMARK_CONFIG.context, ...(config.context || {}) },
+      routeTypes: Array.isArray(config.routeTypes) && config.routeTypes.length === 2
+        ? [...config.routeTypes]
+        : [...DEFAULT_BENCHMARK_CONFIG.routeTypes],
+      q1Options: Array.isArray(config.q1Options) ? config.q1Options : DEFAULT_BENCHMARK_CONFIG.q1Options,
+      q2Options: Array.isArray(config.q2Options) ? config.q2Options : DEFAULT_BENCHMARK_CONFIG.q2Options,
+      q3Options: Array.isArray(config.q3Options) ? config.q3Options : DEFAULT_BENCHMARK_CONFIG.q3Options,
+      followUps: { ...DEFAULT_BENCHMARK_CONFIG.followUps, ...(config.followUps || {}) },
+      uncertainChoices: Array.isArray(config.uncertainChoices)
+        ? config.uncertainChoices
+        : DEFAULT_BENCHMARK_CONFIG.uncertainChoices
+    };
+  }
+
+  function renderChoiceOptions(options, { name, type = 'radio' }) {
+    return options.map(option => {
+      const className = option.className ? ` class="${escapeHtml(option.className)}"` : '';
+      return `<label${className}><input type="${type}" name="${escapeHtml(name)}" value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</label>`;
+    }).join('');
+  }
+
   function createId(prefix) {
     if (window.crypto?.randomUUID) return `${prefix}-${window.crypto.randomUUID()}`;
     return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
   }
 
-  function randomAssignment() {
+  function randomAssignment(routeTypes = DEFAULT_BENCHMARK_CONFIG.routeTypes) {
+    const [first, second] = routeTypes;
     return Math.random() >= 0.5
-      ? { routeA: 'fast', routeB: 'calm' }
-      : { routeA: 'calm', routeB: 'fast' };
+      ? { routeA: first, routeB: second }
+      : { routeA: second, routeB: first };
   }
 
-  function mockRoutePairProvider({ roundIndex }) {
-    if (!demoPairs.length) {
-      return Promise.reject(new Error('No mock route pairs loaded. Include src/data/mock-route-pairs.js or provide routePairProvider.'));
-    }
-    const base = demoPairs[roundIndex % demoPairs.length];
-    return Promise.resolve({
-      ...base,
-      pairId: `${base.pairId}-round-${roundIndex + 1}`
-    });
+  function createMockRoutePairProvider(pairs, label = 'mock route pairs') {
+    return function mockProvider({ roundIndex }) {
+      if (!pairs.length) {
+        return Promise.reject(new Error(`No ${label} loaded. Include route-pair data or provide routePairProvider.`));
+      }
+      const base = pairs[roundIndex % pairs.length];
+      return Promise.resolve({
+        ...base,
+        pairId: `${base.pairId}-round-${roundIndex + 1}`
+      });
+    };
   }
+
+  const mockRoutePairProvider = createMockRoutePairProvider(demoPairs, 'calm mock route pairs');
 
   function consoleAnswerSink(answer) {
     console.info('[ARI calm benchmark answer]', answer);
@@ -74,10 +157,12 @@
     return milestones.find(milestone => milestone.at === completedRounds) || null;
   }
 
-  function buildShell(root, totalRounds) {
+  function buildShell(root, totalRounds, benchmark) {
     const onboardingMaskId = createId('ari-onboarding-mask');
+    const contextId = createId('ari-route-context');
+    const streetViewerId = createId('ari-street-viewer');
     root.innerHTML = `
-      <section class="ari-benchmark" aria-label="ARI calm route benchmark">
+      <section class="ari-benchmark" aria-label="${escapeHtml(benchmark.ariaLabel)}">
         <main class="ari-benchmark__grid">
           <section class="ari-map-card" aria-label="Route map">
             <div class="ari-map" data-map>
@@ -88,11 +173,39 @@
               </div>
               <div class="ari-map__tools" aria-label="Map tools">
                 <button class="ari-icon-btn ari-icon-btn--fit" data-action="fit-routes" type="button" aria-label="See full routes" title="See full routes"><span aria-hidden="true"></span></button>
+                <button class="ari-icon-btn ari-icon-btn--street" data-action="toggle-street-view" type="button" aria-label="Turn on Street View" title="Street View" aria-controls="${streetViewerId}" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="5" r="1"></circle>
+                    <path d="m9 20 3-6 3 6"></path>
+                    <path d="m6 8 6 2 6-2"></path>
+                    <path d="M12 10v4"></path>
+                  </svg>
+                </button>
               </div>
-              <div class="ari-street-card" data-street-card hidden>
-                <button data-action="open-street-view" type="button">Open Street View</button>
-                <button data-action="close-street-view" type="button" aria-label="Close Street View prompt">x</button>
+              <div class="ari-street-mode-hint" data-street-mode-hint role="status" hidden>
+                <b>Street View on</b>
+                <span>Select a point on either route.</span>
               </div>
+              <section class="ari-street-viewer" id="${streetViewerId}" data-street-viewer aria-label="Street View" aria-hidden="true" hidden>
+                <header class="ari-street-viewer__header">
+                  <button class="ari-street-viewer__back" data-action="close-street-view" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    <span>Back to map</span>
+                  </button>
+                  <div class="ari-street-viewer__identity">
+                    <small>Street View</small>
+                    <strong data-street-route>Route A</strong>
+                  </div>
+                </header>
+                <div class="ari-street-viewer__body">
+                  <div class="ari-street-panorama" data-street-panorama></div>
+                  <div class="ari-street-status" data-street-status role="status">
+                    <span class="ari-street-status__loader" aria-hidden="true"></span>
+                    <b data-street-status-title>Loading Street View</b>
+                    <span data-street-status-copy>Looking for imagery near this point.</span>
+                  </div>
+                </div>
+              </section>
             </div>
           </section>
 
@@ -106,53 +219,41 @@
               <button class="ari-panel-handle" data-action="toggle-panel" type="button" aria-expanded="true" aria-label="Minimize question panel" title="Minimize question panel"></button>
             </div>
             <div class="ari-panel-summary" data-panel-summary>
-              <b data-panel-question>${QUESTION_COPY.q1}</b>
-              <button class="ari-context-toggle ari-context-toggle--summary" data-action="open-context" type="button" aria-expanded="false" aria-controls="ari-calm-context" aria-label="What do we mean by calm?" title="What do we mean by calm?"><span aria-hidden="true">i</span></button>
+              <b data-panel-question>${escapeHtml(benchmark.questions.q1)}</b>
+              <button class="ari-context-toggle ari-context-toggle--summary" data-action="open-context" type="button" aria-expanded="false" aria-controls="${contextId}" aria-label="${escapeHtml(benchmark.context.label)}" title="${escapeHtml(benchmark.context.label)}"><span aria-hidden="true">i</span></button>
             </div>
             <form class="ari-question-stack" data-form>
               <div class="ari-question-scroll" data-question-scroll>
                 <section class="ari-question-block" data-q1>
                 <fieldset>
                   <legend>
-                    <span>${QUESTION_COPY.q1}</span>
-                    <button class="ari-context-toggle" data-action="toggle-context" type="button" aria-expanded="false" aria-controls="ari-calm-context" aria-label="What do we mean by calm?" title="What do we mean by calm?"><span aria-hidden="true">i</span></button>
+                    <span>${escapeHtml(benchmark.questions.q1)}</span>
+                    <button class="ari-context-toggle" data-action="toggle-context" type="button" aria-expanded="false" aria-controls="${contextId}" aria-label="${escapeHtml(benchmark.context.label)}" title="${escapeHtml(benchmark.context.label)}"><span aria-hidden="true">i</span></button>
                   </legend>
-                  <div class="ari-context-copy" id="ari-calm-context" hidden>
-                    <p>A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.</p>
+                  <div class="ari-context-copy" id="${contextId}" data-context-copy hidden>
+                    <p>${escapeHtml(benchmark.context.copy)}</p>
                   </div>
                   <div class="ari-choice-grid ari-choice-grid--two">
-                    <label class="ari-choice--route-a"><input type="radio" name="q1Choice" value="route_a">Route A</label>
-                    <label class="ari-choice--route-b"><input type="radio" name="q1Choice" value="route_b">Route B</label>
-                    <label><input type="radio" name="q1Choice" value="either">Both work well</label>
-                    <label><input type="radio" name="q1Choice" value="neither">Neither works</label>
-                    <label><input type="radio" name="q1Choice" value="hard_to_judge">Hard to judge</label>
+                    ${renderChoiceOptions(benchmark.q1Options, { name: 'q1Choice' })}
                   </div>
                 </fieldset>
                 </section>
 
                 <section class="ari-question-block" data-q2 hidden>
                 <fieldset>
-                  <legend>${QUESTION_COPY.q2}</legend>
+                  <legend>${escapeHtml(benchmark.questions.q2)}</legend>
                   <div class="ari-choice-grid">
-                    <label><input type="radio" name="q2Separate" value="yes">Yes</label>
-                    <label><input type="radio" name="q2Separate" value="no">No</label>
-                    <label><input type="radio" name="q2Separate" value="not_sure">Not sure</label>
+                    ${renderChoiceOptions(benchmark.q2Options, { name: 'q2Separate' })}
                   </div>
                 </fieldset>
                 </section>
 
                 <section class="ari-question-block" data-q3 hidden>
                 <fieldset>
-                  <legend>${QUESTION_COPY.q3}</legend>
+                  <legend>${escapeHtml(benchmark.questions.q3)}</legend>
                   <p class="ari-question-hint" id="ari-q3-hint">Select all that apply.</p>
                   <div class="ari-choice-grid" aria-describedby="ari-q3-hint">
-                    <label><input type="checkbox" name="q3Issues" value="not_enough_greenery_water">Not enough greenery or water</label>
-                    <label><input type="checkbox" name="q3Issues" value="too_busy_or_crowded">Too busy or crowded</label>
-                    <label><input type="checkbox" name="q3Issues" value="lacks_nice_streets_surroundings">Lacks nice streets or surroundings</label>
-                    <label><input type="checkbox" name="q3Issues" value="extra_time_distance_not_worth_it">Extra time/distance not worth it</label>
-                    <label><input type="checkbox" name="q3Issues" value="too_similar">Too similar to the other route</label>
-                    <label><input type="checkbox" name="q3Issues" value="too_complex">Too complex to follow</label>
-                    <label><input type="checkbox" name="q3Issues" value="other">Other</label>
+                    ${renderChoiceOptions(benchmark.q3Options, { name: 'q3Issues', type: 'checkbox' })}
                   </div>
                   <div class="ari-question-note" data-q3-note hidden>
                     <textarea name="q3Note" aria-label="Add optional details about your answer" placeholder="Add details (optional)"></textarea>
@@ -194,8 +295,8 @@
             <span>Return to the full comparison.</span>
           </div>
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="street">
-            <b>Check the street</b>
-            <span>Click either route for Street View.</span>
+            <b>Explore the street</b>
+            <span>Turn on Street View, then select a point.</span>
           </div>
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="answer">
             <b>Answer when ready</b>
@@ -224,10 +325,12 @@
       throw new Error('AriCalmBenchmark requires Leaflet on window.L, or Google Maps on window.google.maps, before mounting.');
     }
 
+    const benchmark = normalizeBenchmarkConfig(options.benchmark);
+
     const initialRoundIndex = options.initialRoundIndex || 0;
     const initialTotalRounds = Math.max(options.totalRounds || DEFAULT_TOTAL_ROUNDS, initialRoundIndex + 1);
     const state = {
-      sessionId: options.sessionId || createId('calm-session'),
+      sessionId: options.sessionId || createId(benchmark.sessionPrefix),
       sessionStartedAt: options.sessionStartedAt || new Date().toISOString(),
       participantName: options.participantName || '',
       roundIndex: initialRoundIndex,
@@ -240,7 +343,14 @@
       roundTransitioning: false,
       panelCollapsed: false,
       mapAdapter: null,
-      mapProvider: useGoogleMaps ? 'google' : 'leaflet'
+      mapProvider: useGoogleMaps ? 'google' : 'leaflet',
+      streetViewMode: false,
+      streetViewOpen: false,
+      streetViewPoint: null,
+      streetViewRoute: null,
+      streetViewMapState: null,
+      streetViewService: null,
+      streetViewPanorama: null
     };
 
     const routePairProvider = options.routePairProvider || mockRoutePairProvider;
@@ -248,7 +358,7 @@
     const progressSink = options.progressSink || consoleProgressSink;
     const onExit = typeof options.onExit === 'function' ? options.onExit : null;
     const milestones = Array.isArray(options.milestones) ? options.milestones : [];
-    buildShell(root, state.totalRounds);
+    buildShell(root, state.totalRounds, benchmark);
 
     const els = {
       cardHeader: root.querySelector('.ari-card-header'),
@@ -275,20 +385,29 @@
       q3NoteWrap: root.querySelector('[data-q3-note]'),
       q3Note: root.querySelector('textarea[name="q3Note"]'),
       contextToggle: root.querySelector('[data-action="toggle-context"]'),
-      contextCopy: root.querySelector('#ari-calm-context'),
+      contextCopy: root.querySelector('[data-context-copy]'),
       submit: root.querySelector('[data-submit]'),
       exit: root.querySelector('[data-action="exit"]'),
       previous: root.querySelector('[data-action="previous"]'),
       zoomIn: root.querySelector('[data-action="zoom-in"]'),
       zoomOut: root.querySelector('[data-action="zoom-out"]'),
       fitRoutes: root.querySelector('[data-action="fit-routes"]'),
-      streetCard: root.querySelector('[data-street-card]'),
-      openStreetView: root.querySelector('[data-action="open-street-view"]'),
+      streetViewToggle: root.querySelector('[data-action="toggle-street-view"]'),
+      streetViewHint: root.querySelector('[data-street-mode-hint]'),
+      streetViewer: root.querySelector('[data-street-viewer]'),
+      streetPanorama: root.querySelector('[data-street-panorama]'),
+      streetStatus: root.querySelector('[data-street-status]'),
+      streetStatusTitle: root.querySelector('[data-street-status-title]'),
+      streetStatusCopy: root.querySelector('[data-street-status-copy]'),
+      streetRoute: root.querySelector('[data-street-route]'),
       closeStreetView: root.querySelector('[data-action="close-street-view"]')
     };
 
     let medalUnlockTimer = null;
     let roundTransitionTimer = null;
+    let streetViewCloseTimer = null;
+    let streetViewPositionListener = null;
+    let streetViewRequestId = 0;
 
     function canContinueAfterCurrentRound() {
       return options.allowExtraRounds || state.roundIndex < state.totalRounds - 1;
@@ -474,7 +593,7 @@
       const isMobile = window.matchMedia('(max-width: 700px)').matches;
       const sourceTargets = {
         fit: els.fitRoutes,
-        street: state.mapAdapter.getRoutePointRect(),
+        street: els.streetViewToggle,
         answer: els.questionCard,
         exit: els.exit
       };
@@ -535,16 +654,146 @@
       updatePanelState(false, { animate: true });
     }
 
-    function setStreetViewPoint(point) {
-      state.streetViewPoint = point;
-      els.streetCard.hidden = false;
+    function updateStreetViewModeUi() {
+      const enabled = state.streetViewMode;
+      els.streetViewToggle.classList.toggle('is-active', enabled);
+      els.streetViewToggle.setAttribute('aria-pressed', String(enabled));
+      els.streetViewToggle.setAttribute('aria-label', enabled ? 'Turn off Street View' : 'Turn on Street View');
+      els.streetViewToggle.title = enabled ? 'Turn off Street View' : 'Street View';
+      els.streetViewHint.hidden = !enabled || state.streetViewOpen;
+      state.mapAdapter.setStreetViewEnabled(enabled);
     }
 
-    function openStreetView() {
-      if (!state.streetViewPoint) return;
-      const point = state.streetViewPoint;
-      const url = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${point.lat},${point.lng}`;
-      window.open(url, '_blank', 'noopener,noreferrer');
+    function setStreetViewMode(enabled) {
+      state.streetViewMode = !!enabled;
+      if (!state.streetViewMode) {
+        state.streetViewPoint = null;
+        state.streetViewRoute = null;
+        state.mapAdapter.clearStreetViewPosition();
+      }
+      updateStreetViewModeUi();
+    }
+
+    function setStreetViewStatus(title, copy, { loading = false, visible = true } = {}) {
+      els.streetStatusTitle.textContent = title;
+      els.streetStatusCopy.textContent = copy;
+      els.streetStatus.classList.toggle('is-loading', loading);
+      els.streetStatus.hidden = !visible;
+    }
+
+    function showStreetViewer() {
+      window.clearTimeout(streetViewCloseTimer);
+      els.streetViewer.hidden = false;
+      els.streetViewer.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(() => els.streetViewer.classList.add('is-visible'));
+      requestAnimationFrame(() => els.closeStreetView.focus({ preventScroll: true }));
+    }
+
+    function removeStreetViewPositionListener() {
+      if (!streetViewPositionListener) return;
+      if (window.google?.maps?.event) {
+        window.google.maps.event.removeListener(streetViewPositionListener);
+      }
+      streetViewPositionListener = null;
+    }
+
+    function closeStreetView({ immediate = false, restoreMap = true, restoreFocus = true } = {}) {
+      streetViewRequestId += 1;
+      removeStreetViewPositionListener();
+      if (state.streetViewPanorama) state.streetViewPanorama.setVisible(false);
+      state.streetViewOpen = false;
+      els.streetViewer.classList.remove('is-visible');
+      els.streetViewer.setAttribute('aria-hidden', 'true');
+      window.clearTimeout(streetViewCloseTimer);
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (immediate || reduceMotion) els.streetViewer.hidden = true;
+      else streetViewCloseTimer = window.setTimeout(() => { els.streetViewer.hidden = true; }, 190);
+      if (restoreMap && state.streetViewMapState) {
+        state.mapAdapter.restoreViewState(state.streetViewMapState);
+      }
+      state.streetViewMapState = null;
+      setStreetViewMode(false);
+      if (restoreFocus) requestAnimationFrame(() => els.streetViewToggle.focus({ preventScroll: true }));
+    }
+
+    function openStreetView(point) {
+      if (!point || !state.streetViewMode) return;
+      const requestId = ++streetViewRequestId;
+      state.streetViewPoint = { lat: Number(point.lat), lng: Number(point.lng) };
+      state.streetViewRoute = point.routeKey === 'routeB' ? 'routeB' : 'routeA';
+      state.streetViewMapState = state.mapAdapter.getViewState();
+      state.streetViewOpen = true;
+      els.streetViewer.dataset.route = state.streetViewRoute === 'routeB' ? 'b' : 'a';
+      els.streetRoute.textContent = state.streetViewRoute === 'routeB' ? 'Route B' : 'Route A';
+      state.mapAdapter.setStreetViewPosition(state.streetViewPoint, state.streetViewRoute);
+      setStreetViewStatus('Loading Street View', 'Looking for imagery near this point.', { loading: true });
+      showStreetViewer();
+      updateStreetViewModeUi();
+
+      const maps = window.google?.maps;
+      if (!maps?.StreetViewService || !maps?.StreetViewPanorama) {
+        setStreetViewStatus(
+          'Street View unavailable',
+          'Google imagery is not configured in this preview. Your map position is preserved.',
+          { loading: false }
+        );
+        return;
+      }
+
+      state.streetViewService ||= new maps.StreetViewService();
+      const request = { location: state.streetViewPoint, radius: 80 };
+      if (maps.StreetViewPreference?.NEAREST) request.preference = maps.StreetViewPreference.NEAREST;
+      if (maps.StreetViewSource?.OUTDOOR) request.source = maps.StreetViewSource.OUTDOOR;
+
+      state.streetViewService.getPanorama(request, (data, status) => {
+        if (requestId !== streetViewRequestId || !state.streetViewOpen) return;
+        const okStatus = maps.StreetViewStatus?.OK || 'OK';
+        if (status !== okStatus || !data?.location?.latLng) {
+          setStreetViewStatus(
+            'No imagery near this point',
+            'Go back to the map and try another point on either route.',
+            { loading: false }
+          );
+          return;
+        }
+
+        if (!state.streetViewPanorama) {
+          state.streetViewPanorama = new maps.StreetViewPanorama(els.streetPanorama, {
+            addressControl: false,
+            clickToGo: true,
+            enableCloseButton: false,
+            fullscreenControl: false,
+            linksControl: true,
+            motionTracking: false,
+            motionTrackingControl: false,
+            panControl: true,
+            scrollwheel: true,
+            visible: true,
+            zoomControl: true
+          });
+        }
+
+        if (data.location.pano) state.streetViewPanorama.setPano(data.location.pano);
+        state.streetViewPanorama.setPosition(data.location.latLng);
+        state.streetViewPanorama.setPov({ heading: 0, pitch: 0 });
+        state.streetViewPanorama.setVisible(true);
+        maps.event.trigger(state.streetViewPanorama, 'resize');
+        setStreetViewStatus('', '', { visible: false });
+        removeStreetViewPositionListener();
+        streetViewPositionListener = state.streetViewPanorama.addListener('position_changed', () => {
+          const position = state.streetViewPanorama.getPosition();
+          if (!position) return;
+          state.mapAdapter.setStreetViewPosition(
+            { lat: position.lat(), lng: position.lng() },
+            state.streetViewRoute
+          );
+        });
+      });
+    }
+
+    function setStreetViewPoint(point) {
+      if (!state.streetViewMode) return;
+      openStreetView(point);
     }
 
     function drawRoutes(pair, { hidden = false } = {}) {
@@ -608,14 +857,7 @@
 
     function getQuestionSequence() {
       const selected = getQ1Choice();
-      const sequence = ['q1'];
-      if (selected === 'route_a' || selected === 'route_b' || selected === 'either') {
-        sequence.push('q2');
-      }
-      if (selected === 'route_a' || selected === 'route_b' || selected === 'neither') {
-        sequence.push('q3');
-      }
-      return sequence;
+      return ['q1', ...(benchmark.followUps[selected] || [])];
     }
 
     function isStepComplete(step) {
@@ -635,7 +877,7 @@
       els.q1.hidden = state.questionStep !== 'q1';
       els.q2.hidden = state.questionStep !== 'q2';
       els.q3.hidden = state.questionStep !== 'q3';
-      els.panelQuestion.textContent = QUESTION_COPY[state.questionStep];
+      els.panelQuestion.textContent = benchmark.questions[state.questionStep];
       syncCollapsedContextToggle();
       els.previous.hidden = stepIndex === 0;
       els.previous.disabled = stepIndex === 0;
@@ -645,7 +887,7 @@
       } else if (stepIndex < sequence.length - 1) {
         els.submit.textContent = 'Next question →';
       } else if (canContinueAfterCurrentRound()) {
-        els.submit.textContent = selected === 'hard_to_judge' ? 'Next round →' : 'Finish round →';
+        els.submit.textContent = benchmark.uncertainChoices.includes(selected) ? 'Next round →' : 'Finish round →';
       } else {
         els.submit.textContent = 'Finish test →';
       }
@@ -815,8 +1057,8 @@
       return {
         v: 1,
         type: 'bench-progress',
-        test: 'calm_vs_fast',
-        source: 'calm-benchmark',
+        test: benchmark.testId,
+        source: benchmark.source,
         benchmarkRunId: state.sessionId,
         sessionId: state.sessionId,
         sessionStartedAt: state.sessionStartedAt,
@@ -851,8 +1093,8 @@
       return {
         v: 1,
         type: 'bench-ux',
-        test: 'calm_vs_fast',
-        source: 'calm-benchmark',
+        test: benchmark.testId,
+        source: benchmark.source,
         captureId: roundId,
         benchmarkRunId: state.sessionId,
         sessionId: state.sessionId,
@@ -913,7 +1155,7 @@
         state.onboardingComplete = true;
         if (els.onboarding) els.onboarding.hidden = true;
       }
-      state.assignment = routeAssignment || randomAssignment();
+      state.assignment = routeAssignment || randomAssignment(benchmark.routeTypes);
       state.pair = await routePairProvider({
         sessionId: state.sessionId,
         roundIndex: state.roundIndex
@@ -923,8 +1165,7 @@
       }
       updateProgressHud();
       state.questionStep = questionStep;
-      state.streetViewPoint = null;
-      els.streetCard.hidden = true;
+      closeStreetView({ immediate: true, restoreMap: false, restoreFocus: false });
       els.form.reset();
       restorePartialAnswer(partialAnswer);
       resetQuestionScroll();
@@ -1042,11 +1283,14 @@
     });
 
     els.fitRoutes.addEventListener('click', () => fitRoutes());
-    els.openStreetView.addEventListener('click', openStreetView);
-    els.closeStreetView.addEventListener('click', () => {
-      els.streetCard.hidden = true;
-      state.streetViewPoint = null;
+    els.streetViewToggle.addEventListener('click', () => {
+      if (state.streetViewOpen) {
+        closeStreetView();
+        return;
+      }
+      setStreetViewMode(!state.streetViewMode);
     });
+    els.closeStreetView.addEventListener('click', () => closeStreetView());
 
     els.form.querySelectorAll('.ari-choice--route-a, .ari-choice--route-b').forEach(label => {
       const key = label.classList.contains('ari-choice--route-a') ? 'routeA' : 'routeB';
@@ -1057,6 +1301,11 @@
     });
 
     const resizeController = new AbortController();
+    window.addEventListener('keydown', event => {
+      if (event.key !== 'Escape') return;
+      if (state.streetViewOpen) closeStreetView();
+      else if (state.streetViewMode) setStreetViewMode(false);
+    }, { signal: resizeController.signal });
     window.addEventListener('resize', () => {
       requestAnimationFrame(positionOnboarding);
       requestAnimationFrame(updateQuestionOverflow);
@@ -1073,6 +1322,9 @@
     function unmount() {
       window.clearTimeout(medalUnlockTimer);
       window.clearTimeout(roundTransitionTimer);
+      window.clearTimeout(streetViewCloseTimer);
+      removeStreetViewPositionListener();
+      if (state.streetViewPanorama) state.streetViewPanorama.setVisible(false);
       resizeController.abort();
       questionResizeObserver.disconnect();
       state.mapAdapter?.destroy();
@@ -1089,6 +1341,7 @@
     window.AriCalmBenchmark = {
       mount,
       mockRoutePairProvider,
+      createMockRoutePairProvider,
       consoleAnswerSink,
       consoleProgressSink,
       getHudDialProgress,

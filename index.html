@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ARI Calm Benchmark</title>
+  <title>ARI Route Benchmark</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260714-remove-live-rail-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260714-street-view-mode-1">
   <style>
     body {
       margin: 0;
@@ -23,7 +23,7 @@
       <div class="calm-intro-header-context">
         <button class="calm-challenge-menu" id="challenge-menu" type="button" aria-haspopup="dialog" aria-controls="challenge-dialog">
           <span>Challenges</span>
-          <strong>Fast vs Calm</strong>
+          <strong id="challenge-menu-label">Fast vs Calm</strong>
           <i aria-hidden="true"></i>
         </button>
         <button class="calm-test-reset" data-reset-test-data type="button">Reset test data</button>
@@ -65,12 +65,12 @@
           <section class="calm-challenge-select" aria-labelledby="challenge-select-title">
             <h3 class="calm-challenge-pane-label" id="challenge-select-title">Select challenge</h3>
             <nav class="calm-challenge-list" aria-label="Route challenges">
-              <button class="calm-challenge-option" type="button" aria-label="ARI Fast vs Google, coming soon" disabled>
+              <button class="calm-challenge-option is-available" id="challenge-google" data-challenge="google" type="button" aria-label="ARI Fast vs Google Fast, ready">
                 <span class="calm-challenge-option__cursor" aria-hidden="true"></span>
-                <span class="calm-challenge-option__name">ARI Fast vs Google</span>
-                <strong>Soon</strong>
+                <span class="calm-challenge-option__name">ARI Fast vs Google Fast</span>
+                <strong>Ready</strong>
               </button>
-              <button class="calm-challenge-option is-available is-selected" id="challenge-calm" data-challenge="calm" type="button" aria-label="ARI Fast vs ARI Calm, ready" aria-current="true">
+              <button class="calm-challenge-option is-available" id="challenge-calm" data-challenge="calm" type="button" aria-label="ARI Fast vs ARI Calm, ready">
                 <span class="calm-challenge-option__cursor" aria-hidden="true"></span>
                 <span class="calm-challenge-option__name">ARI Fast vs ARI Calm</span>
                 <strong>Ready</strong>
@@ -93,7 +93,7 @@
               </div>
             </div>
             <footer class="calm-challenge-dialog__controls">
-              <button id="challenge-calm-action" type="button">Play &rarr;</button>
+              <button id="challenge-action" type="button">Play &rarr;</button>
             </footer>
           </section>
         </div>
@@ -105,13 +105,13 @@
     <div class="calm-intro-wrap">
       <section class="calm-hero" aria-labelledby="calm-hero-title">
         <h1 id="calm-hero-title">
-          <span>Which route feels calmer for this walk?</span>
+          <span id="benchmark-hero-question">Which route feels calmer for this walk?</span>
           <span class="calm-route-slot" aria-hidden="true">
             <span class="calm-route-token calm-route-token--a">Route A</span>
             <span class="calm-route-token calm-route-token--b">Route B</span>
           </span>
         </h1>
-        <p>Imagine you are walking somewhere in the city. You are not rushing, and the walking experience matters more than arriving as fast as possible.</p>
+        <p id="benchmark-hero-copy">Imagine you are walking somewhere in the city. You are not rushing, and the walking experience matters more than arriving as fast as possible.</p>
       </section>
 
       <section class="calm-info-grid" aria-label="Test overview">
@@ -145,8 +145,8 @@
                 </div>
               </div>
               <div class="calm-disclosure">
-                <p class="calm-disclosure-q">What do we mean by calm?</p>
-                <p class="calm-disclosure-a">A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.</p>
+                <p class="calm-disclosure-q" id="benchmark-definition-question">What do we mean by calm?</p>
+                <p class="calm-disclosure-a" id="benchmark-definition-answer">A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.</p>
               </div>
             </div>
           </div>
@@ -223,10 +223,11 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="./src/data/mock-route-pairs.js?v=20260709-structure-1"></script>
-  <script src="./src/data/calm-benchmark-data.js?v=20260714-test-reset-1"></script>
+  <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
+  <script src="./src/data/calm-benchmark-data.js?v=20260714-fast-google-ui-3"></script>
   <script src="./src/results/calm-results.js?v=20260713-live-results-1"></script>
-  <script src="./src/maps/map-adapter.js?v=20260713-stable-onboarding-1"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260714-remove-live-rail-1"></script>
+  <script src="./src/maps/map-adapter.js?v=20260714-street-view-mode-2"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260714-street-view-mode-1"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -262,10 +263,78 @@
     const ANSWERS_STORAGE = 'ari-calm-benchmark-answers';
     const PROGRESS_STORAGE = 'ari-calm-benchmark-progress';
     const CHALLENGE_STORAGE = 'ari-route-benchmark-selected-challenge';
-    const dataRepository = AriCalmBenchmarkData.createLocalRepository(localStorage, {
-      legacyAnswersKey: ANSWERS_STORAGE,
-      legacyProgressKey: PROGRESS_STORAGE
-    });
+    const CHALLENGE_CONFIGS = {
+      google: {
+        key: 'google',
+        menuLabel: 'Fast vs Google Fast',
+        documentTitle: 'ARI Fast vs Google Fast Benchmark',
+        heroQuestion: 'Which route works better as the Fast route?',
+        heroCopy: 'Imagine you need to walk somewhere in the city efficiently. Compare both options as routes you would need to follow yourself.',
+        definitionQuestion: 'What makes a good Fast route?',
+        definitionAnswer: 'A route that gets you there quickly while staying direct, clear, and practical to follow.',
+        testId: 'ari_fast_vs_google',
+        storageKey: 'ari-fast-google-benchmark-dataset-v1',
+        benchmark: {
+          testId: 'ari_fast_vs_google',
+          source: 'fast-google-benchmark',
+          sessionPrefix: 'fast-google-session',
+          ariaLabel: 'ARI Fast versus Google Fast route benchmark',
+          routeTypes: ['livemap_fast', 'google'],
+          questions: {
+            q1: 'Which route works better as the Fast route?',
+            q2: 'Would both routes work well as Fast options?',
+            q3: 'What made the other route worse as a Fast route?'
+          },
+          context: {
+            label: 'What makes a good Fast route?',
+            copy: 'A route that gets you there quickly while staying direct, clear, and practical to follow.'
+          },
+          q1Options: [
+            { value: 'route_a', label: 'Route A', className: 'ari-choice--route-a' },
+            { value: 'route_b', label: 'Route B', className: 'ari-choice--route-b' },
+            { value: 'both_work_well', label: 'Both work well' },
+            { value: 'both_work_poorly', label: 'Both work poorly' },
+            { value: 'not_sure', label: 'Hard to judge' }
+          ],
+          q2Options: [],
+          q3Options: [
+            { value: 'longer_time', label: 'Longer time' },
+            { value: 'longer_distance', label: 'Longer distance' },
+            { value: 'misses_shortcut', label: 'Misses shortcut' },
+            { value: 'too_complex', label: 'Too complex to follow' },
+            { value: 'unclear_shortcut', label: 'Unclear shortcut' },
+            { value: 'too_busy_or_crowded', label: 'Too busy or crowded' },
+            { value: 'misses_nicer_route', label: 'Misses nicer route (river, lake, park)' },
+            { value: 'lacks_amenities', label: 'Lacks amenities' }
+          ],
+          followUps: {
+            route_a: ['q3'],
+            route_b: ['q3'],
+            both_work_well: [],
+            both_work_poorly: ['q3'],
+            not_sure: []
+          },
+          uncertainChoices: ['not_sure']
+        },
+        routePairProvider: AriCalmBenchmark.createMockRoutePairProvider(
+          window.AriFastGoogleMockRoutePairs || [],
+          'Fast versus Google mock route pairs'
+        )
+      },
+      calm: {
+        key: 'calm',
+        menuLabel: 'Fast vs Calm',
+        documentTitle: 'ARI Calm Benchmark',
+        heroQuestion: 'Which route feels calmer for this walk?',
+        heroCopy: 'Imagine you are walking somewhere in the city. You are not rushing, and the walking experience matters more than arriving as fast as possible.',
+        definitionQuestion: 'What do we mean by calm?',
+        definitionAnswer: 'A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.',
+        testId: 'calm_vs_fast',
+        storageKey: AriCalmBenchmarkData.DEFAULT_STORAGE_KEY,
+        benchmark: null,
+        routePairProvider: AriCalmBenchmark.mockRoutePairProvider
+      }
+    };
     let benchmarkMounted = false;
     let benchmarkInstance = null;
     let savedProgress = null;
@@ -279,11 +348,29 @@
     const urlParams = new URLSearchParams(window.location.search);
     let freshPreviewMode = urlParams.get('fresh') === '1' || urlParams.get('preview') === 'fresh';
     const requestedChallenge = urlParams.get('game');
+    const storedChallenge = localStorage.getItem(CHALLENGE_STORAGE);
     let selectedChallenge = freshPreviewMode
       ? null
-      : requestedChallenge === 'calm'
-      ? 'calm'
-      : localStorage.getItem(CHALLENGE_STORAGE) === 'calm' ? 'calm' : null;
+      : CHALLENGE_CONFIGS[requestedChallenge]
+      ? requestedChallenge
+      : CHALLENGE_CONFIGS[storedChallenge] ? storedChallenge : null;
+    const activeChallenge = CHALLENGE_CONFIGS[requestedChallenge]
+      ? requestedChallenge
+      : selectedChallenge || 'google';
+    const activeConfig = CHALLENGE_CONFIGS[activeChallenge];
+    const dataRepositories = {
+      calm: AriCalmBenchmarkData.createLocalRepository(localStorage, {
+        legacyAnswersKey: ANSWERS_STORAGE,
+        legacyProgressKey: PROGRESS_STORAGE
+      }),
+      google: AriCalmBenchmarkData.createLocalRepository(localStorage, {
+        storageKey: CHALLENGE_CONFIGS.google.storageKey,
+        testId: CHALLENGE_CONFIGS.google.testId,
+        legacyAnswersKey: 'ari-fast-google-benchmark-answers',
+        legacyProgressKey: 'ari-fast-google-benchmark-progress'
+      })
+    };
+    const dataRepository = dataRepositories[activeChallenge];
     if (selectedChallenge) localStorage.setItem(CHALLENGE_STORAGE, selectedChallenge);
     const urlGoogleKey = urlParams.get('gmap');
     if (urlGoogleKey) {
@@ -300,6 +387,15 @@
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
+    }
+
+    function applyChallengeUi() {
+      document.title = activeConfig.documentTitle;
+      document.getElementById('challenge-menu-label').textContent = activeConfig.menuLabel;
+      document.getElementById('benchmark-hero-question').textContent = activeConfig.heroQuestion;
+      document.getElementById('benchmark-hero-copy').textContent = activeConfig.heroCopy;
+      document.getElementById('benchmark-definition-question').textContent = activeConfig.definitionQuestion;
+      document.getElementById('benchmark-definition-answer').textContent = activeConfig.definitionAnswer;
     }
 
     function percentage(count, total) {
@@ -334,7 +430,104 @@
       return (latest?.completedRounds || 0) >= 10;
     }
 
+    function renderFastGoogleResults() {
+      const snapshot = dataRepository.getSnapshot();
+      const latest = dataRepository.getLatestProgress();
+      const answers = (snapshot.answers || []).filter(answer => answer.test === activeConfig.testId);
+
+      if (!publicResultsUnlocked(snapshot)) {
+        const completed = Math.min(latest?.completedRounds || 0, 10);
+        communityResultsContent.innerHTML = `
+          <section class="calm-results-lock" aria-labelledby="community-results-title">
+            <p class="calm-results-eyebrow">Community Results</p>
+            <h1 id="community-results-title">Results unlock after 10 comparisons.</h1>
+            <p>Complete the goal before seeing how other people answered, so their choices do not influence yours.</p>
+            <div class="calm-results-progress" aria-label="${completed} of 10 comparisons completed"><span style="width:${completed * 10}%"></span></div>
+            <p class="calm-results-progress-copy"><b>${completed}</b> of 10 completed</p>
+            <button type="button" class="calm-results-action" data-results-action="continue">Continue comparing →</button>
+          </section>`;
+        return;
+      }
+
+      if (!answers.length) {
+        communityResultsContent.innerHTML = `
+          <section class="calm-results-empty" aria-labelledby="community-results-title">
+            <p class="calm-results-eyebrow">Community Results</p>
+            <h1 id="community-results-title">The first ARI Fast vs Google Fast results will appear here.</h1>
+            <p>No completed comparisons have been saved on this device yet.</p>
+            <button type="button" class="calm-results-action" data-results-action="continue">Start comparing →</button>
+          </section>`;
+        return;
+      }
+
+      const outcomeCounts = {
+        livemap_fast: 0,
+        google: 0,
+        both_work_well: 0,
+        both_work_poorly: 0,
+        not_sure: 0
+      };
+      const reasonCounts = Object.fromEntries(activeConfig.benchmark.q3Options.map(option => [option.value, 0]));
+      answers.forEach(answer => {
+        const choice = answer.q1Choice || answer.choice;
+        if (choice === 'route_a' || choice === 'route_b') {
+          const slot = choice === 'route_a' ? 'A' : 'B';
+          const provider = answer.labelMap?.[slot] || answer.labels?.[slot]?.routeType;
+          if (provider in outcomeCounts) outcomeCounts[provider] += 1;
+        } else if (choice in outcomeCounts) {
+          outcomeCounts[choice] += 1;
+        }
+        (answer.q3Issues || answer.reasons || []).forEach(reason => {
+          if (reason in reasonCounts) reasonCounts[reason] += 1;
+        });
+      });
+      const outcomeEntries = [
+        ['ARI Fast', outcomeCounts.livemap_fast, 'livemap_fast'],
+        ['Google Fast', outcomeCounts.google, 'google'],
+        ['Both work well', outcomeCounts.both_work_well, 'both_work_well'],
+        ['Both work poorly', outcomeCounts.both_work_poorly, 'both_work_poorly'],
+        ['Hard to judge', outcomeCounts.not_sure, 'not_sure']
+      ];
+      const reasonEntries = activeConfig.benchmark.q3Options
+        .map(option => [option.label, reasonCounts[option.value], option.value])
+        .sort((a, b) => b[1] - a[1]);
+      const reasonResponseCount = answers.filter(answer => (answer.q3Issues || answer.reasons || []).length).length;
+      const participants = new Set(answers.map(answer => answer.participantName || answer.rater).filter(Boolean)).size;
+      const ariPercent = percentage(outcomeCounts.livemap_fast, answers.length);
+      const lastUpdated = answers.reduce((latestDate, answer) => {
+        const value = answer.createdAt || answer.clientTs;
+        return !latestDate || Date.parse(value) > Date.parse(latestDate) ? value : latestDate;
+      }, null);
+
+      communityResultsContent.innerHTML = `
+        <header class="calm-results-hero">
+          <p class="calm-results-eyebrow">Community Results</p>
+          <h1>ARI Fast was chosen in <strong>${ariPercent}%</strong> of comparisons.</h1>
+          <p>Based on ${answers.length} comparisons from ${participants} contributor${participants === 1 ? '' : 's'}. Updated ${formatUpdated(lastUpdated)}.</p>
+        </header>
+        <section class="calm-results-band" aria-labelledby="overall-choice-title">
+          <div class="calm-results-band__intro">
+            <p class="calm-results-index">01</p>
+            <h2 id="overall-choice-title">Which route worked better as Fast?</h2>
+            <p>Every answer is shown, including neutral and uncertain choices.</p>
+          </div>
+          <div class="calm-results-chart">${renderBarRows(outcomeEntries, answers.length, 'calm-result-row--outcome')}</div>
+        </section>
+        <section class="calm-results-band" aria-labelledby="less-suitable-title">
+          <div class="calm-results-band__intro">
+            <p class="calm-results-index">02</p>
+            <h2 id="less-suitable-title">Why did the weaker route lose?</h2>
+            <p>People could select more than one reason.</p>
+          </div>
+          <div class="calm-results-chart">${renderBarRows(reasonEntries, reasonResponseCount)}</div>
+        </section>`;
+    }
+
     function renderCommunityResults() {
+      if (activeChallenge === 'google') {
+        renderFastGoogleResults();
+        return;
+      }
       const snapshot = dataRepository.getSnapshot();
       const summary = AriCalmResults.aggregateAnswers(snapshot.answers);
       const latest = dataRepository.getLatestProgress();
@@ -415,7 +608,65 @@
       return values.map(value => `<option value="${escapeHtml(value)}"${selected === value ? ' selected' : ''}>${escapeHtml(labels[value] || value)}</option>`).join('');
     }
 
+    function fastChoiceLabel(answer) {
+      const choice = answer.q1Choice || answer.choice;
+      if (choice === 'both_work_well') return 'Both work well';
+      if (choice === 'both_work_poorly') return 'Both work poorly';
+      if (choice === 'not_sure') return 'Hard to judge';
+      if (choice !== 'route_a' && choice !== 'route_b') return 'Unknown';
+      const slot = choice === 'route_a' ? 'A' : 'B';
+      const provider = answer.labelMap?.[slot] || answer.labels?.[slot]?.routeType;
+      return provider === 'livemap_fast' ? 'ARI Fast' : provider === 'google' ? 'Google Fast' : 'Unknown';
+    }
+
+    function renderFastGoogleTeamResults() {
+      const snapshot = dataRepository.getSnapshot();
+      const answers = (snapshot.answers || []).filter(answer => answer.test === activeConfig.testId);
+      const participants = new Set(answers.map(answer => answer.participantName || answer.rater).filter(Boolean)).size;
+      const routePairs = new Set(answers.map(answer => answer.pairId).filter(Boolean)).size;
+      const reasonLabels = Object.fromEntries(activeConfig.benchmark.q3Options.map(option => [option.value, option.label]));
+      const tableRows = answers.map(answer => `
+        <tr>
+          <td>${escapeHtml(answer.pairId)}</td>
+          <td>${escapeHtml(answer.participantName || answer.rater)}</td>
+          <td>${escapeHtml(formatUpdated(answer.createdAt || answer.clientTs))}</td>
+          <td>${escapeHtml(fastChoiceLabel(answer))}</td>
+          <td>${escapeHtml((answer.q3Issues || answer.reasons || []).map(reason => reasonLabels[reason] || reason).join(', ') || 'None')}</td>
+        </tr>`).join('');
+
+      teamResultsContent.innerHTML = `
+        <header class="calm-team-header">
+          <div>
+            <p class="calm-results-eyebrow">ARI Fast vs Google Fast</p>
+            <h1>Team dashboard</h1>
+            <p>Blind comparison records from the Fast-route UI preview.</p>
+          </div>
+          <div class="calm-team-header__actions">
+            <span>${answers.length} comparison${answers.length === 1 ? '' : 's'}</span>
+            <button type="button" data-team-action="export">Export NDJSON</button>
+          </div>
+        </header>
+        <section class="calm-team-metrics" aria-label="Result summary">
+          <div><strong>${answers.length}</strong><span>Comparisons</span></div>
+          <div><strong>${participants}</strong><span>Participants</span></div>
+          <div><strong>${routePairs}</strong><span>Route pairs</span></div>
+        </section>
+        <section class="calm-team-records" aria-labelledby="team-records-title">
+          <div class="calm-team-records__head"><h2 id="team-records-title">Comparison records</h2><span>${answers.length} shown</span></div>
+          <div class="calm-team-table-wrap" tabindex="0">
+            <table>
+              <thead><tr><th>Route pair</th><th>Participant</th><th>Date</th><th>Choice</th><th>Reasons</th></tr></thead>
+              <tbody>${tableRows || '<tr><td colspan="5" class="calm-team-empty">No ARI Fast vs Google Fast comparisons yet.</td></tr>'}</tbody>
+            </table>
+          </div>
+        </section>`;
+    }
+
     function renderTeamResults() {
+      if (activeChallenge === 'google') {
+        renderFastGoogleTeamResults();
+        return;
+      }
       const snapshot = dataRepository.getSnapshot();
       const allRows = AriCalmResults.aggregateAnswers(snapshot.answers).rows;
       const summary = AriCalmResults.aggregateAnswers(snapshot.answers, teamFilters);
@@ -569,6 +820,20 @@
       currentMedal.dataset.medalTier = String(rank ? MILESTONES.indexOf(rank) + 1 : 0);
       currentMedal.classList.toggle('is-earned', !!rank);
       currentMedal.innerHTML = (rank || MILESTONES[0]).icon;
+    }
+
+    function updateChallengePreviewFor(challenge) {
+      let progress = null;
+      if (!freshPreviewMode) {
+        try { progress = dataRepositories[challenge]?.getLatestProgress() || null; } catch (error) { console.error(error); }
+      }
+      const count = progress?.completedRounds || 0;
+      const participantName = (progress?.participantName || '').trim();
+      updateChallengePreview(count);
+      document.getElementById('challenge-player-status').textContent = progress
+        ? `Player ${participantName || '1'}`
+        : 'Player 1 · New game';
+      document.getElementById('challenge-action').textContent = progress ? 'Resume →' : 'Play →';
     }
 
     function setChallengeRouteGeometry(paths, value) {
@@ -731,6 +996,7 @@
         if (isSelected) candidate.setAttribute('aria-current', 'true');
         else candidate.removeAttribute('aria-current');
       });
+      updateChallengePreviewFor(option.dataset.challenge);
       updateChallengeRouteCircuit({ animate });
     }
 
@@ -779,7 +1045,7 @@
       if (hasProgress) {
         savedProgress = progress;
         updateChallengePreview(count);
-        document.getElementById('challenge-calm-action').textContent = 'Resume →';
+        document.getElementById('challenge-action').textContent = 'Resume →';
         const next = MILESTONES.find(m => count < m.at) || null;
         const goal = next ? next.at : MILESTONES[MILESTONES.length - 1].at;
 
@@ -838,7 +1104,7 @@
         });
       } else {
         updateChallengePreview(0);
-        document.getElementById('challenge-calm-action').textContent = 'Play →';
+        document.getElementById('challenge-action').textContent = 'Play →';
         document.getElementById('challenge-player-status').textContent = 'Player 1 · New game';
         document.getElementById('start-kicker-text').textContent = 'Start testing';
         document.getElementById('start-h2').innerHTML = `Enter the <span>duel.</span>`;
@@ -919,7 +1185,7 @@
     function openChallengeDialog({ required = false } = {}) {
       challengeDialog.dataset.required = String(required);
       challengeDialogClose.hidden = required;
-      setChallengeOptionSelected(document.getElementById('challenge-calm'), { animate: false });
+      setChallengeOptionSelected(document.getElementById(`challenge-${selectedChallenge || activeChallenge}`), { animate: false });
       document.documentElement.classList.add('is-challenge-dialog-open');
       document.body.classList.add('is-challenge-dialog-open');
       if (!challengeDialog.open) challengeDialog.showModal();
@@ -931,7 +1197,7 @@
         button.disabled = true;
         button.textContent = 'Resetting…';
       });
-      dataRepository.clear();
+      Object.values(dataRepositories).forEach(repository => repository.clear());
       localStorage.removeItem(CHALLENGE_STORAGE);
       const cleanUrl = new URL(window.location.href);
       cleanUrl.search = '';
@@ -940,18 +1206,22 @@
     }
 
     function selectChallenge(challenge) {
-      if (challenge !== 'calm') return;
-      const challengeChanged = selectedChallenge !== challenge;
+      if (!CHALLENGE_CONFIGS[challenge]) return;
+      const challengeChanged = activeChallenge !== challenge;
       selectedChallenge = challenge;
       localStorage.setItem(CHALLENGE_STORAGE, challenge);
       const next = new URL(window.location.href);
       next.searchParams.set('game', challenge);
-      window.history.replaceState({}, '', `${next.pathname}${next.search}${next.hash}`);
       challengeDialog.classList.add('is-launching');
       const finishSelection = () => {
+        if (challengeChanged) {
+          window.location.assign(next.href);
+          return;
+        }
+        window.history.replaceState({}, '', `${next.pathname}${next.search}${next.hash}`);
         challengeDialog.close();
         challengeDialog.classList.remove('is-launching');
-        if (challengeChanged) showPage('testing');
+        showPage('testing');
       };
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         finishSelection();
@@ -988,7 +1258,8 @@
           allowExtraRounds: true,
           milestones: MILESTONES.map(({ at, name, icon }, index) => ({ at, name, icon, tier: index + 1 })),
           mapProvider: googleAvailable ? 'google' : 'leaflet',
-          routePairProvider: AriCalmBenchmark.mockRoutePairProvider,
+          benchmark: activeConfig.benchmark,
+          routePairProvider: activeConfig.routePairProvider,
           ...extraOptions,
           onExit: () => {
             benchmarkInstance?.unmount();
@@ -1000,12 +1271,12 @@
           },
           answerSink: async answer => {
             const result = dataRepository.saveAnswer(answer);
-            console.log('Demo answer payload:', answer);
-            console.log('Demo answer save:', result.status);
+            console.log('Benchmark answer payload:', answer);
+            console.log('Benchmark answer save:', result.status);
           },
           progressSink: async progress => {
             dataRepository.saveProgress(progress);
-            console.log('Demo progress payload:', progress);
+            console.log('Benchmark progress payload:', progress);
           }
         });
         benchmarkMounted = true;
@@ -1054,11 +1325,11 @@
       const option = event.target.closest('.calm-challenge-option');
       if (!option || option.disabled || !option.classList.contains('is-available')) return;
       setChallengeOptionSelected(option);
-      document.getElementById('challenge-calm-action').focus();
+      document.getElementById('challenge-action').focus();
     });
-    document.getElementById('challenge-calm-action').addEventListener('click', () => {
+    document.getElementById('challenge-action').addEventListener('click', () => {
       const selectedOption = challengeList.querySelector('.calm-challenge-option.is-selected:not(:disabled)');
-      selectChallenge(selectedOption?.dataset.challenge || 'calm');
+      selectChallenge(selectedOption?.dataset.challenge || activeChallenge);
     });
     challengeDialog.addEventListener('close', () => {
       window.clearTimeout(challengeRouteTimer);
@@ -1143,6 +1414,7 @@
       setOverviewCardExpanded(overviewCard, overviewCard.classList.contains('is-compact'));
     });
 
+    applyChallengeUi();
     checkResumeState();
     const requestedView = urlParams.get('view');
     showPage(requestedView === 'team-results' ? 'team-results' : requestedView === 'results' ? 'results' : 'testing', { updateUrl: false });

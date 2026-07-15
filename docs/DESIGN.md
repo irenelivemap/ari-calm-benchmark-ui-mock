@@ -160,7 +160,12 @@ Fit routes behavior:
 
 Street View:
 
-- Street View should appear from interacting with a route point, not as a permanent extra toggle.
+- Street View is an explicit map mode so ordinary pan, pinch, double-click, and zoom gestures stay unchanged.
+- A 44px Street View icon sits directly beneath Fit. Activating it reveals the concise instruction `Street View on` / `Select a point on either route.`
+- Only route taps are actionable while the mode is active. Both routes use a forgiving invisible hit area without changing their visible geometry.
+- Route selection opens an embedded inspector on desktop and a full-screen layer on mobile. `Back to map` restores the exact camera, question state, and answers, then turns the mode off.
+- The viewer identifies Route A or Route B with the existing route color. It never exposes the route source.
+- If imagery or the Google API is unavailable, show that state inside the inspector and keep the tester in the benchmark. Never open an external tab as a fallback.
 
 ## Onboarding Rules
 
@@ -186,7 +191,7 @@ Behavior:
 Current onboarding overview:
 
 1. Beside Fit: `Fit both routes` / `Return to the full comparison.`
-2. Beside a route point: `Check the street` / `Click either route for Street View.`
+2. Beside Street View: `Explore the street` / `Turn on Street View, then select a point.`
 3. Beside the question card: `Answer when ready` / `Open the question card.`
 4. Beside Exit: `Leave anytime` / `Your place is saved.`
 

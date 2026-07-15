@@ -10,7 +10,10 @@
   const TEST_ID = 'calm_vs_fast';
   const DEFAULT_STORAGE_KEY = 'ari-calm-benchmark-dataset-v1';
 
-  const Q1_CHOICES = new Set(['route_a', 'route_b', 'either', 'neither', 'hard_to_judge']);
+  const Q1_CHOICES = new Set([
+    'route_a', 'route_b', 'either', 'neither', 'hard_to_judge',
+    'both_work_well', 'both_work_poorly', 'not_sure'
+  ]);
   const Q2_CHOICES = new Set(['yes', 'no', 'not_sure']);
   const Q3_ISSUES = new Set([
     'not_enough_greenery_water',
@@ -19,9 +22,19 @@
     'extra_time_distance_not_worth_it',
     'too_similar',
     'too_complex',
-    'other'
+    'other',
+    'longer_time',
+    'longer_distance',
+    'more_elevation',
+    'more_stairs',
+    'misses_shortcut',
+    'more_turns',
+    'unclear_shortcut',
+    'crossing_friction',
+    'misses_nicer_route',
+    'lacks_amenities'
   ]);
-  const ROUTE_TYPES = new Set(['fast', 'calm']);
+  const ROUTE_TYPES = new Set(['fast', 'calm', 'livemap_fast', 'google']);
   const QUESTION_STEPS = new Set(['q1', 'q2', 'q3']);
 
   class DataValidationError extends Error {
@@ -144,7 +157,7 @@
     const routeA = record.routeAssignment?.routeA;
     const routeB = record.routeAssignment?.routeB;
     if (!ROUTE_TYPES.has(routeA) || !ROUTE_TYPES.has(routeB) || routeA === routeB) {
-      errors.push('routeAssignment must map Route A and Route B to one fast and one calm route.');
+      errors.push('routeAssignment must map Route A and Route B to two different supported route types.');
     }
   }
 
@@ -179,8 +192,11 @@
     if (new Set(record.q3Issues).size !== record.q3Issues.length) errors.push('q3Issues contains duplicates.');
 
     if (!allowPartial && Q1_CHOICES.has(record.q1Choice)) {
-      const needsQ2 = ['route_a', 'route_b', 'either'].includes(record.q1Choice);
-      const needsQ3 = ['route_a', 'route_b', 'neither'].includes(record.q1Choice);
+      const isFastGoogle = record.test === 'ari_fast_vs_google';
+      const needsQ2 = !isFastGoogle && ['route_a', 'route_b', 'either'].includes(record.q1Choice);
+      const needsQ3 = isFastGoogle
+        ? ['route_a', 'route_b', 'both_work_poorly'].includes(record.q1Choice)
+        : ['route_a', 'route_b', 'neither'].includes(record.q1Choice);
       if (needsQ2 && !record.q2Separate) errors.push('q2Separate is required for this Q1 answer.');
       if (!needsQ2 && record.q2Separate) errors.push('q2Separate must be empty for this Q1 answer.');
       if (needsQ3 && !record.q3Issues.length) errors.push('At least one q3Issue is required for this Q1 answer.');
@@ -228,11 +244,11 @@
     return result.record;
   }
 
-  function emptyDataset() {
+  function emptyDataset(testId = TEST_ID) {
     return {
       v: SCHEMA_VERSION,
       type: DATASET_TYPE,
-      test: TEST_ID,
+      test: testId,
       updatedAt: isoNow(),
       sessions: {},
       progressBySessionId: {},
@@ -240,12 +256,12 @@
     };
   }
 
-  function normalizeDataset(input) {
-    if (!isObject(input)) return emptyDataset();
+  function normalizeDataset(input, testId = TEST_ID) {
+    if (!isObject(input)) return emptyDataset(testId);
     return {
       v: SCHEMA_VERSION,
       type: DATASET_TYPE,
-      test: TEST_ID,
+      test: input.test || testId,
       updatedAt: input.updatedAt || isoNow(),
       sessions: isObject(input.sessions) ? clone(input.sessions) : {},
       progressBySessionId: isObject(input.progressBySessionId) ? clone(input.progressBySessionId) : {},
@@ -286,6 +302,7 @@
     }
 
     const storageKey = options.storageKey || DEFAULT_STORAGE_KEY;
+    const testId = options.testId || TEST_ID;
     const legacyAnswersKey = options.legacyAnswersKey || 'ari-calm-benchmark-answers';
     const legacyProgressKey = options.legacyProgressKey || 'ari-calm-benchmark-progress';
 
@@ -322,7 +339,7 @@
 
     function readDataset() {
       const stored = readJson(storage, storageKey, null);
-      const dataset = normalizeDataset(stored);
+      const dataset = normalizeDataset(stored, testId);
       const migrated = migrateLegacy(dataset);
       if (!stored || migrated) writeDataset(dataset);
       return dataset;
@@ -409,7 +426,7 @@
         storage.setItem(legacyAnswersKey, '[]');
         storage.setItem(legacyProgressKey, 'null');
       }
-      writeDataset(emptyDataset());
+      writeDataset(emptyDataset(testId));
       return { status: 'cleared' };
     }
 
