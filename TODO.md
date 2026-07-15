@@ -2,6 +2,55 @@
 
 Working list from the live route-pairs and Street View integration (July 2026).
 
+## Launch: shareable LinkedIn link
+
+Goal: share `https://game.livemap.sh/routing/` publicly. In dependency order.
+
+Blockers — the link does not exist until these are done (owner: infrastructure):
+
+1. [ ] Build the container from this repo's `Dockerfile`, push it to the
+       registry, and deploy it on the paas. Everything it needs is in
+       `deploy/README.md`.
+2. [ ] Point `game.livemap.sh` DNS at that deployment and terminate HTTPS at
+       the ingress.
+3. [ ] Set the deployment environment: `ROUTING_UPSTREAM` (internal routing
+       service address) and `ARI_GOOGLE_MAPS_KEY`.
+4. [ ] In the Google Cloud console, restrict the Maps key to
+       `https://game.livemap.sh/*` (plus the local origins still in use).
+       It currently answers from any origin.
+
+Blocker — without this the campaign collects nothing (owner: backend):
+
+5. [ ] Implement and deploy the benchmark data API from
+       [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md): idempotent
+       `POST /{testId}/answers`, `PUT .../progress`. Natural home: alongside
+       `/api/v1/field` in the routing service. Then set `ARI_DATA_API_BASE`
+       and `DATA_UPSTREAM`. Until then every public answer stays in the
+       tester's browser.
+
+Quality gate before posting (owner: Irene, ~1-2 hours on the live URL):
+
+6. [ ] The pending real-browser checks below (control order, MapLibre
+       controls, mobile split, Street View flow, live Fast vs Google pass).
+7. [ ] Full pass on a real phone via the deployed URL — LinkedIn traffic is
+       mostly mobile.
+8. [ ] Run the acceptance section of
+       [`docs/INTEGRATION_CHECKLIST.md`](docs/INTEGRATION_CHECKLIST.md)
+       against `https://game.livemap.sh/routing/`.
+9. [ ] Validate the link preview with LinkedIn's Post Inspector (OG tags and
+       the social image are already in place).
+
+Decisions for the post itself:
+
+10. [ ] Which URL to share: the chooser (`/routing/`) or one challenge
+        directly (`/routing/fast-vs-google`). One decision surface converts
+        better for cold traffic; the chooser shows the family.
+11. [ ] Expectation-setting: community results are per-browser until an
+        aggregated results endpoint exists; the post copy should not promise
+        a live global leaderboard.
+12. [ ] Watch Google Maps quota during the campaign (Directions + Street View
+        + map loads per visitor); set a billing alert in the Cloud console.
+
 ## Handoff state (2026-07-15)
 
 Everything below is on `main` and live-tested locally against a running
