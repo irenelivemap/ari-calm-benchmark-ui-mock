@@ -163,8 +163,8 @@ Street View:
 - Street View is an explicit map mode so ordinary pan, pinch, double-click, and zoom gestures stay unchanged.
 - A 44px Street View icon sits directly beneath Fit. Activating it reveals the concise instruction `Street View on` / `Select any point on the map.`
 - Any map tap is actionable while the mode is active. Both routes keep a forgiving invisible hit area, without changing their visible geometry, so near-route taps keep their route identity.
-- Selecting a point opens a split inspection layout: on desktop the panorama fills the left 65% (55% below 1100px wide) while the live comparison map keeps a full-height right column; on mobile the panorama takes the top 58% with the map below it. The map column keeps both routes and the moving position marker visible, and tapping another map point retargets the panorama without losing the saved camera.
-- On desktop the question card stays above the panorama, collapsed but fully answerable in place. On mobile it stays hidden until `Back to map`.
+- Selecting a point opens a split inspection layout: on desktop the panorama fills the right 65% (55% below 1100px wide) while the live comparison map keeps a full-height left column; on mobile the panorama takes the top 58% with the map below it. The map column keeps both routes, the moving position marker, and its map controls, and tapping another map point retargets the panorama without losing the saved camera.
+- On desktop the question card keeps its usual top-left place, now over the map column, collapsed but fully answerable in place. On mobile it stays hidden until `Back to map`.
 - `Back to map` restores the exact camera, question state, and answers, then turns the mode off.
 - The viewer identifies points on Route A or Route B with the existing route color, and points away from both routes as a neutral `Map point`. It never exposes the route source.
 - If imagery or the Google API is unavailable, show that state inside the inspector and keep the tester in the benchmark. Never open an external tab as a fallback.

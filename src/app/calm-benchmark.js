@@ -473,12 +473,26 @@
     function getRouteFitPadding() {
       const isMobile = window.matchMedia('(max-width: 700px)').matches;
       if (state.streetViewOpen) {
-        // Split layout: the canvas is already resized to the map column, so a
-        // plain edge inset fits both routes into the visible region.
-        const inset = isMobile ? 16 : 32;
+        // Split layout: the canvas is already resized to the map column. On
+        // desktop the question card overlays the top of that column, so keep
+        // the routes clear of it (capped so an expanded card cannot squeeze
+        // the fit into nothing).
+        if (isMobile) {
+          return {
+            google: 16,
+            leaflet: { padding: [16, 16], maxZoom: ROUTE_FIT_MAX_ZOOM }
+          };
+        }
+        const cardHeight = els.questionCard.getBoundingClientRect().height || 0;
+        const mapHeight = els.mapCanvas.getBoundingClientRect().height || 0;
+        const top = Math.round(Math.min(cardHeight + 40, Math.max(120, mapHeight * 0.4)));
         return {
-          google: inset,
-          leaflet: { padding: [inset, inset], maxZoom: ROUTE_FIT_MAX_ZOOM }
+          google: { top, right: 32, bottom: 32, left: 32 },
+          leaflet: {
+            paddingTopLeft: [32, top],
+            paddingBottomRight: [32, 32],
+            maxZoom: ROUTE_FIT_MAX_ZOOM
+          }
         };
       }
       if (!isMobile) {

@@ -4181,28 +4181,29 @@ html.is-challenge-dialog-open {
 @media (min-width: 701px) {
   .ari-map.is-street-split .ari-street-viewer {
     top: 0;
-    right: auto;
+    right: 0;
     bottom: 0;
-    left: 0;
+    left: auto;
     width: 65%;
     min-width: 0;
     border: 0;
-    border-right: 1px solid rgba(255, 255, 255, 0.16);
+    border-left: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 0;
-    box-shadow: 18px 0 44px rgba(8, 9, 9, 0.28);
-    transform: translateX(-14px);
-  }
-
-  .ari-map.is-street-split .ari-street-viewer.is-visible {
-    transform: none;
+    box-shadow: -18px 0 44px rgba(8, 9, 9, 0.28);
   }
 
   .ari-map.is-street-split .ari-map__canvas {
-    inset: 0 0 0 65%;
+    inset: 0 65% 0 0;
   }
 
-  /* The question card sits over the panorama in split mode and must stay
-     answerable above it. */
+  /* Map controls follow the map into its left column. */
+  .ari-map.is-street-split .ari-map__zoom,
+  .ari-map.is-street-split .ari-map__tools {
+    right: calc(65% + var(--ari-map-control-inset, 24px));
+  }
+
+  /* The question card keeps its usual top-left place over the map column and
+     stays answerable above the split surfaces. */
   .ari-benchmark.is-street-view-open .ari-question-card {
     z-index: 55;
   }
@@ -4215,7 +4216,12 @@ html.is-challenge-dialog-open {
   }
 
   .ari-map.is-street-split .ari-map__canvas {
-    inset: 0 0 0 55%;
+    inset: 0 55% 0 0;
+  }
+
+  .ari-map.is-street-split .ari-map__zoom,
+  .ari-map.is-street-split .ari-map__tools {
+    right: calc(55% + var(--ari-map-control-inset, 24px));
   }
 }
 
