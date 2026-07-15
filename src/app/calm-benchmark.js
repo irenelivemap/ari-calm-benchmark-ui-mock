@@ -1172,7 +1172,13 @@
         roundIndex: state.roundIndex
       });
       if (expectedPairId && state.pair.pairId !== expectedPairId) {
-        throw new Error(`Saved pair ${expectedPairId} does not match loaded pair ${state.pair.pairId}.`);
+        // The route source changed under a saved session (e.g. fixtures were
+        // replaced by live generation). The saved partial answer refers to a
+        // pair the tester can no longer see, so restart this round on the new
+        // pair instead of failing the whole benchmark.
+        console.warn(`Saved pair ${expectedPairId} does not match loaded pair ${state.pair.pairId}; starting this round fresh.`);
+        questionStep = 'q1';
+        partialAnswer = null;
       }
       updateProgressHud();
       state.questionStep = questionStep;
