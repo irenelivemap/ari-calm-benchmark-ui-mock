@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin="">
   <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260715-google-overview-1">
   <style>
     body {
@@ -219,12 +220,14 @@
   <div id="calm-benchmark-root" hidden></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" crossorigin=""></script>
   <script src="./src/data/mock-route-pairs.js?v=20260709-structure-1"></script>
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
   <script src="./src/data/calm-benchmark-data.js?v=20260714-fast-google-ui-3"></script>
   <script src="./src/results/calm-results.js?v=20260713-live-results-1"></script>
-  <script src="./src/maps/map-adapter.js?v=20260714-street-view-mode-2"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260715-google-context-1"></script>
+  <script src="./src/api/route-pair-generator.js?v=20260715-live-route-pairs-1"></script>
+  <script src="./src/maps/map-adapter.js?v=20260715-live-route-pairs-1"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260715-live-route-pairs-1"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -260,6 +263,13 @@
     const ANSWERS_STORAGE = 'ari-calm-benchmark-answers';
     const PROGRESS_STORAGE = 'ari-calm-benchmark-progress';
     const CHALLENGE_STORAGE = 'ari-route-benchmark-selected-challenge';
+    const ROUTING_API_STORAGE = 'ari-benchmark-routing-api';
+    const CALM_ROUTE_PAIR_CACHE = 'ari-calm-benchmark-route-pairs-v1';
+    const routingApiParam = new URLSearchParams(window.location.search).get('api');
+    if (routingApiParam) localStorage.setItem(ROUTING_API_STORAGE, routingApiParam);
+    const routingApiBase = window.ARI_ROUTING_API
+      || localStorage.getItem(ROUTING_API_STORAGE)
+      || AriRoutePairGenerator.DEFAULT_API_BASE;
     const CHALLENGE_CONFIGS = {
       google: {
         key: 'google',
@@ -326,7 +336,12 @@
         testId: 'calm_vs_fast',
         storageKey: AriCalmBenchmarkData.DEFAULT_STORAGE_KEY,
         benchmark: null,
-        routePairProvider: AriCalmBenchmark.mockRoutePairProvider
+        routePairProvider: AriRoutePairGenerator.createLivemapRoutePairProvider({
+          apiBase: routingApiBase,
+          routeTypes: { fast: 'foot_fast', calm: 'foot_calm' },
+          storageKey: CALM_ROUTE_PAIR_CACHE,
+          fallbackProvider: AriCalmBenchmark.mockRoutePairProvider
+        })
       }
     };
     let benchmarkMounted = false;
@@ -1192,6 +1207,7 @@
       });
       Object.values(dataRepositories).forEach(repository => repository.clear());
       localStorage.removeItem(CHALLENGE_STORAGE);
+      localStorage.removeItem(CALM_ROUTE_PAIR_CACHE);
       const cleanUrl = new URL(window.location.href);
       cleanUrl.search = '';
       cleanUrl.hash = '';
@@ -1250,7 +1266,9 @@
           totalRounds: Math.max(DEMO_INITIAL_ROUNDS, (extraOptions.initialRoundIndex || 0) + 1),
           allowExtraRounds: true,
           milestones: MILESTONES.map(({ at, name, icon }, index) => ({ at, name, icon, tier: index + 1 })),
-          mapProvider: googleAvailable ? 'google' : 'leaflet',
+          mapProvider: googleAvailable
+            ? 'google'
+            : AriCalmBenchmarkMaps.hasMapLibre() ? 'maplibre' : 'leaflet',
           benchmark: activeConfig.benchmark,
           routePairProvider: activeConfig.routePairProvider,
           ...extraOptions,

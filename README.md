@@ -54,7 +54,8 @@ There is no build step and no package installation is required.
 ```text
 index.html                         Page shell, challenge config, intro, results, wiring
 src/app/calm-benchmark.js          Shared active-benchmark UI and question state
-src/maps/map-adapter.js            Leaflet and Google Maps adapter
+src/maps/map-adapter.js            MapLibre, Leaflet, and Google Maps adapter
+src/api/route-pair-generator.js    Random Zurich route pairs from the LiveMap routing facade
 src/data/calm-benchmark-data.js    Validation, local persistence, export
 src/data/mock-*.js                 Demo route-pair fixtures
 src/results/calm-results.js        Pure results aggregation
@@ -83,15 +84,34 @@ Use the adapter interface in `src/maps/map-adapter.js`. The shell accepts Leafle
 
 ### Connect real route data
 
-Replace the mock `routePairProvider`; do not edit the fixtures into a production source. The route input is documented in [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md).
+Replace the mock `routePairProvider`; do not edit the fixtures into a production source. The route input is documented in [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md). `src/api/route-pair-generator.js` is the reference implementation against the LiveMap routing facade.
 
 ### Connect production persistence
 
 Replace `answerSink` and `progressSink`. Keep the record shapes and idempotency rules in [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
 
+## Live Route Pairs
+
+The Fast vs Calm challenge generates random route pairs the way the `livemap-routing` bench does: it draws a random origin and destination inside the central-Zurich sampling polygon (400 m to 3000 m apart) and requests `foot_fast` and `foot_calm` from the routing facade in one call.
+
+- Default endpoint: `POST /api/v1/routing/route` on the same origin.
+- Point at another deployment once with `?api=https://host/api/v1/routing`; the base is kept in local storage.
+- When the facade is unreachable (for example on GitHub Pages), the challenge falls back to the mock fixtures and logs a console warning.
+- Generated pairs are cached per session, so retrying or resuming a round loads the identical pair.
+
+Fast vs Google Fast still uses fixtures: Google route geometry must come from the Directions SDK at run time and is a separate integration.
+
+## Map Providers
+
+The benchmark screen picks the first available provider:
+
+1. **Google Maps**, when a key is configured. This also enables Street View imagery.
+2. **MapLibre GL** with the LiveMap style (`map.paas.livemap.sh` + the LiveMap basemap), imported from the `livemap-routing` runtime. It falls back to a public OpenFreeMap style when the LiveMap endpoints are unreachable.
+3. **Leaflet**, when MapLibre is not loaded.
+
 ## Google Maps
 
-The app uses Leaflet by default. Google Maps mode is enabled only when the runtime loads `window.google.maps`.
+Google Maps mode is enabled only when the runtime loads `window.google.maps`.
 
 For private local testing, either:
 

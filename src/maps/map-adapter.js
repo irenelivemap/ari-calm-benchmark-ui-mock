@@ -21,6 +21,46 @@
     return !!(window.google && window.google.maps);
   }
 
+  function hasMapLibre() {
+    return !!window.maplibregl;
+  }
+
+  /** LiveMap style pipeline imported from livemap-routing/runtime demo. */
+  const LIVEMAP_STYLE_BASE = 'https://map.paas.livemap.sh/styles';
+  const LIVEMAP_BASEMAP_TILEJSON_URL = 'https://tiles.livemap-dev.com/basemap';
+  const FALLBACK_MAPLIBRE_STYLE_URL = 'https://tiles.openfreemap.org/styles/bright';
+  const ZURICH_CENTER = [8.54, 47.377];
+
+  function absolutizeStyleAssetUrl(url, styleUrl) {
+    if (!url || /^[a-z][a-z0-9+.-]*:/i.test(url)) return url;
+    if (url.startsWith('/')) return `${new URL(styleUrl).origin}${url}`;
+    return new URL(url, styleUrl).toString();
+  }
+
+  /**
+   * Load the LiveMap MapLibre style and wire its basemap source, exactly like
+   * the livemap-routing runtime does. Falls back to a public style when the
+   * LiveMap endpoints are unreachable so the benchmark stays usable.
+   */
+  async function loadLivemapMapStyle(variant = 'bright') {
+    const styleUrl = `${LIVEMAP_STYLE_BASE}/${variant === 'dark' ? 'dark' : 'bright'}/style.json`;
+    const response = await fetch(styleUrl);
+    if (!response.ok) {
+      throw new Error(`Could not load map style: ${response.status} ${response.statusText}`);
+    }
+    const style = await response.json();
+    style.sources = {
+      ...style.sources,
+      openmaptiles: {
+        type: 'vector',
+        url: LIVEMAP_BASEMAP_TILEJSON_URL
+      }
+    };
+    style.sprite = absolutizeStyleAssetUrl(style.sprite, styleUrl);
+    style.glyphs = absolutizeStyleAssetUrl(style.glyphs, styleUrl);
+    return style;
+  }
+
   function createMapAdapter(options) {
     const state = {
       canvas: options.canvas,
@@ -42,8 +82,145 @@
       assignment: null,
       streetHandlerBound: false,
       streetViewEnabled: false,
-      streetViewMarker: null
+      streetViewMarker: null,
+      mapStyleVariant: options.mapStyleVariant || 'bright',
+      destroyed: false,
+      maplibreInit: null,
+      maplibreQueue: null,
+      maplibreVisuals: { routeA: [], routeB: [] },
+      maplibreMarkers: []
     };
+
+    async function createMapLibreMap() {
+      const style = await loadLivemapMapStyle(state.mapStyleVariant).catch(error => {
+        console.warn('[ARI map] LiveMap style unavailable, using fallback style.', error);
+        return FALLBACK_MAPLIBRE_STYLE_URL;
+      });
+      if (state.destroyed) return;
+      const map = new maplibregl.Map({
+        container: state.canvas,
+        style,
+        center: ZURICH_CENTER,
+        zoom: 13,
+        attributionControl: { compact: true }
+      });
+      await new Promise(resolve => (map.loaded() ? resolve() : map.once('load', resolve)));
+      if (state.destroyed) {
+        map.remove();
+        return;
+      }
+      state.map = map;
+    }
+
+    /** Serialize MapLibre work behind the async style/map bootstrap. */
+    function whenMapLibreReady(run) {
+      if (!state.maplibreInit) {
+        state.maplibreInit = createMapLibreMap();
+        state.maplibreQueue = state.maplibreInit;
+      }
+      state.maplibreQueue = state.maplibreQueue
+        .then(() => (state.map && !state.destroyed ? run(state.map) : undefined))
+        .catch(error => console.warn('[ARI map]', error));
+      return state.maplibreQueue;
+    }
+
+    const MAPLIBRE_ROUTE_LAYERS = [
+      { id: 'ari-route-a-case', route: 'routeA', kind: 'case', color: '#ffffff', width: 15, opacity: 0.82 },
+      { id: 'ari-route-b-case', route: 'routeB', kind: 'case', color: '#ffffff', width: 15, opacity: 0.82 },
+      { id: 'ari-route-a-line', route: 'routeA', kind: 'line', width: 9, opacity: 0.98 },
+      { id: 'ari-route-b-line', route: 'routeB', kind: 'line', width: 6, opacity: 0.98 },
+      { id: 'ari-route-a-hit', route: 'routeA', kind: 'hit', width: 32, opacity: 0.01 },
+      { id: 'ari-route-b-hit', route: 'routeB', kind: 'hit', width: 32, opacity: 0.01 }
+    ];
+
+    function maplibreRouteSourceId(routeKey) {
+      return routeKey === 'routeB' ? 'ari-route-b' : 'ari-route-a';
+    }
+
+    function maplibreLineData(geometry) {
+      return {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates: geometry.map(point => [point[1], point[0]])
+        }
+      };
+    }
+
+    function createMaplibreEndpointMarker(map, lngLat, kind) {
+      const element = document.createElement('span');
+      element.className = `ari-route-marker ari-route-marker--${kind}`;
+      const marker = new maplibregl.Marker({ element }).setLngLat(lngLat).addTo(map);
+      state.maplibreMarkers.push(marker);
+      return marker;
+    }
+
+    function drawMaplibreRoutes(map, pair, assignment) {
+      const routeA = normalizeLatLngs(pair.routes[assignment.routeA].geometry);
+      const routeB = normalizeLatLngs(pair.routes[assignment.routeB].geometry);
+      const dataByRoute = { routeA: maplibreLineData(routeA), routeB: maplibreLineData(routeB) };
+
+      ['routeA', 'routeB'].forEach(routeKey => {
+        const sourceId = maplibreRouteSourceId(routeKey);
+        const source = map.getSource(sourceId);
+        if (source) source.setData(dataByRoute[routeKey]);
+        else map.addSource(sourceId, { type: 'geojson', data: dataByRoute[routeKey] });
+      });
+
+      state.maplibreVisuals = { routeA: [], routeB: [] };
+      MAPLIBRE_ROUTE_LAYERS.forEach(layer => {
+        const color = layer.color
+          || (layer.route === 'routeB' ? state.routeBColor : state.routeAColor);
+        if (!map.getLayer(layer.id)) {
+          map.addLayer({
+            id: layer.id,
+            type: 'line',
+            source: maplibreRouteSourceId(layer.route),
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
+            paint: {
+              'line-color': color,
+              'line-width': layer.width,
+              'line-opacity': layer.opacity * (layer.kind === 'hit' ? 1 : state.routeVisibility)
+            }
+          });
+          if (layer.kind === 'hit') {
+            map.on('click', layer.id, event => {
+              if (!state.streetViewEnabled || !event.lngLat) return;
+              state.onRoutePointClick({
+                lat: event.lngLat.lat,
+                lng: event.lngLat.lng,
+                routeKey: layer.route
+              });
+            });
+          }
+        }
+        if (layer.kind !== 'hit') {
+          state.maplibreVisuals[layer.route].push({
+            id: layer.id,
+            baseWidth: layer.width,
+            baseOpacity: layer.opacity
+          });
+        }
+      });
+
+      state.maplibreMarkers.forEach(marker => marker.remove());
+      state.maplibreMarkers = [];
+      createMaplibreEndpointMarker(map, [pair.origin.lng, pair.origin.lat], 'start');
+      createMaplibreEndpointMarker(map, [pair.destination.lng, pair.destination.lat], 'end');
+      applyRouteVisibility(state.routeVisibility);
+    }
+
+    function maplibreRouteBounds() {
+      if (!state.pair || !state.assignment) return null;
+      const bounds = new maplibregl.LngLatBounds();
+      [state.assignment.routeA, state.assignment.routeB].forEach(routeType => {
+        normalizeLatLngs(state.pair.routes[routeType].geometry).forEach(point => {
+          bounds.extend([point[1], point[0]]);
+        });
+      });
+      return bounds.isEmpty() ? null : bounds;
+    }
 
     function ensure() {
       if (state.map) return;
@@ -76,6 +253,17 @@
     }
 
     function fitRoutes(fitPadding, { animate = true } = {}) {
+      if (state.provider === 'maplibre') {
+        return whenMapLibreReady(map => {
+          const bounds = maplibreRouteBounds();
+          if (!bounds) return;
+          map.fitBounds(bounds, {
+            padding: fitPadding.maplibre ?? fitPadding.google,
+            maxZoom: state.maxFitZoom,
+            animate
+          });
+        });
+      }
       ensure();
       if (state.provider === 'google') {
         if (!state.googleOverlays.length) return;
@@ -323,16 +511,31 @@
     }
 
     function drawRoutes(pair, assignment) {
-      ensure();
-      bindRoutePointClicks();
       state.pair = pair;
       state.assignment = assignment;
+      if (state.provider === 'maplibre') {
+        return whenMapLibreReady(map => drawMaplibreRoutes(map, pair, assignment));
+      }
+      ensure();
+      bindRoutePointClicks();
       if (state.provider === 'google') drawGoogleRoutes(pair, assignment);
       else drawLeafletRoutes(pair, assignment);
     }
 
     function applyRouteVisibility(value) {
       state.routeVisibility = value;
+      if (state.provider === 'maplibre') {
+        if (!state.map) return;
+        Object.values(state.maplibreVisuals).flat().forEach(({ id, baseOpacity }) => {
+          if (state.map.getLayer(id)) {
+            state.map.setPaintProperty(id, 'line-opacity', baseOpacity * value);
+          }
+        });
+        state.maplibreMarkers.forEach(marker => {
+          marker.getElement().style.opacity = String(value);
+        });
+        return;
+      }
       if (state.provider === 'google') {
         Object.values(state.googleRouteVisuals).flat().forEach(layer => {
           const baseOpacity = layer.__ariBaseOpacity ?? 0.98;
@@ -396,6 +599,11 @@
         return new DOMRect(canvasRect.left + containerPoint.x - 28, canvasRect.top + containerPoint.y - 28, 56, 56);
       }
 
+      if (state.provider === 'maplibre' && state.map?.project) {
+        const projected = state.map.project([point[1], point[0]]);
+        return new DOMRect(canvasRect.left + projected.x - 28, canvasRect.top + projected.y - 28, 56, 56);
+      }
+
       return fallback;
     }
 
@@ -409,6 +617,19 @@
             routeA: { opacity: 0.98, weightBoost: 0 },
             routeB: { opacity: 0.98, weightBoost: 0 }
           };
+
+      if (state.provider === 'maplibre') {
+        if (!state.map) return;
+        Object.entries(state.maplibreVisuals).forEach(([key, layers]) => {
+          const config = focusConfig[key];
+          layers.forEach(({ id, baseWidth, baseOpacity }) => {
+            if (!state.map.getLayer(id)) return;
+            state.map.setPaintProperty(id, 'line-opacity', Math.min(baseOpacity, config.opacity));
+            state.map.setPaintProperty(id, 'line-width', Math.max(4, baseWidth + config.weightBoost));
+          });
+        });
+        return;
+      }
 
       if (state.provider === 'google') {
         Object.entries(state.googleRouteVisuals).forEach(([key, layers]) => {
@@ -454,8 +675,25 @@
     }
 
     function setStreetViewPosition(point, routeKey = 'routeA') {
-      ensure();
       const color = routeKey === 'routeB' ? state.routeBColor : state.routeAColor;
+      if (state.provider === 'maplibre') {
+        return whenMapLibreReady(map => {
+          if (!state.streetViewEnabled) return;
+          if (!state.streetViewMarker) {
+            const element = document.createElement('span');
+            element.style.cssText = 'display:block;width:18px;height:18px;border-radius:50%;'
+              + 'border:3px solid #ffffff;box-sizing:border-box;box-shadow:0 1px 5px rgba(16,21,17,0.4);';
+            element.style.background = color;
+            state.streetViewMarker = new maplibregl.Marker({ element })
+              .setLngLat([point.lng, point.lat])
+              .addTo(map);
+            return;
+          }
+          state.streetViewMarker.setLngLat([point.lng, point.lat]);
+          state.streetViewMarker.getElement().style.background = color;
+        });
+      }
+      ensure();
       if (state.provider === 'google') {
         if (!state.streetViewMarker) {
           state.streetViewMarker = new google.maps.Marker({
@@ -501,6 +739,14 @@
     }
 
     function getViewState() {
+      if (state.provider === 'maplibre') {
+        if (!state.map) return null;
+        const mapCenter = state.map.getCenter();
+        return {
+          center: { lat: mapCenter.lat, lng: mapCenter.lng },
+          zoom: state.map.getZoom()
+        };
+      }
       ensure();
       const center = state.map.getCenter();
       if (state.provider === 'google') {
@@ -517,6 +763,14 @@
 
     function restoreViewState(viewState) {
       if (!viewState) return;
+      if (state.provider === 'maplibre') {
+        return whenMapLibreReady(map => {
+          map.jumpTo({
+            center: [viewState.center.lng, viewState.center.lat],
+            zoom: viewState.zoom
+          });
+        });
+      }
       ensure();
       if (state.provider === 'google') {
         state.map.setCenter(viewState.center);
@@ -528,23 +782,28 @@
     }
 
     function zoomIn() {
+      if (state.provider === 'maplibre') return whenMapLibreReady(map => map.zoomIn());
       ensure();
       if (state.provider === 'google') state.map.setZoom(state.map.getZoom() + 1);
       else state.map.zoomIn();
     }
 
     function zoomOut() {
+      if (state.provider === 'maplibre') return whenMapLibreReady(map => map.zoomOut());
       ensure();
       if (state.provider === 'google') state.map.setZoom(state.map.getZoom() - 1);
       else state.map.zoomOut();
     }
 
     function destroy() {
+      state.destroyed = true;
       if (state.routeAnimationFrame) cancelAnimationFrame(state.routeAnimationFrame);
       clearStreetViewPosition();
-      if (state.provider === 'leaflet' && state.map) {
+      if ((state.provider === 'leaflet' || state.provider === 'maplibre') && state.map) {
         state.map.remove();
       }
+      state.maplibreMarkers = [];
+      state.maplibreVisuals = { routeA: [], routeB: [] };
       state.map = null;
       state.routeLayers = null;
       state.standardTiles = null;
@@ -573,6 +832,8 @@
 
   window.AriCalmBenchmarkMaps = {
     createMapAdapter,
-    hasGoogleMaps
+    hasGoogleMaps,
+    hasMapLibre,
+    loadLivemapMapStyle
   };
 })();

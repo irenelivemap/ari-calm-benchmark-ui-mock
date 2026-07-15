@@ -329,8 +329,9 @@
     }
     const requestedProvider = options.mapProvider || 'leaflet';
     const useGoogleMaps = requestedProvider === 'google' && mapTools.hasGoogleMaps();
-    if (!useGoogleMaps && !window.L) {
-      throw new Error('AriCalmBenchmark requires Leaflet on window.L, or Google Maps on window.google.maps, before mounting.');
+    const useMapLibre = !useGoogleMaps && requestedProvider === 'maplibre' && mapTools.hasMapLibre();
+    if (!useGoogleMaps && !useMapLibre && !window.L) {
+      throw new Error('AriCalmBenchmark requires Leaflet on window.L, MapLibre on window.maplibregl, or Google Maps on window.google.maps, before mounting.');
     }
 
     const benchmark = normalizeBenchmarkConfig(options.benchmark);
@@ -351,7 +352,7 @@
       roundTransitioning: false,
       panelCollapsed: false,
       mapAdapter: null,
-      mapProvider: useGoogleMaps ? 'google' : 'leaflet',
+      mapProvider: useGoogleMaps ? 'google' : useMapLibre ? 'maplibre' : 'leaflet',
       streetViewMode: false,
       streetViewOpen: false,
       streetViewPoint: null,

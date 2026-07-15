@@ -13,10 +13,11 @@ src/app/calm-benchmark.js
   shared map-first benchmark shell and question state machine
         |
         +--> src/maps/map-adapter.js
-        |      Leaflet or Google Maps adapter
+        |      MapLibre (LiveMap style), Leaflet, or Google Maps adapter
         |
         +--> routePairProvider
-        |      mock fixtures now, production route source later
+        |      src/api/route-pair-generator.js against the routing facade,
+        |      with mock fixtures as offline fallback
         |
         +--> answerSink / progressSink
                local repository now, production transport later
@@ -79,7 +80,11 @@ AriCalmBenchmark.createMockRoutePairProvider(pairs, label)
 
 ### `src/maps/map-adapter.js`
 
-Owns provider-specific map behavior behind one adapter interface. It chooses Google Maps when requested and available, otherwise Leaflet. See [`../src/maps/README.md`](../src/maps/README.md).
+Owns provider-specific map behavior behind one adapter interface. It chooses Google Maps when requested and available, then MapLibre GL with the LiveMap style pipeline imported from the `livemap-routing` runtime (with an OpenFreeMap fallback style), otherwise Leaflet. See [`../src/maps/README.md`](../src/maps/README.md).
+
+### `src/api/route-pair-generator.js`
+
+Owns random route-pair generation, imported from the `livemap-routing` guided blind bench: the central-Zurich sampling polygon, the 400–3000 m origin/destination distance gate, and the `POST {apiBase}/route` facade call that fetches both configured profiles in one request. Generated pairs are persisted per session so retries and resumed sessions load the identical pair, and the provider falls back to the mock fixtures when the facade is unreachable. Browser- and CommonJS-compatible so Node tests exercise the same implementation.
 
 ### `src/data/calm-benchmark-data.js`
 
@@ -110,7 +115,9 @@ Production integration should replace adapters, not rewrite the question UI:
 - `routePairProvider({ sessionId, roundIndex })`
 - `answerSink(answer)`
 - `progressSink(progress)`
-- `mapProvider: "google" | "leaflet"`
+- `mapProvider: "google" | "maplibre" | "leaflet"`
+
+The Fast vs Calm challenge already wires `routePairProvider` to `AriRoutePairGenerator.createLivemapRoutePairProvider`. The routing API base resolves from `window.ARI_ROUTING_API`, then a stored `?api=` override, then same-origin `/api/v1/routing`.
 
 Contracts are documented in [`DATA_CONTRACT.md`](DATA_CONTRACT.md), [`ANSWER_SCHEMA.md`](ANSWER_SCHEMA.md), and [`DATA_SAVING.md`](DATA_SAVING.md).
 

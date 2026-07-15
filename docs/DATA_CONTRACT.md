@@ -54,6 +54,8 @@ async function routePairProvider({ sessionId, roundIndex }) {
 
 `pairId` and both route IDs must be stable. Retrying a round should return the same logical pair unless the backend explicitly invalidates it.
 
+`src/api/route-pair-generator.js` implements this contract against the LiveMap routing facade: it samples random central-Zurich origin/destination pairs, requests the challenge's profiles in one `POST {apiBase}/route` call, converts the facade's GeoJSON `[longitude, latitude]` coordinates to this contract's `[latitude, longitude]` tuples, and persists generated pairs per session so resumed rounds stay stable.
+
 ## Example: Fast vs Google Fast
 
 ```json

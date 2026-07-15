@@ -9,7 +9,7 @@ The shared benchmark UI should not depend on where the map comes from. It needs 
 - enabling route-point targeting only while Street View mode is active
 - preserving and restoring the exact map camera around Street View inspection
 
-The current implementation lives in `map-adapter.js`. It supports Leaflet for local/private use and Google Maps when `window.google.maps` is already loaded. Production integration should replace or adapt this module while preserving the interface below.
+The current implementation lives in `map-adapter.js`. It supports MapLibre GL with the LiveMap style pipeline imported from the `livemap-routing` runtime (falling back to a public OpenFreeMap style), Leaflet for local/private use, and Google Maps when `window.google.maps` is already loaded. Production integration should replace or adapt this module while preserving the interface below.
 
 ## Required map actions
 

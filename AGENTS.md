@@ -14,6 +14,7 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 - Keep challenge-specific copy and question logic in `CHALLENGE_CONFIGS` in `index.html`.
 - Keep shared active-benchmark behavior in `src/app/calm-benchmark.js`. The historical filename is retained for compatibility and powers every challenge.
 - Treat `src/data/mock-*.js` as fixtures only. Production data must enter through `routePairProvider`.
+- `src/api/route-pair-generator.js` owns random route-pair generation against the routing facade. Keep its fixture fallback working; GitHub Pages has no backend.
 - Never commit a Google Maps API key. Local Google Maps setup is described in `README.md`.
 - Do not reset or rewrite a tester's browser data during visual QA. Use `fresh.html` for a non-destructive new-player preview.
 - Keep the current static/no-build architecture unless the project owner explicitly approves a migration.
