@@ -104,15 +104,13 @@ Fast vs Google Fast still uses fixtures: Google route geometry must come from th
 
 ## Map Providers
 
-The benchmark screen picks the first available provider:
+The base map is **MapLibre GL** with the LiveMap style (`map.paas.livemap.sh` + the LiveMap basemap), imported from the `livemap-routing` runtime. It falls back to a public OpenFreeMap style when the LiveMap endpoints are unreachable, and to Leaflet when MapLibre itself is not loaded.
 
-1. **Google Maps**, when a key is configured. This also enables Street View imagery.
-2. **MapLibre GL** with the LiveMap style (`map.paas.livemap.sh` + the LiveMap basemap), imported from the `livemap-routing` runtime. It falls back to a public OpenFreeMap style when the LiveMap endpoints are unreachable.
-3. **Leaflet**, when MapLibre is not loaded.
+A configured Google Maps key no longer switches the base map: it only loads the Google SDK so the embedded **Street View** inspector works. Hosts that explicitly want a Google base map can still pass `mapProvider: "google"` to `AriCalmBenchmark.mount`.
 
 ## Google Maps
 
-Google Maps mode is enabled only when the runtime loads `window.google.maps`.
+The Google SDK is loaded only when a key is available, and is used for Street View imagery.
 
 For private local testing, either:
 

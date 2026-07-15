@@ -1266,9 +1266,9 @@
           totalRounds: Math.max(DEMO_INITIAL_ROUNDS, (extraOptions.initialRoundIndex || 0) + 1),
           allowExtraRounds: true,
           milestones: MILESTONES.map(({ at, name, icon }, index) => ({ at, name, icon, tier: index + 1 })),
-          mapProvider: googleAvailable
-            ? 'google'
-            : AriCalmBenchmarkMaps.hasMapLibre() ? 'maplibre' : 'leaflet',
+          mapProvider: AriCalmBenchmarkMaps.hasMapLibre()
+            ? 'maplibre'
+            : googleAvailable ? 'google' : 'leaflet',
           benchmark: activeConfig.benchmark,
           routePairProvider: activeConfig.routePairProvider,
           ...extraOptions,
