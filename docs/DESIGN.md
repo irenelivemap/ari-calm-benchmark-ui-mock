@@ -84,7 +84,7 @@ Rules:
 
 Intro page:
 
-- The benchmark family uses one shared header: a `Challenges` context menu on the left and `Compare | Results` views on the right.
+- The benchmark family uses one shared header: a `Challenges` context menu on the left and `Home | Results` views on the right. The header shares the exact content width of the intro below it — its wrap participates in the same border-box sizing as the content.
 - The challenge chooser is a reusable full-screen opening state, not a separate route. It opens automatically only when no challenge has been selected, then remains available through the header menu.
 - While the chooser is open, its off-white canvas and dark cabinet surface preserve continuity with the benchmark while fully replacing its content. No benchmark, header, map, or page scrollbar remains visible behind it.
 - Direct benchmark links such as `?game=calm` bypass the first-visit chooser. Returning visitors reopen the last selected challenge.
