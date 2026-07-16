@@ -4643,6 +4643,20 @@ html.is-challenge-dialog-open {
   grid-column: 1 / -1;
 }
 
+/* Per-route time and distance inside the Route A/B answer rows. Both providers
+   use identical rounding, so the numbers cannot reveal the route source. */
+.ari-choice-metrics {
+  margin-left: auto;
+  flex: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: currentColor;
+  opacity: 0.78;
+  white-space: nowrap;
+}
+
 .ari-choice-grid label {
   position: relative;
   display: flex;

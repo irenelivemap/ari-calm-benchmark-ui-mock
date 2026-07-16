@@ -46,7 +46,8 @@
       neither: ['q3'],
       hard_to_judge: []
     },
-    uncertainChoices: ['hard_to_judge']
+    uncertainChoices: ['hard_to_judge'],
+    showRouteMetrics: false
   };
 
   const MEDAL_UNLOCK_FALLBACK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
@@ -86,11 +87,30 @@
     };
   }
 
-  function renderChoiceOptions(options, { name, type = 'radio' }) {
+  function renderChoiceOptions(options, { name, type = 'radio', withRouteMetrics = false }) {
     return options.map(option => {
       const className = option.className ? ` class="${escapeHtml(option.className)}"` : '';
-      return `<label${className}><input type="${type}" name="${escapeHtml(name)}" value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</label>`;
+      const metricsSlot = withRouteMetrics && (option.value === 'route_a' || option.value === 'route_b')
+        ? `<span class="ari-choice-metrics" data-route-metrics="${option.value === 'route_a' ? 'a' : 'b'}" hidden></span>`
+        : '';
+      return `<label${className}><input type="${type}" name="${escapeHtml(name)}" value="${escapeHtml(option.value)}">${escapeHtml(option.label)}${metricsSlot}</label>`;
     }).join('');
+  }
+
+  /** Identical rounding for both providers so the numbers cannot fingerprint
+   *  the route source: whole minutes, 0.1 km (10 m below ~1 km). */
+  function formatRouteMetrics(metadata) {
+    if (!metadata) return '';
+    const parts = [];
+    if (Number.isFinite(metadata.durationSeconds)) {
+      parts.push(`${Math.max(1, Math.round(metadata.durationSeconds / 60))} min`);
+    }
+    if (Number.isFinite(metadata.distanceMeters)) {
+      parts.push(metadata.distanceMeters >= 950
+        ? `${(metadata.distanceMeters / 1000).toFixed(1)} km`
+        : `${Math.round(metadata.distanceMeters / 10) * 10} m`);
+    }
+    return parts.join(' · ');
   }
 
   function createId(prefix) {
@@ -240,7 +260,7 @@
                   </legend>
                   ${contextCopyMarkup}
                   <div class="ari-choice-grid ari-choice-grid--two">
-                    ${renderChoiceOptions(benchmark.q1Options, { name: 'q1Choice' })}
+                    ${renderChoiceOptions(benchmark.q1Options, { name: 'q1Choice', withRouteMetrics: benchmark.showRouteMetrics })}
                   </div>
                 </fieldset>
                 </section>
@@ -1408,9 +1428,21 @@
         reasons: [...q3Issues],
         q3Note: form.get('q3Note') || '',
         note: '',
+        metricsShown: !!benchmark.showRouteMetrics,
         clientTs: createdAt,
         createdAt
       };
+    }
+
+    function updateRouteMetrics() {
+      if (!benchmark.showRouteMetrics || !state.pair || !state.assignment) return;
+      [['a', state.assignment.routeA], ['b', state.assignment.routeB]].forEach(([slot, routeType]) => {
+        const element = els.form.querySelector(`[data-route-metrics="${slot}"]`);
+        if (!element) return;
+        const text = formatRouteMetrics(state.pair.routes[routeType]?.metadata);
+        element.textContent = text;
+        element.hidden = !text;
+      });
     }
 
     function restorePartialAnswer(answer) {
@@ -1463,6 +1495,7 @@
       state.questionStep = questionStep;
       closeStreetView({ immediate: true, restoreMap: false, restoreFocus: false });
       els.form.reset();
+      updateRouteMetrics();
       restorePartialAnswer(partialAnswer);
       resetQuestionScroll();
       setContextExpanded(false);

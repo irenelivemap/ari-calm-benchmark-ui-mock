@@ -245,6 +245,7 @@ Implemented pattern:
 - `Next question` is clearer than `Submit answer` when the user is moving through follow-up questions.
 - `Back` for Q2/Q3 should be near the question flow, not in the global HUD.
 - Q1 should not show optional free text.
+- When a challenge enables route metrics (currently Fast vs Google Fast only), each Route A/B answer row carries its own quiet `18 min · 1.6 km` line in the row's route color. Both routes use identical rounding — whole minutes, 0.1 km — so the numbers cannot identify the provider. Neutral answer rows never show metrics, and Fast vs Calm stays map-only.
 - Q1 does not display a route situation. A small information control beside the question reveals the calm definition only when requested; do not add a separate context row or text label.
 - Q1 keeps that information control beside the question in both panel states. From the collapsed state, selecting it expands the panel and opens the calm definition; selecting the rest of the collapsed card expands with the definition closed.
 - The expanded question panel keeps its HUD header and action row fixed. Only the question content may scroll, and the native scrollbar stays visually hidden; use a subtle content fade to signal additional answers below.
