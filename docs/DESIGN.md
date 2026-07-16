@@ -110,7 +110,7 @@ Intro page:
 - Side-by-side overview cards use explicit animated desktop heights: `420px` expanded and `90px` compact. Below `900px`, both states return to content-driven height.
 - The expanded Session card uses `10+ comparisons.` as a flexible goal, reassures testers with `Every comparison helps. More is even better.`, gives the target duration as `About 6 to 8 min`, confirms `Desktop and mobile` support, and introduces the medal goal with `Become a Cosmic Explorer.` / `Unlock a new medal every 5 comparisons.`
 - The resume card is an evolving rank world. It begins as the near-black arcade cabinet, then progressively gains street geometry, a traced trail, a horizon, map contours, constellations, and a cosmic field as medals are earned.
-- Rank motifs remain low-contrast behind the content and never change the card layout or ivory action. The latest rank controls the surface tint, border light, progress color, and title accent.
+- Rank motifs remain low-contrast behind the content and never change the card layout or ivory action. The latest rank controls the surface tint, border light, and title accent. The progress pips stay neutral ivory regardless of rank — a tinted pip reads as a route color.
 - Crossing a medal threshold reveals the new world layer outward from that medal's position once. Reloading or revisiting an already earned tier must not replay the animation, and reduced-motion users receive the final state immediately.
 - Do not add a separate `How your answers help` disclosure to the Session card. Keep its content in one scan-friendly stack.
 
@@ -271,7 +271,7 @@ Rules:
 - Both states use the intro h2 pattern: bold number in `Outfit`, serif italic phrase in `Newsreader`. No scoreboard numerals, no glow, no all-caps data blocks.
 - Progress pips are neutral white (`rgba(255,255,255,0.82)` done, `0.12` remaining). Never route green/orange — route colors are reserved.
 - The `Resume →` button uses the same neutral bright treatment as `Start test →`.
-- The resume action cluster contains only `Last played [date]`, the progress pips, and `Resume →`. The participant name appears once in the greeting and is not repeated in the action cluster.
+- The resume action cluster reads in task order: a labeled progress line (`5 of 10 routes · Trail Seeker next`, or `[n] routes · All medals earned` past the final milestone), the pips it explains, `Resume →`, and a quiet `Last played [date]` meta line beneath the action. The date is reassurance metadata, never a heading over the pips. The participant name appears once in the greeting and is not repeated in the action cluster.
 - At standard widths, the action cluster uses no more than about 40% of the card, aligns to the card's right padding, and bottom-aligns with the two-row medal shelf rather than centering against the whole card.
 - At narrow widths, the action cluster stacks below the medal shelf, remains left-aligned, and the Resume button spans the available width.
 - Selecting `Resume →` opens the active question panel immediately. Fresh sessions keep the existing onboarding-led collapsed state.
