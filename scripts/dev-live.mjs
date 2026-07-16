@@ -21,6 +21,7 @@ const PORT = Number(process.env.PORT || 8765);
 const ROUTING_ORIGIN = process.env.LIVEMAP_ROUTING_ORIGIN || 'http://127.0.0.1:8989';
 const DATA_ORIGIN = process.env.ARI_DATA_ORIGIN || 'http://127.0.0.1:8090';
 const DATA_API_BASE = process.env.ARI_DATA_API_BASE || '';
+const GOOGLE_MAPS_KEY = process.env.ARI_GOOGLE_MAPS_KEY || '';
 const PROXY_PREFIX = '/api/v1/routing';
 const DATA_PROXY_PREFIX = '/api/v1/benchmarks';
 const PUBLIC_BASE_PATH = '/routing';
@@ -71,12 +72,16 @@ async function serveStatic(response, pathname) {
     : isPublicPath
       ? publicRelative || 'index.html'
       : pathname === '/' ? 'index.html' : pathname.slice(1);
-  // Mirror the Caddy env injection: with ARI_DATA_API_BASE set, the local
-  // preview exercises the real HTTP transport against the local data API.
-  if (relative === 'runtime-config.js' && DATA_API_BASE) {
+  // Mirror the Caddy env injection: ARI_DATA_API_BASE exercises the real HTTP
+  // transport against the local data API, ARI_GOOGLE_MAPS_KEY enables Street
+  // View and live Google pairs without a ?gmap= link.
+  if (relative === 'runtime-config.js' && (DATA_API_BASE || GOOGLE_MAPS_KEY)) {
+    const injected = {};
+    if (DATA_API_BASE) injected.dataApiBase = DATA_API_BASE;
+    if (GOOGLE_MAPS_KEY) injected.googleMapsKey = GOOGLE_MAPS_KEY;
     response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' });
     return response.end(
-      `window.ARI_RUNTIME_CONFIG = Object.assign({ dataApiBase: ${JSON.stringify(DATA_API_BASE)} }, window.ARI_RUNTIME_CONFIG || {});\n`
+      `window.ARI_RUNTIME_CONFIG = Object.assign(${JSON.stringify(injected)}, window.ARI_RUNTIME_CONFIG || {});\n`
     );
   }
   const filePath = normalize(join(ROOT, relative));
