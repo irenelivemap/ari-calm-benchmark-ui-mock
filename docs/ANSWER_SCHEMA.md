@@ -80,7 +80,7 @@ type BenchmarkAnswerV1 = {
   reasons: Q3Issue[];          // Compatibility alias of q3Issues.
   q3Note: string;
   note: string;                // Compatibility alias.
-  metricsShown: boolean;       // Rounded time/distance were visible during the comparison.
+  metricsShown: boolean;       // Rounded route distances were visible during the comparison.
 
   clientTs: string;
   createdAt: string;

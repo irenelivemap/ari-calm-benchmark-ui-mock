@@ -97,20 +97,14 @@
     }).join('');
   }
 
-  /** Identical rounding for both providers so the numbers cannot fingerprint
-   *  the route source: whole minutes, 0.1 km (10 m below ~1 km). */
+  /** Distance only — durations come from each provider's own speed model and
+   *  are not comparable claims. Identical rounding for both routes so the
+   *  number cannot fingerprint the source: 0.1 km, 10 m steps below ~1 km. */
   function formatRouteMetrics(metadata) {
-    if (!metadata) return '';
-    const parts = [];
-    if (Number.isFinite(metadata.durationSeconds)) {
-      parts.push(`${Math.max(1, Math.round(metadata.durationSeconds / 60))} min`);
-    }
-    if (Number.isFinite(metadata.distanceMeters)) {
-      parts.push(metadata.distanceMeters >= 950
-        ? `${(metadata.distanceMeters / 1000).toFixed(1)} km`
-        : `${Math.round(metadata.distanceMeters / 10) * 10} m`);
-    }
-    return parts.join(' · ');
+    if (!metadata || !Number.isFinite(metadata.distanceMeters)) return '';
+    return metadata.distanceMeters >= 950
+      ? `${(metadata.distanceMeters / 1000).toFixed(1)} km`
+      : `${Math.round(metadata.distanceMeters / 10) * 10} m`;
   }
 
   function createId(prefix) {

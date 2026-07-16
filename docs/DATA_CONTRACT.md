@@ -109,7 +109,7 @@ async function routePairProvider({ sessionId, roundIndex }) {
 - Each geometry contains at least two valid points.
 - The two routes have different route types and stable route IDs.
 - The shell randomizes provider routes into visible Route A / Route B slots.
-- Provider identity and hidden scores are never displayed. Time and distance stay hidden in the first question by default; a challenge may opt in to rounded per-route values through the shell's `showRouteMetrics` (Fast vs Google Fast does), and each answer records whether they were visible via `metricsShown`.
+- Provider identity, hidden scores, and durations are never displayed (durations come from each provider's own speed model and are not comparable). Distance stays hidden in the first question by default; a challenge may opt in to rounded per-route distances through the shell's `showRouteMetrics` (Fast vs Google Fast does), and each answer records whether they were visible via `metricsShown`.
 - Metadata is stored with the answer's route snapshots and may support later questions or analysis.
 
 ## Production Endpoint
