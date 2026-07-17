@@ -1449,13 +1449,13 @@ html.is-challenge-dialog-open {
   --medal-metal-bottom: rgba(255, 255, 255, 0.12);
   --medal-line: rgba(255, 255, 255, 0.62);
   --medal-icon: rgba(255, 255, 255, 0.82);
-  --earned-metal-top: #d8a06f;
-  --earned-metal-mid: #9a5837;
-  --earned-metal-bottom: #4f2d25;
-  --earned-line: #f3c59b;
-  --earned-icon: #fff0d8;
-  --earned-label: #f0c9aa;
-  --earned-glow: rgba(203, 123, 70, 0.28);
+  --earned-metal-top: #ecb98c;
+  --earned-metal-mid: #b26c3f;
+  --earned-metal-bottom: #64392a;
+  --earned-line: #f8d5af;
+  --earned-icon: #fff3de;
+  --earned-label: #f6d7b9;
+  --earned-glow: rgba(216, 140, 85, 0.42);
   position: relative;
   isolation: isolate;
   display: block;
@@ -1685,8 +1685,8 @@ html.is-challenge-dialog-open {
     linear-gradient(145deg, var(--earned-metal-top) 0%, var(--earned-metal-mid) 46%, var(--earned-metal-bottom) 100%);
   background-blend-mode: soft-light, screen, normal;
   box-shadow:
-    0 0 0 3px rgba(255, 255, 255, 0.08),
-    0 0 16px var(--earned-glow),
+    0 0 0 3px rgba(255, 255, 255, 0.16),
+    0 0 20px var(--earned-glow),
     inset 0 2px 0 rgba(255, 255, 255, 0.88),
     inset 0 -4px 0 rgba(0, 0, 0, 0.22),
     inset 0 0 0 5px rgba(0, 0, 0, 0.12),
