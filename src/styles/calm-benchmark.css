@@ -1530,6 +1530,21 @@ html.is-challenge-dialog-open {
   outline: none;
 }
 
+/* Locked medals recede with distance: the next milestone is the brightest
+   grey seal and the horizon fades toward the end of the journey. Hover,
+   focus, or flip restores full presence so the threshold face stays
+   readable. */
+.calm-medal:not(.is-earned) .calm-medal__flip {
+  opacity: var(--medal-presence, 0.85);
+  transition: opacity 160ms ease;
+}
+
+.calm-medal:not(.is-earned):hover .calm-medal__flip,
+.calm-medal:not(.is-earned):focus-visible .calm-medal__flip,
+.calm-medal.is-flipped .calm-medal__flip {
+  opacity: 1;
+}
+
 .calm-medal__flip {
   position: relative;
   display: block;
