@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260717-medal-contrast-2">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260717-medal-fill-1">
   <style>
     body {
       margin: 0;
@@ -234,7 +234,6 @@
             <div class="calm-start-row">
               <button id="resume-test" type="button">Resume →</button>
             </div>
-            <p class="calm-resume-progress-label" id="resume-progress-label"></p>
           </div>
         </section>
       </section>
@@ -1138,11 +1137,6 @@
         document.getElementById('start-h2').innerHTML =
           `${count} <span>route${count === 1 ? '' : 's'} compared.</span>`;
 
-        const remaining = next ? next.at - count : 0;
-        document.getElementById('resume-progress-label').textContent = next
-          ? `${remaining} more route${remaining === 1 ? '' : 's'} to ${next.name}`
-          : 'All medals earned';
-
         shelf.innerHTML = '';
         const nextIndex = next ? MILESTONES.findIndex(milestone => milestone.at === next.at) : -1;
         const PRESENCE_BY_DISTANCE = [0.85, 0.62, 0.52, 0.44, 0.38];
@@ -1156,6 +1150,12 @@
           if (!earned && nextIndex >= 0) {
             const distance = Math.min(PRESENCE_BY_DISTANCE.length - 1, Math.max(0, index - nextIndex));
             medal.style.setProperty('--medal-presence', String(PRESENCE_BY_DISTANCE[distance]));
+          }
+          if (isNext) {
+            // The seal fills with light from the bottom: the fill is the countdown.
+            const stageStart = index > 0 ? MILESTONES[index - 1].at : 0;
+            const fill = Math.round(Math.max(0, Math.min(1, (count - stageStart) / (m.at - stageStart))) * 100);
+            medal.style.setProperty('--stage-fill', `${fill}%`);
           }
           medal.setAttribute('aria-pressed', 'false');
           medal.setAttribute('aria-label', isNext

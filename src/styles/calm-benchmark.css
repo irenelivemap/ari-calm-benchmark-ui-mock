@@ -1411,16 +1411,6 @@ html.is-challenge-dialog-open {
   gap: 12px;
 }
 
-/* The countdown caption under Resume: the one fact with no other home on the
-   card — how far the next medal is. */
-.calm-resume-progress-label {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.84);
-  text-align: center;
-  font-size: 0.74em;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
 
 .calm-resume-right .calm-start-row {
   width: 100%;
@@ -1554,11 +1544,10 @@ html.is-challenge-dialog-open {
   opacity: 1;
 }
 
-/* The next medal is lifted by material, not ornament: brighter metal at full
-   presence, so it reads clearly even when nothing is earned yet. */
+/* The next medal is lifted by material, not ornament: full presence, a
+   near-white rim and icon, and a seal that fills with light from the bottom
+   in proportion to stage progress. The fill is the countdown. */
 .calm-medal.is-next {
-  --medal-metal-top: rgba(255, 255, 255, 0.48);
-  --medal-metal-bottom: rgba(255, 255, 255, 0.2);
   --medal-line: rgba(255, 255, 255, 0.9);
   --medal-icon: #ffffff;
 }
@@ -1570,6 +1559,15 @@ html.is-challenge-dialog-open {
 
 .calm-medal.is-next .calm-medal__label {
   color: #ffffff;
+}
+
+.calm-medal.is-next .calm-medal__seal {
+  background:
+    repeating-conic-gradient(from -12deg, rgba(255, 255, 255, 0.18) 0deg 8deg, rgba(0, 0, 0, 0.14) 8deg 13deg),
+    radial-gradient(circle at 34% 25%, rgba(255, 255, 255, 0.28) 0 12%, transparent 13%),
+    linear-gradient(to top, rgba(255, 255, 255, 0.42) 0 var(--stage-fill, 0%), transparent var(--stage-fill, 0%)),
+    linear-gradient(180deg, var(--medal-metal-top) 0%, var(--medal-metal-bottom) 100%);
+  background-blend-mode: soft-light, normal, screen, normal;
 }
 
 .calm-medal__flip {
