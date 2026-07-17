@@ -1403,7 +1403,7 @@ html.is-challenge-dialog-open {
   grid-area: form;
   display: flex;
   min-width: 0;
-  width: min(100%, 400px);
+  width: min(100%, 300px);
   align-self: end;
   justify-self: end;
   flex-direction: column;
@@ -1681,6 +1681,62 @@ html.is-challenge-dialog-open {
 .calm-medal:focus-visible .calm-medal__seal {
   outline: 3px solid rgba(255, 255, 255, 0.5);
   outline-offset: 4px;
+}
+
+/* Medals are the card's heroes: shelf seals run larger than the 46px base. */
+.calm-medal-shelf .calm-medal {
+  min-height: 90px;
+}
+
+.calm-medal-shelf .calm-medal__seal {
+  width: 58px;
+  height: 58px;
+}
+
+.calm-medal-shelf .calm-medal__seal svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* The next medal is the active quest: solid rim, soft aura, and a neutral
+   ivory arc showing stage progress toward its threshold. */
+.calm-medal.is-next .calm-medal__seal {
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.09),
+    0 0 16px rgba(255, 255, 255, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.2),
+    0 7px 18px rgba(0, 0, 0, 0.28);
+}
+
+.calm-medal.is-next .calm-medal__label {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.calm-medal__arc {
+  position: absolute;
+  inset: -6px;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  transform: rotate(-90deg);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.calm-medal__arc circle {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.calm-medal__arc-track {
+  stroke: rgba(255, 255, 255, 0.14);
+}
+
+.calm-medal__arc-fill {
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-linecap: round;
 }
 
 .calm-medal__label {
@@ -3627,9 +3683,14 @@ html.is-challenge-dialog-open {
     gap: 12px 8px;
   }
 
-  .calm-medal__seal {
-    width: 42px;
-    height: 42px;
+  .calm-medal__seal,
+  .calm-medal-shelf .calm-medal__seal {
+    width: 46px;
+    height: 46px;
+  }
+
+  .calm-medal-shelf .calm-medal {
+    min-height: 78px;
   }
 
   .calm-medal {

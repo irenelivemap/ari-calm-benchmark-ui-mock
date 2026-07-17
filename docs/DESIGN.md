@@ -283,7 +283,9 @@ Rules:
 
 - Milestone ranks: 5 `Street Scout`, 10 `Trail Seeker`, 15 `Horizon Chaser`, 20 `World Mapper`, 25 `Star Navigator`, 30 `Cosmic Explorer`.
 - Every medal reserves the same centered two-line label area. The six resume-card medals use a three-by-two shelf at standard widths and switch to two columns at `340px` and below, including equivalent high-zoom layouts. Never shrink, truncate, or horizontally scroll medal names.
-- Medals are letterpress seals. Locked medals stay dark and desaturated; earned medals keep the same seal and icon geometry but gain a tier-specific metallic material: bronze, silver, gold, emerald, diamond-blue, then master-violet. The next empty slot remains visible as the motivator.
+- Medals are letterpress seals. Locked medals stay dark and desaturated with dashed rims; earned medals keep the same seal and icon geometry but gain a tier-specific metallic material: bronze, silver, gold, emerald, diamond-blue, then master-violet.
+- The next medal is the active quest and must be findable without reading labels: solid rim, soft white aura, brighter label, and a neutral ivory progress arc around its seal showing stage progress toward its threshold. Locked medals never show arcs, and the arc never uses route colors or rank metals. The contrast ladder is earned > next > locked.
+- On the resume card, medals are the visual heroes: shelf seals run larger than the base seal size, and the Resume action cluster is capped near 300px so the button never outweighs the shelf.
 - Earned medal color is an achievement state, not a route identity. Do not reuse the exact Route A orange or Route B green values in the medal palette.
 - Resume-card medals are buttons. The front shows the icon and medal name; tapping/clicking flips the medal to show the route count needed to earn it.
 - Celebration happens in words (serif italic rank in the title), not in effects. No neon, no pulsing glow.
