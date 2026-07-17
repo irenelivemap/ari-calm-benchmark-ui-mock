@@ -1531,17 +1531,26 @@ html.is-challenge-dialog-open {
 }
 
 /* Locked medals recede with distance: the next milestone is the brightest
-   grey seal and the horizon fades toward the end of the journey. Hover,
-   focus, or flip restores full presence so the threshold face stays
-   readable. */
-.calm-medal:not(.is-earned) .calm-medal__flip {
+   grey seal and the horizon fades toward the end of the journey. Only the
+   seals carry the gradient — the names keep a readability floor so every
+   goal stays legible, including the final one. Hover, focus, or flip
+   restores full presence. */
+.calm-medal:not(.is-earned) .calm-medal__seal {
   opacity: var(--medal-presence, 0.85);
   transition: opacity 160ms ease;
 }
 
-.calm-medal:not(.is-earned):hover .calm-medal__flip,
-.calm-medal:not(.is-earned):focus-visible .calm-medal__flip,
-.calm-medal.is-flipped .calm-medal__flip {
+.calm-medal:not(.is-earned) .calm-medal__label {
+  opacity: max(0.82, var(--medal-presence, 0.85));
+  transition: opacity 160ms ease;
+}
+
+.calm-medal:not(.is-earned):hover .calm-medal__seal,
+.calm-medal:not(.is-earned):focus-visible .calm-medal__seal,
+.calm-medal.is-flipped .calm-medal__seal,
+.calm-medal:not(.is-earned):hover .calm-medal__label,
+.calm-medal:not(.is-earned):focus-visible .calm-medal__label,
+.calm-medal.is-flipped .calm-medal__label {
   opacity: 1;
 }
 
