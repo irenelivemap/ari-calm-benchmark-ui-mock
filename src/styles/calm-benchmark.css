@@ -1411,43 +1411,15 @@ html.is-challenge-dialog-open {
   gap: 12px;
 }
 
-/* The labeled progress line gives the pips their meaning: count, goal, and
-   which medal the goal earns. */
+/* The countdown caption under Resume: the one fact with no other home on the
+   card — how far the next medal is. */
 .calm-resume-progress-label {
   margin: 0;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 0.78em;
+  color: rgba(255, 255, 255, 0.84);
+  text-align: center;
+  font-size: 0.74em;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-}
-
-/* Quiet reassurance metadata, deliberately not a heading. */
-.calm-resume-meta-line {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.66em;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-variant-numeric: tabular-nums;
-}
-
-.calm-resume-pips {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  min-height: 14px;
-}
-
-.calm-resume-pip {
-  flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.calm-resume-pip.is-done {
-  background: rgba(255, 255, 255, 0.82);
 }
 
 .calm-resume-right .calm-start-row {
@@ -3667,10 +3639,6 @@ html.is-challenge-dialog-open {
   .calm-medal__flip,
   .calm-medal__label {
     width: 100%;
-  }
-
-  .calm-resume-pips {
-    gap: 3px;
   }
 
   .calm-start-row input,

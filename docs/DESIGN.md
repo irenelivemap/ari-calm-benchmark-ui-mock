@@ -110,7 +110,7 @@ Intro page:
 - Side-by-side overview cards use explicit animated desktop heights: `420px` expanded and `90px` compact. Below `900px`, both states return to content-driven height.
 - The expanded Session card uses `10+ comparisons.` as a flexible goal, reassures testers with `Every comparison helps. More is even better.`, gives the target duration as `About 6 to 8 min`, confirms `Desktop and mobile` support, and introduces the medal goal with `Become a Cosmic Explorer.` / `Unlock a new medal every 5 comparisons.`
 - The resume card is an evolving rank world. It begins as the near-black arcade cabinet, then progressively gains street geometry, a traced trail, a horizon, map contours, constellations, and a cosmic field as medals are earned.
-- Rank motifs remain low-contrast behind the content and never change the card layout or ivory action. The latest rank controls the surface tint, border light, and title accent. The progress pips stay neutral ivory regardless of rank — a tinted pip reads as a route color.
+- Rank motifs remain low-contrast behind the content and never change the card layout or ivory action. The latest rank controls the surface tint, border light, and title accent. The countdown caption stays neutral white regardless of rank — tinted text there reads as a route color.
 - Crossing a medal threshold reveals the new world layer outward from that medal's position once. Reloading or revisiting an already earned tier must not replay the animation, and reduced-motion users receive the final state immediately.
 - Do not add a separate `How your answers help` disclosure to the Session card. Keep its content in one scan-friendly stack.
 
@@ -264,18 +264,18 @@ Primary question:
 The dark start card on the intro page has two states that must read as the same surface:
 
 - State 0 (no saved progress): kicker `Start testing`, title `Enter the duel.`, name form on the right.
-- Resume (saved progress): kicker `Welcome back, [name]`, title uses the intro number pattern (`4 routes compared.` / `12 routes. Wayfinder.`), progress pips + `Resume →` on the right.
+- Resume (saved progress): kicker `Welcome back, [name]`, title is always the count (`4 routes compared.`). The rank is never written in the title — the lit medal in the shelf is the rank statement, because the shelf is the journey display. The right cluster is `Resume →` with a one-line countdown caption beneath it.
 
 Rules:
 
 - Both states use the intro h2 pattern: bold number in `Outfit`, serif italic phrase in `Newsreader`. No scoreboard numerals, no glow, no all-caps data blocks.
-- Progress pips are neutral white (`rgba(255,255,255,0.82)` done, `0.12` remaining). Never route green/orange — route colors are reserved.
+- There is no secondary progress bar on the card: the medal shelf is the only progress visual. Each fact appears exactly once — count in the title, journey and rank in the shelf, distance-to-next in the countdown caption.
 - The `Resume →` button uses the same neutral bright treatment as `Start test →`.
-- The resume action cluster reads in task order: a labeled progress line (`5 of 10 routes · Trail Seeker next`, or `[n] routes · All medals earned` past the final milestone), the pips it explains, `Resume →`, and a quiet `Last played [date]` meta line beneath the action. The date is reassurance metadata, never a heading over the pips. The participant name appears once in the greeting and is not repeated in the action cluster.
+- The resume action cluster contains exactly two elements: `Resume →` and the countdown caption beneath it (`5 more routes to Trail Seeker`, or `All medals earned` past the final milestone). Recency is not displayed anywhere on the card. The medal name in the caption is a pointer to the next dimmed medal in the shelf, which the shelf alone cannot identify. The participant name appears once in the greeting and is not repeated in the action cluster.
 - At standard widths, the action cluster uses no more than about 40% of the card, aligns to the card's right padding, and bottom-aligns with the two-row medal shelf rather than centering against the whole card.
 - At narrow widths, the action cluster stacks below the medal shelf, remains left-aligned, and the Resume button spans the available width.
 - Selecting `Resume →` opens the active question panel immediately. Fresh sessions keep the existing onboarding-led collapsed state.
-- The pips goal is the next milestone (10 → 15 → 20 → 25 → 30), not a fixed 10. Counting past the goal must keep working.
+- The countdown goal is the next milestone (5 → 10 → 15 → 20 → 25 → 30) and rolls forward as medals are earned. Counting past the final goal must keep working; the caption then reads `All medals earned`.
 - There is no `New session` / reset control on the card. Clearing progress is a dev action (localStorage), not a tester affordance.
 - Contrast floor on the dark card: body text at `rgba(255,255,255,0.84)` minimum, small-caps labels at `0.72` minimum. The old `0.55` floor was too low for small text — reserve values below `0.72` for decorative elements only, never for text that must be read.
 

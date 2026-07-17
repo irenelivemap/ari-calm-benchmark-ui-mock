@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260716-resume-card-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260717-resume-card-2">
   <style>
     body {
       margin: 0;
@@ -231,12 +231,10 @@
             <p>Identifies your responses. Not shown publicly.</p>
           </form>
           <div class="calm-resume-right calm-hidden" id="resume-right">
-            <p class="calm-resume-progress-label" id="resume-progress-label"></p>
-            <div class="calm-resume-pips" id="resume-pips"></div>
             <div class="calm-start-row">
               <button id="resume-test" type="button">Resume →</button>
             </div>
-            <p class="calm-resume-meta-line" id="resume-meta-line"></p>
+            <p class="calm-resume-progress-label" id="resume-progress-label"></p>
           </div>
         </section>
       </section>
@@ -1133,33 +1131,17 @@
         updateChallengePreview(count);
         document.getElementById('challenge-action').textContent = 'Resume →';
         const next = MILESTONES.find(m => count < m.at) || null;
-        const goal = next ? next.at : MILESTONES[MILESTONES.length - 1].at;
-
         const participantName = (progress.participantName || '').trim();
         document.getElementById('start-kicker-text').textContent = participantName
           ? `Welcome back, ${participantName}`
           : 'Welcome back';
-        document.getElementById('start-h2').innerHTML = rank
-          ? `${count} <span>routes. ${rank.name}.</span>`
-          : `${count} <span>route${count === 1 ? '' : 's'} compared.</span>`;
+        document.getElementById('start-h2').innerHTML =
+          `${count} <span>route${count === 1 ? '' : 's'} compared.</span>`;
 
-        let played = 'Last played recently';
-        if (progress.savedAt) {
-          const saved = new Date(progress.savedAt);
-          const isToday = saved.toDateString() === new Date().toDateString();
-          played = `Last played ${isToday ? 'today' : saved.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-        }
-        document.getElementById('resume-meta-line').textContent = played;
+        const remaining = next ? next.at - count : 0;
         document.getElementById('resume-progress-label').textContent = next
-          ? `${count} of ${next.at} routes · ${next.name} next`
-          : `${count} routes · All medals earned`;
-        const pipsEl = document.getElementById('resume-pips');
-        pipsEl.innerHTML = '';
-        for (let i = 0; i < goal; i++) {
-          const pip = document.createElement('div');
-          pip.className = 'calm-resume-pip' + (i < count ? ' is-done' : '');
-          pipsEl.appendChild(pip);
-        }
+          ? `${remaining} more route${remaining === 1 ? '' : 's'} to ${next.name}`
+          : 'All medals earned';
 
         shelf.innerHTML = '';
         MILESTONES.forEach((m, index) => {
