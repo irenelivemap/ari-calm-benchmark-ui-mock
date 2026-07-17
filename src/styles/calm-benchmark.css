@@ -1561,13 +1561,34 @@ html.is-challenge-dialog-open {
   color: #ffffff;
 }
 
+/* The fill is the medal's own tier metal rising, slightly translucent so the
+   still-white icon stays legible; the full earned treatment (glow, inset
+   light, tier icon color) snaps in only at completion. The plain-color
+   declaration is the fallback for browsers without color-mix. */
 .calm-medal.is-next .calm-medal__seal {
   background:
     repeating-conic-gradient(from -12deg, rgba(255, 255, 255, 0.18) 0deg 8deg, rgba(0, 0, 0, 0.14) 8deg 13deg),
     radial-gradient(circle at 34% 25%, rgba(255, 255, 255, 0.28) 0 12%, transparent 13%),
-    linear-gradient(to top, rgba(255, 255, 255, 0.42) 0 var(--stage-fill, 0%), transparent var(--stage-fill, 0%)),
+    linear-gradient(to top,
+      var(--earned-metal-bottom) 0,
+      var(--earned-metal-mid) calc(var(--stage-fill, 0%) * 0.55),
+      var(--earned-metal-top) var(--stage-fill, 0%),
+      transparent var(--stage-fill, 0%)),
     linear-gradient(180deg, var(--medal-metal-top) 0%, var(--medal-metal-bottom) 100%);
-  background-blend-mode: soft-light, normal, screen, normal;
+  background:
+    repeating-conic-gradient(from -12deg, rgba(255, 255, 255, 0.18) 0deg 8deg, rgba(0, 0, 0, 0.14) 8deg 13deg),
+    radial-gradient(circle at 34% 25%, rgba(255, 255, 255, 0.28) 0 12%, transparent 13%),
+    linear-gradient(to top,
+      color-mix(in srgb, var(--earned-metal-bottom) 85%, transparent) 0,
+      color-mix(in srgb, var(--earned-metal-mid) 85%, transparent) calc(var(--stage-fill, 0%) * 0.55),
+      color-mix(in srgb, var(--earned-metal-top) 85%, transparent) var(--stage-fill, 0%),
+      transparent var(--stage-fill, 0%)),
+    linear-gradient(180deg, var(--medal-metal-top) 0%, var(--medal-metal-bottom) 100%);
+  background-blend-mode: soft-light, normal, normal, normal;
+}
+
+.calm-medal.is-next .calm-medal__seal svg {
+  filter: drop-shadow(0 1px 3px rgba(10, 12, 11, 0.6));
 }
 
 .calm-medal__flip {
