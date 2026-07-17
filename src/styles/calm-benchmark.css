@@ -1554,6 +1554,24 @@ html.is-challenge-dialog-open {
   opacity: 1;
 }
 
+/* The next medal is lifted by material, not ornament: brighter metal at full
+   presence, so it reads clearly even when nothing is earned yet. */
+.calm-medal.is-next {
+  --medal-metal-top: rgba(255, 255, 255, 0.48);
+  --medal-metal-bottom: rgba(255, 255, 255, 0.2);
+  --medal-line: rgba(255, 255, 255, 0.9);
+  --medal-icon: #ffffff;
+}
+
+.calm-medal.is-next .calm-medal__seal,
+.calm-medal.is-next .calm-medal__label {
+  opacity: 1;
+}
+
+.calm-medal.is-next .calm-medal__label {
+  color: #ffffff;
+}
+
 .calm-medal__flip {
   position: relative;
   display: block;
