@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260717-medal-focus-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260717-resume-card-2">
   <style>
     body {
       margin: 0;
@@ -1146,30 +1146,17 @@
         shelf.innerHTML = '';
         MILESTONES.forEach((m, index) => {
           const earned = count >= m.at;
-          const isNext = !earned && !!next && m.at === next.at;
-          const stageStart = index > 0 ? MILESTONES[index - 1].at : 0;
-          const stagePercent = isNext
-            ? Math.round(Math.max(0, Math.min(1, (count - stageStart) / (m.at - stageStart))) * 100)
-            : 0;
-          const arcMarkup = isNext
-            ? `<svg class="calm-medal__arc" viewBox="0 0 52 52" aria-hidden="true">` +
-                `<circle class="calm-medal__arc-track" cx="26" cy="26" r="24" pathLength="100"></circle>` +
-                `<circle class="calm-medal__arc-fill" cx="26" cy="26" r="24" pathLength="100" style="stroke-dasharray:${stagePercent} ${100 - stagePercent}"></circle>` +
-              `</svg>`
-            : '';
           const medal = document.createElement('button');
           medal.type = 'button';
-          medal.className = 'calm-medal' + (earned ? ' is-earned' : isNext ? ' is-next' : '');
+          medal.className = 'calm-medal' + (earned ? ' is-earned' : '');
           medal.dataset.medalTier = String(index + 1);
           medal.setAttribute('aria-pressed', 'false');
-          medal.setAttribute('aria-label', isNext
-            ? `${m.name} medal, next goal, ${count} of ${m.at} routes`
-            : `${m.name} medal, ${earned ? 'earned' : 'locked'}, ${m.at} routes`);
+          medal.setAttribute('aria-label', `${m.name} medal, ${earned ? 'earned' : 'locked'}, ${m.at} routes`);
           const medalNameParts = m.name.split(' ');
           medal.innerHTML =
             `<span class="calm-medal__flip">` +
               `<span class="calm-medal__face calm-medal__face--front">` +
-                `<span class="calm-medal__seal" aria-hidden="true">${m.icon}${arcMarkup}</span>` +
+                `<span class="calm-medal__seal" aria-hidden="true">${m.icon}</span>` +
                 `<span class="calm-medal__label">${medalNameParts.map(part => `<span>${part}</span>`).join('')}</span>` +
               `</span>` +
               `<span class="calm-medal__face calm-medal__face--back" aria-hidden="true">` +
