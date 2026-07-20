@@ -4031,6 +4031,74 @@ html.is-challenge-dialog-open {
   background: var(--ari-green-deep);
 }
 
+/* Live Street View position: identity-colored core, pulsing halo, and a view
+   cone rotating with the panorama heading. Nothing else on the map pulses or
+   has a beam, so this marker alone reads as "you are standing here". */
+.ari-sv-marker {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.ari-sv-marker__dot {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  box-sizing: border-box;
+  background: var(--sv-color, #101511);
+  box-shadow: 0 1px 5px rgba(16, 21, 17, 0.4);
+}
+
+.ari-sv-marker__halo {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: var(--sv-color, #101511);
+  opacity: 0;
+  animation: ari-sv-pulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.ari-sv-marker__cone {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(from -26deg, var(--sv-color, #101511) 0 52deg, transparent 52deg);
+  opacity: 0.24;
+  -webkit-mask: radial-gradient(circle, transparent 10px, #000 11px, transparent 26px);
+  mask: radial-gradient(circle, transparent 10px, #000 11px, transparent 26px);
+}
+
+.ari-sv-marker__cone[hidden] {
+  display: none;
+}
+
+@keyframes ari-sv-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.35;
+  }
+  70%,
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ari-sv-marker__halo {
+    animation: none;
+    transform: none;
+    opacity: 0.16;
+  }
+}
+
 /* Benchmark map actions live inside the provider's own control stack
    (top-right), above the provider's native camera/zoom controls. */
 .ari-map__tools {

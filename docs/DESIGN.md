@@ -173,6 +173,7 @@ Street View:
 - Entering and leaving Street View animates the same seam: it glides open to the saved split (~320ms) and glides shut on `Back to map` (~300ms) while the map resizes continuously, then the camera eases home instead of teleporting. Reduced motion switches instantly.
 - `Back to map` restores the exact camera, question state, and answers, then turns the mode off.
 - The viewer identifies points on Route A or Route B with the existing route color, and points away from both routes as a neutral `Map point`. It never exposes the route source.
+- The map marks the current panorama position with a live marker: identity-colored core, soft pulsing halo (static at low opacity under reduced motion), and a translucent view cone that rotates with the panorama heading. It is the only element on the map that pulses or has a beam, so it can never be confused with the static start/destination dots. It moves as the tester walks and the cone follows where they look.
 - If imagery or the Google API is unavailable, show that state inside the inspector and keep the tester in the benchmark. Never open an external tab as a fallback.
 
 ## Onboarding Rules

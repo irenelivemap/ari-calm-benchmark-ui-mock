@@ -430,6 +430,7 @@
     let roundTransitionTimer = null;
     let streetViewCloseTimer = null;
     let streetViewPositionListener = null;
+    let streetViewPovListener = null;
     let streetViewRequestId = 0;
 
     function canContinueAfterCurrentRound() {
@@ -931,11 +932,13 @@
     }
 
     function removeStreetViewPositionListener() {
-      if (!streetViewPositionListener) return;
+      if (!streetViewPositionListener && !streetViewPovListener) return;
       if (window.google?.maps?.event) {
-        window.google.maps.event.removeListener(streetViewPositionListener);
+        if (streetViewPositionListener) window.google.maps.event.removeListener(streetViewPositionListener);
+        if (streetViewPovListener) window.google.maps.event.removeListener(streetViewPovListener);
       }
       streetViewPositionListener = null;
+      streetViewPovListener = null;
     }
 
     function finalizeSplitTeardown() {
@@ -1087,6 +1090,11 @@
             state.streetViewRoute
           );
         });
+        streetViewPovListener = state.streetViewPanorama.addListener('pov_changed', () => {
+          const pov = state.streetViewPanorama.getPov();
+          if (pov) state.mapAdapter.setStreetViewHeading(pov.heading ?? 0);
+        });
+        state.mapAdapter.setStreetViewHeading(state.streetViewPanorama.getPov()?.heading ?? 0);
         });
       };
 

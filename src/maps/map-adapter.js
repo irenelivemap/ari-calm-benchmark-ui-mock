@@ -25,6 +25,37 @@
     return !!window.maplibregl;
   }
 
+  /** DOM for the live Street View position marker: identity-colored core,
+   *  pulsing halo, and a view cone rotating with the panorama heading. */
+  function createStreetViewMarkerElement(color) {
+    const element = document.createElement('span');
+    element.className = 'ari-sv-marker';
+    element.style.setProperty('--sv-color', color);
+    element.innerHTML =
+      '<span class="ari-sv-marker__halo"></span>' +
+      '<span class="ari-sv-marker__cone" hidden></span>' +
+      '<span class="ari-sv-marker__dot"></span>';
+    return element;
+  }
+
+  function updateStreetViewMarkerElement(element, { color, heading } = {}) {
+    if (!element) return;
+    if (color) element.style.setProperty('--sv-color', color);
+    if (heading !== undefined) {
+      const cone = element.querySelector('.ari-sv-marker__cone');
+      if (!cone) return;
+      if (heading === null || !Number.isFinite(heading)) {
+        cone.hidden = true;
+      } else {
+        cone.hidden = false;
+        cone.style.transform = `translate(-50%, -50%) rotate(${heading}deg)`;
+      }
+    }
+  }
+
+  /** Wedge for the Google symbol marker; the tip sits on the position. */
+  const GOOGLE_CONE_PATH = 'M 0 0 L -7.2 -16.5 A 18 18 0 0 1 7.2 -16.5 Z';
+
   /** LiveMap style pipeline imported from livemap-routing/runtime demo. */
   const LIVEMAP_STYLE_BASE = 'https://map.paas.livemap.sh/styles';
   const LIVEMAP_BASEMAP_TILEJSON_URL = 'https://tiles.livemap-dev.com/basemap';
@@ -84,6 +115,9 @@
       streetHandlerBound: false,
       streetViewEnabled: false,
       streetViewMarker: null,
+      streetViewMarkerEl: null,
+      streetViewGoogleParts: null,
+      streetViewHeading: null,
       mapStyleVariant: options.mapStyleVariant || 'bright',
       destroyed: false,
       maplibreInit: null,
@@ -715,76 +749,131 @@
     }
 
     function clearStreetViewPosition() {
-      if (!state.streetViewMarker) return;
-      if (state.provider === 'google') state.streetViewMarker.setMap(null);
-      else state.streetViewMarker.remove();
-      state.streetViewMarker = null;
+      if (state.streetViewGoogleParts) {
+        Object.values(state.streetViewGoogleParts).forEach(part => part.setMap(null));
+        state.streetViewGoogleParts = null;
+      }
+      if (state.streetViewMarker) {
+        if (state.provider !== 'google') state.streetViewMarker.remove();
+        state.streetViewMarker = null;
+      }
+      state.streetViewMarkerEl = null;
+      state.streetViewHeading = null;
+    }
+
+    function googleDotIcon(color) {
+      return {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 9,
+        fillColor: color,
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 3
+      };
+    }
+
+    function googleHaloIcon(color) {
+      return {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 17,
+        fillColor: color,
+        fillOpacity: 0.12,
+        strokeOpacity: 0
+      };
+    }
+
+    function googleConeIcon(color, heading) {
+      return {
+        path: GOOGLE_CONE_PATH,
+        scale: 1.6,
+        fillColor: color,
+        fillOpacity: 0.22,
+        strokeOpacity: 0,
+        rotation: heading || 0,
+        anchor: new google.maps.Point(0, 0)
+      };
+    }
+
+    function streetViewColor(routeKey) {
+      return routeKey === 'routeB'
+        ? state.routeBColor
+        : routeKey === 'routeA' ? state.routeAColor : '#101511';
     }
 
     function setStreetViewPosition(point, routeKey = 'routeA') {
-      const color = routeKey === 'routeB'
-        ? state.routeBColor
-        : routeKey === 'routeA' ? state.routeAColor : '#101511';
+      const color = streetViewColor(routeKey);
       if (state.provider === 'maplibre') {
         return whenMapLibreReady(map => {
           if (!state.streetViewEnabled) return;
           if (!state.streetViewMarker) {
-            const element = document.createElement('span');
-            element.style.cssText = 'display:block;width:18px;height:18px;border-radius:50%;'
-              + 'border:3px solid #ffffff;box-sizing:border-box;box-shadow:0 1px 5px rgba(16,21,17,0.4);';
-            element.style.background = color;
-            state.streetViewMarker = new maplibregl.Marker({ element })
+            state.streetViewMarkerEl = createStreetViewMarkerElement(color);
+            state.streetViewMarker = new maplibregl.Marker({ element: state.streetViewMarkerEl })
               .setLngLat([point.lng, point.lat])
               .addTo(map);
-            return;
+          } else {
+            state.streetViewMarker.setLngLat([point.lng, point.lat]);
           }
-          state.streetViewMarker.setLngLat([point.lng, point.lat]);
-          state.streetViewMarker.getElement().style.background = color;
+          updateStreetViewMarkerElement(state.streetViewMarkerEl, {
+            color,
+            heading: state.streetViewHeading
+          });
         });
       }
       ensure();
       if (state.provider === 'google') {
-        if (!state.streetViewMarker) {
-          state.streetViewMarker = new google.maps.Marker({
-            map: state.map,
-            clickable: false,
-            zIndex: 80,
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 9,
-              fillColor: color,
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 3
-            }
-          });
+        if (!state.streetViewGoogleParts) {
+          const shared = { map: state.map, clickable: false };
+          state.streetViewGoogleParts = {
+            halo: new google.maps.Marker({ ...shared, zIndex: 78, icon: googleHaloIcon(color) }),
+            cone: new google.maps.Marker({ ...shared, zIndex: 79, icon: googleConeIcon(color, state.streetViewHeading) }),
+            dot: new google.maps.Marker({ ...shared, zIndex: 80, icon: googleDotIcon(color) })
+          };
         }
-        state.streetViewMarker.setIcon({
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 9,
-          fillColor: color,
-          fillOpacity: 1,
-          strokeColor: '#ffffff',
-          strokeWeight: 3
+        const parts = state.streetViewGoogleParts;
+        parts.halo.setIcon(googleHaloIcon(color));
+        parts.cone.setIcon(googleConeIcon(color, state.streetViewHeading));
+        parts.dot.setIcon(googleDotIcon(color));
+        Object.values(parts).forEach(part => {
+          part.setPosition(point);
+          part.setMap(state.map);
         });
-        state.streetViewMarker.setPosition(point);
-        state.streetViewMarker.setMap(state.map);
+        parts.cone.setVisible(state.streetViewHeading != null);
         return;
       }
 
       if (!state.streetViewMarker) {
-        state.streetViewMarker = L.circleMarker([point.lat, point.lng], {
-          radius: 9,
-          color: '#ffffff',
-          weight: 3,
-          fillColor: color,
-          fillOpacity: 1,
-          interactive: false
+        const element = createStreetViewMarkerElement(color);
+        state.streetViewMarker = L.marker([point.lat, point.lng], {
+          icon: L.divIcon({ className: '', html: element.outerHTML, iconSize: [18, 18], iconAnchor: [9, 9] }),
+          interactive: false,
+          keyboard: false
         }).addTo(state.map);
+        state.streetViewMarkerEl = state.streetViewMarker.getElement()?.querySelector('.ari-sv-marker') || null;
       } else {
         state.streetViewMarker.setLatLng([point.lat, point.lng]);
-        state.streetViewMarker.setStyle({ fillColor: color });
       }
+      updateStreetViewMarkerElement(state.streetViewMarkerEl, {
+        color,
+        heading: state.streetViewHeading
+      });
+    }
+
+    /** Rotate the marker's view cone with the panorama heading; null hides it. */
+    function setStreetViewHeading(heading) {
+      state.streetViewHeading = Number.isFinite(heading) ? heading : null;
+      if (state.provider === 'google') {
+        const parts = state.streetViewGoogleParts;
+        if (!parts) return;
+        if (state.streetViewHeading == null) {
+          parts.cone.setVisible(false);
+          return;
+        }
+        const icon = parts.cone.getIcon();
+        parts.cone.setIcon({ ...icon, rotation: state.streetViewHeading });
+        parts.cone.setVisible(true);
+        return;
+      }
+      updateStreetViewMarkerElement(state.streetViewMarkerEl, { heading: state.streetViewHeading });
     }
 
     function getViewState() {
@@ -894,6 +983,7 @@
       restoreViewState,
       setStreetViewEnabled,
       setStreetViewPosition,
+      setStreetViewHeading,
       clearStreetViewPosition,
       setRoutesVisible,
       zoomIn,
