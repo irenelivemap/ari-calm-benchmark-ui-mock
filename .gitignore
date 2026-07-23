@@ -1,4 +1,6 @@
 .DS_Store
+.claude/
+.codex/
 .impeccable/
 node_modules/
 *.log
