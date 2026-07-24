@@ -5776,33 +5776,26 @@ html.is-challenge-dialog-open {
 
 .ari-question-block .ari-choice-grid .ari-choice-anchor {
   font-weight: 800;
-  border-radius: 3px;
-  padding: 0 4px;
-  margin: 0 -1px;
 }
 
 /* Default / no context */
 .ari-choice-grid:not([data-worse-route]) .ari-choice-anchor,
 .ari-choice-grid[data-worse-route=""] .ari-choice-anchor {
-  background: rgba(255, 255, 255, 0.13);
   color: #fff;
 }
 
 /* Route A is the worse one (participant chose B) */
 .ari-choice-grid[data-worse-route="a"] .ari-choice-anchor {
-  background: rgba(200, 71, 32, 0.12);
   color: #fce0d0;
 }
 
 /* Route B is the worse one (participant chose A) */
 .ari-choice-grid[data-worse-route="b"] .ari-choice-anchor {
-  background: rgba(8, 120, 77, 0.14);
   color: #c8f0e0;
 }
 
 /* Both routes were poor */
 .ari-choice-grid[data-worse-route="both"] .ari-choice-anchor {
-  background: rgba(255, 210, 140, 0.10);
   color: #ffecc0;
 }
 
