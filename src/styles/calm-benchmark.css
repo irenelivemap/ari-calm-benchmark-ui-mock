@@ -5814,9 +5814,9 @@ html.is-challenge-dialog-open {
   color: #c8f0e0;
 }
 
-/* Both routes were poor — no route to reference, use plain white */
+/* Both routes were poor */
 .ari-choice-grid[data-worse-route="both"] .ari-choice-anchor {
-  color: #fff;
+  color: #F0AE2E;
 }
 
 @media (prefers-reduced-motion: reduce) {
