@@ -1236,6 +1236,8 @@
 
     function syncQ3Variant() {
       const variant = getQ3Variant();
+      const q1 = getQ1Choice();
+      els.q3Grid.dataset.worseRoute = q1 === 'route_a' ? 'b' : q1 === 'route_b' ? 'a' : q1 === 'both_work_poorly' ? 'both' : '';
       if (els.q3Grid.dataset.variantKey !== variant.key) {
         const selectedIssues = new Set(
           Array.from(els.q3Grid.querySelectorAll('input[name="q3Issues"]:checked'), input => input.value)
