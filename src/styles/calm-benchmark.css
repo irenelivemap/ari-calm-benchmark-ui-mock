@@ -5749,10 +5749,7 @@ html.is-challenge-dialog-open {
   color: #0A6040;
 }
 
-.ari-choice-grid[data-worse-route="both"] label.is-selected .ari-choice-anchor {
-  color: #7a5a10;
-}
-
+.ari-choice-grid[data-worse-route="both"] label.is-selected .ari-choice-anchor,
 .ari-choice-grid:not([data-worse-route]) label.is-selected .ari-choice-anchor,
 .ari-choice-grid[data-worse-route=""] label.is-selected .ari-choice-anchor {
   color: #101511;
@@ -5767,6 +5764,11 @@ html.is-challenge-dialog-open {
 .ari-q3-route-tag--b {
   color: #4FD19B;
   font-weight: 800;
+}
+
+/* No tick in Q3 — the light row background is selection signal enough */
+.ari-question-block [data-q3-grid] label::after {
+  content: none;
 }
 
 /* Icon + bold-keyword layout for Q3 checkbox options */
@@ -5812,9 +5814,9 @@ html.is-challenge-dialog-open {
   color: #c8f0e0;
 }
 
-/* Both routes were poor */
+/* Both routes were poor — no route to reference, use plain white */
 .ari-choice-grid[data-worse-route="both"] .ari-choice-anchor {
-  color: #ffecc0;
+  color: #fff;
 }
 
 @media (prefers-reduced-motion: reduce) {
