@@ -5765,6 +5765,7 @@ html.is-challenge-dialog-open {
 
 .ari-question-block .ari-choice-grid .ari-choice-anchor {
   font-weight: 800;
+  color: #fff;
 }
 
 @media (prefers-reduced-motion: reduce) {
