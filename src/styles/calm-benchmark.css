@@ -5779,20 +5779,20 @@ html.is-challenge-dialog-open {
 
 /* Route A is the worse one (participant chose B) */
 .ari-choice-grid[data-worse-route="a"] .ari-choice-anchor {
-  background: rgba(200, 71, 32, 0.22);
-  color: #F5A17F;
+  background: rgba(200, 71, 32, 0.12);
+  color: #fce0d0;
 }
 
 /* Route B is the worse one (participant chose A) */
 .ari-choice-grid[data-worse-route="b"] .ari-choice-anchor {
-  background: rgba(8, 120, 77, 0.24);
-  color: #5BE0A3;
+  background: rgba(8, 120, 77, 0.14);
+  color: #c8f0e0;
 }
 
 /* Both routes were poor */
 .ari-choice-grid[data-worse-route="both"] .ari-choice-anchor {
-  background: rgba(255, 210, 140, 0.14);
-  color: #ffd98a;
+  background: rgba(255, 210, 140, 0.10);
+  color: #ffecc0;
 }
 
 @media (prefers-reduced-motion: reduce) {
