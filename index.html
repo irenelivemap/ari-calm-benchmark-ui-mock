@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260720-sv-marker-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260724-q3-icons-1">
   <style>
     body {
       margin: 0;
@@ -259,8 +259,8 @@
   <script src="./src/data/benchmark-transport.js?v=20260715-production-ready-2"></script>
   <script src="./src/results/calm-results.js?v=20260713-live-results-1"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
-  <script src="./src/maps/map-adapter.js?v=20260720-sv-marker-1"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260720-sv-marker-1"></script>
+  <script src="./src/maps/map-adapter.js?v=20260724-q3-icons-1"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260724-q3-icons-1"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -344,9 +344,9 @@
           ariaLabel: 'ARI Fast versus Google Fast route benchmark',
           routeTypes: ['livemap_fast', 'google'],
           questions: {
-            q1: 'Which route works better as the Fast route?',
+            q1: 'Which route would you prefer in this situation?',
             q2: 'Would both routes work well as Fast options?',
-            q3: 'What made the other route worse as a Fast route?'
+            q3: 'What made the other route worse?'
           },
           context: null,
           q1Options: [
@@ -354,20 +354,38 @@
             { value: 'route_b', label: 'Route B', className: 'ari-choice--route-b' },
             { value: 'both_work_well', label: 'Both work well' },
             { value: 'both_work_poorly', label: 'Both work poorly' },
-            { value: 'not_sure', label: "I don't know" }
+            { value: 'not_sure', label: "I'm not sure" }
           ],
           q2Options: [],
           q3Options: [
-            { value: 'longer_time', label: 'Longer time' },
-            { value: 'longer_distance', label: 'Longer distance' },
-            { value: 'misses_shortcut', label: 'Misses shortcut' },
-            { value: 'too_complex', label: 'Too complex to follow' },
-            { value: 'unclear_shortcut', label: 'Unclear shortcut' },
-            { value: 'too_busy_or_crowded', label: 'Too busy or crowded' },
-            { value: 'misses_nicer_route', label: 'Misses nicer route (river, lake, park)' },
-            { value: 'lacks_amenities', label: 'Lacks amenities' },
-            { value: 'other', label: 'Other' }
+            { value: 'longer_time', label: 'Takes longer' },
+            { value: 'unnecessary_detour', label: 'Takes an unnecessary detour' },
+            { value: 'misses_shortcut', label: 'Misses a useful shortcut' },
+            { value: 'too_complex', label: 'Is hard to follow' },
+            { value: 'crossing_friction', label: 'Has difficult street crossings' },
+            { value: 'too_busy_or_crowded', label: 'Goes along busy roads or through crowded areas' },
+            { value: 'misses_nicer_route', label: 'Misses a more pleasant route' },
+            { value: 'may_not_be_walkable', label: 'Part of the route may not be walkable' },
+            { value: 'other', label: 'Other' },
+            { value: 'not_sure', label: "I'm not sure", exclusive: true }
           ],
+          q3Variants: {
+            both_work_poorly: {
+              question: 'What made both routes poor options?',
+              options: [
+                { value: 'longer_time', label: 'Take too long' },
+                { value: 'unnecessary_detour', label: 'Take an unnecessary detour' },
+                { value: 'misses_shortcut', label: 'Miss a useful shortcut' },
+                { value: 'too_complex', label: 'Are hard to follow' },
+                { value: 'crossing_friction', label: 'Have difficult street crossings' },
+                { value: 'too_busy_or_crowded', label: 'Go along busy roads or through crowded areas' },
+                { value: 'misses_nicer_route', label: 'Miss a more pleasant route' },
+                { value: 'may_not_be_walkable', label: 'Part of the routes may not be walkable' },
+                { value: 'other', label: 'Other' },
+                { value: 'not_sure', label: "I'm not sure", exclusive: true }
+              ]
+            }
+          },
           followUps: {
             route_a: ['q3'],
             route_b: ['q3'],
@@ -574,7 +592,7 @@
         ['Google Fast', outcomeCounts.google, 'google'],
         ['Both work well', outcomeCounts.both_work_well, 'both_work_well'],
         ['Both work poorly', outcomeCounts.both_work_poorly, 'both_work_poorly'],
-        ["I don't know", outcomeCounts.not_sure, 'not_sure']
+        ["I'm not sure", outcomeCounts.not_sure, 'not_sure']
       ];
       const reasonEntries = activeConfig.benchmark.q3Options
         .map(option => [option.label, reasonCounts[option.value], option.value])
@@ -700,7 +718,7 @@
       const choice = answer.q1Choice || answer.choice;
       if (choice === 'both_work_well') return 'Both work well';
       if (choice === 'both_work_poorly') return 'Both work poorly';
-      if (choice === 'not_sure') return "I don't know";
+      if (choice === 'not_sure') return "I'm not sure";
       if (choice !== 'route_a' && choice !== 'route_b') return 'Unknown';
       const slot = choice === 'route_a' ? 'A' : 'B';
       const provider = answer.labelMap?.[slot] || answer.labels?.[slot]?.routeType;

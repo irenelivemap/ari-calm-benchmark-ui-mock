@@ -5740,6 +5740,37 @@ html.is-challenge-dialog-open {
   box-shadow: none;
 }
 
+/* Icon + anchor layout for Q3 checkbox options */
+.ari-choice-icon {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  opacity: 0.6;
+  transition: opacity 150ms ease;
+}
+
+.ari-question-block .ari-choice-grid label:has(.ari-choice-icon) {
+  gap: 10px 12px;
+  padding-left: 10px;
+}
+
+.ari-question-block .ari-choice-grid label.is-selected .ari-choice-icon {
+  opacity: 0.9;
+}
+
+.ari-choice-anchor {
+  font-weight: 700;
+  font-size: 0.88rem;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ari-choice-icon {
+    transition: none;
+  }
+}
+
 .ari-note-details {
   border-top-color: rgba(255, 255, 255, 0.12);
 }

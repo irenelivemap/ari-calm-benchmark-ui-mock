@@ -1,5 +1,31 @@
 (function () {
   const DEFAULT_TOTAL_ROUNDS = 10;
+
+  const CHOICE_ICONS = {
+    longer_time: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="7"/><path d="M9 5v4l2.5 2.5"/></svg>`,
+    unnecessary_detour: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15V9a4 4 0 0 1 8 0"/><polyline points="10,5 13,9 10,13"/></svg>`,
+    misses_shortcut: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="11,2 6,10 11,10 6,16"/></svg>`,
+    too_complex: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2v5"/><path d="M9 7l-5 7"/><path d="M9 7l5 7"/></svg>`,
+    crossing_friction: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="1.5" width="7" height="15" rx="2"/><circle cx="9" cy="5.5" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="9" cy="12.5" r="1.5"/></svg>`,
+    too_busy_or_crowded: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="12" cy="5" r="2"/><path d="M2 15c0-2.5 1.8-4 4-4s4 1.5 4 4"/><path d="M8 15c0-2.5 1.8-4 4-4s4 1.5 4 4"/></svg>`,
+    misses_nicer_route: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 15C9 15 3 11 3 6a6 6 0 0 1 12 0c0 5-6 9-6 9z"/><path d="M9 8v7"/></svg>`,
+    may_not_be_walkable: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="7"/><line x1="4.5" y1="13.5" x2="13.5" y2="4.5"/></svg>`,
+    other: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="none" aria-hidden="true"><circle cx="5" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="13" cy="9" r="1.2" fill="currentColor"/></svg>`,
+    not_sure: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5A2.5 2.5 0 0 1 12 7c0 2-3 2.5-3 5"/><circle cx="9" cy="15" r="0.8" fill="currentColor" stroke="none"/></svg>`,
+  };
+
+  const CHOICE_ANCHORS = {
+    longer_time:         'Too long',
+    unnecessary_detour:  'Unnecessary detour',
+    misses_shortcut:     'Misses a shortcut',
+    too_complex:         'Hard to follow',
+    crossing_friction:   'Difficult crossings',
+    too_busy_or_crowded: 'Busy or crowded',
+    misses_nicer_route:  'No pleasant route',
+    may_not_be_walkable: 'Not walkable',
+    other:               'Other',
+    not_sure:            "I'm not sure",
+  };
   const ROUTE_FIT_MAX_ZOOM = 19;
   const DEFAULT_QUESTION_COPY = {
     q1: 'Which route would you choose for this calm walk?',
@@ -80,6 +106,7 @@
       q1Options: Array.isArray(config.q1Options) ? config.q1Options : DEFAULT_BENCHMARK_CONFIG.q1Options,
       q2Options: Array.isArray(config.q2Options) ? config.q2Options : DEFAULT_BENCHMARK_CONFIG.q2Options,
       q3Options: Array.isArray(config.q3Options) ? config.q3Options : DEFAULT_BENCHMARK_CONFIG.q3Options,
+      q3Variants: config.q3Variants && typeof config.q3Variants === 'object' ? config.q3Variants : {},
       followUps: { ...DEFAULT_BENCHMARK_CONFIG.followUps, ...(config.followUps || {}) },
       uncertainChoices: Array.isArray(config.uncertainChoices)
         ? config.uncertainChoices
@@ -90,10 +117,16 @@
   function renderChoiceOptions(options, { name, type = 'radio', withRouteMetrics = false }) {
     return options.map(option => {
       const className = option.className ? ` class="${escapeHtml(option.className)}"` : '';
+      const exclusive = type === 'checkbox' && option.exclusive ? ' data-exclusive-choice' : '';
       const metricsSlot = withRouteMetrics && (option.value === 'route_a' || option.value === 'route_b')
         ? `<span class="ari-choice-metrics" data-route-metrics="${option.value === 'route_a' ? 'a' : 'b'}" hidden></span>`
         : '';
-      return `<label${className}><input type="${type}" name="${escapeHtml(name)}" value="${escapeHtml(option.value)}">${escapeHtml(option.label)}${metricsSlot}</label>`;
+      const icon = type === 'checkbox' ? CHOICE_ICONS[option.value] : null;
+      const anchor = type === 'checkbox' ? CHOICE_ANCHORS[option.value] : null;
+      const labelContent = icon && anchor
+        ? `${icon}<strong class="ari-choice-anchor">${escapeHtml(anchor)}</strong>`
+        : `${escapeHtml(option.label)}${metricsSlot}`;
+      return `<label${className}><input type="${type}" name="${escapeHtml(name)}" value="${escapeHtml(option.value)}"${exclusive}>${labelContent}</label>`;
     }).join('');
   }
 
@@ -270,9 +303,9 @@
 
                 <section class="ari-question-block" data-q3 hidden>
                 <fieldset>
-                  <legend>${escapeHtml(benchmark.questions.q3)}</legend>
+                  <legend data-q3-question>${escapeHtml(benchmark.questions.q3)}</legend>
                   <p class="ari-question-hint" id="ari-q3-hint">Select all that apply.</p>
-                  <div class="ari-choice-grid" aria-describedby="ari-q3-hint">
+                  <div class="ari-choice-grid" data-q3-grid data-variant-key="default" aria-describedby="ari-q3-hint">
                     ${renderChoiceOptions(benchmark.q3Options, { name: 'q3Issues', type: 'checkbox' })}
                   </div>
                   <div class="ari-question-note" data-q3-note hidden>
@@ -405,6 +438,8 @@
       q1: root.querySelector('[data-q1]'),
       q2: root.querySelector('[data-q2]'),
       q3: root.querySelector('[data-q3]'),
+      q3Question: root.querySelector('[data-q3-question]'),
+      q3Grid: root.querySelector('[data-q3-grid]'),
       q3NoteWrap: root.querySelector('[data-q3-note]'),
       q3Note: root.querySelector('textarea[name="q3Note"]'),
       contextToggle: root.querySelector('[data-action="toggle-context"]'),
@@ -1170,6 +1205,38 @@
       return ['q1', ...(benchmark.followUps[selected] || [])];
     }
 
+    function getQ3Variant() {
+      const selected = getQ1Choice();
+      const variant = benchmark.q3Variants[selected];
+      return variant
+        ? {
+            key: selected,
+            question: variant.question || benchmark.questions.q3,
+            options: Array.isArray(variant.options) ? variant.options : benchmark.q3Options
+          }
+        : {
+            key: 'default',
+            question: benchmark.questions.q3,
+            options: benchmark.q3Options
+          };
+    }
+
+    function syncQ3Variant() {
+      const variant = getQ3Variant();
+      if (els.q3Grid.dataset.variantKey !== variant.key) {
+        const selectedIssues = new Set(
+          Array.from(els.q3Grid.querySelectorAll('input[name="q3Issues"]:checked'), input => input.value)
+        );
+        els.q3Grid.innerHTML = renderChoiceOptions(variant.options, { name: 'q3Issues', type: 'checkbox' });
+        els.q3Grid.querySelectorAll('input[name="q3Issues"]').forEach(input => {
+          input.checked = selectedIssues.has(input.value);
+        });
+        els.q3Grid.dataset.variantKey = variant.key;
+      }
+      els.q3Question.textContent = variant.question;
+      return variant;
+    }
+
     function isStepComplete(step) {
       if (step === 'q1') return !!getQ1Choice();
       if (step === 'q2') return !!els.form.querySelector('input[name="q2Separate"]:checked');
@@ -1182,12 +1249,15 @@
     function updateQuestionFlow() {
       const selected = els.form.querySelector('input[name="q1Choice"]:checked')?.value;
       const sequence = getQuestionSequence();
+      const q3Variant = syncQ3Variant();
       if (!sequence.includes(state.questionStep)) state.questionStep = sequence[0];
       const stepIndex = sequence.indexOf(state.questionStep);
       els.q1.hidden = state.questionStep !== 'q1';
       els.q2.hidden = state.questionStep !== 'q2';
       els.q3.hidden = state.questionStep !== 'q3';
-      els.panelQuestion.textContent = benchmark.questions[state.questionStep];
+      els.panelQuestion.textContent = state.questionStep === 'q3'
+        ? q3Variant.question
+        : benchmark.questions[state.questionStep];
       syncCollapsedContextToggle();
       els.previous.hidden = stepIndex === 0;
       els.previous.disabled = stepIndex === 0;
@@ -1509,7 +1579,26 @@
       }
     }
 
-    els.form.addEventListener('change', () => {
+    els.form.addEventListener('change', event => {
+      if (event.target.matches?.('input[name="q1Choice"]') && !getQuestionSequence().includes('q3')) {
+        els.form.querySelectorAll('input[name="q3Issues"]').forEach(input => {
+          input.checked = false;
+        });
+        els.q3Note.value = '';
+      }
+      const changedIssue = event.target.closest?.('input[name="q3Issues"]');
+      if (changedIssue?.checked) {
+        const issueInputs = els.form.querySelectorAll('input[name="q3Issues"]');
+        if (changedIssue.hasAttribute('data-exclusive-choice')) {
+          issueInputs.forEach(input => {
+            if (input !== changedIssue) input.checked = false;
+          });
+        } else {
+          issueInputs.forEach(input => {
+            if (input.hasAttribute('data-exclusive-choice')) input.checked = false;
+          });
+        }
+      }
       updateQuestionFlow();
       autosave();
     });
