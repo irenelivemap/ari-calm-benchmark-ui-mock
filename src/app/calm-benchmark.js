@@ -1234,6 +1234,12 @@
           };
     }
 
+    function q3QuestionHtml(q1Choice, fallback) {
+      if (q1Choice === 'route_a') return 'What made <span class="ari-q3-route-tag ari-q3-route-tag--b">Route B</span> worse?';
+      if (q1Choice === 'route_b') return 'What made <span class="ari-q3-route-tag ari-q3-route-tag--a">Route A</span> worse?';
+      return escapeHtml(fallback);
+    }
+
     function syncQ3Variant() {
       const variant = getQ3Variant();
       const q1 = getQ1Choice();
@@ -1248,7 +1254,7 @@
         });
         els.q3Grid.dataset.variantKey = variant.key;
       }
-      els.q3Question.textContent = variant.question;
+      els.q3Question.innerHTML = q3QuestionHtml(q1, variant.question);
       return variant;
     }
 
@@ -1270,9 +1276,9 @@
       els.q1.hidden = state.questionStep !== 'q1';
       els.q2.hidden = state.questionStep !== 'q2';
       els.q3.hidden = state.questionStep !== 'q3';
-      els.panelQuestion.textContent = state.questionStep === 'q3'
-        ? q3Variant.question
-        : benchmark.questions[state.questionStep];
+      els.panelQuestion.innerHTML = state.questionStep === 'q3'
+        ? q3QuestionHtml(getQ1Choice(), q3Variant.question)
+        : escapeHtml(benchmark.questions[state.questionStep]);
       syncCollapsedContextToggle();
       els.previous.hidden = stepIndex === 0;
       els.previous.disabled = stepIndex === 0;

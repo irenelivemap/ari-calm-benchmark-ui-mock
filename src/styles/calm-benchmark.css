@@ -5740,6 +5740,17 @@ html.is-challenge-dialog-open {
   box-shadow: none;
 }
 
+/* Coloured route name in Q3 question heading */
+.ari-q3-route-tag--a {
+  color: #F08A63;
+  font-weight: 800;
+}
+
+.ari-q3-route-tag--b {
+  color: #4FD19B;
+  font-weight: 800;
+}
+
 /* Icon + bold-keyword layout for Q3 checkbox options */
 .ari-choice-icon {
   flex: 0 0 20px;
