@@ -22,7 +22,7 @@
     misses_shortcut:     ['useful shortcut'],
     too_complex:         ['hard to follow'],
     crossing_friction:   ['difficult street crossings'],
-    too_busy_or_crowded: ['busy roads'],
+    too_busy_or_crowded: ['crowded areas'],
     misses_nicer_route:  ['pleasant route'],
     may_not_be_walkable: ['not be walkable'],
   };

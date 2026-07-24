@@ -5740,6 +5740,29 @@ html.is-challenge-dialog-open {
   box-shadow: none;
 }
 
+/* Two-column grid for Q3 checklist */
+.ari-question-block [data-q3-grid] {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Keyword colour on selected (light) rows */
+.ari-choice-grid[data-worse-route="a"] label.is-selected .ari-choice-anchor {
+  color: #9B3618;
+}
+
+.ari-choice-grid[data-worse-route="b"] label.is-selected .ari-choice-anchor {
+  color: #0A6040;
+}
+
+.ari-choice-grid[data-worse-route="both"] label.is-selected .ari-choice-anchor {
+  color: #7a5a10;
+}
+
+.ari-choice-grid:not([data-worse-route]) label.is-selected .ari-choice-anchor,
+.ari-choice-grid[data-worse-route=""] label.is-selected .ari-choice-anchor {
+  color: #101511;
+}
+
 /* Coloured route name in Q3 question heading */
 .ari-q3-route-tag--a {
   color: #F08A63;
