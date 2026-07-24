@@ -5763,7 +5763,7 @@ html.is-challenge-dialog-open {
   opacity: 0.9;
 }
 
-.ari-choice-anchor {
+.ari-question-block .ari-choice-grid .ari-choice-anchor {
   font-weight: 800;
 }
 
