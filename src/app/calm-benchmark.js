@@ -14,17 +14,19 @@
     not_sure: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5A2.5 2.5 0 0 1 12 7c0 2-3 2.5-3 5"/><circle cx="9" cy="15" r="0.8" fill="currentColor" stroke="none"/></svg>`,
   };
 
-  const CHOICE_ANCHORS = {
-    longer_time:         'Too long',
-    unnecessary_detour:  'Unnecessary detour',
-    misses_shortcut:     'Misses a shortcut',
-    too_complex:         'Hard to follow',
-    crossing_friction:   'Difficult crossings',
-    too_busy_or_crowded: 'Busy or crowded',
-    misses_nicer_route:  'No pleasant route',
-    may_not_be_walkable: 'Not walkable',
-    other:               'Other',
-    not_sure:            "I'm not sure",
+  // Each entry splits the original label into pre + bold + post so the key
+  // identifying word(s) stand out without changing the wording.
+  const CHOICE_LABELS = {
+    longer_time:         { pre: 'Take ', bold: 'too long', post: '' },
+    unnecessary_detour:  { pre: 'Take an ', bold: 'unnecessary detour', post: '' },
+    misses_shortcut:     { pre: 'Miss a ', bold: 'useful shortcut', post: '' },
+    too_complex:         { pre: 'Are ', bold: 'hard to follow', post: '' },
+    crossing_friction:   { pre: 'Have ', bold: 'difficult street crossings', post: '' },
+    too_busy_or_crowded: { pre: 'Go along ', bold: 'busy roads', post: ' or through crowded areas' },
+    misses_nicer_route:  { pre: 'Miss a ', bold: 'more pleasant route', post: '' },
+    may_not_be_walkable: { pre: 'Part of the routes may ', bold: 'not be walkable', post: '' },
+    other:               { pre: '', bold: 'Other', post: '' },
+    not_sure:            { pre: '', bold: "I'm not sure", post: '' },
   };
   const ROUTE_FIT_MAX_ZOOM = 19;
   const DEFAULT_QUESTION_COPY = {
@@ -122,9 +124,9 @@
         ? `<span class="ari-choice-metrics" data-route-metrics="${option.value === 'route_a' ? 'a' : 'b'}" hidden></span>`
         : '';
       const icon = type === 'checkbox' ? CHOICE_ICONS[option.value] : null;
-      const anchor = type === 'checkbox' ? CHOICE_ANCHORS[option.value] : null;
-      const labelContent = icon && anchor
-        ? `${icon}<strong class="ari-choice-anchor">${escapeHtml(anchor)}</strong>`
+      const parts = type === 'checkbox' ? CHOICE_LABELS[option.value] : null;
+      const labelContent = icon && parts
+        ? `${icon}<span class="ari-choice-body">${escapeHtml(parts.pre)}<strong class="ari-choice-anchor">${escapeHtml(parts.bold)}</strong>${escapeHtml(parts.post)}</span>`
         : `${escapeHtml(option.label)}${metricsSlot}`;
       return `<label${className}><input type="${type}" name="${escapeHtml(name)}" value="${escapeHtml(option.value)}"${exclusive}>${labelContent}</label>`;
     }).join('');
