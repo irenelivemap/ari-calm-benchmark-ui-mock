@@ -14,26 +14,30 @@
     not_sure: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5A2.5 2.5 0 0 1 12 7c0 2-3 2.5-3 5"/><circle cx="9" cy="15" r="0.8" fill="currentColor" stroke="none"/></svg>`,
   };
 
-  // Keyword to bold within option.label — matched case-insensitively so it
-  // works for both singular ("Takes an unnecessary detour") and plural forms.
+  // Keywords to bold within option.label — array so variants with different
+  // wording (e.g. "Takes longer" vs "Take too long") are both covered.
   const CHOICE_BOLD_KEYWORDS = {
-    longer_time:         'too long',
-    unnecessary_detour:  'unnecessary detour',
-    misses_shortcut:     'useful shortcut',
-    too_complex:         'hard to follow',
-    crossing_friction:   'difficult street crossings',
-    too_busy_or_crowded: 'busy roads',
-    misses_nicer_route:  'pleasant route',
-    may_not_be_walkable: 'not be walkable',
+    longer_time:         ['too long', 'longer'],
+    unnecessary_detour:  ['unnecessary detour'],
+    misses_shortcut:     ['useful shortcut'],
+    too_complex:         ['hard to follow'],
+    crossing_friction:   ['difficult street crossings'],
+    too_busy_or_crowded: ['busy roads'],
+    misses_nicer_route:  ['pleasant route'],
+    may_not_be_walkable: ['not be walkable'],
   };
 
-  function boldKeyword(label, keyword) {
-    if (!keyword) return escapeHtml(label);
-    const i = label.toLowerCase().indexOf(keyword.toLowerCase());
-    if (i === -1) return escapeHtml(label);
-    return escapeHtml(label.slice(0, i))
-      + '<strong class="ari-choice-anchor">' + escapeHtml(label.slice(i, i + keyword.length)) + '</strong>'
-      + escapeHtml(label.slice(i + keyword.length));
+  function boldKeyword(label, keywords) {
+    const list = Array.isArray(keywords) ? keywords : keywords ? [keywords] : [];
+    for (const kw of list) {
+      const i = label.toLowerCase().indexOf(kw.toLowerCase());
+      if (i !== -1) {
+        return escapeHtml(label.slice(0, i))
+          + '<strong class="ari-choice-anchor">' + escapeHtml(label.slice(i, i + kw.length)) + '</strong>'
+          + escapeHtml(label.slice(i + kw.length));
+      }
+    }
+    return escapeHtml(label);
   }
   const ROUTE_FIT_MAX_ZOOM = 19;
   const DEFAULT_QUESTION_COPY = {
