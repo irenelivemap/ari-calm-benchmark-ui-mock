@@ -5740,11 +5740,6 @@ html.is-challenge-dialog-open {
   box-shadow: none;
 }
 
-/* Two-column grid for Q3 checklist */
-.ari-question-block [data-q3-grid] {
-  grid-template-columns: 1fr 1fr;
-}
-
 /* Keyword colour on selected (light) rows */
 .ari-choice-grid[data-worse-route="a"] label.is-selected .ari-choice-anchor {
   color: #9B3618;
