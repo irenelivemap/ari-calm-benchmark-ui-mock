@@ -5821,8 +5821,45 @@ html.is-challenge-dialog-open {
   line-height: 1.5;
 }
 
+.ari-onboarding__panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ari-onboarding__close {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1.5px solid rgba(16, 21, 17, 0.18);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(16, 21, 17, 0.55);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.ari-onboarding__close:hover {
+  background: rgba(16, 21, 17, 0.07);
+  color: rgba(16, 21, 17, 0.82);
+  border-color: rgba(16, 21, 17, 0.32);
+}
+
+.ari-onboarding__close:focus-visible {
+  outline: 2px solid rgba(16, 21, 17, 0.4);
+  outline-offset: 2px;
+}
+
 .ari-onboarding__step-count {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -5861,32 +5898,6 @@ html.is-challenge-dialog-open {
   outline-offset: 3px;
 }
 
-.ari-onboarding__skip {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  z-index: 4;
-  appearance: none;
-  padding: 10px 14px;
-  border: none;
-  background: transparent;
-  color: rgba(246, 245, 238, 0.56);
-  font: inherit;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 140ms ease;
-}
-
-.ari-onboarding__skip:hover {
-  color: rgba(246, 245, 238, 0.82);
-}
-
-.ari-onboarding__skip:focus-visible {
-  outline: 2px solid rgba(246, 245, 238, 0.5);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
 
 .ari-btn {
   appearance: none;

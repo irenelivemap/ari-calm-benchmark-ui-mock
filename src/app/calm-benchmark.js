@@ -393,27 +393,34 @@
           <div class="ari-onboarding__target" data-onboarding-target="answer" aria-hidden="true"></div>
 
           <div class="ari-onboarding__intro" data-onboarding-panel="0">
-            <p class="ari-onboarding__step-count" aria-label="Step 1 of 3">1 / 3</p>
+            <div class="ari-onboarding__panel-header">
+              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro">&times;</button>
+              <p class="ari-onboarding__step-count" aria-label="Step 1 of 3">1 / 3</p>
+            </div>
             <b>Compare the routes</b>
             <span>These are your ${routeCountLabel}. Explore the map before you decide — pan, zoom, or use Street View.</span>
             <button class="ari-onboarding__next" data-action="next-onboarding" type="button">Next →</button>
           </div>
 
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="answer" data-onboarding-panel="1" hidden aria-hidden="true">
-            <p class="ari-onboarding__step-count" aria-label="Step 2 of 3">2 / 3</p>
+            <div class="ari-onboarding__panel-header">
+              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro">&times;</button>
+              <p class="ari-onboarding__step-count" aria-label="Step 2 of 3">2 / 3</p>
+            </div>
             <b>Choose when ready</b>
             <span>Open this panel and pick the route or routes you prefer.</span>
             <button class="ari-onboarding__next" data-action="next-onboarding" type="button">Next →</button>
           </div>
 
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="street" data-onboarding-panel="2" hidden aria-hidden="true">
-            <p class="ari-onboarding__step-count" aria-label="Step 3 of 3">3 / 3</p>
+            <div class="ari-onboarding__panel-header">
+              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro">&times;</button>
+              <p class="ari-onboarding__step-count" aria-label="Step 3 of 3">3 / 3</p>
+            </div>
             <b>Explore the street</b>
             <span>Turn on Street View and tap any point on the map to look around before choosing.</span>
             <button class="ari-onboarding__next" data-action="next-onboarding" type="button">Start comparison →</button>
           </div>
-
-          <button class="ari-onboarding__skip" data-action="skip-onboarding" type="button">Skip intro</button>
         </section>
 
       </section>
@@ -485,7 +492,7 @@
       onboardingTargets: Array.from(root.querySelectorAll('[data-onboarding-target]')),
       onboardingCoachmarks: Array.from(root.querySelectorAll('[data-onboarding-coachmark]')),
       onboardingPanels: Array.from(root.querySelectorAll('[data-onboarding-panel]')),
-      onboardingSkip: root.querySelector('[data-action="skip-onboarding"]'),
+      onboardingSkip: root.querySelector('.ari-onboarding__close'),
       saveFlash: root.querySelector('[data-save-flash]'),
       systemStatus: root.querySelector('[data-system-status]'),
       systemStatusCopy: root.querySelector('[data-system-status-copy]'),
