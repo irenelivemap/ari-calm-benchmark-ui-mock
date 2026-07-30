@@ -428,8 +428,9 @@
           q1Options: [
             { value: 'route_a', label: 'Route A', className: 'ari-choice--route-a' },
             { value: 'route_b', label: 'Route B', className: 'ari-choice--route-b' },
-            { value: 'none_work_well', label: 'None work well', exclusive: true },
-            { value: 'hard_to_judge', label: 'Hard to judge', exclusive: true }
+            { value: 'both_work_well', label: 'Both work well', exclusive: true },
+            { value: 'none_work_well', label: 'Both work poorly', exclusive: true },
+            { value: 'hard_to_judge', label: "I'm not sure", exclusive: true }
           ],
           q1Multiple: false,
           q2Options: [],
@@ -450,7 +451,7 @@
           followUps: {
             route_a: ['q3'],
             route_b: ['q3'],
-            route_c: ['q3'],
+            both_work_well: [],
             none_work_well: ['q3'],
             hard_to_judge: []
           },
