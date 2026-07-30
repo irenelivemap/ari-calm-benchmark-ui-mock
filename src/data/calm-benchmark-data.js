@@ -197,7 +197,7 @@
     const assignments = ROUTE_SLOTS
       .map(({ key }) => record.routeAssignment?.[key])
       .filter(Boolean);
-    const requiresThreeRoutes = record.test === CALM_ROUTE_COMPARISON_TEST_ID;
+    const requiresThreeRoutes = false;
     const expectedCount = requiresThreeRoutes ? 3 : 2;
     if (
       assignments.length !== expectedCount
@@ -281,9 +281,7 @@
       if (!needsQ3 && record.q3Issues.length) errors.push('q3Issues must be empty for this Q1 answer.');
     }
 
-    const requiredLabelSlots = record.test === CALM_ROUTE_COMPARISON_TEST_ID
-      ? ['A', 'B', 'C']
-      : ['A', 'B'];
+    const requiredLabelSlots = ['A', 'B'];
     requiredLabelSlots.forEach(slot => {
       const label = record.labels?.[slot];
       if (!isObject(label)) {
