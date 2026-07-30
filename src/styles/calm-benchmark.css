@@ -5642,7 +5642,6 @@ html.is-challenge-dialog-open {
   box-shadow:
     0 0 0 3px rgba(246, 245, 238, 0.2),
     0 16px 38px rgba(8, 9, 9, 0.38);
-  pointer-events: none;
   animation: ari-onboarding-enter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -5757,27 +5756,108 @@ html.is-challenge-dialog-open {
   left: calc(50% - 2px);
 }
 
-.ari-onboarding__start {
+.ari-onboarding__intro {
   position: absolute;
-  top: auto;
-  bottom: 24px;
+  bottom: 32px;
   left: 50%;
-  z-index: 4;
-  min-height: 52px;
-  padding: 13px 30px;
-  border-color: rgba(16, 21, 17, 0.32);
-  color: #111512;
-  background: #f6f5ee;
-  box-shadow:
-    0 0 0 5px rgba(8, 9, 9, 0.66),
-    0 14px 34px rgba(8, 9, 9, 0.34),
-    inset 0 -3px 0 rgba(16, 21, 17, 0.16);
-  font-size: 0.95rem;
   transform: translateX(-50%);
+  z-index: 4;
+  width: min(340px, calc(100% - 32px));
+  border-radius: 14px;
+  padding: 20px 22px 18px;
+  border: 1px solid rgba(16, 21, 17, 0.88);
+  background: #efeee6;
+  color: #101511;
+  box-shadow:
+    0 0 0 5px rgba(8, 9, 9, 0.58),
+    0 20px 44px rgba(8, 9, 9, 0.4);
+  animation: ari-onboarding-enter 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.ari-onboarding__start:hover {
-  background: #fff;
+.ari-onboarding__intro b,
+.ari-onboarding__intro span {
+  display: block;
+}
+
+.ari-onboarding__intro b {
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.25;
+  margin-bottom: 5px;
+}
+
+.ari-onboarding__intro span {
+  color: rgba(16, 21, 17, 0.72);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.ari-onboarding__step-count {
+  margin: 0 0 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: rgba(16, 21, 17, 0.42);
+  text-transform: uppercase;
+}
+
+.ari-onboarding__next {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 14px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(16, 21, 17, 0.82);
+  background: #101511;
+  color: #f6f5ee;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.ari-onboarding__next:hover {
+  background: #1e2a1f;
+  transform: translateY(-1px);
+}
+
+.ari-onboarding__next:active {
+  transform: translateY(0);
+}
+
+.ari-onboarding__next:focus-visible {
+  outline: 3px solid rgba(16, 21, 17, 0.5);
+  outline-offset: 3px;
+}
+
+.ari-onboarding__skip {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 4;
+  appearance: none;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: rgba(246, 245, 238, 0.52);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 140ms ease;
+}
+
+.ari-onboarding__skip:hover {
+  color: rgba(246, 245, 238, 0.82);
+}
+
+.ari-onboarding__skip:focus-visible {
+  outline: 2px solid rgba(246, 245, 238, 0.5);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
 .ari-btn {
@@ -5821,10 +5901,6 @@ html.is-challenge-dialog-open {
     inset 0 -1px 0 rgba(0, 0, 0, 0.34);
 }
 
-.ari-onboarding__start.ari-btn:hover:not(:disabled),
-.ari-onboarding__start.ari-btn:active:not(:disabled) {
-  transform: translateX(-50%);
-}
 
 .ari-btn:focus-visible {
   outline: 3px solid rgba(255, 255, 255, 0.58);
@@ -5857,25 +5933,6 @@ html.is-challenge-dialog-open {
     inset 0 -4px 0 rgba(16, 21, 17, 0.18);
 }
 
-.ari-onboarding__start.ari-btn--primary {
-  border: 2px solid #101511;
-  background: #fff;
-  box-shadow:
-    0 0 0 5px rgba(246, 245, 238, 0.42),
-    0 0 0 8px rgba(8, 9, 9, 0.58),
-    0 16px 36px rgba(8, 9, 9, 0.36),
-    inset 0 -3px 0 rgba(16, 21, 17, 0.16);
-}
-
-.ari-onboarding__start.ari-btn--primary:hover:not(:disabled) {
-  border-color: #101511;
-  background: #fff;
-  box-shadow:
-    0 0 0 6px rgba(246, 245, 238, 0.5),
-    0 0 0 9px rgba(8, 9, 9, 0.62),
-    0 18px 40px rgba(8, 9, 9, 0.4),
-    inset 0 -3px 0 rgba(16, 21, 17, 0.14);
-}
 
 .ari-btn--primary:disabled {
   border-color: rgba(255, 255, 255, 0.22);
@@ -7106,33 +7163,20 @@ html.is-challenge-dialog-open {
     font-size: 0.7rem;
   }
 
-  .ari-onboarding__start {
-    top: 6px;
-    bottom: auto;
-    min-height: 44px;
-    padding: 8px 18px;
-    font-size: 0.84rem;
+  .ari-onboarding__intro {
+    bottom: 16px;
+    padding: 16px 18px 14px;
   }
 
-  .ari-onboarding__start.ari-btn--primary {
-    box-shadow:
-      0 0 0 3px rgba(246, 245, 238, 0.42),
-      0 0 0 5px rgba(8, 9, 9, 0.58),
-      0 12px 28px rgba(8, 9, 9, 0.34),
-      inset 0 -3px 0 rgba(16, 21, 17, 0.16);
-  }
-
-  .ari-onboarding__start.ari-btn--primary:hover:not(:disabled) {
-    box-shadow:
-      0 0 0 4px rgba(246, 245, 238, 0.5),
-      0 0 0 6px rgba(8, 9, 9, 0.62),
-      0 14px 30px rgba(8, 9, 9, 0.38),
-      inset 0 -3px 0 rgba(16, 21, 17, 0.14);
+  .ari-onboarding__next {
+    padding: 7px 14px;
+    font-size: 0.76rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ari-onboarding__coachmark,
+  .ari-onboarding__intro,
   .ari-onboarding__target,
   .ari-street-viewer {
     animation: none;

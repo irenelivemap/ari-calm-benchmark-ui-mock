@@ -375,44 +375,44 @@
           </aside>
         </main>
 
-        <section class="ari-onboarding" data-onboarding role="dialog" aria-modal="true" aria-labelledby="ari-onboarding-title">
+        <section class="ari-onboarding" data-onboarding role="dialog" aria-modal="true" aria-labelledby="ari-onboarding-title" data-step="0">
           <h2 class="ari-visually-hidden" id="ari-onboarding-title">Before you start</h2>
           <svg class="ari-onboarding__scrim" data-onboarding-scrim aria-hidden="true">
             <defs>
               <mask id="${onboardingMaskId}" maskUnits="userSpaceOnUse">
                 <rect data-onboarding-mask-base x="0" y="0" fill="white"></rect>
-                <rect data-onboarding-cutout="fit" fill="black"></rect>
                 <rect data-onboarding-cutout="street" fill="black"></rect>
                 <rect data-onboarding-cutout="answer" fill="black"></rect>
-                <rect data-onboarding-cutout="exit" fill="black"></rect>
               </mask>
             </defs>
             <rect data-onboarding-scrim-fill x="0" y="0" mask="url(#${onboardingMaskId})"></rect>
           </svg>
 
-          <div class="ari-onboarding__target" data-onboarding-target="fit" aria-hidden="true"></div>
           <div class="ari-onboarding__target" data-onboarding-target="street" aria-hidden="true"></div>
           <div class="ari-onboarding__target" data-onboarding-target="answer" aria-hidden="true"></div>
-          <div class="ari-onboarding__target" data-onboarding-target="exit" aria-hidden="true"></div>
 
-          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="fit">
-            <b>Fit ${routeCountLabel}</b>
-            <span>Return to the full comparison.</span>
+          <div class="ari-onboarding__intro" data-onboarding-panel="0">
+            <p class="ari-onboarding__step-count" aria-label="Step 1 of 3">1 / 3</p>
+            <b>Compare the routes</b>
+            <span>These are your ${routeCountLabel}. Explore the map before you decide — pan, zoom, or use Street View.</span>
+            <button class="ari-onboarding__next" data-action="next-onboarding" type="button">Next →</button>
           </div>
-          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="street">
+
+          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="answer" data-onboarding-panel="1" hidden aria-hidden="true">
+            <p class="ari-onboarding__step-count" aria-label="Step 2 of 3">2 / 3</p>
+            <b>Choose when ready</b>
+            <span>Open this panel and pick the route or routes you prefer.</span>
+            <button class="ari-onboarding__next" data-action="next-onboarding" type="button">Next →</button>
+          </div>
+
+          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="street" data-onboarding-panel="2" hidden aria-hidden="true">
+            <p class="ari-onboarding__step-count" aria-label="Step 3 of 3">3 / 3</p>
             <b>Explore the street</b>
-            <span>Turn on Street View, then select any point on the map.</span>
-          </div>
-          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="answer">
-            <b>Answer when ready</b>
-            <span>Open the question card.</span>
-          </div>
-          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="exit">
-            <b>Leave anytime</b>
-            <span>Your place is saved.</span>
+            <span>Turn on Street View and tap any point on the map to look around before choosing.</span>
+            <button class="ari-onboarding__next" data-action="next-onboarding" type="button">Start comparison →</button>
           </div>
 
-          <button class="ari-btn ari-btn--primary ari-onboarding__start" data-action="next-onboarding" type="button">Start comparison →</button>
+          <button class="ari-onboarding__skip" data-action="skip-onboarding" type="button">Skip intro</button>
         </section>
 
       </section>
@@ -445,6 +445,7 @@
       assignment: null,
       questionStep: 'q1',
       onboardingComplete: !!options.skipOnboarding || initialRoundIndex > 0,
+      onboardingStep: 0,
       completedRounds: options.initialCompletedRounds || 0,
       goalCheckpointPending: !!options.initialGoalCheckpointPending,
       roundTransitioning: false,
@@ -482,7 +483,8 @@
       onboardingCutouts: Array.from(root.querySelectorAll('[data-onboarding-cutout]')),
       onboardingTargets: Array.from(root.querySelectorAll('[data-onboarding-target]')),
       onboardingCoachmarks: Array.from(root.querySelectorAll('[data-onboarding-coachmark]')),
-      nextOnboarding: root.querySelector('[data-action="next-onboarding"]'),
+      onboardingPanels: Array.from(root.querySelectorAll('[data-onboarding-panel]')),
+      onboardingSkip: root.querySelector('[data-action="skip-onboarding"]'),
       saveFlash: root.querySelector('[data-save-flash]'),
       systemStatus: root.querySelector('[data-system-status]'),
       systemStatusCopy: root.querySelector('[data-system-status-copy]'),
@@ -779,75 +781,61 @@
 
     function positionOnboarding() {
       if (state.onboardingComplete || els.onboarding.hidden) return;
+      const step = state.onboardingStep;
       const overlayRect = els.onboarding.getBoundingClientRect();
       if (!overlayRect.width || !overlayRect.height) return;
       els.onboardingMaskBase.setAttribute('width', String(overlayRect.width));
       els.onboardingMaskBase.setAttribute('height', String(overlayRect.height));
       els.onboardingScrimFill.setAttribute('width', String(overlayRect.width));
       els.onboardingScrimFill.setAttribute('height', String(overlayRect.height));
+
+      // Clear all cutouts first
+      els.onboardingCutouts.forEach(cutout => {
+        cutout.setAttribute('width', '0');
+        cutout.setAttribute('height', '0');
+      });
+
+      // Step 0 is the intro card — no spotlight needed
+      if (step === 0) return;
+
+      const stepTargetName = step === 1 ? 'answer' : 'street';
       const isMobile = window.matchMedia('(max-width: 700px)').matches;
-      const sourceTargets = {
-        fit: els.fitRoutes,
-        street: els.streetViewToggle,
-        answer: els.questionCard,
-        exit: els.exit
-      };
       const preferences = isMobile
-        ? {
-            fit: ['left', 'bottom', 'top'],
-            street: ['right', 'left', 'bottom', 'top'],
-            answer: ['top', 'right', 'left'],
-            exit: ['right', 'top', 'left']
-          }
-        : {
-            fit: ['left', 'bottom', 'top'],
-            street: ['right', 'left', 'bottom', 'top'],
-            answer: ['right', 'top', 'bottom'],
-            exit: ['right', 'bottom', 'top']
-          };
-      const targetRects = {};
-      ['exit', 'fit', 'answer', 'street'].forEach(name => {
-        const sourceRect = getOnboardingRect(sourceTargets[name]);
-        const target = els.onboardingTargets.find(item => item.dataset.onboardingTarget === name);
-        const cutout = els.onboardingCutouts.find(item => item.dataset.onboardingCutout === name);
-        if (!sourceRect || !target || !cutout) return;
-        const padding = name === 'answer' ? 6 : 8;
-        const expanded = expandRect(new DOMRect(
-          sourceRect.left - overlayRect.left,
-          sourceRect.top - overlayRect.top,
-          sourceRect.width,
-          sourceRect.height
-        ), padding);
-        targetRects[name] = expanded;
+        ? { answer: ['top', 'right', 'left'], street: ['right', 'left', 'bottom', 'top'] }
+        : { answer: ['right', 'top', 'bottom'], street: ['right', 'left', 'bottom', 'top'] };
+      const sourceEl = step === 1 ? els.questionCard : els.streetViewToggle;
+      const sourceRect = getOnboardingRect(sourceEl);
+      const target = els.onboardingTargets.find(item => item.dataset.onboardingTarget === stepTargetName);
+      const cutout = els.onboardingCutouts.find(item => item.dataset.onboardingCutout === stepTargetName);
+      if (!sourceRect || !target || !cutout) return;
 
-        target.style.setProperty('--target-left', `${expanded.left}px`);
-        target.style.setProperty('--target-top', `${expanded.top}px`);
-        target.style.setProperty('--target-width', `${expanded.width}px`);
-        target.style.setProperty('--target-height', `${expanded.height}px`);
-        target.dataset.kind = name;
-        cutout.setAttribute('x', String(expanded.left));
-        cutout.setAttribute('y', String(expanded.top));
-        cutout.setAttribute('width', String(expanded.width));
-        cutout.setAttribute('height', String(expanded.height));
-        cutout.setAttribute('rx', String(name === 'street' ? expanded.width / 2 : name === 'answer' ? 12 : 18));
-        cutout.setAttribute('ry', String(name === 'street' ? expanded.height / 2 : name === 'answer' ? 12 : 18));
-      });
+      const padding = stepTargetName === 'answer' ? 6 : 8;
+      const expanded = expandRect(new DOMRect(
+        sourceRect.left - overlayRect.left,
+        sourceRect.top - overlayRect.top,
+        sourceRect.width,
+        sourceRect.height
+      ), padding);
 
-      const startRect = els.nextOnboarding.getBoundingClientRect();
-      const occupied = [
-        ...Object.values(targetRects),
-        {
-          left: startRect.left - overlayRect.left,
-          top: startRect.top - overlayRect.top,
-          right: startRect.right - overlayRect.left,
-          bottom: startRect.bottom - overlayRect.top
-        }
-      ];
-      ['exit', 'fit', 'answer', 'street'].forEach(name => {
-        const coachmark = els.onboardingCoachmarks.find(item => item.dataset.onboardingCoachmark === name);
-        if (!coachmark || !targetRects[name]) return;
-        placeOnboardingCoachmark(coachmark, targetRects[name], preferences[name], occupied, overlayRect);
-      });
+      target.style.setProperty('--target-left', `${expanded.left}px`);
+      target.style.setProperty('--target-top', `${expanded.top}px`);
+      target.style.setProperty('--target-width', `${expanded.width}px`);
+      target.style.setProperty('--target-height', `${expanded.height}px`);
+      target.dataset.kind = stepTargetName;
+      cutout.setAttribute('x', String(expanded.left));
+      cutout.setAttribute('y', String(expanded.top));
+      cutout.setAttribute('width', String(expanded.width));
+      cutout.setAttribute('height', String(expanded.height));
+      cutout.setAttribute('rx', String(stepTargetName === 'street' ? expanded.width / 2 : 12));
+      cutout.setAttribute('ry', String(stepTargetName === 'street' ? expanded.height / 2 : 12));
+
+      const coachmark = els.onboardingCoachmarks.find(item => item.dataset.onboardingCoachmark === stepTargetName);
+      if (!coachmark) return;
+      placeOnboardingCoachmark(coachmark, expanded, preferences[stepTargetName], [expanded], overlayRect);
+    }
+
+    function getActiveOnboardingPanel() {
+      return els.onboardingPanels.find(p => Number(p.dataset.onboardingPanel) === state.onboardingStep) || null;
     }
 
     function renderOnboarding() {
@@ -855,15 +843,42 @@
       els.mapShell.inert = true;
       els.questionCard.inert = true;
       updatePanelState(true);
+      state.onboardingStep = 0;
+      els.onboarding.dataset.step = '0';
+      els.onboardingPanels.forEach(panel => {
+        const active = Number(panel.dataset.onboardingPanel) === 0;
+        panel.hidden = !active;
+        panel.setAttribute('aria-hidden', String(!active));
+      });
       requestAnimationFrame(() => {
         positionOnboarding();
-        els.nextOnboarding.focus({ preventScroll: true });
+        getActiveOnboardingPanel()?.querySelector('[data-action="next-onboarding"]')?.focus({ preventScroll: true });
       });
       setTimeout(positionOnboarding, 240);
       // The map tools are adopted into the provider's control container once
       // the map is ready (async for MapLibre); reposition after that settles.
       setTimeout(positionOnboarding, 1200);
       setTimeout(positionOnboarding, 2600);
+    }
+
+    function advanceOnboarding() {
+      const TOTAL_STEPS = 3;
+      state.onboardingStep += 1;
+      if (state.onboardingStep >= TOTAL_STEPS) {
+        finishOnboarding();
+        return;
+      }
+      els.onboarding.dataset.step = String(state.onboardingStep);
+      els.onboardingPanels.forEach(panel => {
+        const active = Number(panel.dataset.onboardingPanel) === state.onboardingStep;
+        panel.hidden = !active;
+        panel.setAttribute('aria-hidden', String(!active));
+      });
+      requestAnimationFrame(() => {
+        positionOnboarding();
+        getActiveOnboardingPanel()?.querySelector('[data-action="next-onboarding"]')?.focus({ preventScroll: true });
+      });
+      setTimeout(positionOnboarding, 240);
     }
 
     function finishOnboarding() {
@@ -1940,13 +1955,14 @@
       if (onExit) onExit();
     });
 
-    els.nextOnboarding.addEventListener('click', () => {
-      finishOnboarding();
+    els.onboarding.addEventListener('click', event => {
+      if (event.target.closest('[data-action="next-onboarding"]')) advanceOnboarding();
+      else if (event.target.closest('[data-action="skip-onboarding"]')) finishOnboarding();
     });
     els.onboarding.addEventListener('keydown', event => {
       if (event.key !== 'Tab') return;
       event.preventDefault();
-      els.nextOnboarding.focus({ preventScroll: true });
+      (getActiveOnboardingPanel()?.querySelector('[data-action="next-onboarding"]') || els.onboardingSkip)?.focus({ preventScroll: true });
     });
 
     els.retrySystem.addEventListener('click', () => {
