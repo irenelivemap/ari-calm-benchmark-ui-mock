@@ -904,9 +904,9 @@ html.is-challenge-dialog-open {
 
 .calm-card h2 span,
 .calm-start-card h2 span {
-  font-family: var(--ari-serif);
-  font-style: italic;
-  font-weight: 400;
+  font-family: inherit;
+  font-style: inherit;
+  font-weight: inherit;
 }
 
 .calm-route-steps {
