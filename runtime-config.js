@@ -7,7 +7,7 @@
     dataApiBase: '',
     googleMapsKey: '',
     allowQueryConfig: true,
-    showReset: false,
+    showReset: true,
     enableTeamResults: true
   }, root.ARI_RUNTIME_CONFIG || {});
 })(typeof globalThis !== 'undefined' ? globalThis : this);
