@@ -1065,7 +1065,7 @@ html.is-challenge-dialog-open {
   padding: 12px 0;
   border-top: 1px solid var(--ari-hairline-warm);
   color: var(--ari-warm-ink);
-  font-size: 26px;
+  font-size: 19px;
 }
 
 .calm-card--session .calm-session-points div {
