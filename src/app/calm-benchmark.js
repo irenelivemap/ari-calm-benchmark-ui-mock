@@ -392,6 +392,16 @@
           <div class="ari-onboarding__target" data-onboarding-target="street" aria-hidden="true"></div>
           <div class="ari-onboarding__target" data-onboarding-target="answer" aria-hidden="true"></div>
 
+          <div class="ari-onboarding__intro ari-onboarding__intro--briefing" data-onboarding-panel="-1">
+            <div class="ari-onboarding__panel-header">
+              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro">&times;</button>
+            </div>
+            <b>Before you start</b>
+            <span>Imagine you are on your way somewhere in Zürich. You are not in a rush, but you still want to arrive in a reasonable amount of time. You would prefer a calmer way to get there.</span>
+            <span>A Calm route may take you along quieter streets, through greener areas, or near water. For each trip, you'll see two routes with the same start and destination. Compare them and choose the answer that best matches what you would do.</span>
+            <button class="ari-onboarding__next" data-action="next-onboarding" type="button">Got it →</button>
+          </div>
+
           <div class="ari-onboarding__intro" data-onboarding-panel="0">
             <div class="ari-onboarding__panel-header">
               <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro">&times;</button>
@@ -453,7 +463,7 @@
       assignment: null,
       questionStep: 'q1',
       onboardingComplete: !!options.skipOnboarding || initialRoundIndex > 0,
-      onboardingStep: 0,
+      onboardingStep: -1,
       completedRounds: options.initialCompletedRounds || 0,
       goalCheckpointPending: !!options.initialGoalCheckpointPending,
       roundTransitioning: false,
@@ -853,10 +863,10 @@
       els.mapShell.inert = true;
       els.questionCard.inert = true;
       updatePanelState(true);
-      state.onboardingStep = 0;
-      els.onboarding.dataset.step = '0';
+      state.onboardingStep = -1;
+      els.onboarding.dataset.step = '-1';
       els.onboardingPanels.forEach(panel => {
-        const active = Number(panel.dataset.onboardingPanel) === 0;
+        const active = Number(panel.dataset.onboardingPanel) === -1;
         panel.hidden = !active;
         panel.setAttribute('aria-hidden', String(!active));
       });

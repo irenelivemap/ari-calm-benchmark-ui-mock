@@ -5794,6 +5794,17 @@ html.is-challenge-dialog-open {
   animation: ari-onboarding-enter 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+.ari-onboarding__intro--briefing {
+  bottom: auto;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, calc(100% - 32px));
+}
+
+.ari-onboarding__intro--briefing span + span {
+  margin-top: 12px;
+}
+
 .ari-onboarding__intro b,
 .ari-onboarding__intro span {
   display: block;
