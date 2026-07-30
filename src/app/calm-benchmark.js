@@ -412,23 +412,23 @@
             <button class="ari-onboarding__next" data-action="next-onboarding" type="button">Next →</button>
           </div>
 
-          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="answer" data-onboarding-panel="1" hidden aria-hidden="true">
+          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="street" data-onboarding-panel="1" hidden aria-hidden="true">
             <div class="ari-onboarding__panel-header">
               <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro">&times;</button>
               <p class="ari-onboarding__step-count" aria-label="Step 2 of 3">2 / 3</p>
             </div>
-            <b>Choose when ready</b>
-            <span>Open this panel and pick the route or routes you prefer.</span>
+            <b>Explore the map</b>
+            <span>Pan, zoom, or turn on Street View and tap any point on the map to look around before choosing.</span>
             <button class="ari-onboarding__next" data-action="next-onboarding" type="button">Next →</button>
           </div>
 
-          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="street" data-onboarding-panel="2" hidden aria-hidden="true">
+          <div class="ari-onboarding__coachmark" data-onboarding-coachmark="answer" data-onboarding-panel="2" hidden aria-hidden="true">
             <div class="ari-onboarding__panel-header">
               <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro">&times;</button>
               <p class="ari-onboarding__step-count" aria-label="Step 3 of 3">3 / 3</p>
             </div>
-            <b>Explore the street</b>
-            <span>Turn on Street View and tap any point on the map to look around before choosing.</span>
+            <b>Choose when ready</b>
+            <span>Open this panel and pick the route or routes you prefer.</span>
             <button class="ari-onboarding__next" data-action="next-onboarding" type="button">Start comparison →</button>
           </div>
         </section>
@@ -817,12 +817,12 @@
       // Steps -1 and 0 are full-screen cards — no spotlight needed
       if (step <= 0) return;
 
-      const stepTargetName = step === 1 ? 'answer' : 'street';
+      const stepTargetName = step === 1 ? 'street' : 'answer';
       const isMobile = window.matchMedia('(max-width: 700px)').matches;
       const preferences = isMobile
         ? { answer: ['top', 'right', 'left'], street: ['right', 'left', 'bottom', 'top'] }
         : { answer: ['right', 'top', 'bottom'], street: ['right', 'left', 'bottom', 'top'] };
-      const sourceEl = step === 1 ? els.questionCard : els.streetViewToggle;
+      const sourceEl = step === 1 ? els.streetViewToggle : els.questionCard;
       const sourceRect = getOnboardingRect(sourceEl);
       const target = els.onboardingTargets.find(item => item.dataset.onboardingTarget === stepTargetName);
       const cutout = els.onboardingCutouts.find(item => item.dataset.onboardingCutout === stepTargetName);
