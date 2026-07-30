@@ -273,12 +273,12 @@
                 <strong>Street View mode on</strong>
                 <span>Select any point on the map to explore it in Street View.</span>
               </div>
-              <div class="ari-street-divider" data-street-divider role="separator" tabindex="0" aria-label="Resize the Street View split" hidden><span aria-hidden="true"></span></div>
+              <div class="ari-street-divider" data-street-divider role="separator" tabindex="0" aria-label="Resize the Street View split" title="Double-click to reset split" hidden><span aria-hidden="true"></span></div>
               <section class="ari-street-viewer" id="${streetViewerId}" data-street-viewer aria-label="Street View" aria-hidden="true" hidden>
                 <header class="ari-street-viewer__header">
-                  <button class="ari-street-viewer__back" data-action="close-street-view" type="button">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-                    <span>Back to map</span>
+                  <button class="ari-street-viewer__back" data-action="close-street-view" type="button" aria-label="Close Street View">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+                    <span>Close</span>
                   </button>
                   <div class="ari-street-viewer__identity">
                     <small>Street View</small>
@@ -291,6 +291,7 @@
                     <span class="ari-street-status__loader" aria-hidden="true"></span>
                     <b data-street-status-title>Loading Street View</b>
                     <span data-street-status-copy>Looking for imagery near this point.</span>
+                    <button class="ari-street-status__dismiss" data-action="close-street-view" type="button">Close Street View</button>
                   </div>
                 </div>
               </section>
@@ -1035,8 +1036,8 @@
           ? 'Street View mode on. Select any point on the map to explore it in Street View. Keyboard users can press A, B, or C to inspect a representative route point. Press again to turn off.'
           : 'Turn on Street View'
       );
-      els.streetViewToggle.title = enabled ? 'Turn off Street View' : 'Street View — inspect any map point at street level';
-      els.streetViewToggleLabel.textContent = 'Street View';
+      els.streetViewToggle.title = enabled ? 'Turn off Street View (or press Esc)' : 'Street View — inspect any map point at street level';
+      els.streetViewToggleLabel.textContent = enabled ? 'Exit Street View' : 'Street View';
       if (enabled && !state.streetViewOpen) {
         if (els.streetViewHint.hidden) showStreetHint();
       } else {

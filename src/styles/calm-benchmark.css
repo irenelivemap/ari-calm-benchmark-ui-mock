@@ -4891,12 +4891,12 @@ html.is-challenge-dialog-open {
 }
 
 .ari-street-mode-hint strong {
-  font: 750 0.75rem/1.2 var(--ari-font);
+  font: 750 0.9rem/1.2 var(--ari-font);
 }
 
 .ari-street-mode-hint span {
   color: rgba(255, 255, 255, 0.76);
-  font: 600 0.72rem/1.35 var(--ari-font);
+  font: 600 0.86rem/1.35 var(--ari-font);
 }
 
 .ari-street-mode-hint[hidden] {
@@ -5109,7 +5109,7 @@ html.is-challenge-dialog-open {
 
 .ari-street-viewer__identity small {
   color: rgba(255, 255, 255, 0.72);
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 600;
 }
 
@@ -5120,7 +5120,7 @@ html.is-challenge-dialog-open {
   gap: 7px;
   margin-top: 2px;
   color: #fff;
-  font-size: 0.84rem;
+  font-size: 0.95rem;
   line-height: 1;
 }
 
@@ -5172,10 +5172,13 @@ html.is-challenge-dialog-open {
   background: #eceeea;
   color: var(--ari-ink);
   text-align: center;
+  transition: opacity 200ms ease;
 }
 
 .ari-street-status[hidden] {
-  display: none;
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .ari-street-status b {
@@ -5192,6 +5195,27 @@ html.is-challenge-dialog-open {
   font-size: 0.82rem;
   line-height: 1.45;
   text-wrap: pretty;
+}
+
+.ari-street-status__dismiss {
+  display: none;
+  margin-top: 18px;
+  padding: 9px 22px;
+  border: 1.5px solid rgba(16, 21, 17, 0.22);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ari-ink);
+  font: 600 0.88rem/1 var(--ari-font);
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.ari-street-status__dismiss:hover {
+  background: rgba(16, 21, 17, 0.07);
+}
+
+.ari-street-status:not(.is-loading) .ari-street-status__dismiss {
+  display: inline-block;
 }
 
 .ari-street-status__loader {
@@ -6938,7 +6962,21 @@ html.is-challenge-dialog-open {
   }
 
   .ari-benchmark.is-street-view-open .ari-question-card {
+    max-height: 80px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .ari-benchmark.is-street-view-open .ari-question-card .ari-card-header,
+  .ari-benchmark.is-street-view-open .ari-question-card .ari-question-stack {
     display: none;
+  }
+
+  .ari-benchmark.is-street-view-open .ari-question-card .ari-panel-summary {
+    max-height: 60px;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
   }
 
   .ari-map.is-street-split .ari-map__tools,
