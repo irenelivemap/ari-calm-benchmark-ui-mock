@@ -46,7 +46,7 @@
   ]);
   const ROUTE_TYPES = new Set([
     'fast', 'calm', 'livemap_fast', 'google',
-    'calm_quiet', 'calm_nature', 'human'
+    'calm_quiet', 'calm_nature'
   ]);
   const QUESTION_STEPS = new Set(['q1', 'q2', 'q3']);
 

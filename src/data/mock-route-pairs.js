@@ -35,7 +35,7 @@
   const rounds = [
     {
       pairId: 'calm-route-comparison-01',
-      scenario: 'Three blinded walking routes with the same start and destination.',
+      scenario: 'Two blinded walking routes with the same start and destination.',
       routes: {
         calm_quiet: {
           routeId: 'calm-round-1-calm-quiet',
@@ -48,18 +48,12 @@
           source: 'calm_nature',
           metadata: { distanceMeters: 2028.208, durationSeconds: 1460, profile: 'foot_calm_v1' },
           encoded: "uoplyA_e~hOuC|IpGzHdHrGtHfFrSjLoCxV}@lBlQbF`D}@hEzCb@nAtFnBfBUdf@dR|BbCvNxEv@{BlFjAGxC~@tAlu@lYxF\\dP`KfFxEbBfElJlM`Qx]fF|HhMvIhB~C`F`CpL`@zIk@z@g@l@sB`Ee@d@v@t@T`AIjzAmd@dDaBbBmDdCdAhEmC|CUdJeFtFyBlFe@~CNzCn@`C_A`C_EpKrSbL|RhSzZtDa@xBh@fKvHj@NxAF|CYtEjE`\\zRpUt^bOlSfOw@`Gb@fJtHpIa@hDwAbB}AxAuBrBsEhCqLlAmDhGcLhLGrEo@vBuBhBkC`EaJpBiC|FkE~D_@lE^pE_@bCjB|Q|SzG|EvHzDtc@wHlAjAdAtEdR}L~FcFjJaKtI{LbWic@"
-        },
-        human: {
-          routeId: 'calm-round-1-human',
-          source: 'human',
-          metadata: { distanceMeters: 2252.633, durationSeconds: 1622, profile: 'manual' },
-          encoded: "uoplyA_e~hOuC|IpGzHdHrGtHfFrSjLoCxV}@lBlQbF`D}@hEzCb@nAtFnBfBUdf@dR|BbCvNxEv@{BlFjAGxC~@tAlu@lYxF\\dP`KfFxEbBfElJlM`Qx]fF|HhMvIT`@rA|B{AfEa@lH|@w@v@CdL^fLCvKmAdLkCjFWpKv@bDGbDa@~KyClE|b@bEgA|Dr_@aCj@hAbJt@`GOxBxJnMtAyC|DaGhCC|Ivb@|^cMtDxVzOwD~@zRfArAfAbJ|Cge@v[~NpEtCnMdKjARjAIpDeBfF~ElHaKv_A|b@hC`@fTfAzLlG~H_@dE{GTwAv@mBhE_EhAaCrD}j@`EeJfNiP`A}@hAa@xNq@~TqKbO_EhB_AjHaHbHgFjEkEh@iAtc@wHlAjAhKoGzK}I`KuKzIwLhBpDbWic@"
         }
       }
     },
     {
       pairId: 'calm-route-comparison-02',
-      scenario: 'Three blinded walking routes with the same start and destination.',
+      scenario: 'Two blinded walking routes with the same start and destination.',
       routes: {
         calm_quiet: {
           routeId: 'calm-round-2-calm-quiet',
@@ -72,18 +66,12 @@
           source: 'calm_nature',
           metadata: { distanceMeters: 1410.268, durationSeconds: 1015, profile: 'foot_calm_v1' },
           encoded: "qa}jyAwblhOsAv@`ApE|HvXvDnKzFlR{UrOpJ`e@}hApt@mItEwXbb@_SjXmSnUcFpHqEhIaE`Ja[||@kExJw@_AsNr[{ErH_F`LyClAsNnSo|@ttA}AoBcD_GdACzAb@Kh@cAScA|AvzAf|BzK`NhHvKkAnFtGjPhG~D`I~KF`EnDzAlUnRk@f@"
-        },
-        human: {
-          routeId: 'calm-round-2-human',
-          source: 'human',
-          metadata: { distanceMeters: 1446.432, durationSeconds: 1041, profile: 'manual' },
-          encoded: "qa}jyAwblhOsAv@`ApE|HvXvDnKu\\jToJnF_DjDePjXyHvNwBxCmLfKeDzB_EbEy@`CbClEdA~@zAjApDl@XrNwXbb@_SjXmSnUcFpHqEhIaE`J_HxRaRbi@eSpd@aNzXeh@v_AiTl_@_\\po@sApCsHdTxh@rt@~DgFt@n@xEzHrEcKtI}JbGfIv@Oh]xj@|AvErEoDtGjPhG~D`I~KF`EnDzAlUnRk@f@"
         }
       }
     },
     {
       pairId: 'calm-route-comparison-03',
-      scenario: 'Three blinded walking routes with the same start and destination.',
+      scenario: 'Two blinded walking routes with the same start and destination.',
       routes: {
         calm_quiet: {
           routeId: 'calm-round-3-calm-quiet',
@@ -96,18 +84,12 @@
           source: 'calm_nature',
           metadata: { distanceMeters: 2036.808, durationSeconds: 1467, profile: 'foot_calm_v1' },
           encoded: "uqfkyAokghOvKaHnJ|c@~B?`hAkIlJeAtEiAzLkFbHeFx@}AfAmE~`@u\\dD\\~A_AvB`IvA}@|HrZvIvFbClEdA~@zAjApDl@XrNf`@xo@bCfBjC}HrDeFrKsExEuK`SsMlJoFfn@yb@pZwQnF{BnTmL`QqHb_@uLg@iGxJkBtCcItKkCnDRzL}DxEaAnIu@bWE~GgAtAiGnC{i@u@mNDuOh@yFC_G}AoKbEkEhGoLjCmMeAyJhAmCryA_x@hMaJ`Ab@hMoHrAIlk@gd@`DjKxBgBdAbF~S}OfJcIdJaGhA|FnJeDnBwA`TiE|A@bC|@t@nCpFpCpALpAQlBoAzA_D"
-        },
-        human: {
-          routeId: 'calm-round-3-human',
-          source: 'human',
-          metadata: { distanceMeters: 2091.549, durationSeconds: 1506, profile: 'manual' },
-          encoded: "uqfkyAokghOvKaHs@aEvWyOdJuGhBjEt@]xD~B|AxL~G{AGbGbKcDrDkAsDjAlSzLxDMbDb@nJpDdB[xBcAtBiD~G\\fAmE~`@u\\dD\\~A_AvB`IvA}@|HrZvIvFbClEdA~@zAjApDl@XrNlIuEfzAaaAnq@mc@hNuIlNwHhFe@lFcC``@_NdH}AhC`DjMiDGaFjBgDfuAok@pF~B`I[tFrArCaGnFuDnMeBnMNxIv@jWfF|o@~OpM`D~At@VuNr@wC|@uKf@uAv@sTjEye@UwBmDiNtEgCeQas@WcBfXeTxIcGzCiF~S}OfJcIdJaGhA|FnJeDnBwA`TiE|A@bC|@t@nCpFpCpALpAQlBoAzA_D"
         }
       }
     },
     {
       pairId: 'calm-route-comparison-04',
-      scenario: 'Three blinded walking routes with the same start and destination.',
+      scenario: 'Two blinded walking routes with the same start and destination.',
       routes: {
         calm_quiet: {
           routeId: 'calm-round-4-calm-quiet',
@@ -120,12 +102,6 @@
           source: 'calm_nature',
           metadata: { distanceMeters: 1790.64, durationSeconds: 1289, profile: 'foot_calm_v1' },
           encoded: "}c~jyAmmseO|Uos@xAhBfBaErLa_@D}KpNmd@pC_Hts@uzBsAeCtGeM{G{K`Q_ZnIsPbAcHjAeN`Nl@nIuGe@cGKwI`@k`@iAgH}BiG{D}GnNgT|G}ObJiQfQmg@hCuDlC`AvBsH`c@c`AzBeD|FaB|BsB{A{Ez@cI~a@{s@nBmCdYsf@zGsK`IuOdMeSr@z@bA}@zDuGdBeEX{BjEqHpBw@rFeJjAuC_@eBPs@lm@mdApMoRdi@}s@kBeENgC~CoD_Uig@tOuWDqBa@eCL{A|FkA"
-        },
-        human: {
-          routeId: 'calm-round-4-human',
-          source: 'human',
-          metadata: { distanceMeters: 1784.635, durationSeconds: 1285, profile: 'manual' },
-          encoded: "}c~jyAmmseO|Uos@xAhBfBaErLa_@D}KpNmd@pC_Hts@uzBsAeCtGeM{G{K`Q_ZnIsPbAcHjAeN`Nl@nIuGe@cGKwI`@k`@iAgH}BiG{D}GnNgT|G}ObJiQfQmg@hCuDlC`AvBsH`c@c`AzBeD|FaB|BsB@\\}AyFz@cIsA_HqCkD{AkFeD}Xu@_KzSkc@nCwEfAuEv]au@dCeEhAqE|EiKvPq^zJoNjFkLpPm[xAmDfDqE~^on@bANjC}DKgDrf@sz@~AEtFaIdXaEa@eCL{A|FkA"
         }
       }
     }

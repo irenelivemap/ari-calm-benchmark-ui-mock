@@ -6,7 +6,6 @@
   const OUTCOMES = [
     'calm_quiet',
     'calm_nature',
-    'human',
     'none_work_well',
     'hard_to_judge'
   ];
@@ -24,7 +23,6 @@
   const OUTCOME_LABELS = {
     calm_quiet: 'Calm Quiet',
     calm_nature: 'Calm Nature',
-    human: 'Human / Manual',
     none_work_well: 'None work well',
     hard_to_judge: 'Hard to judge',
     multiple_routes: 'Multiple routes',
@@ -145,7 +143,7 @@
       ? datedRows.reduce((latest, row) => Date.parse(row.date) > Date.parse(latest) ? row.date : latest, datedRows[0].date)
       : null;
 
-    const routeOutcomes = ['calm_quiet', 'calm_nature', 'human'];
+    const routeOutcomes = ['calm_quiet', 'calm_nature'];
     const highestRouteCount = Math.max(...routeOutcomes.map(routeType => outcomeCounts[routeType]));
     const leadingRoutes = highestRouteCount > 0
       ? routeOutcomes.filter(routeType => outcomeCounts[routeType] === highestRouteCount)

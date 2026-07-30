@@ -254,12 +254,12 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" integrity="sha256-vpYzxNhw4m+zfxz+XFp3GBZnEUAD6hYgeseFDY2ordE=" crossorigin=""></script>
   <script src="./src/app/runtime.js?v=20260729-three-routes-1"></script>
-  <script src="./src/data/mock-route-pairs.js?v=20260729-three-routes-1"></script>
+  <script src="./src/data/mock-route-pairs.js?v=20260730-two-routes-1"></script>
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
-  <script src="./src/data/calm-benchmark-data.js?v=20260729-multi-select-2"></script>
+  <script src="./src/data/calm-benchmark-data.js?v=20260730-two-routes-1"></script>
   <script src="./src/data/benchmark-transport.js?v=20260729-team-results-2"></script>
   <script src="./src/data/mock-team-results.js?v=20260729-sample-results-1"></script>
-  <script src="./src/results/calm-results.js?v=20260729-team-results-2"></script>
+  <script src="./src/results/calm-results.js?v=20260730-two-routes-1"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
   <script src="./src/maps/route-overlap.js?v=20260729-street-view-any-point-1"></script>
   <script src="./src/maps/map-adapter.js?v=20260729-street-view-any-point-1"></script>
@@ -411,8 +411,8 @@
         key: 'calm',
         menuLabel: 'Calm Route Comparison',
         documentTitle: 'ARI Calm Route Comparison',
-        heroQuestion: 'Which route or routes would you choose for this calm walk?',
-        heroCopy: 'Compare three possible walking routes. Their source is hidden, so choose only from the route experience you see.',
+        heroQuestion: 'Which route would you choose for this calm walk?',
+        heroCopy: 'Compare two possible walking routes. Their source is hidden, so choose only from the route experience you see.',
         definitionQuestion: 'What do we mean by calm?',
         definitionAnswer: 'A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.',
         testId: 'calm_route_comparison',
@@ -423,7 +423,7 @@
           source: 'calm-route-comparison',
           sessionPrefix: 'calm-route-session',
           ariaLabel: 'Blinded calm route comparison',
-          routeTypes: ['calm_quiet', 'calm_nature', 'human'],
+          routeTypes: ['calm_quiet', 'calm_nature'],
           questions: {
             q1: 'Which route or routes would you choose for this calm walk?',
             q2: '',
@@ -436,7 +436,6 @@
           q1Options: [
             { value: 'route_a', label: 'Route A', className: 'ari-choice--route-a' },
             { value: 'route_b', label: 'Route B', className: 'ari-choice--route-b' },
-            { value: 'route_c', label: 'Route C', className: 'ari-choice--route-c' },
             { value: 'none_work_well', label: 'None work well', exclusive: true },
             { value: 'hard_to_judge', label: 'Hard to judge', exclusive: true }
           ],
@@ -786,7 +785,7 @@
         .map(key => [AriCalmResults.REASON_LABELS[key], summary.reasonCounts[key], key])
         .sort((a, b) => b[1] - a[1]);
       const reasonResponseCount = summary.rows.filter(row => row.reasons.length > 0).length;
-      const selectedRouteCount = ['calm_quiet', 'calm_nature', 'human']
+      const selectedRouteCount = ['calm_quiet', 'calm_nature']
         .reduce((total, key) => total + summary.outcomeCounts[key], 0);
       const leadingStatement = summary.leadingRoute
         ? `${escapeHtml(AriCalmResults.OUTCOME_LABELS[summary.leadingRoute])} was selected in <strong>${percentage(summary.outcomeCounts[summary.leadingRoute], summary.total)}%</strong> of comparisons.`
