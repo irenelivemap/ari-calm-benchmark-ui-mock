@@ -1088,7 +1088,7 @@ html.is-challenge-dialog-open {
 
 .calm-session-points b {
   color: var(--ari-ink);
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .calm-session-points small {
