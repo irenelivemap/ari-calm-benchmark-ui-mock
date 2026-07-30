@@ -616,7 +616,7 @@ html.is-challenge-dialog-open {
   width: 100%;
   max-width: 100%;
   color: var(--ari-ink);
-  font-size: clamp(35px, 3.5vw, 48px);
+  font-size: clamp(35px, 3.5vw, 46px);
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: -0.02em;
