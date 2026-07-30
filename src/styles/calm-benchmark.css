@@ -466,7 +466,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-intro-wrap {
-  max-width: 1080px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 28px;
 }
@@ -616,7 +616,7 @@ html.is-challenge-dialog-open {
   width: 100%;
   max-width: 100%;
   color: var(--ari-ink);
-  font-size: 40px;
+  font-size: 36px;
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -3492,11 +3492,6 @@ html.is-challenge-dialog-open {
   50% { transform: translate(4px, -50%); }
 }
 
-@media (max-width: 1100px) {
-  .calm-hero h1 {
-    font-size: 36px;
-  }
-}
 
 @media (max-width: 900px) {
   .calm-challenge-dialog {
