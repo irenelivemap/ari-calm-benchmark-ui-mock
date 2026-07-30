@@ -616,7 +616,7 @@ html.is-challenge-dialog-open {
   width: 100%;
   max-width: 100%;
   color: var(--ari-ink);
-  font-size: clamp(26px, 3.2vw, 40px);
+  font-size: clamp(35px, 3.5vw, 48px);
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -864,11 +864,10 @@ html.is-challenge-dialog-open {
   align-items: center;
   gap: 8px;
   color: var(--ari-muted);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  opacity: 0.7;
 }
 
 .calm-card--session .calm-kicker {
@@ -896,8 +895,8 @@ html.is-challenge-dialog-open {
 .calm-start-card h2 {
   margin: 0;
   color: var(--ari-ink);
-  font-size: 1.35rem;
-  line-height: 1.25;
+  font-size: 35px;
+  line-height: 1.2;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -1022,13 +1021,14 @@ html.is-challenge-dialog-open {
   display: block;
   margin-bottom: 2px;
   color: var(--ari-ink);
+  font-size: 26px;
   font-weight: 400;
 }
 
 .calm-step-list span {
   display: block;
   color: var(--ari-muted);
-  font-size: 0.84em;
+  font-size: 19px;
   line-height: 1.42;
 }
 
@@ -1065,6 +1065,7 @@ html.is-challenge-dialog-open {
   padding: 12px 0;
   border-top: 1px solid var(--ari-hairline-warm);
   color: var(--ari-warm-ink);
+  font-size: 26px;
 }
 
 .calm-card--session .calm-session-points div {
