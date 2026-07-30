@@ -408,7 +408,7 @@
               <p class="ari-onboarding__step-count" aria-label="Step 1 of 3">1 / 3</p>
             </div>
             <b>Compare the routes</b>
-            <span>These are your ${routeCountLabel}. Explore the map before you decide — pan, zoom, or use Street View.</span>
+            <span>For each trip, you'll see two routes with the same start and destination. Explore the map before you decide — pan, zoom, or use Street View.</span>
             <button class="ari-onboarding__next" data-action="next-onboarding" type="button">Next →</button>
           </div>
 
