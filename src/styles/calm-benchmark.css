@@ -5633,9 +5633,9 @@ html.is-challenge-dialog-open {
   left: var(--coach-left, 24px);
   top: var(--coach-top, 24px);
   z-index: 2;
-  width: min(272px, calc(100% - 28px));
-  border-radius: 12px;
-  padding: 18px 20px;
+  width: min(320px, calc(100% - 28px));
+  border-radius: 14px;
+  padding: 22px 24px;
   border: 1px solid rgba(16, 21, 17, 0.88);
   background: #efeee6;
   color: #101511;
@@ -5677,17 +5677,17 @@ html.is-challenge-dialog-open {
 
 .ari-onboarding__coachmark b {
   color: #101511;
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   font-weight: 800;
   line-height: 1.25;
 }
 
 .ari-onboarding__coachmark span {
-  margin-top: 5px;
+  margin-top: 6px;
   color: rgba(16, 21, 17, 0.72);
-  font-size: 0.88rem;
+  font-size: 1.05rem;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .ari-onboarding__coachmark::after {
@@ -5762,9 +5762,9 @@ html.is-challenge-dialog-open {
   left: 50%;
   transform: translateX(-50%);
   z-index: 4;
-  width: min(420px, calc(100% - 32px));
-  border-radius: 16px;
-  padding: 24px 26px 22px;
+  width: min(480px, calc(100% - 32px));
+  border-radius: 18px;
+  padding: 28px 30px 26px;
   border: 1px solid rgba(16, 21, 17, 0.88);
   background: #efeee6;
   color: #101511;
@@ -5780,22 +5780,22 @@ html.is-challenge-dialog-open {
 }
 
 .ari-onboarding__intro b {
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   font-weight: 800;
-  line-height: 1.25;
-  margin-bottom: 6px;
+  line-height: 1.2;
+  margin-bottom: 8px;
 }
 
 .ari-onboarding__intro span {
   color: rgba(16, 21, 17, 0.72);
-  font-size: 0.92rem;
+  font-size: 1.05rem;
   font-weight: 500;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .ari-onboarding__step-count {
-  margin: 0 0 10px;
-  font-size: 0.74rem;
+  margin: 0 0 12px;
+  font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   color: rgba(16, 21, 17, 0.42);
@@ -5806,14 +5806,14 @@ html.is-challenge-dialog-open {
   appearance: none;
   display: inline-flex;
   align-items: center;
-  margin-top: 18px;
-  padding: 10px 22px;
+  margin-top: 20px;
+  padding: 13px 28px;
   border-radius: 999px;
   border: 1.5px solid rgba(16, 21, 17, 0.82);
   background: #101511;
   color: #f6f5ee;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   font-weight: 800;
   cursor: pointer;
   transition: background 120ms ease, transform 120ms ease;
@@ -5839,12 +5839,12 @@ html.is-challenge-dialog-open {
   right: 20px;
   z-index: 4;
   appearance: none;
-  padding: 8px 12px;
+  padding: 10px 14px;
   border: none;
   background: transparent;
   color: rgba(246, 245, 238, 0.56);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: color 140ms ease;
