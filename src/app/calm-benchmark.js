@@ -789,7 +789,8 @@
       els.onboardingScrimFill.setAttribute('width', String(overlayRect.width));
       els.onboardingScrimFill.setAttribute('height', String(overlayRect.height));
 
-      // Clear all cutouts first
+      // Hide all targets and clear all cutouts
+      els.onboardingTargets.forEach(t => { t.hidden = true; });
       els.onboardingCutouts.forEach(cutout => {
         cutout.setAttribute('width', '0');
         cutout.setAttribute('height', '0');
@@ -808,6 +809,7 @@
       const target = els.onboardingTargets.find(item => item.dataset.onboardingTarget === stepTargetName);
       const cutout = els.onboardingCutouts.find(item => item.dataset.onboardingCutout === stepTargetName);
       if (!sourceRect || !target || !cutout) return;
+      target.hidden = false;
 
       const padding = stepTargetName === 'answer' ? 6 : 8;
       const expanded = expandRect(new DOMRect(
