@@ -642,9 +642,9 @@ html.is-challenge-dialog-open {
   margin-left: 0.22em;
   overflow: hidden;
   vertical-align: baseline;
-  font-family: var(--ari-serif);
-  font-style: italic;
-  font-weight: 500;
+  font-family: inherit;
+  font-style: normal;
+  font-weight: inherit;
   line-height: 1;
 }
 
@@ -760,11 +760,13 @@ html.is-challenge-dialog-open {
 }
 
 .calm-card--how {
-  background: var(--ari-card-sage);
+  background: #fff;
+  border: 1px solid rgba(16, 21, 17, 0.08);
 }
 
 .calm-card--session {
-  background: var(--ari-card-blue);
+  background: #fff;
+  border: 1px solid rgba(16, 21, 17, 0.08);
 }
 
 .calm-card-head {
@@ -862,12 +864,13 @@ html.is-challenge-dialog-open {
 .calm-kicker {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   color: var(--ari-muted);
-  font-size: 0.74em;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-size: 0.65em;
+  font-weight: 500;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
+  opacity: 0.55;
 }
 
 .calm-card--session .calm-kicker {
@@ -876,13 +879,13 @@ html.is-challenge-dialog-open {
 
 .calm-icon {
   display: inline-flex;
-  width: 34px;
-  height: 34px;
+  width: 22px;
+  height: 22px;
   flex: none;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(16, 21, 17, 0.06);
   color: var(--ari-ink);
 }
 
@@ -895,10 +898,10 @@ html.is-challenge-dialog-open {
 .calm-start-card h2 {
   margin: 0;
   color: var(--ari-ink);
-  font-size: 1.55em;
-  line-height: 1.15;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 1rem;
+  line-height: 1.45;
+  font-weight: 400;
+  letter-spacing: 0;
 }
 
 
@@ -952,7 +955,7 @@ html.is-challenge-dialog-open {
 .calm-route-track {
   position: relative;
   display: grid;
-  height: 44px;
+  height: 22px;
   grid-template-columns: repeat(3, 1fr);
   align-items: center;
   margin-bottom: 4px;
@@ -964,7 +967,7 @@ html.is-challenge-dialog-open {
   left: 16.666%;
   right: 16.666%;
   width: 66.666%;
-  height: 42px;
+  height: 22px;
   overflow: visible;
   transform: translateY(-50%);
 }
