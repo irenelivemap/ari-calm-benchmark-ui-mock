@@ -7,7 +7,7 @@
   const DATASET_TYPE = 'calm-benchmark-dataset';
   const ANSWER_TYPE = 'bench-ux';
   const PROGRESS_TYPE = 'bench-progress';
-  const TEST_ID = 'calm_vs_fast';
+  const TEST_ID = 'calm_route_comparison';
   const DEFAULT_STORAGE_KEY = 'ari-calm-benchmark-dataset-v1';
   const CALM_ROUTE_COMPARISON_TEST_ID = 'calm_route_comparison';
   const ROUTE_SLOTS = [

@@ -631,6 +631,7 @@
         if (isMobile) {
           return {
             google: 16,
+            maplibre: 16,
             leaflet: { padding: [16, 16], maxZoom: ROUTE_FIT_MAX_ZOOM }
           };
         }
@@ -639,6 +640,7 @@
         const top = Math.round(Math.min(cardHeight + 40, Math.max(120, mapHeight * 0.4)));
         return {
           google: { top, right: 32, bottom: 32, left: 32 },
+          maplibre: { top, right: 32, bottom: 32, left: 32 },
           leaflet: {
             paddingTopLeft: [32, top],
             paddingBottomRight: [32, 32],
@@ -675,6 +677,7 @@
 
           return {
             google: { top, right, bottom, left },
+            maplibre: { top, right, bottom, left },
             leaflet: {
               paddingTopLeft: [left, top],
               paddingBottomRight: [right, bottom],
@@ -685,6 +688,7 @@
 
         return {
           google: edgePadding,
+          maplibre: edgePadding,
           leaflet: { padding: [edgePadding, edgePadding], maxZoom: ROUTE_FIT_MAX_ZOOM }
         };
       }
@@ -693,6 +697,12 @@
       const lowerSheet = measuredSheet || (state.panelCollapsed ? 110 : Math.min(Math.round(window.innerHeight * 0.62), 520));
       return {
         google: {
+          top: 76,
+          right: 20,
+          bottom: lowerSheet + 20,
+          left: 20
+        },
+        maplibre: {
           top: 76,
           right: 20,
           bottom: lowerSheet + 20,
@@ -1033,6 +1043,9 @@
       els.streetStatusCopy.textContent = copy;
       els.streetStatus.classList.toggle('is-loading', loading);
       els.streetStatus.hidden = !visible;
+      if (!loading && visible && title) {
+        requestAnimationFrame(() => els.closeStreetView.focus({ preventScroll: true }));
+      }
     }
 
     function showStreetViewer() {
@@ -1346,11 +1359,17 @@
     }
 
     function getQ3Variant() {
-      const selected = getQ1Choice();
-      const variant = benchmark.q3Variants[selected];
+      let variantKey;
+      if (benchmark.q1Multiple) {
+        const choices = getQ1Choices();
+        variantKey = choices.includes('none_work_well') ? 'none_work_well' : null;
+      } else {
+        variantKey = getQ1Choice();
+      }
+      const variant = variantKey ? benchmark.q3Variants[variantKey] : null;
       return variant
         ? {
-            key: selected,
+            key: variantKey,
             question: variant.question || benchmark.questions.q3,
             options: Array.isArray(variant.options) ? variant.options : benchmark.q3Options
           }
@@ -1902,7 +1921,7 @@
         return;
       }
       state.completedRounds += 1;
-      if (state.completedRounds === 10) state.goalCheckpointPending = true;
+      if (state.completedRounds > 0 && state.completedRounds % 10 === 0) state.goalCheckpointPending = true;
       const earnedMilestone = getEarnedMilestone(state.completedRounds, milestones);
       if (!canContinueAfterCurrentRound()) {
         els.submit.textContent = 'Complete';

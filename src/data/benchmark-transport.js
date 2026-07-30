@@ -118,7 +118,10 @@
       return body
         .split('\n')
         .filter(line => line.trim())
-        .map(line => JSON.parse(line));
+        .reduce((acc, line) => {
+          try { acc.push(JSON.parse(line)); } catch (_) {}
+          return acc;
+        }, []);
     }
 
     return {

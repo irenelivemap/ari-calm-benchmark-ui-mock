@@ -41,7 +41,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin="">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
   <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260730-hero-full-width-1">
   <style>
     body {
@@ -241,18 +241,18 @@
     </div>
   </main>
 
-  <main id="community-results" class="calm-results calm-hidden">
+  <section id="community-results" class="calm-results calm-hidden" aria-label="Community results">
     <div id="community-results-content" class="calm-results-wrap"></div>
-  </main>
+  </section>
 
-  <main id="team-results" class="calm-team-results calm-hidden">
+  <section id="team-results" class="calm-team-results calm-hidden" aria-label="Team results">
     <div id="team-results-content" class="calm-team-wrap"></div>
-  </main>
+  </section>
 
   <div id="calm-benchmark-root" hidden></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" crossorigin=""></script>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" integrity="sha256-vpYzxNhw4m+zfxz+XFp3GBZnEUAD6hYgeseFDY2ordE=" crossorigin=""></script>
   <script src="./src/app/runtime.js?v=20260729-three-routes-1"></script>
   <script src="./src/data/mock-route-pairs.js?v=20260729-three-routes-1"></script>
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
@@ -470,6 +470,7 @@
       }
     };
     let benchmarkMounted = false;
+    let benchmarkStarting = false;
     let benchmarkInstance = null;
     let savedProgress = null;
     let activePage = 'testing';
@@ -890,7 +891,7 @@
       });
 
       const selectedPerson = orderedParticipants.find(item => item.participantId === selectedResultsParticipantId);
-      const selectedParticipantLabel = participantLabels.get(selectedResultsParticipantId) || selectedPerson.participant;
+      const selectedParticipantLabel = participantLabels.get(selectedResultsParticipantId) || selectedPerson?.participant || 'Unknown';
       const participantSummary = AriCalmResults.aggregateAnswers(answers, {
         participantId: selectedResultsParticipantId
       });
@@ -1616,6 +1617,8 @@
     }
 
     async function startBenchmark(participantName, extraOptions = {}) {
+      if (benchmarkStarting) return;
+      benchmarkStarting = true;
       if (freshPreviewMode) {
         freshPreviewMode = false;
         const nextUrl = new URL(window.location.href);
@@ -1679,6 +1682,7 @@
       }
 
       window.scrollTo({ top: 0, behavior: 'auto' });
+      benchmarkStarting = false;
     }
 
     participantInput.addEventListener('input', () => {
@@ -1807,7 +1811,8 @@
         renderTeamResults();
       }
       if (action === 'export') {
-        const blob = new Blob([dataRepository.exportAnswerJsonl()], { type: 'application/x-ndjson' });
+        const mergedAnswers = calmResultsAnswers();
+        const blob = new Blob([mergedAnswers.map(a => JSON.stringify(a)).join('\n')], { type: 'application/x-ndjson' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
