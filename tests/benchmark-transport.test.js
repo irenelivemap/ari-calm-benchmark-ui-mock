@@ -50,6 +50,33 @@ test('upserts progress at the session endpoint', async () => {
   assert.equal(calls[0].init.method, 'PUT');
 });
 
+test('reads the shared NDJSON answer feed', async () => {
+  const calls = [];
+  const transport = createHttpTransport({
+    baseUrl: '/api/v1/benchmarks',
+    storage: new MemoryStorage(),
+    fetchImpl: async (url, init) => {
+      calls.push({ url, init });
+      return {
+        ok: true,
+        status: 200,
+        text: async () => [
+          JSON.stringify({ captureId: 'capture-1', participantName: 'Irene' }),
+          JSON.stringify({ captureId: 'capture-2', participantName: 'Alex' }),
+          ''
+        ].join('\n')
+      };
+    }
+  });
+
+  assert.deepEqual(await transport.listAnswers('calm_route_comparison'), [
+    { captureId: 'capture-1', participantName: 'Irene' },
+    { captureId: 'capture-2', participantName: 'Alex' }
+  ]);
+  assert.equal(calls[0].url, '/api/v1/benchmarks/calm_route_comparison/answers');
+  assert.equal(calls[0].init.method, 'GET');
+});
+
 test('queues failed records and flushes them later', async () => {
   const storage = new MemoryStorage();
   let available = false;

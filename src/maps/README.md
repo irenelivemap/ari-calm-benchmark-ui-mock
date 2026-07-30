@@ -2,10 +2,10 @@
 
 The shared benchmark UI should not depend on where the map comes from. It needs a map capable of:
 
-- drawing Route A and Route B
+- drawing Route A and Route B, plus Route C when configured
 - drawing start and destination markers
 - panning and zooming
-- fitting both routes into the closest useful comparison view
+- fitting every active route into the closest useful comparison view
 - enabling Street View point targeting only while the mode is active
 - preserving and restoring the exact map camera around Street View inspection
 

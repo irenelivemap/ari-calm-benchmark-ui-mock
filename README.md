@@ -52,7 +52,7 @@ There is no build step and no package installation is required.
 | `/routing/fast-vs-calm` | Clean public Fast vs Calm path. |
 | `/fresh.html` | New-player QA preview without deleting saved browser data. |
 | `/demo.html` | Compatibility redirect for previously shared links. |
-| `/?view=results&preview=1` | Unlocked community-results preview. |
+| `/?view=results&preview=1` | Community-results preview that bypasses the Fast vs Google release lock. |
 | `/?view=team-results` | Direct internal-results prototype. |
 
 ## Repository Map

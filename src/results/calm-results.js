@@ -3,7 +3,13 @@
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.AriCalmResults = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
-  const OUTCOMES = ['calm', 'fast', 'both', 'neither', 'hard_to_judge'];
+  const OUTCOMES = [
+    'calm_quiet',
+    'calm_nature',
+    'human',
+    'none_work_well',
+    'hard_to_judge'
+  ];
   const Q2_CHOICES = ['yes', 'no', 'not_sure'];
   const REASONS = [
     'not_enough_greenery_water',
@@ -16,11 +22,12 @@
   ];
 
   const OUTCOME_LABELS = {
-    calm: 'Calm route',
-    fast: 'Fast route',
-    both: 'Both work well',
-    neither: 'Neither works',
+    calm_quiet: 'Calm Quiet',
+    calm_nature: 'Calm Nature',
+    human: 'Human / Manual',
+    none_work_well: 'None work well',
     hard_to_judge: 'Hard to judge',
+    multiple_routes: 'Multiple routes',
     unknown: 'Unknown'
   };
 
@@ -34,40 +41,57 @@
     other: 'Other'
   };
 
-  function selectedRouteType(answer) {
-    const mapping = answer.labelMap || answer.routeAssignment || {};
-    if (answer.q1Choice === 'route_a' || answer.choice === 'route_a') return mapping.A || mapping.routeA || answer.routeAType || 'unknown';
-    if (answer.q1Choice === 'route_b' || answer.choice === 'route_b') return mapping.B || mapping.routeB || answer.routeBType || 'unknown';
-    if ((answer.q1Choice || answer.choice) === 'either') return 'both';
-    if ((answer.q1Choice || answer.choice) === 'neither') return 'neither';
-    if ((answer.q1Choice || answer.choice) === 'hard_to_judge') return 'hard_to_judge';
-    return 'unknown';
+  function q1Selections(answer) {
+    if (Array.isArray(answer.q1Choices) && answer.q1Choices.length) return [...answer.q1Choices];
+    const choice = answer.q1Choice || answer.choice;
+    if (choice === 'all_three_work_well') return ['route_a', 'route_b', 'route_c'];
+    return choice && choice !== 'multiple_routes' ? [choice] : [];
   }
 
-  function calmPosition(answer) {
+  function selectedRouteTypes(answer) {
     const mapping = answer.labelMap || answer.routeAssignment || {};
-    const routeA = mapping.A || mapping.routeA || answer.routeAType;
-    const routeB = mapping.B || mapping.routeB || answer.routeBType;
-    if (routeA === 'calm') return 'A';
-    if (routeB === 'calm') return 'B';
-    return null;
+    const routeTypes = {
+      route_a: mapping.A || mapping.routeA || answer.routeAType || 'unknown',
+      route_b: mapping.B || mapping.routeB || answer.routeBType || 'unknown',
+      route_c: mapping.C || mapping.routeC || answer.routeCType || 'unknown'
+    };
+    const outcomes = q1Selections(answer).map(choice => routeTypes[choice] || choice);
+    return outcomes.length ? outcomes : ['unknown'];
+  }
+
+  function selectedRouteType(answer) {
+    const outcomes = selectedRouteTypes(answer);
+    return outcomes.length === 1 ? outcomes[0] : 'multiple_routes';
+  }
+
+  function selectedSlots(answer) {
+    const slots = { route_a: 'A', route_b: 'B', route_c: 'C' };
+    return q1Selections(answer).map(choice => slots[choice]).filter(Boolean);
   }
 
   function normalizeRow(answer) {
     const reasons = Array.isArray(answer.q3Issues)
       ? answer.q3Issues
       : Array.isArray(answer.reasons) ? answer.reasons : [];
+    const outcomes = selectedRouteTypes(answer);
+    const participant = answer.participantName || answer.rater || 'Anonymous';
     return {
       id: answer.captureId || answer.roundId || '',
-      participant: answer.participantName || answer.rater || 'Anonymous',
+      participant,
+      participantId: answer.participantId
+        || answer.sessionId
+        || answer.benchmarkRunId
+        || `name:${participant}`,
       sessionId: answer.sessionId || answer.benchmarkRunId || '',
       pairId: answer.pairId || 'Unknown pair',
+      roundNumber: Number.isFinite(Number(answer.roundNumber)) ? Number(answer.roundNumber) : null,
       date: answer.clientTs || answer.createdAt || '',
-      outcome: selectedRouteType(answer),
+      outcome: outcomes.length === 1 ? outcomes[0] : 'multiple_routes',
+      outcomes,
       q2: answer.q2Separate || null,
       reasons: [...reasons],
       note: answer.q3Note || answer.note || '',
-      calmPosition: calmPosition(answer),
+      selectedSlots: selectedSlots(answer),
       raw: answer
     };
   }
@@ -75,8 +99,9 @@
   function filterAnswers(answers, filters = {}) {
     return (answers || []).map(normalizeRow).filter(row => {
       if (filters.participant && row.participant !== filters.participant) return false;
+      if (filters.participantId && row.participantId !== filters.participantId) return false;
       if (filters.sessionId && row.sessionId !== filters.sessionId) return false;
-      if (filters.outcome && row.outcome !== filters.outcome) return false;
+      if (filters.outcome && !row.outcomes.includes(filters.outcome)) return false;
       if (filters.reason && !row.reasons.includes(filters.reason)) return false;
       if (filters.pairId && row.pairId !== filters.pairId) return false;
       return true;
@@ -95,24 +120,24 @@
     const participantIds = new Set();
     const routePairs = new Set();
     const positionBias = {
-      calmShownAsA: 0,
-      calmShownAsB: 0,
-      calmSelectedAsA: 0,
-      calmSelectedAsB: 0
+      selectedAsA: 0,
+      selectedAsB: 0,
+      selectedAsC: 0
     };
 
     rows.forEach(row => {
-      if (Object.hasOwn(outcomeCounts, row.outcome)) outcomeCounts[row.outcome] += 1;
+      row.outcomes.forEach(outcome => {
+        if (Object.hasOwn(outcomeCounts, outcome)) outcomeCounts[outcome] += 1;
+      });
       if (row.q2 && Object.hasOwn(q2Counts, row.q2)) q2Counts[row.q2] += 1;
       row.reasons.forEach(reason => {
         if (Object.hasOwn(reasonCounts, reason)) reasonCounts[reason] += 1;
       });
-      participantIds.add(row.participant || row.sessionId);
+      participantIds.add(row.participantId);
       if (row.pairId && row.pairId !== 'Unknown pair') routePairs.add(row.pairId);
-      if (row.calmPosition === 'A') positionBias.calmShownAsA += 1;
-      if (row.calmPosition === 'B') positionBias.calmShownAsB += 1;
-      if (row.outcome === 'calm' && row.calmPosition === 'A') positionBias.calmSelectedAsA += 1;
-      if (row.outcome === 'calm' && row.calmPosition === 'B') positionBias.calmSelectedAsB += 1;
+      if (row.selectedSlots.includes('A')) positionBias.selectedAsA += 1;
+      if (row.selectedSlots.includes('B')) positionBias.selectedAsB += 1;
+      if (row.selectedSlots.includes('C')) positionBias.selectedAsC += 1;
     });
 
     const datedRows = rows.filter(row => Number.isFinite(Date.parse(row.date)));
@@ -120,6 +145,12 @@
       ? datedRows.reduce((latest, row) => Date.parse(row.date) > Date.parse(latest) ? row.date : latest, datedRows[0].date)
       : null;
 
+    const routeOutcomes = ['calm_quiet', 'calm_nature', 'human'];
+    const highestRouteCount = Math.max(...routeOutcomes.map(routeType => outcomeCounts[routeType]));
+    const leadingRoutes = highestRouteCount > 0
+      ? routeOutcomes.filter(routeType => outcomeCounts[routeType] === highestRouteCount)
+      : [];
+    const leadingRoute = leadingRoutes.length === 1 ? leadingRoutes[0] : null;
     return {
       total: rows.length,
       participants: participantIds.size,
@@ -129,8 +160,60 @@
       q2Counts,
       reasonCounts,
       positionBias,
+      leadingRoute,
+      leadingRoutes,
       rows
     };
+  }
+
+  function summarizeParticipants(answers) {
+    const participants = new Map();
+
+    filterAnswers(answers).forEach(row => {
+      if (!participants.has(row.participantId)) {
+        participants.set(row.participantId, {
+          participantId: row.participantId,
+          participant: row.participant,
+          comparisons: 0,
+          sessionIds: new Set(),
+          routePairs: new Set(),
+          lastUpdated: null
+        });
+      }
+      const summary = participants.get(row.participantId);
+      summary.comparisons += 1;
+      if (row.sessionId) summary.sessionIds.add(row.sessionId);
+      if (row.pairId && row.pairId !== 'Unknown pair') summary.routePairs.add(row.pairId);
+      if (Number.isFinite(Date.parse(row.date))
+        && (!summary.lastUpdated || Date.parse(row.date) > Date.parse(summary.lastUpdated))) {
+        summary.lastUpdated = row.date;
+      }
+    });
+
+    return [...participants.values()]
+      .map(summary => ({
+        participantId: summary.participantId,
+        participant: summary.participant,
+        comparisons: summary.comparisons,
+        sessions: summary.sessionIds.size,
+        routePairs: summary.routePairs.size,
+        lastUpdated: summary.lastUpdated
+      }))
+      .sort((a, b) =>
+        a.participant.localeCompare(b.participant, undefined, { sensitivity: 'base' })
+        || a.participantId.localeCompare(b.participantId)
+      );
+  }
+
+  function mergeAnswers(remoteAnswers, localAnswers) {
+    const merged = new Map();
+    [...(remoteAnswers || []), ...(localAnswers || [])].forEach((answer, index) => {
+      const key = answer.captureId
+        || answer.roundId
+        || `${answer.sessionId || answer.benchmarkRunId || 'unknown'}:${answer.roundNumber ?? index}`;
+      merged.set(key, answer);
+    });
+    return [...merged.values()];
   }
 
   function createPreferenceSnapshot(answers, options = {}) {
@@ -144,8 +227,9 @@
       total: rows.length,
       releasedTotal,
       nextReleaseAt: releasedTotal + batchSize,
-      calmPercent: releasedTotal
-        ? Math.round((releasedSummary.outcomeCounts.calm / releasedSummary.total) * 100)
+      leadingRoute: releasedTotal ? releasedSummary.leadingRoute : null,
+      leadingRoutePercent: releasedTotal && releasedSummary.leadingRoute
+        ? Math.round((releasedSummary.outcomeCounts[releasedSummary.leadingRoute] / releasedSummary.total) * 100)
         : null
     };
   }
@@ -156,10 +240,14 @@
     REASONS,
     OUTCOME_LABELS,
     REASON_LABELS,
+    q1Selections,
+    selectedRouteTypes,
     selectedRouteType,
     normalizeRow,
     filterAnswers,
     aggregateAnswers,
+    summarizeParticipants,
+    mergeAnswers,
     createPreferenceSnapshot
   };
 });

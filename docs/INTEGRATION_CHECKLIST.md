@@ -7,7 +7,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Confirm the challenge test ID and route types.
 - [ ] Confirm the exact question copy, choices, and follow-up rules.
 - [ ] Add or update the profile in `CHALLENGE_CONFIGS` in `index.html`.
-- [ ] Keep provider names hidden from active Route A/B labels.
+- [ ] Keep provider names hidden from active Route A/B or Route A/B/C labels.
 
 ## Frontend
 
@@ -23,7 +23,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 ## Public Host
 
-- [x] Prepare `/routing/`, `/routing/fast-vs-google`, and `/routing/fast-vs-calm`.
+- [x] Prepare `/routing/`, `/routing/fast-vs-google`, and `/routing/calm-route-comparison` (with `/routing/fast-vs-calm` as a legacy alias).
 - [x] Proxy routing calls through the public host at `/api/v1/routing`.
 - [x] Disable query-based API, Google key, reset, and QA overrides in production.
 - [x] Add LinkedIn/Open Graph metadata and a social preview image.
@@ -39,7 +39,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Provide stable `pairId` and route IDs.
 - [ ] Return the same logical pair when retrying one session round.
 - [ ] Include metadata needed for later analysis without exposing it in Q1.
-- [ ] Validate that both geometries contain at least two valid points.
+- [ ] Validate that every geometry contains at least two valid points.
 
 ## Persistence
 
@@ -54,9 +54,9 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 ## Map Behavior
 
-- [ ] Draw both routes with the existing orange/green visible-slot colors.
+- [ ] Draw active routes with the existing orange/green colors and the blue Route C color when configured.
 - [ ] Preserve pan, pinch, scroll, double-click, and zoom behavior.
-- [ ] Fit both routes within the area not covered by the question panel.
+- [ ] Fit all active routes within the area not covered by the question panel.
 - [ ] Keep Fit independent from the tester's manual camera state until pressed.
 - [ ] Enable Street View point targeting only while the mode is active; near-route taps keep their route identity, other taps are neutral map points.
 - [ ] Restore the exact map camera and question state after Street View closes.
@@ -66,7 +66,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 - [ ] A new participant can start without team context.
 - [ ] A returning participant resumes the same session, pair, assignment, question step, and partial answer.
-- [ ] Route A/B assignment is randomized and remains blinded.
+- [ ] Route A/B or Route A/B/C assignment is randomized and remains blinded.
 - [ ] The active challenge shows the correct question flow.
 - [ ] Retrying a completed comparison does not create a duplicate answer.
 - [ ] Leaving mid-round saves progress without submitting an incomplete answer.
@@ -80,11 +80,12 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 ## Challenge-specific Checks
 
-### Fast vs Calm
+### Calm Route Comparison
 
-- [ ] Route keys are `fast` and `calm`.
-- [ ] Q2 is required only for Route A, Route B, or Both work well.
-- [ ] Q3 is required only for Route A, Route B, or Neither works.
+- [x] Route keys are `calm_quiet`, `calm_nature`, and `human`.
+- [x] No Q2 is shown.
+- [x] Q1 allows any combination of Route A, Route B, and Route C; None work well and Hard to judge remain exclusive.
+- [x] Q3 is required when one or two routes are selected, or when None work well is selected.
 
 ### Fast vs Google Fast
 

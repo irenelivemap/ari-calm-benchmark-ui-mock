@@ -18,15 +18,15 @@ This prototype tests whether people prefer or trust one walking route over anoth
 
 The current benchmark family includes:
 
-- **Fast vs Calm**, which asks which route better fits a calm walk.
+- **Calm Route Comparison**, which compares Calm Quiet, Calm Nature, and a Human/Manual route behind randomized Route A/B/C labels.
 - **Fast vs Google Fast**, which asks which route works better as a fast route.
 - **Fast vs Safe**, planned but not yet implemented.
 
-Success means a participant can start or resume a session, inspect both routes, use Street View only when necessary, answer with minimal friction, and produce a record that can be decoded reliably by research and engineering.
+Success means a participant can start or resume a session, inspect every visible route, use Street View only when necessary, answer with minimal friction, and produce a record that can be decoded reliably by research and engineering.
 
 ## Primary Task
 
-Compare Route A and Route B on the map, choose the answer that fits the current challenge, and explain relevant issues when asked.
+Compare the blinded route options on the map, choose the answer that fits the current challenge, and explain relevant issues when asked. Fast vs Google uses a single A/B choice; Calm Route Comparison allows one or more A/B/C routes to be selected.
 
 The map is the primary decision surface. Questions, progress, medals, and results must support comparisons rather than compete with them.
 
@@ -37,6 +37,7 @@ The map is the primary decision surface. Questions, progress, medals, and result
 - **Low friction**: no unnecessary clicks, repeated explanations, or forced detours before the next comparison.
 - **Resumable**: leaving and returning must preserve the same session, pair, assignment, question step, and partial answer.
 - **Motivating, not coercive**: medals and community results encourage more comparisons without changing answer semantics.
+- **A clear stopping point**: after 10 saved comparisons, participants explicitly choose to end the session or keep comparing.
 - **One data foundation**: internal and external participants produce equivalent records.
 - **Adapter-driven integration**: real routes, maps, and persistence replace explicit interfaces rather than rewriting the UI.
 

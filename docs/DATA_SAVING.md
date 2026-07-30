@@ -6,7 +6,7 @@ The benchmark separates completed answers from resumable progress:
 2. An unfinished session upserts one progress record.
 3. Results read the same challenge dataset and never maintain a second answer source.
 
-The browser implements this contract in `src/data/calm-benchmark-data.js` with local storage. When runtime configuration supplies `dataApiBase`, `src/data/benchmark-transport.js` also delivers the same validated records to production endpoints.
+The browser implements this contract in `src/data/calm-benchmark-data.js` with local storage. When runtime configuration supplies `dataApiBase`, `src/data/benchmark-transport.js` delivers the same validated records to production endpoints and reads the shared NDJSON answer feed for the Calm team-results dashboard. The dashboard merges that feed with local answers by capture ID so an unsent local answer remains visible without creating duplicates.
 
 ## Challenge Datasets
 
@@ -14,7 +14,7 @@ Challenges do not share progress or answers.
 
 | Challenge | Test ID | Local storage key |
 | --- | --- | --- |
-| Fast vs Calm | `calm_vs_fast` | `ari-calm-benchmark-dataset-v1` |
+| Calm Route Comparison | `calm_route_comparison` | `ari-calm-route-comparison-dataset-v1` |
 | Fast vs Google Fast | `ari_fast_vs_google` | `ari-fast-google-benchmark-dataset-v1` |
 
 The `Reset test data` control currently clears both datasets. It exists for the single-tester design phase and must be removed before production research.
@@ -25,7 +25,7 @@ The `Reset test data` control currently clears both datasets. It exists for the 
 type BenchmarkDatasetV1 = {
   v: 1;
   type: "calm-benchmark-dataset"; // Historical type retained for compatibility.
-  test: "calm_vs_fast" | "ari_fast_vs_google";
+  test: "calm_route_comparison" | "ari_fast_vs_google";
   updatedAt: string;
   sessions: Record<string, SessionSummary>;
   progressBySessionId: Record<string, BenchmarkProgressV1>;
@@ -97,8 +97,8 @@ The answer feed is newline-delimited JSON, one completed answer per line. Record
 - `rater`
 - `choice`
 - `reasons`
-- `labels.A` / `labels.B`
-- `labelMap.A` / `labelMap.B`
+- `labels.A` / `labels.B` / optional `labels.C`
+- `labelMap.A` / `labelMap.B` / optional `labelMap.C`
 - `clientTs`
 
 Current aliases such as `sessionId`, `participantName`, `q1Choice`, and `q3Issues` remain present.

@@ -5,20 +5,31 @@ The shared benchmark shell produces one answer record per completed comparison. 
 ## Completed Answer
 
 ```ts
-type RouteType = "fast" | "calm" | "livemap_fast" | "google";
+type RouteType =
+  | "calm_quiet"
+  | "calm_nature"
+  | "human"
+  | "livemap_fast"
+  | "google"
+  | "fast" // legacy
+  | "calm"; // legacy
 
 type Q1Choice =
   | "route_a"
   | "route_b"
+  | "route_c"
+  | "all_three_work_well"
+  | "none_work_well"
   | "either"
   | "neither"
   | "hard_to_judge"
   | "both_work_well"
   | "both_work_poorly"
+  | "multiple_routes"
   | "not_sure";
 
 type Q3Issue =
-  // Fast vs Calm
+  // Calm Route Comparison
   | "not_enough_greenery_water"
   | "too_busy_or_crowded"
   | "lacks_nice_streets_surroundings"
@@ -28,22 +39,25 @@ type Q3Issue =
   | "other"
   // Fast vs Google Fast
   | "longer_time"
-  | "longer_distance"
+  | "unnecessary_detour"
   | "misses_shortcut"
-  | "unclear_shortcut"
+  | "crossing_friction"
   | "misses_nicer_route"
-  | "lacks_amenities"
+  | "may_not_be_walkable"
+  | "not_sure"
   // Accepted legacy values from the first Fast benchmark
+  | "longer_distance"
+  | "unclear_shortcut"
+  | "lacks_amenities"
   | "more_elevation"
   | "more_stairs"
-  | "more_turns"
-  | "crossing_friction";
+  | "more_turns";
 
 type BenchmarkAnswerV1 = {
   v: 1;
   type: "bench-ux";
-  test: "calm_vs_fast" | "ari_fast_vs_google";
-  source: "calm-benchmark" | "fast-google-benchmark";
+  test: "calm_route_comparison" | "ari_fast_vs_google";
+  source: "calm-route-comparison" | "fast-google-benchmark";
 
   captureId: string;          // Idempotency key.
   benchmarkRunId: string;     // Compatibility alias of sessionId.
@@ -58,16 +72,20 @@ type BenchmarkAnswerV1 = {
   routeAssignment: {
     routeA: RouteType;
     routeB: RouteType;
+    routeC?: RouteType;
   };
   routeAType: RouteType;
   routeBType: RouteType;
+  routeCType: RouteType | null;
   labelMap: {
     A: RouteType;
     B: RouteType;
+    C?: RouteType;
   };
   labels: {
     A: RouteSnapshot;
     B: RouteSnapshot;
+    C?: RouteSnapshot;
   };
 
   origin: { lat: number; lng: number; label?: string };
@@ -75,6 +93,7 @@ type BenchmarkAnswerV1 = {
 
   q1Choice: Q1Choice;
   choice: Q1Choice;            // Compatibility alias of q1Choice.
+  q1Choices: Q1Choice[];       // Canonical Q1 selections; may contain multiple Calm routes.
   q2Separate: "yes" | "no" | "not_sure" | null;
   q3Issues: Q3Issue[];
   reasons: Q3Issue[];          // Compatibility alias of q3Issues.
@@ -94,27 +113,27 @@ type RouteSnapshot = {
 };
 ```
 
-The duplicate names (`benchmarkRunId` / `sessionId`, `choice` / `q1Choice`, `reasons` / `q3Issues`) preserve compatibility with the first ARI benchmark dashboard while keeping the current question flow explicit.
+The duplicate names (`benchmarkRunId` / `sessionId`, `choice` / `q1Choice`, `reasons` / `q3Issues`) preserve compatibility with the first ARI benchmark dashboard while keeping the current question flow explicit. For Calm Route Comparison, `q1Choices` is authoritative. `q1Choice` is the selected value for one choice and `multiple_routes` when two or three routes are selected.
 
 ## Challenge Rules
 
-### Fast vs Calm
+### Calm Route Comparison
 
 Q1 choices:
 
-- `route_a`
-- `route_b`
-- `either` (Both work well)
-- `neither` (Neither works)
-- `hard_to_judge`
+- Any non-empty combination of `route_a`, `route_b`, and `route_c`
+- `none_work_well` by itself
+- `hard_to_judge` by itself
+
+`all_three_work_well` is accepted only as a legacy saved value; the current UI represents it by selecting all three routes.
 
 Follow-ups:
 
 | Q1 choice | Q2 | Q3 |
 | --- | --- | --- |
-| `route_a`, `route_b` | Required | Required |
-| `either` | Required | Empty |
-| `neither` | Empty | Required |
+| One or two route choices | Empty | Required |
+| All three route choices | Empty | Empty |
+| `none_work_well` | Empty | Required |
 | `hard_to_judge` | Empty | Empty |
 
 ### Fast vs Google Fast
@@ -125,7 +144,7 @@ Q1 choices:
 - `route_b`
 - `both_work_well`
 - `both_work_poorly`
-- `not_sure` (I don't know)
+- `not_sure` (I'm not sure)
 
 Follow-ups:
 
@@ -153,6 +172,7 @@ type BenchmarkProgressV1 = {
   sessionStartedAt: string;
   roundIndex: number;          // Zero-based current round.
   completedRounds: number;
+  goalCheckpointPending: boolean; // True until the 10-comparison choice is resolved.
   pairId: string | null;
   routeAssignment: BenchmarkAnswerV1["routeAssignment"] | null;
   questionStep: "q1" | "q2" | "q3";
@@ -173,6 +193,7 @@ Decode a visible route choice without exposing provider identity to the tester:
 function selectedRouteType(answer) {
   if (answer.q1Choice === 'route_a') return answer.labelMap.A;
   if (answer.q1Choice === 'route_b') return answer.labelMap.B;
+  if (answer.q1Choice === 'route_c') return answer.labelMap.C;
   return null;
 }
 ```

@@ -1,5 +1,10 @@
 (function () {
   const DEFAULT_TOTAL_ROUNDS = 10;
+  const ROUTE_SLOTS = [
+    { slot: 'A', key: 'routeA', value: 'route_a', className: 'ari-choice--route-a' },
+    { slot: 'B', key: 'routeB', value: 'route_b', className: 'ari-choice--route-b' },
+    { slot: 'C', key: 'routeC', value: 'route_c', className: 'ari-choice--route-c' }
+  ];
 
   const CHOICE_ICONS = {
     longer_time: `<svg class="ari-choice-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="7"/><path d="M9 5v4l2.5 2.5"/></svg>`,
@@ -64,6 +69,7 @@
       { value: 'neither', label: 'Neither works' },
       { value: 'hard_to_judge', label: 'Hard to judge' }
     ],
+    q1Multiple: false,
     q2Options: [
       { value: 'yes', label: 'Yes' },
       { value: 'no', label: 'No' },
@@ -94,6 +100,7 @@
 
   const routeAColor = '#C84720';
   const routeBColor = '#08784D';
+  const routeCColor = '#2864C7';
 
   function escapeHtml(value) {
     return String(value ?? '')
@@ -113,10 +120,11 @@
       context: config.context === null
         ? null
         : { ...DEFAULT_BENCHMARK_CONFIG.context, ...(config.context || {}) },
-      routeTypes: Array.isArray(config.routeTypes) && config.routeTypes.length === 2
+      routeTypes: Array.isArray(config.routeTypes) && [2, 3].includes(config.routeTypes.length)
         ? [...config.routeTypes]
         : [...DEFAULT_BENCHMARK_CONFIG.routeTypes],
       q1Options: Array.isArray(config.q1Options) ? config.q1Options : DEFAULT_BENCHMARK_CONFIG.q1Options,
+      q1Multiple: config.q1Multiple === true,
       q2Options: Array.isArray(config.q2Options) ? config.q2Options : DEFAULT_BENCHMARK_CONFIG.q2Options,
       q3Options: Array.isArray(config.q3Options) ? config.q3Options : DEFAULT_BENCHMARK_CONFIG.q3Options,
       q3Variants: config.q3Variants && typeof config.q3Variants === 'object' ? config.q3Variants : {},
@@ -131,8 +139,9 @@
     return options.map(option => {
       const className = option.className ? ` class="${escapeHtml(option.className)}"` : '';
       const exclusive = type === 'checkbox' && option.exclusive ? ' data-exclusive-choice' : '';
-      const metricsSlot = withRouteMetrics && (option.value === 'route_a' || option.value === 'route_b')
-        ? `<span class="ari-choice-metrics" data-route-metrics="${option.value === 'route_a' ? 'a' : 'b'}" hidden></span>`
+      const routeOption = ROUTE_SLOTS.find(slot => slot.value === option.value);
+      const metricsSlot = withRouteMetrics && routeOption
+        ? `<span class="ari-choice-metrics" data-route-metrics="${routeOption.slot.toLowerCase()}" hidden></span>`
         : '';
       const icon = type === 'checkbox' ? CHOICE_ICONS[option.value] : null;
       const keyword = type === 'checkbox' ? CHOICE_BOLD_KEYWORDS[option.value] : null;
@@ -159,10 +168,14 @@
   }
 
   function randomAssignment(routeTypes = DEFAULT_BENCHMARK_CONFIG.routeTypes) {
-    const [first, second] = routeTypes;
-    return Math.random() >= 0.5
-      ? { routeA: first, routeB: second }
-      : { routeA: second, routeB: first };
+    const shuffled = [...routeTypes];
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+    }
+    return Object.fromEntries(
+      ROUTE_SLOTS.slice(0, shuffled.length).map(({ key }, index) => [key, shuffled[index]])
+    );
   }
 
   function createMockRoutePairProvider(pairs, label = 'mock route pairs') {
@@ -223,6 +236,7 @@
     const onboardingMaskId = createId('ari-onboarding-mask');
     const contextId = createId('ari-route-context');
     const streetViewerId = createId('ari-street-viewer');
+    const routeCountLabel = benchmark.routeTypes.length === 3 ? 'all three routes' : 'both routes';
     const contextSummaryMarkup = benchmark.context ? `
       <button class="ari-context-toggle ari-context-toggle--summary" data-action="open-context" type="button" aria-expanded="false" aria-controls="${contextId}" aria-label="${escapeHtml(benchmark.context.label)}" title="${escapeHtml(benchmark.context.label)}"><span aria-hidden="true">i</span></button>` : '';
     const contextToggleMarkup = benchmark.context ? `
@@ -238,20 +252,26 @@
             <div class="ari-map" data-map>
               <div class="ari-map__canvas" data-map-canvas aria-label="Interactive route comparison map"></div>
               <div class="ari-map__tools" aria-label="Map tools">
-                <button class="ari-icon-btn ari-icon-btn--fit" data-action="fit-routes" type="button" aria-label="Fit both routes" title="Fit both routes">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <polyline points="9 3 9 9 3 9"></polyline>
-                    <polyline points="15 3 15 9 21 9"></polyline>
-                    <polyline points="9 21 9 15 3 15"></polyline>
-                    <polyline points="15 21 15 15 21 15"></polyline>
-                  </svg>
+                <button class="ari-icon-btn ari-icon-btn--street ari-street-toggle" data-action="toggle-street-view" type="button" aria-label="Turn on Street View" title="Street View — inspect any map point at street level" aria-controls="${streetViewerId}" aria-pressed="false">
+                  <span class="ari-street-toggle__label" data-street-toggle-label aria-hidden="true">Street View</span>
+                  <span class="ari-street-toggle__glyph" aria-hidden="true">360°</span>
                 </button>
-                <button class="ari-street-toggle" data-action="toggle-street-view" type="button" aria-label="Turn on Street View" title="Street View" aria-controls="${streetViewerId}" aria-pressed="false">
-                  <span>Street View</span>
-                </button>
+                <div class="ari-map__navigation" role="group" aria-label="Map navigation">
+                  <button class="ari-icon-btn ari-icon-btn--fit" data-action="fit-routes" type="button" aria-label="Fit ${routeCountLabel}" title="Fit ${routeCountLabel}">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <polyline points="9 3 9 9 3 9"></polyline>
+                      <polyline points="15 3 15 9 21 9"></polyline>
+                      <polyline points="9 21 9 15 3 15"></polyline>
+                      <polyline points="15 21 15 15 21 15"></polyline>
+                    </svg>
+                  </button>
+                  <button class="ari-icon-btn ari-icon-btn--zoom" data-action="zoom-in" type="button" aria-label="Zoom in" title="Zoom in"><span aria-hidden="true">+</span></button>
+                  <button class="ari-icon-btn ari-icon-btn--zoom" data-action="zoom-out" type="button" aria-label="Zoom out" title="Zoom out"><span aria-hidden="true">−</span></button>
+                </div>
               </div>
               <div class="ari-street-mode-hint" data-street-mode-hint role="status" hidden>
-                <span>Select any point on the map.</span>
+                <strong>Street View mode on</strong>
+                <span>Select any point on the map to explore it in Street View.</span>
               </div>
               <div class="ari-street-divider" data-street-divider role="separator" tabindex="0" aria-label="Resize the Street View split" hidden><span aria-hidden="true"></span></div>
               <section class="ari-street-viewer" id="${streetViewerId}" data-street-viewer aria-label="Street View" aria-hidden="true" hidden>
@@ -290,6 +310,11 @@
               <b data-panel-question>${escapeHtml(benchmark.questions.q1)}</b>
               ${contextSummaryMarkup}
             </div>
+            <div class="ari-system-status" data-system-status role="status" hidden>
+              <span data-system-status-copy></span>
+              <button type="button" data-action="retry-system" hidden>Retry</button>
+              <button type="button" data-action="exit-system" hidden>Exit</button>
+            </div>
             <form class="ari-question-stack" data-form>
               <div class="ari-question-scroll" data-question-scroll>
                 <section class="ari-question-block" data-q1>
@@ -299,8 +324,13 @@
                     ${contextToggleMarkup}
                   </legend>
                   ${contextCopyMarkup}
-                  <div class="ari-choice-grid ari-choice-grid--two">
-                    ${renderChoiceOptions(benchmark.q1Options, { name: 'q1Choice', withRouteMetrics: benchmark.showRouteMetrics })}
+                  ${benchmark.q1Multiple ? '<p class="ari-question-hint" id="ari-q1-hint">Select all that apply.</p>' : ''}
+                  <div class="ari-choice-grid ari-choice-grid--two${benchmark.q1Multiple ? ' ari-choice-grid--multiple' : ''}"${benchmark.q1Multiple ? ' aria-describedby="ari-q1-hint"' : ''}>
+                    ${renderChoiceOptions(benchmark.q1Options, {
+                      name: 'q1Choice',
+                      type: benchmark.q1Multiple ? 'checkbox' : 'radio',
+                      withRouteMetrics: benchmark.showRouteMetrics
+                    })}
                   </div>
                 </fieldset>
                 </section>
@@ -333,6 +363,15 @@
                 <button class="ari-btn ari-btn--primary" data-submit type="submit" disabled>Next question →</button>
               </div>
             </form>
+            <section class="ari-goal-checkpoint" data-goal-checkpoint role="dialog" aria-labelledby="ari-goal-checkpoint-title" hidden>
+              <p>Goal complete</p>
+              <h2 id="ari-goal-checkpoint-title">10 comparisons saved.</h2>
+              <span>Your answers are saved. You can finish now or keep comparing.</span>
+              <div class="ari-goal-checkpoint__actions">
+                <button class="ari-btn ari-btn--primary" data-action="end-session" type="button">End session</button>
+                <button class="ari-btn ari-btn--secondary" data-action="continue-session" type="button">Keep comparing</button>
+              </div>
+            </section>
           </aside>
         </main>
 
@@ -357,12 +396,12 @@
           <div class="ari-onboarding__target" data-onboarding-target="exit" aria-hidden="true"></div>
 
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="fit">
-            <b>Fit both routes</b>
+            <b>Fit ${routeCountLabel}</b>
             <span>Return to the full comparison.</span>
           </div>
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="street">
             <b>Explore the street</b>
-            <span>Turn on Street View, then select any point.</span>
+            <span>Turn on Street View, then select any point on the map.</span>
           </div>
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="answer">
             <b>Answer when ready</b>
@@ -373,7 +412,7 @@
             <span>Your place is saved.</span>
           </div>
 
-          <button class="ari-btn ari-btn--primary ari-onboarding__start" data-action="next-onboarding" type="button">Start round →</button>
+          <button class="ari-btn ari-btn--primary ari-onboarding__start" data-action="next-onboarding" type="button">Start comparison →</button>
         </section>
 
       </section>
@@ -407,15 +446,18 @@
       questionStep: 'q1',
       onboardingComplete: !!options.skipOnboarding || initialRoundIndex > 0,
       completedRounds: options.initialCompletedRounds || 0,
+      goalCheckpointPending: !!options.initialGoalCheckpointPending,
       roundTransitioning: false,
+      loadingRound: false,
+      loadError: null,
       panelCollapsed: false,
+      panelCollapsedBeforeStreetView: null,
       mapAdapter: null,
       mapProvider: useGoogleMaps ? 'google' : useMapLibre ? 'maplibre' : 'leaflet',
       streetViewMode: false,
       streetViewOpen: false,
       streetViewPoint: null,
       streetViewRoute: null,
-      streetViewMapState: null,
       streetViewService: null,
       streetViewPanorama: null
     };
@@ -442,6 +484,10 @@
       onboardingCoachmarks: Array.from(root.querySelectorAll('[data-onboarding-coachmark]')),
       nextOnboarding: root.querySelector('[data-action="next-onboarding"]'),
       saveFlash: root.querySelector('[data-save-flash]'),
+      systemStatus: root.querySelector('[data-system-status]'),
+      systemStatusCopy: root.querySelector('[data-system-status-copy]'),
+      retrySystem: root.querySelector('[data-action="retry-system"]'),
+      exitSystem: root.querySelector('[data-action="exit-system"]'),
       questionCard: root.querySelector('[data-question-card]'),
       panelToggle: root.querySelector('[data-action="toggle-panel"]'),
       panelQuestion: root.querySelector('[data-panel-question]'),
@@ -463,6 +509,9 @@
       mapTools: root.querySelector('.ari-map__tools'),
       fitRoutes: root.querySelector('[data-action="fit-routes"]'),
       streetViewToggle: root.querySelector('[data-action="toggle-street-view"]'),
+      streetViewToggleLabel: root.querySelector('[data-street-toggle-label]'),
+      zoomIn: root.querySelector('[data-action="zoom-in"]'),
+      zoomOut: root.querySelector('[data-action="zoom-out"]'),
       streetViewHint: root.querySelector('[data-street-mode-hint]'),
       streetDivider: root.querySelector('[data-street-divider]'),
       streetViewer: root.querySelector('[data-street-viewer]'),
@@ -471,7 +520,10 @@
       streetStatusTitle: root.querySelector('[data-street-status-title]'),
       streetStatusCopy: root.querySelector('[data-street-status-copy]'),
       streetRoute: root.querySelector('[data-street-route]'),
-      closeStreetView: root.querySelector('[data-action="close-street-view"]')
+      closeStreetView: root.querySelector('[data-action="close-street-view"]'),
+      goalCheckpoint: root.querySelector('[data-goal-checkpoint]'),
+      endSession: root.querySelector('[data-action="end-session"]'),
+      continueSession: root.querySelector('[data-action="continue-session"]')
     };
 
     let medalUnlockTimer = null;
@@ -480,6 +532,7 @@
     let streetViewPositionListener = null;
     let streetViewPovListener = null;
     let streetViewRequestId = 0;
+    let systemRetry = null;
 
     function canContinueAfterCurrentRound() {
       return options.allowExtraRounds || state.roundIndex < state.totalRounds - 1;
@@ -522,11 +575,47 @@
       renderHudMedals();
     }
 
+    function clearSystemStatus() {
+      const restoreFocus = els.systemStatus.contains(document.activeElement);
+      systemRetry = null;
+      els.systemStatus.hidden = true;
+      els.retrySystem.hidden = true;
+      els.exitSystem.hidden = true;
+      els.systemStatus.classList.remove('is-error', 'is-loading');
+      els.systemStatus.setAttribute('role', 'status');
+      if (restoreFocus) requestAnimationFrame(() => els.panelToggle.focus({ preventScroll: true }));
+    }
+
+    function showSystemStatus(copy, {
+      kind = 'error',
+      retry = null,
+      allowExit = false
+    } = {}) {
+      systemRetry = retry;
+      els.systemStatusCopy.textContent = copy;
+      els.systemStatus.classList.toggle('is-error', kind === 'error');
+      els.systemStatus.classList.toggle('is-loading', kind === 'loading');
+      els.systemStatus.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+      els.retrySystem.hidden = typeof retry !== 'function';
+      els.exitSystem.hidden = !allowExit;
+      els.systemStatus.hidden = false;
+    }
+
+    function setRoundBusy(busy) {
+      state.loadingRound = busy;
+      els.questionCard.toggleAttribute('aria-busy', busy);
+      els.form.toggleAttribute('inert', busy || state.panelCollapsed || state.goalCheckpointPending);
+      if (busy) {
+        showSystemStatus('Loading this comparison…', { kind: 'loading' });
+      }
+    }
+
     state.mapAdapter = mapTools.createMapAdapter({
       canvas: els.mapCanvas,
       provider: state.mapProvider,
       routeAColor,
       routeBColor,
+      routeCColor,
       maxFitZoom: ROUTE_FIT_MAX_ZOOM,
       toolsElement: els.mapTools,
       onRoutePointClick: setStreetViewPoint
@@ -706,14 +795,12 @@
             answer: ['right', 'top', 'bottom'],
             exit: ['right', 'bottom', 'top']
           };
-      const occupied = [];
-
+      const targetRects = {};
       ['exit', 'fit', 'answer', 'street'].forEach(name => {
         const sourceRect = getOnboardingRect(sourceTargets[name]);
         const target = els.onboardingTargets.find(item => item.dataset.onboardingTarget === name);
-        const coachmark = els.onboardingCoachmarks.find(item => item.dataset.onboardingCoachmark === name);
         const cutout = els.onboardingCutouts.find(item => item.dataset.onboardingCutout === name);
-        if (!sourceRect || !target || !coachmark || !cutout) return;
+        if (!sourceRect || !target || !cutout) return;
         const padding = name === 'answer' ? 6 : 8;
         const expanded = expandRect(new DOMRect(
           sourceRect.left - overlayRect.left,
@@ -721,6 +808,7 @@
           sourceRect.width,
           sourceRect.height
         ), padding);
+        targetRects[name] = expanded;
 
         target.style.setProperty('--target-left', `${expanded.left}px`);
         target.style.setProperty('--target-top', `${expanded.top}px`);
@@ -733,14 +821,34 @@
         cutout.setAttribute('height', String(expanded.height));
         cutout.setAttribute('rx', String(name === 'street' ? expanded.width / 2 : name === 'answer' ? 12 : 18));
         cutout.setAttribute('ry', String(name === 'street' ? expanded.height / 2 : name === 'answer' ? 12 : 18));
-        placeOnboardingCoachmark(coachmark, expanded, preferences[name], occupied, overlayRect);
+      });
+
+      const startRect = els.nextOnboarding.getBoundingClientRect();
+      const occupied = [
+        ...Object.values(targetRects),
+        {
+          left: startRect.left - overlayRect.left,
+          top: startRect.top - overlayRect.top,
+          right: startRect.right - overlayRect.left,
+          bottom: startRect.bottom - overlayRect.top
+        }
+      ];
+      ['exit', 'fit', 'answer', 'street'].forEach(name => {
+        const coachmark = els.onboardingCoachmarks.find(item => item.dataset.onboardingCoachmark === name);
+        if (!coachmark || !targetRects[name]) return;
+        placeOnboardingCoachmark(coachmark, targetRects[name], preferences[name], occupied, overlayRect);
       });
     }
 
     function renderOnboarding() {
       if (state.onboardingComplete || els.onboarding.hidden) return;
+      els.mapShell.inert = true;
+      els.questionCard.inert = true;
       updatePanelState(true);
-      requestAnimationFrame(positionOnboarding);
+      requestAnimationFrame(() => {
+        positionOnboarding();
+        els.nextOnboarding.focus({ preventScroll: true });
+      });
       setTimeout(positionOnboarding, 240);
       // The map tools are adopted into the provider's control container once
       // the map is ready (async for MapLibre); reposition after that settles.
@@ -751,7 +859,10 @@
     function finishOnboarding() {
       state.onboardingComplete = true;
       els.onboarding.hidden = true;
+      els.mapShell.inert = false;
+      els.questionCard.inert = false;
       updatePanelState(false, { animate: true });
+      requestAnimationFrame(() => els.panelToggle.focus({ preventScroll: true }));
     }
 
     const SPLIT_STORAGE_KEY = 'ari-benchmark-street-split-v1';
@@ -819,7 +930,7 @@
     function clampPanoShare(share, mobile) {
       if (mobile) return Math.min(70, Math.max(30, share));
       const width = els.mapShell.getBoundingClientRect().width || 1200;
-      const maxShare = Math.min(85, 100 - (300 / width) * 100);
+      const maxShare = Math.min(85, 100 - (440 / width) * 100);
       return Math.min(maxShare, Math.max(40, share));
     }
 
@@ -873,55 +984,32 @@
       const mobile = isMobileViewport();
       els.streetDivider.setAttribute('aria-orientation', mobile ? 'horizontal' : 'vertical');
       els.streetDivider.setAttribute('aria-valuemin', mobile ? '30' : '40');
-      els.streetDivider.setAttribute('aria-valuemax', mobile ? '70' : '85');
+      const desktopWidth = els.mapShell.getBoundingClientRect().width || 1200;
+      const desktopMax = Math.floor(Math.min(85, 100 - (440 / desktopWidth) * 100));
+      els.streetDivider.setAttribute('aria-valuemax', String(mobile ? 70 : desktopMax));
       els.streetDivider.setAttribute('aria-valuenow', String(Math.round(currentPanoShare(mobile))));
     }
 
-    const STREET_HINT_SEEN_KEY = 'ari-benchmark-street-hint-seen-v1';
-    let streetHintTimer = null;
-
     function hideStreetHint() {
-      window.clearTimeout(streetHintTimer);
-      els.streetViewHint.classList.remove('is-fading');
       els.streetViewHint.hidden = true;
     }
 
-    /** Show the mode instruction beside the pill: persistent the first time a
-     *  tester ever enables the mode, fading out on later activations. */
     function showStreetHint() {
-      window.clearTimeout(streetHintTimer);
-      // The pill lives inside the provider's control stack, so measure where
-      // it actually rendered instead of assuming an inset.
-      const mapRect = els.mapShell.getBoundingClientRect();
-      const pillRect = els.streetViewToggle.getBoundingClientRect();
-      if (mapRect.width && pillRect.width) {
-        els.streetViewHint.style.right = `${Math.round(mapRect.right - pillRect.left + 10)}px`;
-        els.streetViewHint.style.top = `${Math.round(pillRect.top - mapRect.top)}px`;
-      }
-      els.streetViewHint.classList.remove('is-fading');
       els.streetViewHint.hidden = false;
-      let seen = false;
-      try { seen = localStorage.getItem(STREET_HINT_SEEN_KEY) === '1'; } catch (_) { /* fine */ }
-      if (!seen) {
-        try { localStorage.setItem(STREET_HINT_SEEN_KEY, '1'); } catch (_) { /* fine */ }
-        return;
-      }
-      streetHintTimer = window.setTimeout(() => {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          hideStreetHint();
-          return;
-        }
-        els.streetViewHint.classList.add('is-fading');
-        streetHintTimer = window.setTimeout(hideStreetHint, 260);
-      }, 4000);
     }
 
     function updateStreetViewModeUi() {
       const enabled = state.streetViewMode;
       els.streetViewToggle.classList.toggle('is-active', enabled);
       els.streetViewToggle.setAttribute('aria-pressed', String(enabled));
-      els.streetViewToggle.setAttribute('aria-label', enabled ? 'Turn off Street View' : 'Turn on Street View');
-      els.streetViewToggle.title = enabled ? 'Turn off Street View' : 'Street View';
+      els.streetViewToggle.setAttribute(
+        'aria-label',
+        enabled
+          ? 'Street View mode on. Select any point on the map to explore it in Street View. Keyboard users can press A, B, or C to inspect a representative route point. Press again to turn off.'
+          : 'Turn on Street View'
+      );
+      els.streetViewToggle.title = enabled ? 'Turn off Street View' : 'Street View — inspect any map point at street level';
+      els.streetViewToggleLabel.textContent = 'Street View';
       if (enabled && !state.streetViewOpen) {
         if (els.streetViewHint.hidden) showStreetHint();
       } else {
@@ -950,6 +1038,11 @@
     function showStreetViewer() {
       window.clearTimeout(streetViewCloseTimer);
       const alreadySplit = els.mapShell.classList.contains('is-street-split');
+      const viewStateBeforeSplit = alreadySplit ? null : state.mapAdapter.getViewState();
+      if (!alreadySplit) {
+        state.panelCollapsedBeforeStreetView = state.panelCollapsed;
+        updatePanelState(true, { animate: true });
+      }
       els.mapShell.classList.add('is-street-split');
       els.benchmark.classList.add('is-street-view-open');
       els.streetDivider.hidden = false;
@@ -965,14 +1058,14 @@
         if (reduceMotion) {
           requestAnimationFrame(() => {
             state.mapAdapter.notifyResize();
-            fitRoutes({ animate: false });
+            if (viewStateBeforeSplit) state.mapAdapter.restoreViewState(viewStateBeforeSplit);
           });
         } else {
           // The seam glides open: the panorama takes its room in one motion.
           els.mapShell.style.setProperty(mobile ? '--ari-sv-split-m' : '--ari-sv-split', '0%');
           animateSplitShare(0, targetShare, 320, () => {
             state.mapAdapter.notifyResize();
-            fitRoutes({ animate: false });
+            if (viewStateBeforeSplit) state.mapAdapter.restoreViewState(viewStateBeforeSplit);
             settleSplitPanorama();
           });
         }
@@ -996,6 +1089,10 @@
       els.streetViewer.classList.remove('is-visible');
       els.streetViewer.hidden = true;
       applyStoredSplit();
+      if (state.panelCollapsedBeforeStreetView === false) {
+        updatePanelState(false, { animate: true });
+      }
+      state.panelCollapsedBeforeStreetView = null;
     }
 
     function closeStreetView({ immediate = false, restoreMap = true, restoreFocus = true } = {}) {
@@ -1008,8 +1105,7 @@
       els.streetViewer.setAttribute('aria-hidden', 'true');
       window.clearTimeout(streetViewCloseTimer);
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const savedMapState = restoreMap ? state.streetViewMapState : null;
-      state.streetViewMapState = null;
+      const savedMapState = restoreMap ? state.mapAdapter.getViewState() : null;
       setStreetViewMode(false);
       if (restoreFocus) requestAnimationFrame(() => els.streetViewToggle.focus({ preventScroll: true }));
 
@@ -1039,19 +1135,18 @@
       if (!point || !state.streetViewMode) return;
       const requestId = ++streetViewRequestId;
       state.streetViewPoint = { lat: Number(point.lat), lng: Number(point.lng) };
-      state.streetViewRoute = point.routeKey === 'routeB' || point.routeKey === 'routeA'
+      state.streetViewRoute = ['routeA', 'routeB', 'routeC'].includes(point.routeKey)
         ? point.routeKey
         : null;
-      // Save the camera only when entering Street View; retargeting from the
-      // split map keeps the original pre-inspection view for Back to map.
-      if (!state.streetViewOpen) state.streetViewMapState = state.mapAdapter.getViewState();
       state.streetViewOpen = true;
       els.streetViewer.dataset.route = state.streetViewRoute === 'routeB'
         ? 'b'
-        : state.streetViewRoute === 'routeA' ? 'a' : 'map';
+        : state.streetViewRoute === 'routeC' ? 'c'
+          : state.streetViewRoute === 'routeA' ? 'a' : 'map';
       els.streetRoute.textContent = state.streetViewRoute === 'routeB'
         ? 'Route B'
-        : state.streetViewRoute === 'routeA' ? 'Route A' : 'Map point';
+        : state.streetViewRoute === 'routeC' ? 'Route C'
+          : state.streetViewRoute === 'routeA' ? 'Route A' : 'Map point';
       state.mapAdapter.setStreetViewPosition(state.streetViewPoint, state.streetViewRoute);
       setStreetViewStatus('Loading Street View', 'Looking for imagery near this point.', { loading: true });
       showStreetViewer();
@@ -1094,13 +1189,13 @@
           if (status === zeroStatus) {
             setStreetViewStatus(
               'No imagery near this point',
-              'Go back to the map and try another point.',
+              'Select another point on the map, or go back to continue exploring.',
               { loading: false }
             );
           } else {
             setStreetViewStatus(
-              'Street View request failed',
-              `Google answered "${status}". Check the browser console and the Maps key configuration.`,
+              'Street View could not load here',
+              'Select another point on the map, or go back to continue exploring.',
               { loading: false }
             );
           }
@@ -1187,10 +1282,18 @@
       await Promise.all([routeExit, motionDelay(200)]);
 
       if (state.roundIndex >= state.totalRounds - 1) state.totalRounds += 5;
-      await loadRound(nextRoundIndex, {
+      const loaded = await loadRound(nextRoundIndex, {
         deferRouteReveal: true,
         panelCollapsed: panelWasCollapsed
       });
+      if (!loaded) {
+        state.roundTransitioning = false;
+        els.questionCard.classList.remove('is-question-switching', 'is-round-transitioning');
+        els.cardHeader.classList.remove('is-round-complete');
+        els.roundComplete.classList.remove('is-visible');
+        els.roundComplete.setAttribute('aria-hidden', 'true');
+        return false;
+      }
       els.questionCard.classList.remove('is-question-switching');
       await motionDelay(140);
       await state.mapAdapter.setRoutesVisible(true, {
@@ -1207,15 +1310,39 @@
       els.cardHeader.classList.remove('is-round-complete');
       els.questionCard.removeAttribute('aria-busy');
       if (earnedMilestone) showMedalUnlock(earnedMilestone);
+      return true;
+    }
+
+    function getQ1Choices() {
+      return Array.from(
+        els.form.querySelectorAll('input[name="q1Choice"]:checked'),
+        input => input.value
+      );
+    }
+
+    function getSelectedRouteKeys() {
+      const selectedChoices = new Set(getQ1Choices());
+      return ROUTE_SLOTS
+        .slice(0, benchmark.routeTypes.length)
+        .filter(slot => selectedChoices.has(slot.value))
+        .map(slot => slot.key);
     }
 
     function getQ1Choice() {
-      return els.form.querySelector('input[name="q1Choice"]:checked')?.value;
+      const choices = getQ1Choices();
+      if (choices.length > 1) return 'multiple_routes';
+      return choices[0] || null;
     }
 
     function getQuestionSequence() {
-      const selected = getQ1Choice();
-      return ['q1', ...(benchmark.followUps[selected] || [])];
+      const choices = getQ1Choices();
+      if (benchmark.q1Multiple) {
+        const selectedRoutes = choices.filter(choice => choice.startsWith('route_'));
+        const needsQ3 = choices.includes('none_work_well')
+          || (selectedRoutes.length > 0 && selectedRoutes.length < benchmark.routeTypes.length);
+        return ['q1', ...(needsQ3 ? ['q3'] : [])];
+      }
+      return ['q1', ...(benchmark.followUps[choices[0]] || [])];
     }
 
     function getQ3Variant() {
@@ -1235,15 +1362,41 @@
     }
 
     function q3QuestionHtml(q1Choice, fallback) {
-      if (q1Choice === 'route_a') return 'What made <span class="ari-q3-route-tag ari-q3-route-tag--b">Route B</span> worse?';
-      if (q1Choice === 'route_b') return 'What made <span class="ari-q3-route-tag ari-q3-route-tag--a">Route A</span> worse?';
+      if (benchmark.routeTypes.length === 2 && q1Choice === 'route_a') {
+        return 'What made <span class="ari-q3-route-tag ari-q3-route-tag--b">Route B</span> worse?';
+      }
+      if (benchmark.routeTypes.length === 2 && q1Choice === 'route_b') {
+        return 'What made <span class="ari-q3-route-tag ari-q3-route-tag--a">Route A</span> worse?';
+      }
+      if (benchmark.routeTypes.length === 3) {
+        const selectedRoutes = new Set(getQ1Choices().filter(choice => choice.startsWith('route_')));
+        const unselected = ROUTE_SLOTS
+          .slice(0, benchmark.routeTypes.length)
+          .filter(slot => !selectedRoutes.has(slot.value));
+        if (selectedRoutes.size === 2 && unselected.length === 1) {
+          const route = unselected[0];
+          return `What made <span class="ari-q3-route-tag ari-q3-route-tag--${route.slot.toLowerCase()}">Route ${route.slot}</span> less suitable?`;
+        }
+      }
       return escapeHtml(fallback);
     }
 
     function syncQ3Variant() {
       const variant = getQ3Variant();
       const q1 = getQ1Choice();
-      els.q3Grid.dataset.worseRoute = q1 === 'route_a' ? 'b' : q1 === 'route_b' ? 'a' : q1 === 'both_work_poorly' ? 'both' : '';
+      if (benchmark.routeTypes.length === 3) {
+        const selectedRoutes = new Set(getQ1Choices().filter(choice => choice.startsWith('route_')));
+        const unselected = ROUTE_SLOTS
+          .slice(0, benchmark.routeTypes.length)
+          .filter(slot => !selectedRoutes.has(slot.value));
+        els.q3Grid.dataset.worseRoute = q1 === 'none_work_well'
+          ? 'all'
+          : unselected.length === 1 ? unselected[0].slot.toLowerCase() : 'others';
+      } else {
+        els.q3Grid.dataset.worseRoute = q1 === 'route_a'
+          ? 'b'
+          : q1 === 'route_b' ? 'a' : q1 === 'both_work_poorly' ? 'both' : '';
+      }
       if (els.q3Grid.dataset.variantKey !== variant.key) {
         const selectedIssues = new Set(
           Array.from(els.q3Grid.querySelectorAll('input[name="q3Issues"]:checked'), input => input.value)
@@ -1259,7 +1412,7 @@
     }
 
     function isStepComplete(step) {
-      if (step === 'q1') return !!getQ1Choice();
+      if (step === 'q1') return getQ1Choices().length > 0;
       if (step === 'q2') return !!els.form.querySelector('input[name="q2Separate"]:checked');
       if (step === 'q3') {
         return !!els.form.querySelector('input[name="q3Issues"]:checked');
@@ -1268,7 +1421,8 @@
     }
 
     function updateQuestionFlow() {
-      const selected = els.form.querySelector('input[name="q1Choice"]:checked')?.value;
+      const selected = getQ1Choice();
+      const selectedChoices = getQ1Choices();
       const sequence = getQuestionSequence();
       const q3Variant = syncQ3Variant();
       if (!sequence.includes(state.questionStep)) state.questionStep = sequence[0];
@@ -1283,12 +1437,14 @@
       els.previous.hidden = stepIndex === 0;
       els.previous.disabled = stepIndex === 0;
       els.submit.disabled = !isStepComplete(state.questionStep);
-      if (state.questionStep === 'q1' && !selected) {
+      if (state.questionStep === 'q1' && !selectedChoices.length) {
         els.submit.textContent = 'Next question →';
       } else if (stepIndex < sequence.length - 1) {
         els.submit.textContent = 'Next question →';
       } else if (canContinueAfterCurrentRound()) {
-        els.submit.textContent = benchmark.uncertainChoices.includes(selected) ? 'Next round →' : 'Finish round →';
+        els.submit.textContent = selectedChoices.some(choice => benchmark.uncertainChoices.includes(choice))
+          ? 'Next round →'
+          : 'Finish round →';
       } else {
         els.submit.textContent = 'Finish test →';
       }
@@ -1296,6 +1452,9 @@
         const input = label.querySelector('input');
         label.classList.toggle('is-selected', !!input && input.checked);
       });
+      state.mapAdapter.setSelectedRoutes(
+        state.questionStep === 'q1' ? getSelectedRouteKeys() : []
+      );
       const hasQ3Selection = !!els.form.querySelector('input[name="q3Issues"]:checked');
       els.q3NoteWrap.hidden = !hasQ3Selection;
       els.q3Note.disabled = !hasQ3Selection;
@@ -1408,7 +1567,7 @@
         form.style.transition = '';
       }
 
-      els.form.toggleAttribute('inert', collapsed);
+      els.form.toggleAttribute('inert', collapsed || state.loadingRound || state.goalCheckpointPending);
       els.form.setAttribute('aria-hidden', String(collapsed));
       els.panelToggle.setAttribute('aria-expanded', String(!collapsed));
       els.panelToggle.setAttribute('aria-label', collapsed ? 'Expand question panel' : 'Minimize question panel');
@@ -1419,8 +1578,38 @@
       }
     }
 
-    function autosave() {
-      Promise.resolve(progressSink(readProgress())).catch(() => {});
+    async function autosave({ announce = false } = {}) {
+      try {
+        await Promise.resolve(progressSink(readProgress()));
+        if (els.systemStatus.classList.contains('is-error')) clearSystemStatus();
+        if (announce) flashSaved();
+        return true;
+      } catch (error) {
+        console.error('Could not sync benchmark progress.', error);
+        showSystemStatus('Couldn’t sync. Your answers are still on this device.', {
+          retry: () => autosave({ announce: true })
+        });
+        return false;
+      }
+    }
+
+    function setGoalCheckpointVisible(visible, { focus = true } = {}) {
+      state.goalCheckpointPending = !!visible;
+      els.goalCheckpoint.hidden = !visible;
+      els.panelQuestion.parentElement.hidden = visible;
+      els.form.hidden = visible;
+      els.panelToggle.disabled = visible;
+      els.questionCard.classList.toggle('is-goal-checkpoint', visible);
+      if (visible) {
+        updatePanelState(false);
+        els.form.inert = true;
+        if (focus) requestAnimationFrame(() => els.endSession.focus({ preventScroll: true }));
+      } else {
+        els.form.hidden = false;
+        els.panelQuestion.parentElement.hidden = false;
+        els.form.inert = state.panelCollapsed || state.loadingRound;
+        updateQuestionFlow();
+      }
     }
 
     function flashSaved() {
@@ -1468,16 +1657,18 @@
         participantName: state.participantName,
         roundIndex: state.roundIndex,
         completedRounds: state.completedRounds,
+        goalCheckpointPending: state.goalCheckpointPending,
         pairId: state.pair?.pairId,
         routeAssignment: state.assignment,
         questionStep: state.questionStep,
-        partialAnswer: readAnswer(savedAt),
+        partialAnswer: state.pair && state.assignment ? readAnswer(savedAt) : null,
         savedAt
       };
     }
 
     function getRouteLabel(slot) {
-      const routeType = slot === 'A' ? state.assignment.routeA : state.assignment.routeB;
+      const descriptor = ROUTE_SLOTS.find(routeSlot => routeSlot.slot === slot);
+      const routeType = descriptor ? state.assignment[descriptor.key] : null;
       const route = state.pair.routes[routeType];
       return {
         routeId: route.routeId,
@@ -1489,10 +1680,14 @@
 
     function readAnswer(createdAt = new Date().toISOString()) {
       const form = new FormData(els.form);
-      const q1Choice = form.get('q1Choice');
+      const q1Choices = form.getAll('q1Choice');
+      const q1Choice = q1Choices.length > 1 ? 'multiple_routes' : q1Choices[0] || null;
       const q2Separate = form.get('q2Separate') || null;
       const q3Issues = form.getAll('q3Issues');
       const roundId = `${state.sessionId}-round-${state.roundIndex + 1}`;
+      const activeSlots = ROUTE_SLOTS.filter(({ key }) => state.assignment[key]);
+      const labelMap = Object.fromEntries(activeSlots.map(({ slot, key }) => [slot, state.assignment[key]]));
+      const labels = Object.fromEntries(activeSlots.map(({ slot }) => [slot, getRouteLabel(slot)]));
       return {
         v: 1,
         type: 'bench-ux',
@@ -1510,12 +1705,14 @@
         routeAssignment: state.assignment,
         routeAType: state.assignment.routeA,
         routeBType: state.assignment.routeB,
-        labelMap: { A: state.assignment.routeA, B: state.assignment.routeB },
-        labels: { A: getRouteLabel('A'), B: getRouteLabel('B') },
+        routeCType: state.assignment.routeC || null,
+        labelMap,
+        labels,
         origin: state.pair.origin,
         destination: state.pair.destination,
         q1Choice,
         choice: q1Choice,
+        q1Choices,
         q2Separate,
         q3Issues,
         reasons: [...q3Issues],
@@ -1529,8 +1726,10 @@
 
     function updateRouteMetrics() {
       if (!benchmark.showRouteMetrics || !state.pair || !state.assignment) return;
-      [['a', state.assignment.routeA], ['b', state.assignment.routeB]].forEach(([slot, routeType]) => {
-        const element = els.form.querySelector(`[data-route-metrics="${slot}"]`);
+      ROUTE_SLOTS.forEach(({ slot, key }) => {
+        const routeType = state.assignment[key];
+        if (!routeType) return;
+        const element = els.form.querySelector(`[data-route-metrics="${slot.toLowerCase()}"]`);
         if (!element) return;
         const text = formatRouteMetrics(state.pair.routes[routeType]?.metadata);
         element.textContent = text;
@@ -1540,14 +1739,17 @@
 
     function restorePartialAnswer(answer) {
       if (!answer) return;
-      const values = {
-        q1Choice: answer.q1Choice || answer.choice || null,
-        q2Separate: answer.q2Separate || null
-      };
-      Object.entries(values).forEach(([name, value]) => {
-        els.form.querySelectorAll(`input[name="${name}"]`).forEach(input => {
-          input.checked = input.value === value;
-        });
+      const savedQ1Choices = Array.isArray(answer.q1Choices)
+        ? answer.q1Choices
+        : (answer.q1Choice || answer.choice) === 'all_three_work_well' && benchmark.q1Multiple
+          ? ROUTE_SLOTS.slice(0, benchmark.routeTypes.length).map(slot => slot.value)
+          : [answer.q1Choice || answer.choice].filter(Boolean);
+      const selectedQ1Choices = new Set(savedQ1Choices);
+      els.form.querySelectorAll('input[name="q1Choice"]').forEach(input => {
+        input.checked = selectedQ1Choices.has(input.value);
+      });
+      els.form.querySelectorAll('input[name="q2Separate"]').forEach(input => {
+        input.checked = input.value === (answer.q2Separate || null);
       });
       const selectedIssues = new Set(answer.q3Issues || answer.reasons || []);
       els.form.querySelectorAll('input[name="q3Issues"]').forEach(input => {
@@ -1564,17 +1766,43 @@
       partialAnswer = null,
       expectedPairId = null
     } = {}) {
+      const requestedAssignment = routeAssignment || randomAssignment(benchmark.routeTypes);
+      const retry = () => loadRound(index, {
+        deferRouteReveal,
+        panelCollapsed,
+        routeAssignment: requestedAssignment,
+        questionStep,
+        partialAnswer,
+        expectedPairId
+      });
+      setRoundBusy(true);
       state.roundIndex = index;
       if (state.onboardingComplete && els.onboarding) els.onboarding.hidden = true;
       if (state.roundIndex > 0) {
         state.onboardingComplete = true;
         if (els.onboarding) els.onboarding.hidden = true;
       }
-      state.assignment = routeAssignment || randomAssignment(benchmark.routeTypes);
-      state.pair = await routePairProvider({
-        sessionId: state.sessionId,
-        roundIndex: state.roundIndex
-      });
+      state.assignment = requestedAssignment;
+      state.pair = null;
+      try {
+        state.pair = await routePairProvider({
+          sessionId: state.sessionId,
+          roundIndex: state.roundIndex
+        });
+      } catch (error) {
+        state.loadError = error;
+        setRoundBusy(false);
+        showSystemStatus('Couldn’t load this comparison. Check your connection and try again.', {
+          retry,
+          allowExit: true
+        });
+        console.error('Could not load benchmark comparison.', error);
+        return false;
+      }
+      const recoveredFromError = !!state.loadError;
+      state.loadError = null;
+      setRoundBusy(false);
+      clearSystemStatus();
       if (expectedPairId && state.pair.pairId !== expectedPairId) {
         // The route source changed under a saved session (e.g. fixtures were
         // replaced by live generation). The saved partial answer refers to a
@@ -1595,12 +1823,32 @@
       updatePanelState(panelCollapsed);
       updateQuestionFlow();
       drawRoutes(state.pair, { hidden: deferRouteReveal });
+      setGoalCheckpointVisible(state.goalCheckpointPending);
       if (!state.onboardingComplete) {
         requestAnimationFrame(renderOnboarding);
+      } else if (recoveredFromError && !state.goalCheckpointPending) {
+        requestAnimationFrame(() => {
+          const firstChoice = els.form.querySelector('input[name="q1Choice"]');
+          firstChoice?.focus({ preventScroll: true });
+        });
       }
+      return true;
     }
 
     els.form.addEventListener('change', event => {
+      const changedQ1 = event.target.closest?.('input[name="q1Choice"]');
+      if (benchmark.q1Multiple && changedQ1?.checked) {
+        const q1Inputs = els.form.querySelectorAll('input[name="q1Choice"]');
+        if (changedQ1.hasAttribute('data-exclusive-choice')) {
+          q1Inputs.forEach(input => {
+            if (input !== changedQ1) input.checked = false;
+          });
+        } else {
+          q1Inputs.forEach(input => {
+            if (input.hasAttribute('data-exclusive-choice')) input.checked = false;
+          });
+        }
+      }
       if (event.target.matches?.('input[name="q1Choice"]') && !getQuestionSequence().includes('q3')) {
         els.form.querySelectorAll('input[name="q3Issues"]').forEach(input => {
           input.checked = false;
@@ -1644,12 +1892,17 @@
       els.submit.disabled = true;
       try {
         await answerSink(readAnswer());
+        clearSystemStatus();
       } catch (error) {
         console.error('Could not save calm benchmark answer.', error);
         updateQuestionFlow();
+        showSystemStatus('Couldn’t send this answer. It is still on this device.', {
+          retry: () => els.form.requestSubmit()
+        });
         return;
       }
       state.completedRounds += 1;
+      if (state.completedRounds === 10) state.goalCheckpointPending = true;
       const earnedMilestone = getEarnedMilestone(state.completedRounds, milestones);
       if (!canContinueAfterCurrentRound()) {
         els.submit.textContent = 'Complete';
@@ -1657,8 +1910,10 @@
         await playRoundTransition(state.roundIndex + 1, earnedMilestone);
       }
       if (earnedMilestone && !canContinueAfterCurrentRound()) showMedalUnlock(earnedMilestone);
-      autosave();
-      flashSaved();
+      if (state.goalCheckpointPending && state.pair) {
+        setGoalCheckpointVisible(true);
+      }
+      autosave({ announce: true });
     });
 
     els.exit.addEventListener('click', async () => {
@@ -1669,9 +1924,34 @@
     els.nextOnboarding.addEventListener('click', () => {
       finishOnboarding();
     });
+    els.onboarding.addEventListener('keydown', event => {
+      if (event.key !== 'Tab') return;
+      event.preventDefault();
+      els.nextOnboarding.focus({ preventScroll: true });
+    });
+
+    els.retrySystem.addEventListener('click', () => {
+      const retry = systemRetry;
+      if (retry) Promise.resolve(retry()).catch(() => {});
+    });
+    els.exitSystem.addEventListener('click', () => {
+      if (onExit) onExit();
+    });
+    els.endSession.addEventListener('click', async () => {
+      setGoalCheckpointVisible(false, { focus: false });
+      await autosave({ announce: true });
+      if (onExit) onExit({ view: 'results' });
+    });
+    els.continueSession.addEventListener('click', async () => {
+      setGoalCheckpointVisible(false, { focus: false });
+      await autosave({ announce: true });
+      const firstChoice = els.form.querySelector('input[name="q1Choice"]');
+      firstChoice?.focus({ preventScroll: true });
+    });
 
     els.panelToggle.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (state.goalCheckpointPending) return;
       updatePanelState(!state.panelCollapsed, { animate: true });
     });
 
@@ -1687,12 +1967,14 @@
     });
 
     els.cardHeader.addEventListener('click', (e) => {
+      if (state.goalCheckpointPending) return;
       if (e.target.closest('[data-action="exit"]')) return;
       if (e.target.closest('[data-action="toggle-panel"]')) return;
       if (!state.panelCollapsed) updatePanelState(true, { animate: true });
     });
 
     els.questionCard.addEventListener('click', (e) => {
+      if (state.goalCheckpointPending) return;
       if (!state.panelCollapsed) return;
       if (e.target.closest('[data-action="toggle-panel"]')) return;
       if (e.target.closest('[data-action="open-context"]')) return;
@@ -1716,6 +1998,8 @@
     });
 
     els.fitRoutes.addEventListener('click', () => fitRoutes());
+    els.zoomIn.addEventListener('click', () => state.mapAdapter.zoomIn());
+    els.zoomOut.addEventListener('click', () => state.mapAdapter.zoomOut());
     els.streetViewToggle.addEventListener('click', () => {
       if (state.streetViewOpen) {
         closeStreetView();
@@ -1763,19 +2047,34 @@
 
     applyStoredSplit();
 
-    els.form.querySelectorAll('.ari-choice--route-a, .ari-choice--route-b').forEach(label => {
-      const key = label.classList.contains('ari-choice--route-a') ? 'routeA' : 'routeB';
+    els.form.querySelectorAll('.ari-choice--route-a, .ari-choice--route-b, .ari-choice--route-c').forEach(label => {
+      const key = ROUTE_SLOTS.find(({ className }) => label.classList.contains(className))?.key;
+      if (!key) return;
       label.addEventListener('mouseenter', () => state.mapAdapter.focusRoute(key));
       label.addEventListener('mouseleave', () => state.mapAdapter.focusRoute(null));
-      label.addEventListener('focusin', () => state.mapAdapter.focusRoute(key));
+      label.addEventListener('focusin', event => {
+        if (event.target.matches?.(':focus-visible')) state.mapAdapter.focusRoute(key);
+      });
       label.addEventListener('focusout', () => state.mapAdapter.focusRoute(null));
     });
 
     const resizeController = new AbortController();
     window.addEventListener('keydown', event => {
-      if (event.key !== 'Escape') return;
-      if (state.streetViewOpen) closeStreetView();
-      else if (state.streetViewMode) setStreetViewMode(false);
+      if (event.key === 'Escape') {
+        if (state.streetViewOpen) closeStreetView();
+        else if (state.streetViewMode) setStreetViewMode(false);
+        return;
+      }
+      if (!state.streetViewMode || state.streetViewOpen) return;
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+      const slotIndex = ['a', 'b', 'c'].indexOf(event.key.toLowerCase());
+      if (slotIndex < 0 || slotIndex >= benchmark.routeTypes.length) return;
+      const routeKey = ROUTE_SLOTS[slotIndex].key;
+      const point = state.mapAdapter.getRepresentativeRoutePoint(routeKey);
+      if (point) {
+        event.preventDefault();
+        setStreetViewPoint(point);
+      }
     }, { signal: resizeController.signal });
     window.addEventListener('resize', () => {
       requestAnimationFrame(positionOnboarding);
@@ -1788,13 +2087,14 @@
       questionStep: options.initialQuestionStep || 'q1',
       partialAnswer: options.initialPartialAnswer || null,
       expectedPairId: options.initialPairId || null
+    }).then(loaded => {
+      if (loaded && state.goalCheckpointPending) setGoalCheckpointVisible(true);
     });
 
     function unmount() {
       window.clearTimeout(medalUnlockTimer);
       window.clearTimeout(roundTransitionTimer);
       window.clearTimeout(streetViewCloseTimer);
-      window.clearTimeout(streetHintTimer);
       cancelSplitTween();
       if (splitResizeFrame) cancelAnimationFrame(splitResizeFrame);
       removeStreetViewPositionListener();

@@ -50,6 +50,27 @@ function validProgress(overrides = {}) {
   };
 }
 
+function validThreeRouteAnswer(overrides = {}) {
+  return validAnswer({
+    test: 'calm_route_comparison',
+    source: 'calm-route-comparison',
+    routeAssignment: {
+      routeA: 'calm_quiet',
+      routeB: 'human',
+      routeC: 'calm_nature'
+    },
+    labels: {
+      A: { routeId: 'quiet-1', routeType: 'calm_quiet', source: 'calm_quiet' },
+      B: { routeId: 'human-1', routeType: 'human', source: 'human' },
+      C: { routeId: 'nature-1', routeType: 'calm_nature', source: 'calm_nature' }
+    },
+    q1Choice: 'route_c',
+    q2Separate: null,
+    q3Issues: ['not_enough_greenery_water'],
+    ...overrides
+  });
+}
+
 test('saves an answer once and answers duplicates idempotently', async () => {
   const api = await startApi();
   try {
@@ -69,6 +90,21 @@ test('saves an answer once and answers duplicates idempotently', async () => {
     const lines = (await feed.text()).trim().split('\n');
     assert.equal(lines.length, 1);
     assert.equal(JSON.parse(lines[0]).captureId, 'calm-session-1-round-1');
+  } finally {
+    await api.close();
+  }
+});
+
+test('accepts Calm Route Comparison answers at the current endpoint', async () => {
+  const api = await startApi();
+  try {
+    const url = `${api.base}/api/v1/benchmarks/calm_route_comparison/answers`;
+    const response = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(validThreeRouteAnswer())
+    });
+    assert.equal(response.status, 201);
+    assert.equal((await response.json()).record.labelMap.C, 'calm_nature');
   } finally {
     await api.close();
   }

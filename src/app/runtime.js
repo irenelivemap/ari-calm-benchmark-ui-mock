@@ -5,11 +5,14 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   const CHALLENGE_SLUGS = Object.freeze({
     google: 'fast-vs-google',
-    calm: 'fast-vs-calm'
+    calm: 'calm-route-comparison'
   });
-  const SLUG_CHALLENGES = Object.freeze(Object.fromEntries(
-    Object.entries(CHALLENGE_SLUGS).map(([challenge, slug]) => [slug, challenge])
-  ));
+  const SLUG_CHALLENGES = Object.freeze({
+    ...Object.fromEntries(
+      Object.entries(CHALLENGE_SLUGS).map(([challenge, slug]) => [slug, challenge])
+    ),
+    'fast-vs-calm': 'calm'
+  });
 
   function normalizeBasePath(value) {
     const path = String(value || '').trim();

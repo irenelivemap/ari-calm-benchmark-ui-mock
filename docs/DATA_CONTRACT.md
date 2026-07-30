@@ -7,7 +7,12 @@ The shared benchmark shell requests one route pair per comparison through `route
 ```ts
 type LatLngTuple = [latitude: number, longitude: number];
 
-type RouteType = "fast" | "calm" | "livemap_fast" | "google";
+type RouteType =
+  | "calm_quiet"
+  | "calm_nature"
+  | "human"
+  | "livemap_fast"
+  | "google";
 
 type RouteOption = {
   routeId: string;
@@ -37,11 +42,11 @@ type BenchmarkRoutePair = {
 };
 ```
 
-Only the two route keys configured for the active challenge are required.
+Only the route keys configured for the active challenge are required.
 
 | Challenge | Required route keys | Test ID |
 | --- | --- | --- |
-| Fast vs Calm | `fast`, `calm` | `calm_vs_fast` |
+| Calm Route Comparison | `calm_quiet`, `calm_nature`, `human` | `calm_route_comparison` |
 | Fast vs Google Fast | `livemap_fast`, `google` | `ari_fast_vs_google` |
 
 ## Provider Interface
@@ -52,9 +57,9 @@ async function routePairProvider({ sessionId, roundIndex }) {
 }
 ```
 
-`pairId` and both route IDs must be stable. Retrying a round should return the same logical pair unless the backend explicitly invalidates it.
+`pairId` and every route ID must be stable. Retrying a round should return the same logical pair unless the backend explicitly invalidates it.
 
-`src/api/route-pair-generator.js` implements this contract against the LiveMap routing facade: it samples random central-Zurich origin/destination pairs, requests the challenge's profiles in one `POST {apiBase}/route` call, converts the facade's GeoJSON `[longitude, latitude]` coordinates to this contract's `[latitude, longitude]` tuples, and persists generated pairs per session so resumed rounds stay stable.
+`src/api/route-pair-generator.js` implements the two-route live contract used by Fast vs Google. Calm Route Comparison currently uses the four curated rounds in `src/data/mock-route-pairs.js`, converted from GeoJSON `[longitude, latitude]` coordinates to this contract's `[latitude, longitude]` tuples.
 
 ## Example: Fast vs Google Fast
 
@@ -107,8 +112,8 @@ async function routePairProvider({ sessionId, roundIndex }) {
 - Geometry is ordered from origin to destination.
 - Geometry uses `[latitude, longitude]`, not GeoJSON `[longitude, latitude]`.
 - Each geometry contains at least two valid points.
-- The two routes have different route types and stable route IDs.
-- The shell randomizes provider routes into visible Route A / Route B slots.
+- Routes have different route types and stable route IDs.
+- The shell randomizes provider routes into visible Route A / Route B or Route A / Route B / Route C slots.
 - Provider identity, hidden scores, and durations are never displayed (durations come from each provider's own speed model and are not comparable). Distance stays hidden in the first question by default; a challenge may opt in to rounded per-route distances through the shell's `showRouteMetrics` (Fast vs Google Fast does), and each answer records whether they were visible via `metricsShown`.
 - Metadata is stored with the answer's route snapshots and may support later questions or analysis.
 

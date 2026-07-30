@@ -101,6 +101,7 @@ test('stores partial progress and returns the latest resumable session', () => {
   repository.saveProgress(validProgress({
     roundIndex: 1,
     completedRounds: 1,
+    goalCheckpointPending: true,
     pairId: 'pair-2',
     questionStep: 'q1',
     partialAnswer: validAnswer({
@@ -118,6 +119,7 @@ test('stores partial progress and returns the latest resumable session', () => {
   const progress = repository.getLatestProgress();
   assert.equal(progress.sessionId, 'calm-session-123');
   assert.equal(progress.roundIndex, 1);
+  assert.equal(progress.goalCheckpointPending, true);
   assert.equal(progress.partialAnswer.q1Choice, null);
   assert.equal(repository.verify().valid, true);
 });
@@ -200,4 +202,86 @@ test('stores ARI Fast versus Google Fast preview records with their own route ty
   assert.equal(snapshot.answers[0].labelMap.A, 'livemap_fast');
   assert.equal(snapshot.answers[0].q3Issues[0], 'misses_nicer_route');
   assert.equal(repository.verify().valid, true);
+});
+
+test('accepts the current Fast versus Google follow-up reasons', () => {
+  const result = validateAnswerRecord(validAnswer({
+    test: 'ari_fast_vs_google',
+    q1Choice: 'route_a',
+    q2Separate: null,
+    q3Issues: ['unnecessary_detour', 'may_not_be_walkable']
+  }));
+
+  assert.equal(result.valid, true);
+});
+
+test('stores a three-route blinded Calm Route Comparison answer', () => {
+  const result = validateAnswerRecord(validAnswer({
+    test: 'calm_route_comparison',
+    source: 'calm-route-comparison',
+    routeAssignment: {
+      routeA: 'human',
+      routeB: 'calm_quiet',
+      routeC: 'calm_nature'
+    },
+    labels: {
+      A: { routeId: 'human-1', routeType: 'human', source: 'human' },
+      B: { routeId: 'quiet-1', routeType: 'calm_quiet', source: 'calm_quiet' },
+      C: { routeId: 'nature-1', routeType: 'calm_nature', source: 'calm_nature' }
+    },
+    q1Choice: 'route_c',
+    q2Separate: null,
+    q3Issues: ['too_busy_or_crowded']
+  }));
+
+  assert.equal(result.valid, true);
+  assert.equal(result.record.labelMap.C, 'calm_nature');
+  assert.equal(result.record.labels.C.routeId, 'nature-1');
+});
+
+test('stores multiple selected routes for Calm Route Comparison', () => {
+  const result = validateAnswerRecord(validAnswer({
+    test: 'calm_route_comparison',
+    source: 'calm-route-comparison',
+    routeAssignment: {
+      routeA: 'human',
+      routeB: 'calm_quiet',
+      routeC: 'calm_nature'
+    },
+    labels: {
+      A: { routeId: 'human-1', routeType: 'human', source: 'human' },
+      B: { routeId: 'quiet-1', routeType: 'calm_quiet', source: 'calm_quiet' },
+      C: { routeId: 'nature-1', routeType: 'calm_nature', source: 'calm_nature' }
+    },
+    q1Choice: 'multiple_routes',
+    q1Choices: ['route_a', 'route_c'],
+    q2Separate: null,
+    q3Issues: ['too_busy_or_crowded']
+  }));
+
+  assert.equal(result.valid, true);
+  assert.equal(result.record.q1Choice, 'multiple_routes');
+  assert.deepEqual(result.record.q1Choices, ['route_a', 'route_c']);
+});
+
+test('rejects a neutral Calm choice combined with a route', () => {
+  const result = validateAnswerRecord(validAnswer({
+    test: 'calm_route_comparison',
+    source: 'calm-route-comparison',
+    routeAssignment: {
+      routeA: 'human',
+      routeB: 'calm_quiet',
+      routeC: 'calm_nature'
+    },
+    labels: {
+      A: { routeId: 'human-1', routeType: 'human', source: 'human' },
+      B: { routeId: 'quiet-1', routeType: 'calm_quiet', source: 'calm_quiet' },
+      C: { routeId: 'nature-1', routeType: 'calm_nature', source: 'calm_nature' }
+    },
+    q1Choices: ['route_a', 'hard_to_judge'],
+    q3Issues: []
+  }));
+
+  assert.equal(result.valid, false);
+  assert.match(result.errors.join(' '), /combined only with other route choices/);
 });

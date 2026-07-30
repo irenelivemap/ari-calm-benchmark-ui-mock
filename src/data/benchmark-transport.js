@@ -107,9 +107,24 @@
       }
     }
 
+    async function listAnswers(test) {
+      const response = await fetchImpl(endpoint('answer', { test }), {
+        method: 'GET',
+        headers: { Accept: 'application/x-ndjson' }
+      });
+      if (!response.ok) throw new Error(`Benchmark API returned ${response.status}.`);
+      const body = await response.text();
+      if (!body.trim()) return [];
+      return body
+        .split('\n')
+        .filter(line => line.trim())
+        .map(line => JSON.parse(line));
+    }
+
     return {
       saveAnswer: record => save('answer', record),
       saveProgress: record => save('progress', record),
+      listAnswers,
       flush,
       getPendingCount: () => readQueue(storage, queueKey).length
     };

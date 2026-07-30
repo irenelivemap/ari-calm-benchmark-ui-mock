@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260724-q3-icons-13">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260729-street-view-any-point-1">
   <style>
     body {
       margin: 0;
@@ -57,7 +57,7 @@
       <div class="calm-intro-header-context">
         <button class="calm-challenge-menu" id="challenge-menu" type="button" aria-haspopup="dialog" aria-controls="challenge-dialog">
           <span>Challenges</span>
-          <strong id="challenge-menu-label">Fast vs Calm</strong>
+          <strong id="challenge-menu-label">Calm Route Comparison</strong>
           <i aria-hidden="true"></i>
         </button>
         <button class="calm-test-reset" data-reset-test-data type="button">Reset test data</button>
@@ -101,9 +101,9 @@
                 <span class="calm-challenge-option__name">ARI Fast vs Google Fast</span>
                 <strong>Ready</strong>
               </button>
-              <button class="calm-challenge-option is-available" id="challenge-calm" data-challenge="calm" type="button" aria-label="ARI Fast vs ARI Calm, ready">
+              <button class="calm-challenge-option is-available" id="challenge-calm" data-challenge="calm" type="button" aria-label="Calm Route Comparison, ready">
                 <span class="calm-challenge-option__cursor" aria-hidden="true"></span>
-                <span class="calm-challenge-option__name">ARI Fast vs ARI Calm</span>
+                <span class="calm-challenge-option__name">Calm Route Comparison</span>
                 <strong>Ready</strong>
               </button>
               <button class="calm-challenge-option" type="button" aria-label="ARI Fast vs ARI Safe, coming soon" disabled>
@@ -140,6 +140,7 @@
           <span class="calm-route-slot" aria-hidden="true">
             <span class="calm-route-token calm-route-token--a">Route A</span>
             <span class="calm-route-token calm-route-token--b">Route B</span>
+            <span class="calm-route-token calm-route-token--c" id="hero-route-c" hidden>Route C</span>
           </span>
         </h1>
         <p id="benchmark-hero-copy">Imagine you are walking somewhere in the city. You are not rushing, and the walking experience matters more than arriving as fast as possible.</p>
@@ -169,9 +170,9 @@
                     <span class="calm-stop calm-stop--end"></span>
                   </div>
                   <div class="calm-step-list">
-                    <div><b>Compare</b><span>Look at both routes on the map.</span></div>
-                    <div><b>Choose</b><span>Pick the one you would actually take.</span></div>
-                    <div><b>Explain</b><span>Tell us why you chose it.</span></div>
+                    <div><b>Compare</b><span id="benchmark-compare-copy">Look at both routes on the map.</span></div>
+                    <div><b>Choose</b><span id="benchmark-choose-copy">Pick the one you would actually take.</span></div>
+                    <div><b>Explain</b><span id="benchmark-explain-copy">Tell us why you chose it.</span></div>
                   </div>
                 </div>
               </div>
@@ -197,7 +198,7 @@
               <div class="calm-card-main">
                 <h2>10+ <span>comparisons.</span></h2>
                 <div class="calm-session-content">
-                  <p class="calm-session-intro">Every comparison helps. More is even better.</p>
+                  <p class="calm-session-intro">Every careful comparison helps.</p>
                   <div class="calm-session-points">
                     <div><b>About 6 to 8 min</b></div>
                     <div><b>Desktop and mobile</b></div>
@@ -219,7 +220,7 @@
               </span>
               <span id="start-kicker-text">Start testing</span>
             </div>
-            <h2 id="start-h2">Enter the <span>duel.</span></h2>
+            <h2 id="start-h2">Enter the <span>route lab.</span></h2>
             <div class="calm-medal-shelf calm-hidden" id="medal-shelf" aria-label="Milestones"></div>
           </div>
           <form class="calm-start-form" id="start-form">
@@ -228,7 +229,7 @@
               <input id="participant-name" type="text" autocomplete="name" placeholder="Type a name">
               <button id="start-test" type="submit" disabled>Start test →</button>
             </div>
-            <p>Identifies your responses. Not shown publicly.</p>
+            <p>Shown to your evaluation team with your answers.</p>
           </form>
           <div class="calm-resume-right calm-hidden" id="resume-right">
             <div class="calm-start-row">
@@ -252,15 +253,17 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" crossorigin=""></script>
-  <script src="./src/app/runtime.js?v=20260715-production-ready-1"></script>
-  <script src="./src/data/mock-route-pairs.js?v=20260709-structure-1"></script>
+  <script src="./src/app/runtime.js?v=20260729-three-routes-1"></script>
+  <script src="./src/data/mock-route-pairs.js?v=20260729-three-routes-1"></script>
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
-  <script src="./src/data/calm-benchmark-data.js?v=20260714-fast-google-ui-3"></script>
-  <script src="./src/data/benchmark-transport.js?v=20260715-production-ready-2"></script>
-  <script src="./src/results/calm-results.js?v=20260713-live-results-1"></script>
+  <script src="./src/data/calm-benchmark-data.js?v=20260729-multi-select-2"></script>
+  <script src="./src/data/benchmark-transport.js?v=20260729-team-results-2"></script>
+  <script src="./src/data/mock-team-results.js?v=20260729-sample-results-1"></script>
+  <script src="./src/results/calm-results.js?v=20260729-team-results-2"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
-  <script src="./src/maps/map-adapter.js?v=20260724-q3-icons-13"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260724-q3-icons-13"></script>
+  <script src="./src/maps/route-overlap.js?v=20260729-street-view-any-point-1"></script>
+  <script src="./src/maps/map-adapter.js?v=20260729-street-view-any-point-1"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260729-street-view-any-point-1"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -298,11 +301,9 @@
       document.querySelectorAll('[data-reset-test-data]').forEach(button => button.remove());
     }
     const GOOGLE_KEY_STORAGE = 'ari-calm-benchmark-google-maps-key';
-    const ANSWERS_STORAGE = 'ari-calm-benchmark-answers';
-    const PROGRESS_STORAGE = 'ari-calm-benchmark-progress';
     const CHALLENGE_STORAGE = 'ari-route-benchmark-selected-challenge';
+    const SAMPLE_RESULTS_STORAGE = 'ari-calm-team-results-sample-mode-v1';
     const ROUTING_API_STORAGE = 'ari-benchmark-routing-api';
-    const CALM_ROUTE_PAIR_CACHE = 'ari-calm-benchmark-route-pairs-v1';
     const GOOGLE_ROUTE_PAIR_CACHE = 'ari-fast-google-benchmark-route-pairs-v1';
     const initialUrlParams = new URLSearchParams(window.location.search);
     if (!runtimeConfig.allowQueryConfig) {
@@ -337,6 +338,7 @@
         definitionAnswer: null,
         testId: 'ari_fast_vs_google',
         storageKey: 'ari-fast-google-benchmark-dataset-v1',
+        resultsAvailableFromStart: false,
         benchmark: {
           testId: 'ari_fast_vs_google',
           source: 'fast-google-benchmark',
@@ -407,21 +409,64 @@
       },
       calm: {
         key: 'calm',
-        menuLabel: 'Fast vs Calm',
-        documentTitle: 'ARI Calm Benchmark',
-        heroQuestion: 'Which route feels calmer for this walk?',
-        heroCopy: 'Imagine you are walking somewhere in the city. You are not rushing, and the walking experience matters more than arriving as fast as possible.',
+        menuLabel: 'Calm Route Comparison',
+        documentTitle: 'ARI Calm Route Comparison',
+        heroQuestion: 'Which route or routes would you choose for this calm walk?',
+        heroCopy: 'Compare three possible walking routes. Their source is hidden, so choose only from the route experience you see.',
         definitionQuestion: 'What do we mean by calm?',
         definitionAnswer: 'A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.',
-        testId: 'calm_vs_fast',
-        storageKey: AriCalmBenchmarkData.DEFAULT_STORAGE_KEY,
-        benchmark: null,
-        routePairProvider: AriRoutePairGenerator.createLivemapRoutePairProvider({
-          apiBase: routingApiBase,
-          routeTypes: { fast: 'foot_fast', calm: 'foot_calm' },
-          storageKey: CALM_ROUTE_PAIR_CACHE,
-          fallbackProvider: AriCalmBenchmark.mockRoutePairProvider
-        })
+        testId: 'calm_route_comparison',
+        storageKey: 'ari-calm-route-comparison-dataset-v1',
+        resultsAvailableFromStart: true,
+        benchmark: {
+          testId: 'calm_route_comparison',
+          source: 'calm-route-comparison',
+          sessionPrefix: 'calm-route-session',
+          ariaLabel: 'Blinded calm route comparison',
+          routeTypes: ['calm_quiet', 'calm_nature', 'human'],
+          questions: {
+            q1: 'Which route or routes would you choose for this calm walk?',
+            q2: '',
+            q3: 'What made the other routes less suitable?'
+          },
+          context: {
+            label: 'What do we mean by calm?',
+            copy: 'A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.'
+          },
+          q1Options: [
+            { value: 'route_a', label: 'Route A', className: 'ari-choice--route-a' },
+            { value: 'route_b', label: 'Route B', className: 'ari-choice--route-b' },
+            { value: 'route_c', label: 'Route C', className: 'ari-choice--route-c' },
+            { value: 'none_work_well', label: 'None work well', exclusive: true },
+            { value: 'hard_to_judge', label: 'Hard to judge', exclusive: true }
+          ],
+          q1Multiple: true,
+          q2Options: [],
+          q3Options: [
+            { value: 'not_enough_greenery_water', label: 'Not enough greenery or water' },
+            { value: 'too_busy_or_crowded', label: 'Too busy or crowded' },
+            { value: 'lacks_nice_streets_surroundings', label: 'Lacks nice streets or surroundings' },
+            { value: 'extra_time_distance_not_worth_it', label: 'Extra time or distance not worth it' },
+            { value: 'too_similar', label: 'Too similar to the selected route' },
+            { value: 'too_complex', label: 'Too complex to follow' },
+            { value: 'other', label: 'Other' }
+          ],
+          q3Variants: {
+            none_work_well: {
+              question: 'What made all three routes poor options?'
+            }
+          },
+          followUps: {
+            route_a: ['q3'],
+            route_b: ['q3'],
+            route_c: ['q3'],
+            none_work_well: ['q3'],
+            hard_to_judge: []
+          },
+          uncertainChoices: ['hard_to_judge'],
+          showRouteMetrics: false
+        },
+        routePairProvider: AriCalmBenchmark.mockRoutePairProvider
       }
     };
     let benchmarkMounted = false;
@@ -429,6 +474,18 @@
     let savedProgress = null;
     let activePage = 'testing';
     let teamFilters = { participant: '', outcome: '', reason: '' };
+    /**
+     * THESIS: Team patterns and human records are peers, never one crowded dashboard.
+     * OWN-WORLD: Flat ivory-white research surfaces, ink type, hairlines, and restrained green state.
+     * STORY: Scan the team, switch to people, then inspect one person without judgment or scoring.
+     * FIRST VIEWPORT: Calm title and evidence totals lead; Overview and Participants form the primary fork.
+     * FORM: Existing results world extended as an operate surface with a master-detail participant view.
+     */
+    let calmResultsView = 'overview';
+    let selectedResultsParticipantId = '';
+    const storedSampleResultsMode = localStorage.getItem(SAMPLE_RESULTS_STORAGE);
+    let sampleResultsEnabled = !runtimeConfig.production
+      && (storedSampleResultsMode === 'sample' || storedSampleResultsMode === '1');
     let challengeRouteTimer = null;
     let challengeMedalTimer = null;
     let challengeRouteResizeFrame = null;
@@ -450,8 +507,10 @@
     const activeConfig = CHALLENGE_CONFIGS[activeChallenge];
     const dataRepositories = {
       calm: AriCalmBenchmarkData.createLocalRepository(localStorage, {
-        legacyAnswersKey: ANSWERS_STORAGE,
-        legacyProgressKey: PROGRESS_STORAGE
+        storageKey: CHALLENGE_CONFIGS.calm.storageKey,
+        testId: CHALLENGE_CONFIGS.calm.testId,
+        legacyAnswersKey: 'ari-calm-route-comparison-answers',
+        legacyProgressKey: 'ari-calm-route-comparison-progress'
       }),
       google: AriCalmBenchmarkData.createLocalRepository(localStorage, {
         storageKey: CHALLENGE_CONFIGS.google.storageKey,
@@ -461,12 +520,25 @@
       })
     };
     const dataRepository = dataRepositories[activeChallenge];
+    if (
+      !runtimeConfig.production
+      && activeChallenge === 'calm'
+      && storedSampleResultsMode === null
+      && !(dataRepository.getSnapshot().answers || []).length
+    ) {
+      sampleResultsEnabled = true;
+    }
     const remoteTransport = runtimeConfig.dataApiBase
       ? AriBenchmarkTransport.createHttpTransport({
           baseUrl: runtimeConfig.dataApiBase,
           storage: localStorage
         })
       : null;
+    const remoteTeamResults = {
+      status: remoteTransport ? 'idle' : 'local',
+      answers: [],
+      error: null
+    };
     if (remoteTransport) {
       void remoteTransport.flush();
       window.addEventListener('online', () => void remoteTransport.flush());
@@ -494,6 +566,17 @@
       document.getElementById('challenge-menu-label').textContent = activeConfig.menuLabel;
       document.getElementById('benchmark-hero-question').textContent = activeConfig.heroQuestion;
       document.getElementById('benchmark-hero-copy').textContent = activeConfig.heroCopy;
+      document.getElementById('hero-route-c').hidden = activeChallenge !== 'calm';
+      document.querySelector('.calm-route-slot').classList.toggle('has-route-c', activeChallenge === 'calm');
+      document.getElementById('benchmark-compare-copy').textContent = activeChallenge === 'calm'
+        ? 'Look at all three routes on the map.'
+        : 'Look at both routes on the map.';
+      document.getElementById('benchmark-choose-copy').textContent = activeChallenge === 'calm'
+        ? 'Pick any route or routes you would take.'
+        : 'Pick the one you would actually take.';
+      document.getElementById('benchmark-explain-copy').textContent = activeChallenge === 'calm'
+        ? 'Tell us what made the other options less suitable.'
+        : 'Tell us why you chose it.';
       const definition = document.querySelector('.calm-disclosure');
       const hasDefinition = Boolean(activeConfig.definitionQuestion && activeConfig.definitionAnswer);
       document.querySelector('.calm-card--how').classList.toggle('has-no-disclosure', !hasDefinition);
@@ -530,6 +613,7 @@
     }
 
     function publicResultsUnlocked(snapshot) {
+      if (activeConfig.resultsAvailableFromStart) return true;
       if (urlParams.get('preview') === '1') return true;
       const latest = Object.values(snapshot.progressBySessionId || {})
         .sort((a, b) => Date.parse(b.savedAt || 0) - Date.parse(a.savedAt || 0))[0];
@@ -629,85 +713,287 @@
         </section>`;
     }
 
-    function renderCommunityResults() {
-      if (activeChallenge === 'google') {
-        renderFastGoogleResults();
-        return;
-      }
-      const snapshot = dataRepository.getSnapshot();
-      const summary = AriCalmResults.aggregateAnswers(snapshot.answers);
-      const latest = dataRepository.getLatestProgress();
+    function calmResultsAnswers() {
+      if (sampleResultsEnabled) return AriMockTeamResults.createCalmTeamAnswers();
+      const localAnswers = dataRepository.getSnapshot().answers || [];
+      return AriCalmResults.mergeAnswers(remoteTeamResults.answers, localAnswers);
+    }
 
-      if (!publicResultsUnlocked(snapshot)) {
-        const completed = Math.min(latest?.completedRounds || 0, 10);
-        communityResultsContent.innerHTML = `
-          <section class="calm-results-lock" aria-labelledby="community-results-title">
-            <p class="calm-results-eyebrow">Community Results</p>
-            <h1 id="community-results-title">Results unlock after 10 comparisons.</h1>
-            <p>Complete the goal before seeing how other people answered, so their choices do not influence yours.</p>
-            <div class="calm-results-progress" aria-label="${completed} of 10 comparisons completed"><span style="width:${completed * 10}%"></span></div>
-            <p class="calm-results-progress-copy"><b>${completed}</b> of 10 completed</p>
-            <button type="button" class="calm-results-action" data-results-action="continue">Continue comparing →</button>
-          </section>`;
-        return;
+    async function loadRemoteTeamResults() {
+      if (sampleResultsEnabled || !remoteTransport || activeChallenge !== 'calm') return;
+      if (remoteTeamResults.status === 'loading' || remoteTeamResults.status === 'ready') return;
+      remoteTeamResults.status = 'loading';
+      remoteTeamResults.error = null;
+      if (activePage === 'results') renderCommunityResults();
+      try {
+        remoteTeamResults.answers = await remoteTransport.listAnswers(activeConfig.testId);
+        remoteTeamResults.status = 'ready';
+      } catch (error) {
+        remoteTeamResults.status = 'error';
+        remoteTeamResults.error = error;
+        console.warn('Could not refresh team results.', error);
       }
+      if (activePage === 'results') renderCommunityResults();
+    }
 
+    function renderCalmResultsSwitcher(participantCount) {
+      const sourceState = sampleResultsEnabled ? 'sample' : remoteTeamResults.status;
+      const sourceLabel = sampleResultsEnabled
+        ? 'Illustrative sample data'
+        : remoteTeamResults.status === 'loading'
+          ? 'Updating team data…'
+          : remoteTeamResults.status === 'ready'
+            ? 'Team data up to date'
+            : remoteTeamResults.status === 'error'
+              ? 'Team sync unavailable · showing saved device data'
+              : 'Preview data on this device';
+      const sampleToggle = runtimeConfig.production ? '' : `
+        <button type="button" class="calm-results-sample-toggle" data-results-action="${sampleResultsEnabled ? 'saved-data' : 'sample-data'}">
+          ${sampleResultsEnabled ? 'Use saved data' : 'View sample data'}
+        </button>`;
+      return `
+        <div class="calm-results-toolbar">
+          <nav class="calm-results-switcher" aria-label="Calm results view">
+            <button type="button" data-results-view="overview" aria-pressed="${calmResultsView === 'overview'}">Overview</button>
+            <button type="button" data-results-view="participants" aria-pressed="${calmResultsView === 'participants'}">Participants</button>
+          </nav>
+          <div class="calm-results-toolbar__meta">
+            <p role="status">
+              <span>${participantCount} participant${participantCount === 1 ? '' : 's'} represented</span>
+              <small data-state="${sourceState}">${sourceLabel}</small>
+            </p>
+            ${sampleToggle}
+          </div>
+        </div>`;
+    }
+
+    function renderCalmOverview(summary) {
       if (!summary.total) {
-        communityResultsContent.innerHTML = `
-          <section class="calm-results-empty" aria-labelledby="community-results-title">
-            <p class="calm-results-eyebrow">Community Results</p>
-            <h1 id="community-results-title">The first results will appear here.</h1>
-            <p>No completed comparisons have been saved on this device yet.</p>
+        return `
+          <section class="calm-results-dashboard-empty" aria-labelledby="calm-overview-empty-title">
+            <p class="calm-results-eyebrow">Overview</p>
+            <h2 id="calm-overview-empty-title">No completed comparisons yet.</h2>
+            <p>Team patterns will appear here as soon as the first evaluation is saved.</p>
             <button type="button" class="calm-results-action" data-results-action="continue">Start comparing →</button>
           </section>`;
-        return;
       }
 
       const outcomeEntries = AriCalmResults.OUTCOMES.map(key => [
         AriCalmResults.OUTCOME_LABELS[key], summary.outcomeCounts[key], key
       ]);
-      const q2Total = Object.values(summary.q2Counts).reduce((sum, count) => sum + count, 0);
-      const q2Entries = [
-        ['Yes', summary.q2Counts.yes, 'yes'],
-        ['No', summary.q2Counts.no, 'no'],
-        ['Not sure', summary.q2Counts.not_sure, 'not_sure']
-      ];
       const reasonEntries = AriCalmResults.REASONS
         .map(key => [AriCalmResults.REASON_LABELS[key], summary.reasonCounts[key], key])
         .sort((a, b) => b[1] - a[1]);
       const reasonResponseCount = summary.rows.filter(row => row.reasons.length > 0).length;
-      const calmPercent = percentage(summary.outcomeCounts.calm, summary.total);
+      const selectedRouteCount = ['calm_quiet', 'calm_nature', 'human']
+        .reduce((total, key) => total + summary.outcomeCounts[key], 0);
+      const leadingStatement = summary.leadingRoute
+        ? `${escapeHtml(AriCalmResults.OUTCOME_LABELS[summary.leadingRoute])} was selected in <strong>${percentage(summary.outcomeCounts[summary.leadingRoute], summary.total)}%</strong> of comparisons.`
+        : selectedRouteCount
+          ? 'No single route leads the team selections.'
+          : 'No route preference has emerged yet.';
 
-      communityResultsContent.innerHTML = `
-        <header class="calm-results-hero">
-          <p class="calm-results-eyebrow">Community Results</p>
-          <h1>Calm routes were chosen in <strong>${calmPercent}%</strong> of comparisons.</h1>
-          <p>Based on ${summary.total} comparisons from ${summary.participants} contributor${summary.participants === 1 ? '' : 's'}. Updated ${formatUpdated(summary.lastUpdated)}.</p>
-        </header>
+      return `
+        <section class="calm-results-overview-lead" aria-labelledby="calm-overview-title">
+          <p class="calm-results-eyebrow">Team pattern</p>
+          <h2 id="calm-overview-title">${leadingStatement}</h2>
+          <p>Multiple routes could be selected, so route percentages may total more than 100%.</p>
+        </section>
         <section class="calm-results-band" aria-labelledby="overall-choice-title">
           <div class="calm-results-band__intro">
             <p class="calm-results-index">01</p>
-            <h2 id="overall-choice-title">Which route felt calmer?</h2>
-            <p>Every answer is shown, including neutral and uncertain choices.</p>
+            <h2 id="overall-choice-title">Route selection rates</h2>
+            <p>Decoded route types across all completed team evaluations.</p>
           </div>
           <div class="calm-results-chart">${renderBarRows(outcomeEntries, summary.total, 'calm-result-row--outcome')}</div>
         </section>
-        <section class="calm-results-band" aria-labelledby="separate-options-title">
-          <div class="calm-results-band__intro">
-            <p class="calm-results-index">02</p>
-            <h2 id="separate-options-title">Should Fast and Calm both be shown?</h2>
-            <p>Responses from comparisons where this follow-up was asked.</p>
-          </div>
-          <div class="calm-results-chart">${renderBarRows(q2Entries, q2Total)}</div>
-        </section>
         <section class="calm-results-band" aria-labelledby="less-suitable-title">
           <div class="calm-results-band__intro">
-            <p class="calm-results-index">03</p>
-            <h2 id="less-suitable-title">What made routes less suitable?</h2>
-            <p>People could select more than one reason.</p>
+            <p class="calm-results-index">02</p>
+            <h2 id="less-suitable-title">Reasons selected</h2>
+            <p>Participants could select more than one reason.</p>
           </div>
           <div class="calm-results-chart">${renderBarRows(reasonEntries, reasonResponseCount)}</div>
+        </section>
+        <section class="calm-team-position calm-results-position" aria-labelledby="calm-position-title">
+          <div>
+            <p class="calm-results-index">03</p>
+            <h2 id="calm-position-title">Visible label check</h2>
+            <p>Selection counts for A, B, and C help the team spot possible position effects.</p>
+          </div>
+          <dl>
+            <div><dt>Route A selected</dt><dd>${summary.positionBias.selectedAsA}</dd></div>
+            <div><dt>Route B selected</dt><dd>${summary.positionBias.selectedAsB}</dd></div>
+            <div><dt>Route C selected</dt><dd>${summary.positionBias.selectedAsC}</dd></div>
+          </dl>
         </section>`;
+    }
+
+    function renderParticipantRows(rows) {
+      return rows.map(row => {
+        const choices = row.outcomes
+          .map(outcome => AriCalmResults.OUTCOME_LABELS[outcome] || 'Unknown')
+          .join(', ');
+        const reasons = row.reasons.length
+          ? row.reasons.map(reason => AriCalmResults.REASON_LABELS[reason] || reason).join(', ')
+          : 'None';
+        const comparison = row.roundNumber ? `#${row.roundNumber}` : '—';
+        return `
+          <tr>
+            <td data-label="Comparison">${escapeHtml(comparison)}</td>
+            <td data-label="Route pair">${escapeHtml(row.pairId)}</td>
+            <td data-label="Choice"><span class="calm-team-outcome" data-outcome="${escapeHtml(row.outcome)}">${escapeHtml(choices)}</span></td>
+            <td data-label="Reasons">${escapeHtml(reasons)}</td>
+            <td data-label="Details">${escapeHtml(row.note || '—')}</td>
+            <td data-label="Date">${escapeHtml(formatUpdated(row.date))}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    function renderCalmParticipants(answers, participantSummaries, currentParticipantId) {
+      const orderedParticipants = [...participantSummaries].sort((a, b) => {
+        if (a.participantId === currentParticipantId) return -1;
+        if (b.participantId === currentParticipantId) return 1;
+        return a.participant.localeCompare(b.participant, undefined, { sensitivity: 'base' })
+          || a.participantId.localeCompare(b.participantId);
+      });
+      if (!orderedParticipants.some(item => item.participantId === selectedResultsParticipantId)) {
+        selectedResultsParticipantId = orderedParticipants.find(item => item.participantId === currentParticipantId)?.participantId
+          || orderedParticipants[0]?.participantId
+          || '';
+      }
+
+      if (!orderedParticipants.length) {
+        return `
+          <section class="calm-results-dashboard-empty" aria-labelledby="calm-participants-empty-title">
+            <p class="calm-results-eyebrow">Participants</p>
+            <h2 id="calm-participants-empty-title">No participant records yet.</h2>
+            <p>Names and individual evaluation records will appear after the first completed comparison.</p>
+            <button type="button" class="calm-results-action" data-results-action="continue">Start comparing →</button>
+          </section>`;
+      }
+
+      const participantLabels = new Map();
+      const duplicateNameGroups = orderedParticipants.reduce((groups, item) => {
+        const key = item.participant.toLocaleLowerCase();
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(item);
+        return groups;
+      }, new Map());
+      duplicateNameGroups.forEach(items => {
+        items.forEach((item, index) => {
+          participantLabels.set(
+            item.participantId,
+            items.length > 1 ? `${item.participant} · ${index + 1}` : item.participant
+          );
+        });
+      });
+
+      const selectedPerson = orderedParticipants.find(item => item.participantId === selectedResultsParticipantId);
+      const selectedParticipantLabel = participantLabels.get(selectedResultsParticipantId) || selectedPerson.participant;
+      const participantSummary = AriCalmResults.aggregateAnswers(answers, {
+        participantId: selectedResultsParticipantId
+      });
+      const outcomeEntries = AriCalmResults.OUTCOMES
+        .map(key => [AriCalmResults.OUTCOME_LABELS[key], participantSummary.outcomeCounts[key], key])
+        .filter(([, count]) => count > 0);
+      const reasonEntries = AriCalmResults.REASONS
+        .map(key => [AriCalmResults.REASON_LABELS[key], participantSummary.reasonCounts[key], key])
+        .filter(([, count]) => count > 0)
+        .sort((a, b) => b[1] - a[1]);
+      const reasonResponseCount = participantSummary.rows.filter(row => row.reasons.length > 0).length;
+      const isCurrentParticipant = selectedResultsParticipantId === currentParticipantId;
+      const participantButtons = orderedParticipants.map(item => {
+        const isSelected = item.participantId === selectedResultsParticipantId;
+        const isYou = item.participantId === currentParticipantId;
+        return `
+          <button type="button" data-results-participant="${escapeHtml(item.participantId)}" aria-pressed="${isSelected}">
+            <span><strong>${escapeHtml(participantLabels.get(item.participantId))}</strong>${isYou ? '<em>You</em>' : ''}</span>
+            <small>${item.comparisons} comparison${item.comparisons === 1 ? '' : 's'} · ${item.routePairs} route pair${item.routePairs === 1 ? '' : 's'}</small>
+          </button>`;
+      }).join('');
+
+      return `
+        <div class="calm-participants-layout">
+          <aside class="calm-participant-list" aria-labelledby="calm-participant-list-title">
+            <div class="calm-participant-list__head">
+              <h2 id="calm-participant-list-title">Participants</h2>
+              <span>${orderedParticipants.length}</span>
+            </div>
+            <div class="calm-participant-list__items">${participantButtons}</div>
+          </aside>
+          <section class="calm-participant-detail" aria-labelledby="calm-participant-detail-title">
+            <header class="calm-participant-detail__header">
+              <p class="calm-results-eyebrow">Participant record</p>
+              <h2 id="calm-participant-detail-title">${escapeHtml(selectedParticipantLabel)}${isCurrentParticipant ? '<span>You</span>' : ''}</h2>
+              <p>${selectedPerson.comparisons} completed comparison${selectedPerson.comparisons === 1 ? '' : 's'} across ${selectedPerson.routePairs} route pair${selectedPerson.routePairs === 1 ? '' : 's'}. Updated ${formatUpdated(selectedPerson.lastUpdated)}.</p>
+            </header>
+            <section class="calm-team-metrics calm-participant-metrics" aria-label="${escapeHtml(selectedParticipantLabel)} summary">
+              <div><strong>${selectedPerson.comparisons}</strong><span>Comparisons</span></div>
+              <div><strong>${selectedPerson.routePairs}</strong><span>Route pairs</span></div>
+              <div><strong>${selectedPerson.sessions}</strong><span>Sessions</span></div>
+            </section>
+            <div class="calm-team-analysis calm-participant-analysis">
+              <section aria-labelledby="participant-choice-title">
+                <h2 id="participant-choice-title">Route choices</h2>
+                <div class="calm-results-chart">${renderBarRows(outcomeEntries, participantSummary.total, 'calm-result-row--outcome')}</div>
+              </section>
+              <section aria-labelledby="participant-reasons-title">
+                <h2 id="participant-reasons-title">Reasons selected</h2>
+                <div class="calm-results-chart">${reasonEntries.length
+                  ? renderBarRows(reasonEntries, reasonResponseCount)
+                  : '<p class="calm-participant-empty-note">No reasons selected.</p>'}</div>
+              </section>
+            </div>
+            <section class="calm-team-records calm-participant-records" aria-labelledby="participant-records-title">
+              <div class="calm-team-records__head">
+                <h2 id="participant-records-title">Evaluation records</h2>
+                <span>${participantSummary.total} shown</span>
+              </div>
+              <div class="calm-team-table-wrap" tabindex="0">
+                <table>
+                  <thead><tr><th>Comparison</th><th>Route pair</th><th>Choice</th><th>Reasons</th><th>Details</th><th>Date</th></tr></thead>
+                  <tbody>${renderParticipantRows(participantSummary.rows)}</tbody>
+                </table>
+              </div>
+            </section>
+          </section>
+        </div>`;
+    }
+
+    function renderCommunityResults() {
+      if (activeChallenge === 'google') {
+        renderFastGoogleResults();
+        return;
+      }
+      const answers = calmResultsAnswers();
+      const summary = AriCalmResults.aggregateAnswers(answers);
+      const participantSummaries = AriCalmResults.summarizeParticipants(answers);
+      const latest = dataRepository.getLatestProgress();
+      const currentParticipantId = sampleResultsEnabled
+        ? AriMockTeamResults.CURRENT_PARTICIPANT_ID
+        : latest?.sessionId || latest?.benchmarkRunId || '';
+      const activeContent = calmResultsView === 'participants'
+        ? renderCalmParticipants(answers, participantSummaries, currentParticipantId)
+        : renderCalmOverview(summary);
+
+      communityResultsContent.innerHTML = `
+        <header class="calm-results-dashboard-header">
+          <div>
+            <p class="calm-results-eyebrow">Calm Route Comparison</p>
+            <h1>Team results</h1>
+            <p>Explore shared route patterns or review a participant’s evaluation record.</p>
+          </div>
+          <dl aria-label="Team result totals">
+            <div><dt>Comparisons</dt><dd>${summary.total}</dd></div>
+            <div><dt>Participants</dt><dd>${summary.participants}</dd></div>
+            <div><dt>Route pairs</dt><dd>${summary.routePairs}</dd></div>
+          </dl>
+        </header>
+        ${renderCalmResultsSwitcher(participantSummaries.length)}
+        <div class="calm-results-dashboard-panel" data-results-panel="${calmResultsView}">
+          ${activeContent}
+        </div>`;
     }
 
     function selectOptions(values, selected, labels = {}) {
@@ -773,30 +1059,31 @@
         renderFastGoogleTeamResults();
         return;
       }
-      const snapshot = dataRepository.getSnapshot();
-      const allRows = AriCalmResults.aggregateAnswers(snapshot.answers).rows;
-      const summary = AriCalmResults.aggregateAnswers(snapshot.answers, teamFilters);
+      const answers = calmResultsAnswers();
+      const allRows = AriCalmResults.aggregateAnswers(answers).rows;
+      const summary = AriCalmResults.aggregateAnswers(answers, teamFilters);
       const participants = [...new Set(allRows.map(row => row.participant))].sort();
       const reasonEntries = AriCalmResults.REASONS
         .map(key => [AriCalmResults.REASON_LABELS[key], summary.reasonCounts[key], key])
         .sort((a, b) => b[1] - a[1]);
       const reasonResponseCount = summary.rows.filter(row => row.reasons.length > 0).length;
       const outcomeEntries = AriCalmResults.OUTCOMES.map(key => [AriCalmResults.OUTCOME_LABELS[key], summary.outcomeCounts[key], key]);
-      const calmPercent = percentage(summary.outcomeCounts.calm, summary.total);
+      const leadingRoutePercent = summary.leadingRoute
+        ? percentage(summary.outcomeCounts[summary.leadingRoute], summary.total)
+        : null;
       const tableRows = summary.rows.map(row => `
         <tr>
           <td>${escapeHtml(row.pairId)}</td>
           <td>${escapeHtml(row.participant)}</td>
           <td>${escapeHtml(formatUpdated(row.date))}</td>
-          <td><span class="calm-team-outcome" data-outcome="${escapeHtml(row.outcome)}">${escapeHtml(AriCalmResults.OUTCOME_LABELS[row.outcome] || 'Unknown')}</span></td>
-          <td>${escapeHtml(row.q2 ? row.q2.replace('_', ' ') : 'Not asked')}</td>
+          <td><span class="calm-team-outcome" data-outcome="${escapeHtml(row.outcome)}">${escapeHtml(row.outcomes.map(outcome => AriCalmResults.OUTCOME_LABELS[outcome] || 'Unknown').join(', '))}</span></td>
           <td>${row.reasons.length ? escapeHtml(row.reasons.map(reason => AriCalmResults.REASON_LABELS[reason] || reason).join(', ')) : 'None'}</td>
         </tr>`).join('');
 
       teamResultsContent.innerHTML = `
         <header class="calm-team-header">
           <div>
-            <p class="calm-results-eyebrow">ARI Calm Benchmark</p>
+            <p class="calm-results-eyebrow">Calm Route Comparison</p>
             <h1>Team dashboard</h1>
             <p>One view for research review, data checks, and route-pair follow-up.</p>
           </div>
@@ -815,11 +1102,11 @@
           <div><strong>${summary.total}</strong><span>Comparisons</span></div>
           <div><strong>${summary.participants}</strong><span>Participants</span></div>
           <div><strong>${summary.routePairs}</strong><span>Route pairs</span></div>
-          <div><strong>${calmPercent}%</strong><span>Calm chosen</span></div>
+          <div><strong>${leadingRoutePercent === null ? '—' : `${leadingRoutePercent}%`}</strong><span>${summary.leadingRoute ? 'Leading route' : 'No single leader'}</span></div>
         </section>
         <div class="calm-team-analysis">
           <section aria-labelledby="team-choice-title">
-            <h2 id="team-choice-title">Choice distribution</h2>
+            <h2 id="team-choice-title">Route selection rates</h2>
             <div class="calm-results-chart">${renderBarRows(outcomeEntries, summary.total, 'calm-result-row--outcome')}</div>
           </section>
           <section aria-labelledby="team-reasons-title">
@@ -828,20 +1115,19 @@
           </section>
         </div>
         <section class="calm-team-position" aria-labelledby="team-position-title">
-          <div><h2 id="team-position-title">A/B position check</h2><p>Use this to spot whether route placement may be influencing choices.</p></div>
+          <div><h2 id="team-position-title">A/B/C position check</h2><p>Use this to spot whether the visible label may be influencing choices.</p></div>
           <dl>
-            <div><dt>Calm shown as A</dt><dd>${summary.positionBias.calmShownAsA}</dd></div>
-            <div><dt>Calm chosen as A</dt><dd>${summary.positionBias.calmSelectedAsA}</dd></div>
-            <div><dt>Calm shown as B</dt><dd>${summary.positionBias.calmShownAsB}</dd></div>
-            <div><dt>Calm chosen as B</dt><dd>${summary.positionBias.calmSelectedAsB}</dd></div>
+            <div><dt>Route A selected</dt><dd>${summary.positionBias.selectedAsA}</dd></div>
+            <div><dt>Route B selected</dt><dd>${summary.positionBias.selectedAsB}</dd></div>
+            <div><dt>Route C selected</dt><dd>${summary.positionBias.selectedAsC}</dd></div>
           </dl>
         </section>
         <section class="calm-team-records" aria-labelledby="team-records-title">
           <div class="calm-team-records__head"><h2 id="team-records-title">Comparison records</h2><span>${summary.total} shown</span></div>
           <div class="calm-team-table-wrap" tabindex="0">
             <table>
-              <thead><tr><th>Route pair</th><th>Participant</th><th>Date</th><th>Choice</th><th>Show both</th><th>Reasons</th></tr></thead>
-              <tbody>${tableRows || '<tr><td colspan="6" class="calm-team-empty">No records match these filters.</td></tr>'}</tbody>
+              <thead><tr><th>Route pair</th><th>Participant</th><th>Date</th><th>Choice</th><th>Reasons</th></tr></thead>
+              <tbody>${tableRows || '<tr><td colspan="5" class="calm-team-empty">No records match these filters.</td></tr>'}</tbody>
             </table>
           </div>
         </section>`;
@@ -867,7 +1153,10 @@
         if (button.dataset.view === view) button.setAttribute('aria-current', 'page');
         else button.removeAttribute('aria-current');
       });
-      if (view === 'results') renderCommunityResults();
+      if (view === 'results') {
+        renderCommunityResults();
+        void loadRemoteTeamResults();
+      }
       if (isTeam) renderTeamResults();
       if (updateUrl) updateViewQuery(view);
       window.scrollTo({ top: 0, behavior: 'auto' });
@@ -1203,7 +1492,7 @@
         updateChallengePreview(0);
         document.getElementById('challenge-action').textContent = 'Play →';
         document.getElementById('start-kicker-text').textContent = 'Start testing';
-        document.getElementById('start-h2').innerHTML = `Enter the <span>duel.</span>`;
+        document.getElementById('start-h2').innerHTML = `Enter the <span>route lab.</span>`;
       }
     }
 
@@ -1296,10 +1585,9 @@
       });
       Object.values(dataRepositories).forEach(repository => repository.clear());
       localStorage.removeItem(CHALLENGE_STORAGE);
-      localStorage.removeItem(CALM_ROUTE_PAIR_CACHE);
+      localStorage.removeItem(SAMPLE_RESULTS_STORAGE);
       localStorage.removeItem(GOOGLE_ROUTE_PAIR_CACHE);
       localStorage.removeItem('ari-benchmark-street-split-v1');
-      localStorage.removeItem('ari-benchmark-street-hint-seen-v1');
       window.location.replace(AriBenchmarkRuntime.rootUrl(window.location, runtimeConfig).href);
     }
 
@@ -1365,13 +1653,13 @@
           benchmark: activeConfig.benchmark,
           routePairProvider: activeConfig.routePairProvider,
           ...extraOptions,
-          onExit: () => {
+          onExit: ({ view = 'testing' } = {}) => {
             benchmarkInstance?.unmount();
             benchmarkInstance = null;
             benchmarkRoot.hidden = true;
             benchmarkMounted = false;
             checkResumeState();
-            showPage('testing');
+            showPage(view);
           },
           answerSink: async answer => {
             const result = dataRepository.saveAnswer(answer);
@@ -1411,6 +1699,7 @@
         sessionStartedAt: savedProgress.sessionStartedAt,
         initialRoundIndex: savedProgress.roundIndex,
         initialCompletedRounds: savedProgress.completedRounds || 0,
+        initialGoalCheckpointPending: savedProgress.goalCheckpointPending === true,
         initialPairId: savedProgress.pairId,
         initialRouteAssignment: savedProgress.routeAssignment,
         initialQuestionStep: savedProgress.questionStep,
@@ -1465,7 +1754,43 @@
     document.fonts?.ready.then(scheduleChallengeRouteCircuitUpdate);
 
     communityResults.addEventListener('click', event => {
-      if (event.target.closest('[data-results-action="continue"]')) showPage('testing');
+      const resultsAction = event.target.closest('[data-results-action]')?.dataset.resultsAction;
+      if (resultsAction === 'sample-data') {
+        sampleResultsEnabled = true;
+        selectedResultsParticipantId = '';
+        localStorage.setItem(SAMPLE_RESULTS_STORAGE, 'sample');
+        renderCommunityResults();
+        return;
+      }
+      if (resultsAction === 'saved-data') {
+        sampleResultsEnabled = false;
+        selectedResultsParticipantId = '';
+        localStorage.setItem(SAMPLE_RESULTS_STORAGE, 'saved');
+        renderCommunityResults();
+        void loadRemoteTeamResults();
+        return;
+      }
+      if (resultsAction === 'continue') {
+        showPage('testing');
+        return;
+      }
+      const viewButton = event.target.closest('[data-results-view]');
+      if (viewButton && viewButton.dataset.resultsView !== calmResultsView) {
+        calmResultsView = viewButton.dataset.resultsView;
+        renderCommunityResults();
+        requestAnimationFrame(() => {
+          communityResults.querySelector(`[data-results-view="${calmResultsView}"]`)?.focus();
+        });
+        return;
+      }
+      const participantButton = event.target.closest('[data-results-participant]');
+      if (participantButton && participantButton.dataset.resultsParticipant !== selectedResultsParticipantId) {
+        selectedResultsParticipantId = participantButton.dataset.resultsParticipant;
+        renderCommunityResults();
+        requestAnimationFrame(() => {
+          communityResults.querySelector('[data-results-participant][aria-pressed="true"]')?.focus();
+        });
+      }
     });
 
     teamResults.addEventListener('change', event => {

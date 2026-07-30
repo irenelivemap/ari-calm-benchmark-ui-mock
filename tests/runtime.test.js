@@ -16,6 +16,7 @@ test('infers the public routing base without affecting preview paths', () => {
 
 test('resolves clean challenge paths and legacy query parameters', () => {
   assert.equal(resolveChallenge({ pathname: '/routing/fast-vs-google', search: '' }), 'google');
+  assert.equal(resolveChallenge({ pathname: '/routing/calm-route-comparison', search: '' }), 'calm');
   assert.equal(resolveChallenge({ pathname: '/routing/fast-vs-calm', search: '?game=google' }), 'calm');
   assert.equal(resolveChallenge({ pathname: '/preview/', search: '?game=google' }), 'google');
 });

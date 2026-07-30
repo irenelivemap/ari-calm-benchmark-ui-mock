@@ -10,7 +10,7 @@
  *   node server/data-api.js                 # PORT 8090, DATA_DIR ./benchmark-data
  *   DATA_DIR=/data PORT=8090 node server/data-api.js
  *
- * Endpoints (testId is calm_vs_fast or ari_fast_vs_google):
+ * Endpoints (testId is calm_route_comparison, calm_vs_fast legacy, or ari_fast_vs_google):
  *   POST /api/v1/benchmarks/{testId}/answers                    201 saved / 200 duplicate
  *   PUT  /api/v1/benchmarks/{testId}/sessions/{id}/progress     200 upserted
  *   GET  /api/v1/benchmarks/{testId}/sessions/{id}/progress     200 / 404
@@ -26,7 +26,7 @@ const {
 } = require('../src/data/calm-benchmark-data.js');
 
 const BASE_PATH = '/api/v1/benchmarks';
-const KNOWN_TESTS = new Set(['calm_vs_fast', 'ari_fast_vs_google']);
+const KNOWN_TESTS = new Set(['calm_route_comparison', 'calm_vs_fast', 'ari_fast_vs_google']);
 const MAX_BODY_BYTES = 1024 * 1024;
 
 function createDataApi({ dataDir }) {

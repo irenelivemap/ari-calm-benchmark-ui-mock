@@ -9,10 +9,17 @@
   const PROGRESS_TYPE = 'bench-progress';
   const TEST_ID = 'calm_vs_fast';
   const DEFAULT_STORAGE_KEY = 'ari-calm-benchmark-dataset-v1';
+  const CALM_ROUTE_COMPARISON_TEST_ID = 'calm_route_comparison';
+  const ROUTE_SLOTS = [
+    { slot: 'A', key: 'routeA', typeKey: 'routeAType', idKey: 'routeARouteId' },
+    { slot: 'B', key: 'routeB', typeKey: 'routeBType', idKey: 'routeBRouteId' },
+    { slot: 'C', key: 'routeC', typeKey: 'routeCType', idKey: 'routeCRouteId' }
+  ];
 
   const Q1_CHOICES = new Set([
-    'route_a', 'route_b', 'either', 'neither', 'hard_to_judge',
-    'both_work_well', 'both_work_poorly', 'not_sure'
+    'route_a', 'route_b', 'route_c', 'either', 'neither', 'hard_to_judge',
+    'both_work_well', 'both_work_poorly', 'all_three_work_well',
+    'none_work_well', 'not_sure', 'multiple_routes'
   ]);
   const Q2_CHOICES = new Set(['yes', 'no', 'not_sure']);
   const Q3_ISSUES = new Set([
@@ -32,9 +39,15 @@
     'unclear_shortcut',
     'crossing_friction',
     'misses_nicer_route',
-    'lacks_amenities'
+    'lacks_amenities',
+    'unnecessary_detour',
+    'may_not_be_walkable',
+    'not_sure'
   ]);
-  const ROUTE_TYPES = new Set(['fast', 'calm', 'livemap_fast', 'google']);
+  const ROUTE_TYPES = new Set([
+    'fast', 'calm', 'livemap_fast', 'google',
+    'calm_quiet', 'calm_nature', 'human'
+  ]);
   const QUESTION_STEPS = new Set(['q1', 'q2', 'q3']);
 
   class DataValidationError extends Error {
@@ -71,11 +84,12 @@
     }
   }
 
-  function routeLabelFromLegacy(input, slot, routeType) {
+  function routeLabelFromLegacy(input, descriptor, routeType) {
+    const { slot, idKey } = descriptor;
     const existing = input.labels?.[slot];
     if (isObject(existing)) return clone(existing);
     return {
-      routeId: input[slot === 'A' ? 'routeARouteId' : 'routeBRouteId'] || null,
+      routeId: input[idKey] || null,
       routeType,
       source: null,
       metadata: null
@@ -83,12 +97,23 @@
   }
 
   function normalizeAnswerRecord(input) {
-    const q1Choice = input.q1Choice ?? input.choice ?? null;
+    const legacyQ1Choice = input.q1Choice ?? input.choice ?? null;
+    const q1Choices = Array.isArray(input.q1Choices)
+      ? [...input.q1Choices]
+      : legacyQ1Choice == null ? [] : [legacyQ1Choice];
+    const q1Choice = Array.isArray(input.q1Choices)
+      ? q1Choices.length > 1 ? 'multiple_routes' : q1Choices[0] || null
+      : legacyQ1Choice;
     const q3Issues = Array.isArray(input.q3Issues)
       ? [...input.q3Issues]
       : Array.isArray(input.reasons) ? [...input.reasons] : [];
-    const routeAType = input.routeAType || input.routeAssignment?.routeA || input.labelMap?.A || null;
-    const routeBType = input.routeBType || input.routeAssignment?.routeB || input.labelMap?.B || null;
+    const routeTypes = Object.fromEntries(ROUTE_SLOTS.map(descriptor => [
+      descriptor.slot,
+      input[descriptor.typeKey]
+        || input.routeAssignment?.[descriptor.key]
+        || input.labelMap?.[descriptor.slot]
+        || null
+    ]));
     const sessionId = input.sessionId || input.benchmarkRunId || '';
     const roundId = input.roundId || input.captureId || '';
     const createdAt = input.createdAt || input.clientTs || isoNow();
@@ -109,19 +134,33 @@
       pairId: input.pairId || '',
       q1Choice,
       choice: q1Choice,
+      q1Choices,
       q2Separate: input.q2Separate || null,
       q3Issues,
       reasons: [...q3Issues],
       q3Note: input.q3Note || input.note || '',
       note: input.note || input.q3Note || '',
-      routeAssignment: { routeA: routeAType, routeB: routeBType },
-      routeAType,
-      routeBType,
-      labelMap: { A: routeAType, B: routeBType },
-      labels: {
-        A: routeLabelFromLegacy(input, 'A', routeAType),
-        B: routeLabelFromLegacy(input, 'B', routeBType)
-      },
+      routeAssignment: Object.fromEntries(
+        ROUTE_SLOTS
+          .filter(({ slot }) => routeTypes[slot])
+          .map(({ slot, key }) => [key, routeTypes[slot]])
+      ),
+      routeAType: routeTypes.A,
+      routeBType: routeTypes.B,
+      routeCType: routeTypes.C,
+      labelMap: Object.fromEntries(
+        ROUTE_SLOTS
+          .filter(({ slot }) => routeTypes[slot])
+          .map(({ slot }) => [slot, routeTypes[slot]])
+      ),
+      labels: Object.fromEntries(
+        ROUTE_SLOTS
+          .filter(({ slot }) => routeTypes[slot])
+          .map(descriptor => [
+            descriptor.slot,
+            routeLabelFromLegacy(input, descriptor, routeTypes[descriptor.slot])
+          ])
+      ),
       origin: input.origin ? clone(input.origin) : null,
       destination: input.destination ? clone(input.destination) : null,
       clientTs: input.clientTs || createdAt,
@@ -144,6 +183,7 @@
       sessionStartedAt: input.sessionStartedAt || input.startedAt || savedAt,
       roundIndex: Number.isInteger(input.roundIndex) ? input.roundIndex : 0,
       completedRounds: Number.isInteger(input.completedRounds) ? input.completedRounds : 0,
+      goalCheckpointPending: input.goalCheckpointPending === true,
       pairId: input.pairId || null,
       routeAssignment: input.routeAssignment ? clone(input.routeAssignment) : null,
       questionStep: input.questionStep || 'q1',
@@ -154,9 +194,20 @@
   }
 
   function validateRouteAssignment(record, errors) {
-    const routeA = record.routeAssignment?.routeA;
-    const routeB = record.routeAssignment?.routeB;
-    if (!ROUTE_TYPES.has(routeA) || !ROUTE_TYPES.has(routeB) || routeA === routeB) {
+    const assignments = ROUTE_SLOTS
+      .map(({ key }) => record.routeAssignment?.[key])
+      .filter(Boolean);
+    const requiresThreeRoutes = record.test === CALM_ROUTE_COMPARISON_TEST_ID;
+    const expectedCount = requiresThreeRoutes ? 3 : 2;
+    if (
+      assignments.length !== expectedCount
+      || assignments.some(routeType => !ROUTE_TYPES.has(routeType))
+      || new Set(assignments).size !== assignments.length
+    ) {
+      if (requiresThreeRoutes) {
+        errors.push('routeAssignment must map Route A, Route B, and Route C to three different supported route types.');
+        return;
+      }
       errors.push('routeAssignment must map Route A and Route B to two different supported route types.');
     }
   }
@@ -177,10 +228,30 @@
     }
     validateRouteAssignment(record, errors);
 
-    if (record.q1Choice == null && allowPartial) {
+    if (record.q1Choice == null && allowPartial && record.q1Choices.length === 0) {
       // A newly started round is valid progress even before Q1 is answered.
     } else if (!Q1_CHOICES.has(record.q1Choice)) {
       errors.push('q1Choice is invalid.');
+    }
+    const invalidQ1Choices = record.q1Choices.filter(choice => !Q1_CHOICES.has(choice) || choice === 'multiple_routes');
+    if (invalidQ1Choices.length) errors.push(`q1Choices contains invalid values: ${invalidQ1Choices.join(', ')}.`);
+    if (new Set(record.q1Choices).size !== record.q1Choices.length) errors.push('q1Choices contains duplicates.');
+    if (
+      record.test === CALM_ROUTE_COMPARISON_TEST_ID
+      && record.q1Choices.length > 1
+      && record.q1Choices.some(choice => !['route_a', 'route_b', 'route_c'].includes(choice))
+    ) {
+      errors.push('Calm route choices can be combined only with other route choices.');
+    }
+    if (
+      record.q1Choice === 'multiple_routes'
+      && (
+        record.test !== CALM_ROUTE_COMPARISON_TEST_ID
+        || record.q1Choices.length < 2
+        || record.q1Choices.some(choice => !['route_a', 'route_b', 'route_c'].includes(choice))
+      )
+    ) {
+      errors.push('multiple_routes requires at least two Calm route choices.');
     }
 
     if (record.q2Separate != null && !Q2_CHOICES.has(record.q2Separate)) {
@@ -193,17 +264,27 @@
 
     if (!allowPartial && Q1_CHOICES.has(record.q1Choice)) {
       const isFastGoogle = record.test === 'ari_fast_vs_google';
-      const needsQ2 = !isFastGoogle && ['route_a', 'route_b', 'either'].includes(record.q1Choice);
+      const isCalmRouteComparison = record.test === CALM_ROUTE_COMPARISON_TEST_ID;
+      const selectedCalmRoutes = record.q1Choices.filter(choice => ['route_a', 'route_b', 'route_c'].includes(choice));
+      const needsQ2 = !isFastGoogle
+        && !isCalmRouteComparison
+        && ['route_a', 'route_b', 'either'].includes(record.q1Choice);
       const needsQ3 = isFastGoogle
         ? ['route_a', 'route_b', 'both_work_poorly'].includes(record.q1Choice)
-        : ['route_a', 'route_b', 'neither'].includes(record.q1Choice);
+        : isCalmRouteComparison
+          ? record.q1Choices.includes('none_work_well')
+            || (selectedCalmRoutes.length > 0 && selectedCalmRoutes.length < 3)
+          : ['route_a', 'route_b', 'neither'].includes(record.q1Choice);
       if (needsQ2 && !record.q2Separate) errors.push('q2Separate is required for this Q1 answer.');
       if (!needsQ2 && record.q2Separate) errors.push('q2Separate must be empty for this Q1 answer.');
       if (needsQ3 && !record.q3Issues.length) errors.push('At least one q3Issue is required for this Q1 answer.');
       if (!needsQ3 && record.q3Issues.length) errors.push('q3Issues must be empty for this Q1 answer.');
     }
 
-    ['A', 'B'].forEach(slot => {
+    const requiredLabelSlots = record.test === CALM_ROUTE_COMPARISON_TEST_ID
+      ? ['A', 'B', 'C']
+      : ['A', 'B'];
+    requiredLabelSlots.forEach(slot => {
       const label = record.labels?.[slot];
       if (!isObject(label)) {
         errors.push(`labels.${slot} is required.`);
@@ -224,6 +305,7 @@
     if (!record.participantName.trim()) errors.push('participantName is required.');
     if (!Number.isInteger(record.roundIndex) || record.roundIndex < 0) errors.push('roundIndex must be zero or greater.');
     if (!Number.isInteger(record.completedRounds) || record.completedRounds < 0) errors.push('completedRounds must be zero or greater.');
+    if (typeof record.goalCheckpointPending !== 'boolean') errors.push('goalCheckpointPending must be a boolean.');
     if (!QUESTION_STEPS.has(record.questionStep)) errors.push('questionStep is invalid.');
     if (!isIsoDate(record.savedAt)) errors.push('savedAt must be an ISO timestamp.');
     if (record.routeAssignment) validateRouteAssignment(record, errors);
@@ -445,6 +527,7 @@
   return {
     SCHEMA_VERSION,
     TEST_ID,
+    CALM_ROUTE_COMPARISON_TEST_ID,
     DEFAULT_STORAGE_KEY,
     DataValidationError,
     normalizeAnswerRecord,

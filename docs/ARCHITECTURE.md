@@ -42,14 +42,15 @@ Historical `calm-*` filenames are retained to avoid breaking shared links and in
 | Path | Behavior |
 | --- | --- |
 | `/` | Opens the saved challenge or the challenge chooser for a new browser. |
-| `/?game=calm` | Opens Fast vs Calm directly. |
+| `/?game=calm` | Opens Calm Route Comparison directly. |
 | `/?game=google` | Opens Fast vs Google Fast directly. |
 | `/routing/` | Production-path challenge selector. |
 | `/routing/fast-vs-google` | Clean public Fast vs Google path. |
-| `/routing/fast-vs-calm` | Clean public Fast vs Calm path. |
+| `/routing/calm-route-comparison` | Clean public Calm Route Comparison path. |
+| `/routing/fast-vs-calm` | Legacy Calm Route Comparison path. |
 | `/fresh.html` | Non-destructive new-player preview. Existing local data is ignored, not deleted. |
 | `/demo.html` | Compatibility redirect for older shared links. |
-| `/?view=results&preview=1` | Community results preview without the normal release lock. |
+| `/?view=results&preview=1` | Community results preview that bypasses the Fast vs Google release lock. Calm results are available from the start. |
 | `/?view=team-results` | Direct internal results prototype; not present in participant navigation. |
 
 ## Module Ownership
@@ -72,7 +73,7 @@ Do not move challenge-specific question options into the shared shell. Keeping t
 Owns the active comparison experience:
 
 - round and question state
-- hidden A/B assignment
+- hidden A/B or A/B/C assignment
 - onboarding
 - map controls and Street View mode
 - answer/progress payload construction
@@ -120,7 +121,7 @@ UI fixtures only. They model the route-pair contract and must never become the p
 1. `index.html` resolves the challenge from a clean path, `?game=`, saved selection, or the chooser.
 2. It creates a challenge-specific local repository.
 3. Start or Resume calls `AriCalmBenchmark.mount` with the challenge configuration and adapters.
-4. The shell requests a route pair and randomizes its hidden assignment to Route A/B.
+4. The shell requests a route set and randomizes its hidden assignment to Route A/B or Route A/B/C.
 5. A completed comparison is validated and saved locally, then delivered through the optional HTTP transport.
 6. An unfinished state is locally upserted and remotely sent through the same retryable transport.
 7. Result views read the same challenge dataset and aggregate it through `AriCalmResults`.
@@ -134,7 +135,7 @@ Production integration should replace adapters, not rewrite the question UI:
 - `progressSink(progress)`
 - `mapProvider: "google" | "maplibre" | "leaflet"`
 
-Both active challenges wire `routePairProvider` to `AriRoutePairGenerator`: Fast vs Calm uses `createLivemapRoutePairProvider` (both profiles from the facade), Fast vs Google Fast uses `createLivemapGoogleRoutePairProvider` (facade `foot_fast` + Google Directions at run time, never persisting Google geometry). The routing API base resolves from `window.ARI_ROUTING_API`, then a stored `?api=` override, then same-origin `/api/v1/routing`.
+Calm Route Comparison uses the four curated Calm Quiet, Calm Nature, and Human/Manual fixture rounds in `src/data/mock-route-pairs.js`. Fast vs Google Fast uses `AriRoutePairGenerator.createLivemapGoogleRoutePairProvider` (facade `foot_fast` + Google Directions at run time, never persisting Google geometry). The routing API base resolves from `window.ARI_ROUTING_API`, then a stored `?api=` override, then same-origin `/api/v1/routing`.
 
 Contracts are documented in [`DATA_CONTRACT.md`](DATA_CONTRACT.md), [`ANSWER_SCHEMA.md`](ANSWER_SCHEMA.md), and [`DATA_SAVING.md`](DATA_SAVING.md).
 
