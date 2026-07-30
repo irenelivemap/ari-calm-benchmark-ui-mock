@@ -50,7 +50,7 @@ html.is-challenge-dialog-open {
 .calm-results,
 .calm-team-results {
   color: var(--ari-ink);
-  font-size: 20px;
+  font-size: 22px;
   font-family: var(--ari-font);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -864,7 +864,7 @@ html.is-challenge-dialog-open {
   align-items: center;
   gap: 8px;
   color: var(--ari-muted);
-  font-size: 0.7em;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
