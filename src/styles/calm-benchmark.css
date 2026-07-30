@@ -644,7 +644,7 @@ html.is-challenge-dialog-open {
   vertical-align: baseline;
   font-family: inherit;
   font-style: normal;
-  font-weight: inherit;
+  font-weight: 400;
   line-height: 1;
 }
 
