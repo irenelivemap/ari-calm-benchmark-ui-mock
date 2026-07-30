@@ -814,8 +814,8 @@
         cutout.setAttribute('height', '0');
       });
 
-      // Step 0 is the intro card — no spotlight needed
-      if (step === 0) return;
+      // Steps -1 and 0 are full-screen cards — no spotlight needed
+      if (step <= 0) return;
 
       const stepTargetName = step === 1 ? 'answer' : 'street';
       const isMobile = window.matchMedia('(max-width: 700px)').matches;
