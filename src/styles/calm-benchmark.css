@@ -616,7 +616,7 @@ html.is-challenge-dialog-open {
   width: 100%;
   max-width: 100%;
   color: var(--ari-ink);
-  font-size: 36px;
+  font-size: clamp(26px, 3.2vw, 40px);
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -3555,7 +3555,6 @@ html.is-challenge-dialog-open {
   }
 
   .calm-hero h1 {
-    font-size: 32px;
     text-wrap: wrap;
   }
 
@@ -3673,10 +3672,6 @@ html.is-challenge-dialog-open {
 }
 
 @media (max-width: 800px) {
-  .calm-hero h1 {
-    font-size: 28px;
-  }
-
   .calm-route-slot {
     width: 3.75em;
     margin-left: 0.18em;
@@ -4081,7 +4076,6 @@ html.is-challenge-dialog-open {
 
   .calm-hero h1 {
     max-width: 100%;
-    font-size: 28px;
     line-height: 1.08;
   }
 
