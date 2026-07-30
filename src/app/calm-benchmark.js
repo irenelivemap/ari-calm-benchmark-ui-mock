@@ -398,7 +398,7 @@
             </div>
             <b>Before you start</b>
             <span>Imagine you are on your way somewhere in Zürich. You are not in a rush, but you still want to arrive in a reasonable amount of time. You would prefer a calmer way to get there.</span>
-            <span>A Calm route may take you along quieter streets, through greener areas, or near water. For each trip, you'll see two routes with the same start and destination. Compare them and choose the answer that best matches what you would do.</span>
+            <span>A Calm route may take you along quieter streets, through greener areas, or near water.</span>
             <button class="ari-onboarding__next" data-action="next-onboarding" type="button">Got it →</button>
           </div>
 
