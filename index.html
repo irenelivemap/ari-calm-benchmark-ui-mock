@@ -406,7 +406,7 @@
         key: 'calm',
         menuLabel: 'Calm Route Comparison',
         documentTitle: 'ARI Calm Route Comparison',
-        heroQuestion: 'Which route would you choose for a calm walk?',
+        heroQuestion: 'Which route would you choose for a calmer walk?',
         heroCopy: 'Compare two possible walking routes. Their source is hidden, so choose only from the route experience you see.',
         definitionQuestion: null,
         definitionAnswer: null,
@@ -420,21 +420,18 @@
           ariaLabel: 'Blinded calm route comparison',
           routeTypes: ['calm_quiet', 'calm_nature'],
           questions: {
-            q1: 'Which route or routes would you choose for this calm walk?',
+            q1: 'Which route would you choose for a calmer walk?',
             q2: '',
             q3: 'What made the other routes less suitable?'
           },
-          context: {
-            label: 'What do we mean by calm?',
-            copy: 'A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.'
-          },
+          context: null,
           q1Options: [
             { value: 'route_a', label: 'Route A', className: 'ari-choice--route-a' },
             { value: 'route_b', label: 'Route B', className: 'ari-choice--route-b' },
             { value: 'none_work_well', label: 'None work well', exclusive: true },
             { value: 'hard_to_judge', label: 'Hard to judge', exclusive: true }
           ],
-          q1Multiple: true,
+          q1Multiple: false,
           q2Options: [],
           q3Options: [
             { value: 'not_enough_greenery_water', label: 'Not enough greenery or water' },
