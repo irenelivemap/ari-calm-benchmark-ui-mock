@@ -40,6 +40,22 @@ Each onboarding step highlights exactly one element. Showing all coachmarks simu
 
 ---
 
+## Typography & Legibility
+
+**Interactive text (inputs, buttons, body copy) must be at minimum 1rem (16px).**
+Never rely on browser-default input font sizes — browsers often render `<input>` at ~13px unless explicitly overridden. Always set `font: <weight> 1rem/1 <font-stack>` on inputs so size, weight, and family are all intentional.
+
+**Typed/entered text must be at least font-weight 500 on dark backgrounds.**
+Regular weight (400) thins out on dark surfaces even at full white (`#fff`). Use 500 for user-entered text in dark-background inputs to ensure comfortable legibility.
+
+**Placeholder text must be visually distinct from typed text but still readable.**
+Placeholder opacity ~0.62 (on dark) distinguishes guidance from real content while staying legible. Never go below 0.5 — invisible placeholders prevent users from understanding what a field expects.
+
+**All body and interactive text must meet WCAG AA contrast (4.5:1 for normal, 3:1 for large ≥24px/18px bold).**
+Check contrast when combining semi-transparent colours — the effective contrast is the blended result against the actual background, not just the foreground value.
+
+---
+
 ## Copy & Labels
 
 **Controls state their outcome, not their current state.**
