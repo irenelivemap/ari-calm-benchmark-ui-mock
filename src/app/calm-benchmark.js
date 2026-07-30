@@ -1126,18 +1126,22 @@
       state.panelCollapsedBeforeStreetView = null;
     }
 
-    function closeStreetView({ immediate = false, restoreMap = true, restoreFocus = true } = {}) {
+    function closeStreetView({ immediate = false, restoreMap = true, restoreFocus = true, deactivate = false } = {}) {
       streetViewRequestId += 1;
       removeStreetViewPositionListener();
       cancelSplitTween();
       if (state.streetViewPanorama) state.streetViewPanorama.setVisible(false);
       state.streetViewOpen = false;
+      state.streetViewPoint = null;
+      state.streetViewRoute = null;
+      state.mapAdapter.clearStreetViewPosition();
       const wasSplit = els.mapShell.classList.contains('is-street-split');
       els.streetViewer.setAttribute('aria-hidden', 'true');
       window.clearTimeout(streetViewCloseTimer);
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const savedMapState = restoreMap ? state.mapAdapter.getViewState() : null;
-      setStreetViewMode(false);
+      if (deactivate) setStreetViewMode(false);
+      else updateStreetViewModeUi();
       if (restoreFocus) requestAnimationFrame(() => els.streetViewToggle.focus({ preventScroll: true }));
 
       if (!wasSplit || immediate || reduceMotion) {
@@ -1851,7 +1855,7 @@
       }
       updateProgressHud();
       state.questionStep = questionStep;
-      closeStreetView({ immediate: true, restoreMap: false, restoreFocus: false });
+      closeStreetView({ immediate: true, restoreMap: false, restoreFocus: false, deactivate: true });
       els.form.reset();
       updateRouteMetrics();
       restorePartialAnswer(partialAnswer);
@@ -2040,7 +2044,7 @@
     els.zoomOut.addEventListener('click', () => state.mapAdapter.zoomOut());
     els.streetViewToggle.addEventListener('click', () => {
       if (state.streetViewOpen) {
-        closeStreetView();
+        closeStreetView({ deactivate: true });
         return;
       }
       setStreetViewMode(!state.streetViewMode);

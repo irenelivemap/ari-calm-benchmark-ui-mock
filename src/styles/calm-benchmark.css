@@ -4797,17 +4797,21 @@ html.is-challenge-dialog-open {
 }
 
 .ari-map__tools .ari-street-toggle.is-active {
-  border-color: rgba(16, 21, 17, 0.72);
-  background: var(--ari-ink);
+  border-color: var(--ari-green-deep);
+  background: var(--ari-green-deep);
   color: #fff;
   box-shadow:
-    0 0 0 3px rgba(255, 255, 255, 0.9),
+    0 0 0 3px rgba(8, 120, 77, 0.3),
     0 10px 28px rgba(16, 21, 17, 0.24);
 }
 
+.ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__label {
+  background: var(--ari-green);
+}
+
 .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__glyph {
-  border-left-color: rgba(255, 255, 255, 0.18);
-  background: var(--ari-ink);
+  border-left-color: rgba(255, 255, 255, 0.22);
+  background: var(--ari-green-deep);
   color: #fff;
 }
 
@@ -6900,13 +6904,23 @@ html.is-challenge-dialog-open {
   }
 
   .ari-map__tools .ari-street-toggle.is-active {
-    border-color: rgba(255, 255, 255, 0.42);
-    background: var(--ari-ink);
+    border-color: var(--ari-green-deep);
+    background: var(--ari-green-deep);
     color: #fff;
     box-shadow:
-      0 0 0 3px rgba(255, 255, 255, 0.86),
+      0 0 0 3px rgba(8, 120, 77, 0.32),
       0 12px 24px rgba(16, 21, 17, 0.26),
-      inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+      inset 0 -2px 0 rgba(0, 0, 0, 0.16);
+  }
+
+  .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__label {
+    background: var(--ari-green);
+  }
+
+  .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__glyph {
+    border-left-color: rgba(255, 255, 255, 0.22);
+    background: var(--ari-green-deep);
+    color: #fff;
   }
 
   .ari-street-viewer {
