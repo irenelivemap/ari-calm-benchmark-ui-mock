@@ -72,16 +72,17 @@ html.is-challenge-dialog-open {
 }
 
 .calm-challenge-dialog {
-  width: min(1120px, calc(100% - 48px));
+  width: min(1060px, calc(100% - 48px));
   max-height: calc(100svh - 48px);
   margin: auto;
   overflow: hidden;
-  border: 1px solid rgba(16, 21, 17, 0.22);
-  border-radius: var(--ari-radius-card);
+  border: 2px solid #1c241f;
+  border-radius: 20px;
   padding: 0;
-  background: #0b0e0c;
+  background: #070a08;
   color: #fff;
-  box-shadow: 0 28px 70px rgba(16, 21, 17, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  box-shadow: 0 30px 72px rgba(16, 21, 17, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  scrollbar-width: none;
   font-family: var(--ari-font);
   animation: calm-challenge-dialog-in 360ms var(--motion-settle) both;
 }
@@ -440,6 +441,7 @@ html.is-challenge-dialog-open {
   border-color: rgba(255, 255, 255, 0.8);
   background: var(--preview-medal);
   color: #fffef4;
+  box-shadow: 0 0 10px rgba(150, 140, 110, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -2px 0 rgba(0, 0, 0, 0.24);
   box-shadow: 0 0 10px color-mix(in srgb, var(--preview-medal) 58%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -2px 0 rgba(0, 0, 0, 0.24);
 }
 
@@ -854,7 +856,7 @@ html.is-challenge-dialog-open {
   bottom: auto;
   width: 18px;
   height: 17px;
-  background: radial-gradient(circle at bottom right, transparent 16.5px, #fff 17px);
+  background: radial-gradient(circle at bottom right, transparent 15.5px, rgba(255, 255, 255, 0.5) 16.5px, #fff 17.5px);
 }
 /* Bottom fillet: 24px quarter-circle below the notch at the left edge */
 .calm-card--how .calm-kicker::after,
@@ -864,7 +866,7 @@ html.is-challenge-dialog-open {
   bottom: -24px;
   width: 24px;
   height: 24px;
-  background: radial-gradient(circle at bottom right, transparent 23.5px, #fff 24px);
+  background: radial-gradient(circle at bottom right, transparent 22.5px, rgba(255, 255, 255, 0.5) 23.5px, #fff 24.5px);
 }
 
 .calm-card--session {
@@ -1488,14 +1490,14 @@ html.is-challenge-dialog-open {
   top: 0;
   width: 18px;
   height: 17px;
-  background: radial-gradient(circle at bottom right, transparent 16.5px, #fff 17px);
+  background: radial-gradient(circle at bottom right, transparent 15.5px, rgba(255, 255, 255, 0.5) 16.5px, #fff 17.5px);
 }
 .calm-start-left .calm-kicker::after {
   left: 0;
   bottom: -24px;
   width: 24px;
   height: 24px;
-  background: radial-gradient(circle at bottom right, transparent 23.5px, #fff 24px);
+  background: radial-gradient(circle at bottom right, transparent 22.5px, rgba(255, 255, 255, 0.5) 23.5px, #fff 24.5px);
 }
 
 .calm-start-left h2 {
@@ -3084,15 +3086,7 @@ html.is-challenge-dialog-open {
   text-align: center;
 }
 
-/* Arcade challenge stage: one game screen, one selector, one command. */
-.calm-challenge-dialog {
-  width: min(1060px, calc(100% - 48px));
-  border: 2px solid #1c241f;
-  border-radius: 20px;
-  background: #070a08;
-  box-shadow: 0 30px 72px rgba(16, 21, 17, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-  scrollbar-width: none;
-}
+/* Arcade challenge stage child elements */
 
 .calm-challenge-dialog::-webkit-scrollbar {
   display: none;
