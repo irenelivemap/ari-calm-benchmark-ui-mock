@@ -788,7 +788,7 @@ html.is-challenge-dialog-open {
   gap: 0;
   overflow: hidden;
   padding: 24px;
-  /* Spacing rhythm: 16px eyebrow→headline applied via padding-top in card-head */
+  /* top padding overridden per card variant below */
   transition:
     height 620ms var(--motion-settle),
     min-height 620ms var(--motion-settle),
@@ -803,6 +803,11 @@ html.is-challenge-dialog-open {
 
 .calm-card--how {
   background: var(--ari-green);
+  padding-top: 52px; /* 34px notch + 18px breathing room */
+}
+
+.calm-card--session {
+  padding-top: 52px;
 }
 
 /* card-notch--tl: page-colour bite in the top-left card corner
