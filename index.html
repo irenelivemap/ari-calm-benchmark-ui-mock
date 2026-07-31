@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Fraunces:ital,opsz,wght@1,9..144,300;1,9..144,400;1,9..144,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260731-ds-alignment-6">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260731-ds-alignment-7">
   <style>
     body {
       margin: 0;
@@ -158,7 +158,7 @@
           <div id="how-card-body" class="calm-card-body">
             <div class="calm-card-body-inner">
               <div class="calm-card-main">
-                <h2>We'll show you two alternatives for the <span class="calm-marker">same walk.</span></h2>
+                <h2>We'll show you two alternatives for the same walk.</h2>
                 <div class="calm-route-steps">
                   <div class="calm-route-track" aria-hidden="true">
                     <svg class="calm-route-path" viewBox="0 0 100 42" preserveAspectRatio="none">
@@ -1862,18 +1862,6 @@
       snapshot: () => dataRepository.getSnapshot(),
       exportJsonl: () => dataRepository.exportAnswerJsonl()
     };
-    // DS marker: "one felt-tip phrase per page, stroke sweeps in on scroll"
-    const markerEl = document.querySelector('.calm-marker');
-    if (markerEl) {
-      const obs = new IntersectionObserver(([entry]) => {
-        if (entry.isIntersecting) {
-          markerEl.classList.add('is-marked');
-          obs.disconnect();
-        }
-      }, { threshold: 0.6 });
-      obs.observe(markerEl);
-    }
-
     if (new URLSearchParams(window.location.search).get('qa') === 'alignment') {
       requestAnimationFrame(() => {
         document.querySelectorAll('[data-overview-card]').forEach(card => {
