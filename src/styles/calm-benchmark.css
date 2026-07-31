@@ -931,6 +931,11 @@ html.is-challenge-dialog-open {
   text-transform: uppercase;
 }
 
+.calm-card--how .calm-card-main,
+.calm-card--how h2 {
+  color: var(--ari-plum);
+}
+
 .calm-card--session .calm-kicker {
   color: var(--ari-plum);
 }
