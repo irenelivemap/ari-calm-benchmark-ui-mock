@@ -1237,6 +1237,7 @@ html.is-challenge-dialog-open {
   gap: 16px 24px;
   align-items: start;
   overflow: hidden;
+  clip-path: inset(0 round var(--ari-radius-card));
   padding: 28px;
   padding-top: 44px;
   background:
@@ -1249,7 +1250,7 @@ html.is-challenge-dialog-open {
 .calm-start-card::before {
   content: "";
   position: absolute;
-  z-index: -1;
+  z-index: 0;
   inset: 0;
   opacity: .16;
   pointer-events: none;
@@ -1260,7 +1261,7 @@ html.is-challenge-dialog-open {
 .calm-start-card::after {
   content: "";
   position: absolute;
-  z-index: -1;
+  z-index: 0;
   inset: 0;
   pointer-events: none;
   opacity: var(--rank-motif-opacity);
@@ -1441,9 +1442,6 @@ html.is-challenge-dialog-open {
     "medals form";
 }
 
-.calm-start-card:not(.is-resumed) {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
 
 .calm-start-card > * {
   position: relative;
@@ -4375,8 +4373,9 @@ html.is-challenge-dialog-open {
     min-height: 0;
     gap: 14px;
     padding: 22px 19px;
+    padding-top: 44px;
+    grid-template-columns: 1fr;
     grid-template-areas:
-      "label"
       "title"
       "form";
   }
