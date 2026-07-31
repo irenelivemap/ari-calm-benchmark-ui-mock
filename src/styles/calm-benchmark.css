@@ -804,8 +804,9 @@ html.is-challenge-dialog-open {
   background: var(--ari-green);
 }
 
-/* card-notch--tl: eyebrow tab bites top-left corner */
-.calm-card--how .calm-kicker {
+/* card-notch--tl: eyebrow tab bites top-left corner — both cards */
+.calm-card--how .calm-kicker,
+.calm-card--session .calm-kicker {
   display: inline-flex;
   align-self: start;
   padding: 4px 14px 5px;
@@ -926,10 +927,6 @@ html.is-challenge-dialog-open {
 
 .calm-card--how .calm-card-main,
 .calm-card--how h2 {
-  color: var(--ari-plum);
-}
-
-.calm-card--session .calm-kicker {
   color: var(--ari-plum);
 }
 
