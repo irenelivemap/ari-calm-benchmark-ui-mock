@@ -1249,7 +1249,7 @@ html.is-challenge-dialog-open {
 .calm-start-card::before {
   content: "";
   position: absolute;
-  z-index: 0;
+  z-index: -1;
   inset: 0;
   opacity: .16;
   pointer-events: none;
@@ -1260,7 +1260,7 @@ html.is-challenge-dialog-open {
 .calm-start-card::after {
   content: "";
   position: absolute;
-  z-index: 0;
+  z-index: -1;
   inset: 0;
   pointer-events: none;
   opacity: var(--rank-motif-opacity);
@@ -1457,7 +1457,6 @@ html.is-challenge-dialog-open {
 .calm-start-left .calm-kicker {
   /* card-notch--tl: same pattern as the coloured overview cards */
   position: absolute;
-  z-index: 2;
   top: 0;
   bottom: auto;
   left: 0;
