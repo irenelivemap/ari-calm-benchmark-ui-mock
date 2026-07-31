@@ -19,7 +19,7 @@
   --ari-route-a: #C84720;
   --ari-route-c: #2864C7;
   --ari-amber-deep: #6F3218;
-  --ari-hairline: rgba(16, 21, 17, 0.14);
+  --ari-hairline: var(--ari-grey-03);
   --ari-hairline-warm: rgba(111, 50, 24, 0.28);
   --ari-warm-ink: #4b3729;
   --ari-warm-muted: #5b4436;
@@ -651,7 +651,11 @@ html.is-challenge-dialog-open {
   display: grid;
   width: 100%;
   padding-top: 20px;
-  gap: 12px;
+  gap: 12px; /* eyebrow→headline: 12px */
+}
+
+.calm-hero h1 + p {
+  margin-top: 4px; /* headline→body: 16px total (12 gap + 4 margin) */
 }
 
 .calm-hero h1 {
@@ -774,7 +778,7 @@ html.is-challenge-dialog-open {
   grid-template-columns: 1.7fr 1fr;
   gap: 24px;
   align-items: start;
-  margin: 32px 0 24px;
+  margin: 56px 0 24px; /* body→content: 56px */
 }
 
 .calm-card,
@@ -805,6 +809,18 @@ html.is-challenge-dialog-open {
 
 .calm-card--how {
   background: var(--ari-yellow);
+}
+
+/* card-notch--tl: eyebrow tab bites top-left corner */
+.calm-card--how .calm-kicker {
+  display: inline-flex;
+  align-self: start;
+  padding: 4px 14px 5px;
+  margin: -28px -28px 12px;
+  border-radius: 0 0 17px 0;
+  background: rgba(16, 21, 17, 0.08);
+  color: var(--ari-plum);
+  gap: 6px;
 }
 
 .calm-card--session {
@@ -907,9 +923,10 @@ html.is-challenge-dialog-open {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--ari-muted);
+  color: var(--ari-grey-04);
   font-size: 13px;
   font-weight: 600;
+  line-height: 18px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -1073,9 +1090,9 @@ html.is-challenge-dialog-open {
 
 .calm-step-list span {
   display: block;
-  color: var(--ari-muted);
+  color: var(--ari-grey-04);
   font-size: 17px;
-  line-height: 1.42;
+  line-height: 22px;
   letter-spacing: -0.024em;
   text-wrap: pretty;
 }
@@ -1115,6 +1132,7 @@ html.is-challenge-dialog-open {
   border-top: 1px solid var(--ari-hairline-warm);
   color: var(--ari-warm-ink);
   font-size: 17px;
+  line-height: 22px;
   letter-spacing: -0.024em;
 }
 
@@ -1418,7 +1436,7 @@ html.is-challenge-dialog-open {
   grid-area: form;
   flex-direction: column;
   justify-content: center;
-  gap: 9px;
+  gap: 8px;
   padding-top: 8px;
 }
 
@@ -1473,15 +1491,14 @@ html.is-challenge-dialog-open {
 }
 
 .calm-start-row button:hover:not(:disabled) {
-  transform: translateY(-2px);
   background: #9fa4f5;
   box-shadow:
-    0 18px 36px rgba(138, 144, 243, 0.38),
+    0 14px 30px rgba(138, 144, 243, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .calm-start-row button:active:not(:disabled) {
-  transform: translateY(0);
+  background: #7a80e8;
 }
 
 .calm-start-row button:focus-visible {
@@ -3354,80 +3371,53 @@ html.is-challenge-dialog-open {
   position: relative;
   z-index: 3;
   display: grid;
-  min-height: 78px;
+  min-height: 56px;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 18px;
+  gap: 16px;
   justify-items: stretch;
   align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  padding: 16px 22px 16px 50px;
-  background: linear-gradient(180deg, #1b211d 0%, #141815 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: calc(0.5em + 8px);
+  padding: 14px 22px 14px 48px;
+  background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.78);
   text-align: left;
-  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    inset 0 -5px 0 rgba(0, 0, 0, 0.38),
-    0 4px 0 rgba(0, 0, 0, 0.22);
-  transition: transform 200ms var(--motion-spring), background-color 140ms ease, box-shadow 140ms ease, filter 140ms ease;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 
 .calm-challenge-option:last-child {
-  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .calm-challenge-option.is-selected,
 .calm-challenge-option.is-selected:hover {
-  border-color: #f4f2e8;
-  background: linear-gradient(90deg, #512416 0%, #352018 46%, #0d2d23 54%, #104534 100%);
+  border-color: var(--ari-green);
+  background: rgba(143, 217, 168, 0.16);
   color: #fff;
-  box-shadow:
-    inset 4px 0 0 var(--ari-route-a),
-    inset -4px 0 0 var(--ari-green),
-    inset 0 0 0 2px #f4f2e8,
-    inset 0 -6px 0 rgba(0, 0, 0, 0.34),
-    0 0 22px rgba(244, 242, 232, 0.13);
-  transform: none;
 }
 
 .calm-challenge-option.is-available:not(.is-selected) {
-  border-color: rgba(255, 255, 255, 0.28);
-  background: linear-gradient(180deg, #252c27 0%, #1b201d 100%);
-  color: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.88);
   cursor: pointer;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.13),
-    inset 0 -5px 0 rgba(0, 0, 0, 0.38),
-    0 4px 0 rgba(0, 0, 0, 0.22);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .calm-challenge-option.is-available:not(.is-selected):hover {
-    background: linear-gradient(180deg, #303833 0%, #202622 100%);
+    background: rgba(255, 255, 255, 0.11);
     color: #fff;
-    filter: brightness(1.05);
-    transform: translateX(3px);
+    border-color: rgba(255, 255, 255, 0.32);
   }
 }
 
-.calm-challenge-option.is-selected:hover {
-  background: linear-gradient(90deg, #642b17 0%, #43251a 46%, #0d3528 54%, #14523e 100%);
-  filter: brightness(1.08);
-}
-
 .calm-challenge-option.is-selected:active {
-  box-shadow:
-    inset 4px 0 0 var(--ari-route-a),
-    inset -4px 0 0 var(--ari-green),
-    inset 0 0 0 2px #f4f2e8,
-    inset 0 -2px 0 rgba(0, 0, 0, 0.34);
-  transform: scale(0.985);
+  background: rgba(143, 217, 168, 0.22);
 }
 
 .calm-challenge-option:focus-visible {
-  outline: 3px solid rgba(244, 242, 232, 0.74);
-  outline-offset: 4px;
+  outline: 2px solid var(--ari-blurple);
+  outline-offset: 3px;
 }
 
 .calm-challenge-option:disabled {
@@ -3518,12 +3508,11 @@ html.is-challenge-dialog-open {
 
 #challenge-action:hover {
   background: #9fa4f5;
-  transform: translateY(-2px);
   box-shadow: 0 14px 32px rgba(138, 144, 243, 0.44), inset 0 1px 0 rgba(255, 255, 255, 0.26);
 }
 
 #challenge-action:active {
-  transform: translateY(0) scale(0.99);
+  background: #7a80e8;
   box-shadow: 0 4px 14px rgba(138, 144, 243, 0.28);
 }
 
@@ -5591,8 +5580,8 @@ html.is-challenge-dialog-open {
 }
 
 .ari-choice-grid label.ari-choice--route-a.is-selected {
-  border-color: rgba(200, 71, 32, 0.52);
-  background: var(--ari-route-a);
+  border-color: rgba(7, 95, 61, 0.46);
+  background: var(--ari-green-deep);
   color: #fff;
 }
 
@@ -5603,9 +5592,9 @@ html.is-challenge-dialog-open {
 }
 
 .ari-choice-grid label.ari-choice--route-a {
-  border-color: rgba(200, 71, 32, 0.42);
-  background: color-mix(in srgb, var(--ari-route-a) 18%, #fff);
-  color: var(--ari-amber-deep);
+  border-color: rgba(7, 95, 61, 0.22);
+  background: color-mix(in srgb, var(--ari-green) 18%, #fff);
+  color: var(--ari-green-deep);
 }
 
 .ari-choice-grid label.ari-choice--route-c.is-selected {
@@ -5940,10 +5929,10 @@ html.is-challenge-dialog-open {
 .ari-onboarding__step-count {
   margin: 0;
   font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  color: rgba(16, 21, 17, 0.42);
-  text-transform: uppercase;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: -0.006em;
+  color: var(--ari-grey-04);
 }
 
 .ari-onboarding__next {
@@ -5966,12 +5955,11 @@ html.is-challenge-dialog-open {
 
 .ari-onboarding__next:hover {
   background: #9fa4f5;
-  transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(138, 144, 243, 0.4);
 }
 
 .ari-onboarding__next:active {
-  transform: translateY(0);
+  background: #7a80e8;
 }
 
 .ari-onboarding__next:focus-visible {
@@ -6270,11 +6258,11 @@ html.is-challenge-dialog-open {
   min-width: 44px;
   min-height: 44px;
   border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 9px;
-  padding: 6px 10px;
+  border-radius: calc(0.5em + 8px);
+  padding: 6px 14px;
   background: transparent;
   color: #fff;
-  font: 700 0.74rem/1 var(--ari-font);
+  font: 600 0.74rem/1 var(--ari-font);
   cursor: pointer;
 }
 
