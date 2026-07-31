@@ -773,6 +773,7 @@ html.is-challenge-dialog-open {
   gap: 24px;
   align-items: start;
   margin: 56px 0 24px; /* body→content: 56px */
+  padding-top: 22px; /* room for floating card-tab above cards */
 }
 
 .calm-card,
@@ -786,7 +787,7 @@ html.is-challenge-dialog-open {
   min-height: 420px;
   flex-direction: column;
   gap: 0;
-  overflow: hidden;
+  overflow: visible;
   padding: 24px;
   /* Spacing rhythm: 16px eyebrow→headline applied via padding-top in card-head */
   transition:
@@ -805,17 +806,20 @@ html.is-challenge-dialog-open {
   background: var(--ari-green);
 }
 
-/* card-notch--tl: eyebrow tab bites top-left corner — both cards */
+/* card-tab: rides the top edge — floats above the card */
 .calm-card--how .calm-kicker,
 .calm-card--session .calm-kicker {
+  position: absolute;
+  top: -16px;
+  left: 24px;
   display: inline-flex;
-  align-self: start;
+  align-items: center;
   padding: 4px 14px 5px;
-  margin: -24px -24px 12px;
-  border-radius: 0 0 17px 0;
-  background: rgba(16, 21, 17, 0.08);
+  border-radius: 999px;
+  background: var(--ari-off-white);
   color: var(--ari-plum);
   gap: 6px;
+  box-shadow: 0 1px 3px rgba(33, 26, 42, 0.1);
 }
 
 .calm-card--session {
@@ -823,10 +827,9 @@ html.is-challenge-dialog-open {
 }
 
 .calm-card-head {
-  margin: -24px -24px 0;
-  padding: 24px 24px 0;
   border-radius: var(--ari-radius-card) var(--ari-radius-card) 0 0;
   cursor: pointer;
+  padding-top: 16px;
 }
 
 .calm-card-head:focus-visible {
@@ -834,12 +837,8 @@ html.is-challenge-dialog-open {
   outline-offset: -6px;
 }
 
-.calm-card:not(.is-compact) .calm-card-head:hover .calm-kicker {
-  color: var(--ari-ink);
-}
-
-.calm-card--session:not(.is-compact) .calm-card-head:hover .calm-kicker {
-  color: var(--ari-ink);
+.calm-card:not(.is-compact):hover .calm-kicker {
+  box-shadow: 0 2px 6px rgba(33, 26, 42, 0.16);
 }
 
 .calm-card-main {
