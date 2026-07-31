@@ -2290,7 +2290,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-results-sample-toggle:focus-visible {
-  outline: 3px solid rgba(27, 112, 76, 0.24);
+  outline: 3px solid rgba(138, 144, 243, 0.52);
   outline-offset: 2px;
 }
 
