@@ -7,7 +7,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Confirm the challenge test ID and route types.
 - [ ] Confirm the exact question copy, choices, and follow-up rules.
 - [ ] Add or update the profile in `CHALLENGE_CONFIGS` in `index.html`.
-- [ ] Keep provider names hidden from active Route A/B or Route A/B/C labels.
+- [ ] Keep provider names hidden from active Route A/B labels.
 
 ## Frontend
 
@@ -54,7 +54,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 ## Map Behavior
 
-- [ ] Draw active routes with the existing orange/green colors and the blue Route C color when configured.
+- [ ] Draw active routes with the existing orange/green Route A/B colors.
 - [ ] Preserve pan, pinch, scroll, double-click, and zoom behavior.
 - [ ] Fit all active routes within the area not covered by the question panel.
 - [ ] Keep Fit independent from the tester's manual camera state until pressed.
@@ -66,7 +66,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 - [ ] A new participant can start without team context.
 - [ ] A returning participant resumes the same session, pair, assignment, question step, and partial answer.
-- [ ] Route A/B or Route A/B/C assignment is randomized and remains blinded.
+- [ ] Route A/B assignment is randomized and remains blinded.
 - [ ] The active challenge shows the correct question flow.
 - [ ] Retrying a completed comparison does not create a duplicate answer.
 - [ ] Leaving mid-round saves progress without submitting an incomplete answer.
@@ -82,9 +82,9 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 ### Calm Route Comparison
 
-- [x] Route keys are `calm_quiet`, `calm_nature`, and `human`.
+- [x] Route keys are `calm_quiet` and `calm_nature`.
 - [x] No Q2 is shown.
-- [x] Q1 allows any combination of Route A, Route B, and Route C; None work well and Hard to judge remain exclusive.
+- [x] Q1 offers Route A, Route B, Both work well, Both work poorly, and I'm not sure.
 - [x] Q3 is required when one or two routes are selected, or when None work well is selected.
 
 ### Fast vs Google Fast

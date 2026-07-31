@@ -12,12 +12,12 @@ A configured comparison mode with its own providers, questions, results labels, 
 
 Active challenges:
 
-- **Fast vs Calm**: compares `fast` and `calm` routes. Test ID: `calm_vs_fast`.
+- **Calm Route Comparison**: compares `calm_quiet` and `calm_nature` routes. Test ID: `calm_route_comparison`.
 - **Fast vs Google Fast**: compares `livemap_fast` and `google` routes. Test ID: `ari_fast_vs_google`.
 
 Planned challenge:
 
-- **Fast vs Safe**: visible in the challenge chooser but not yet playable.
+- **Fast vs Safe**: planned but not currently participant-facing.
 
 ## Route Pair
 

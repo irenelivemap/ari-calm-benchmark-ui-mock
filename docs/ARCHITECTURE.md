@@ -6,7 +6,7 @@ This is a static browser application with no build step and no runtime dependenc
 
 ```text
 index.html
-  challenge chooser + intro + results + persistence wiring
+  Calm-focused intro + results + persistence wiring
         |
         v
 src/app/calm-benchmark.js
@@ -41,10 +41,10 @@ Historical `calm-*` filenames are retained to avoid breaking shared links and in
 
 | Path | Behavior |
 | --- | --- |
-| `/` | Opens the saved challenge or the challenge chooser for a new browser. |
+| `/` | Opens Calm Route Comparison directly. |
 | `/?game=calm` | Opens Calm Route Comparison directly. |
 | `/?game=google` | Opens Fast vs Google Fast directly. |
-| `/routing/` | Production-path challenge selector. |
+| `/routing/` | Production-path Calm Route Comparison entry. |
 | `/routing/fast-vs-google` | Clean public Fast vs Google path. |
 | `/routing/calm-route-comparison` | Clean public Calm Route Comparison path. |
 | `/routing/fast-vs-calm` | Legacy Calm Route Comparison path. |
@@ -60,7 +60,7 @@ Historical `calm-*` filenames are retained to avoid breaking shared links and in
 Owns page-level composition and challenge selection:
 
 - `CHALLENGE_CONFIGS`
-- challenge chooser and intro copy
+- Calm-focused intro and dormant multi-challenge configuration
 - local repository selection
 - start/resume wiring
 - community and team results rendering
@@ -73,7 +73,7 @@ Do not move challenge-specific question options into the shared shell. Keeping t
 Owns the active comparison experience:
 
 - round and question state
-- hidden A/B or A/B/C assignment
+- hidden A/B assignment, with legacy A/B/C records still readable
 - onboarding
 - map controls and Street View mode
 - answer/progress payload construction
@@ -84,6 +84,7 @@ Its public browser interface is `window.AriCalmBenchmark`:
 ```js
 AriCalmBenchmark.mount(root, options)
 AriCalmBenchmark.createMockRoutePairProvider(pairs, label)
+AriCalmBenchmark.createSessionPairOrder(pairCount, sessionId)
 ```
 
 `mount` returns `getState`, `fitRoutes`, `loadRound`, and `unmount`.
@@ -118,10 +119,10 @@ UI fixtures only. They model the route-pair contract and must never become the p
 
 ## Runtime Flow
 
-1. `index.html` resolves the challenge from a clean path, `?game=`, saved selection, or the chooser.
+1. `index.html` opens Calm Route Comparison by default. Explicit Google paths remain available for compatibility and internal development.
 2. It creates a challenge-specific local repository.
 3. Start or Resume calls `AriCalmBenchmark.mount` with the challenge configuration and adapters.
-4. The shell requests a route set and randomizes its hidden assignment to Route A/B or Route A/B/C.
+4. The shell requests a route pair. Curated fixture pairs use a session-derived shuffled order that is stable on resume, and every pair still receives a randomized hidden assignment to Route A/B.
 5. A completed comparison is validated and saved locally, then delivered through the optional HTTP transport.
 6. An unfinished state is locally upserted and remotely sent through the same retryable transport.
 7. Result views read the same challenge dataset and aggregate it through `AriCalmResults`.
@@ -135,7 +136,7 @@ Production integration should replace adapters, not rewrite the question UI:
 - `progressSink(progress)`
 - `mapProvider: "google" | "maplibre" | "leaflet"`
 
-Calm Route Comparison uses the four curated Calm Quiet, Calm Nature, and Human/Manual fixture rounds in `src/data/mock-route-pairs.js`. Fast vs Google Fast uses `AriRoutePairGenerator.createLivemapGoogleRoutePairProvider` (facade `foot_fast` + Google Directions at run time, never persisting Google geometry). The routing API base resolves from `window.ARI_ROUTING_API`, then a stored `?api=` override, then same-origin `/api/v1/routing`.
+Calm Route Comparison uses twelve curated Calm Quiet and Calm Nature fixture rounds in `src/data/mock-route-pairs.js`. Their presentation order is shuffled from the session ID, so participants receive different permutations while refreshes and resumed sessions preserve the same sequence. Fast vs Google Fast uses `AriRoutePairGenerator.createLivemapGoogleRoutePairProvider` (facade `foot_fast` + Google Directions at run time, never persisting Google geometry). The routing API base resolves from `window.ARI_ROUTING_API`, then a stored `?api=` override, then same-origin `/api/v1/routing`.
 
 Contracts are documented in [`DATA_CONTRACT.md`](DATA_CONTRACT.md), [`ANSWER_SCHEMA.md`](ANSWER_SCHEMA.md), and [`DATA_SAVING.md`](DATA_SAVING.md).
 

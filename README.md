@@ -2,16 +2,16 @@
 
 Static, map-first UI for blinded route-comparison research. The same benchmark shell currently supports:
 
-- **Fast vs Calm**: ARI Fast compared with ARI Calm.
+- **Calm Route Comparison**: Calm Quiet compared with Calm Nature.
 - **Fast vs Google Fast**: ARI Fast compared with Google Fast.
-- **Fast vs Safe**: visible in the chooser as a planned challenge, not yet playable.
+- **Fast vs Safe**: retained as a planned challenge, not currently participant-facing.
 
 Testers see only Route A and Route B. The hidden provider assignment is stored with each answer for later analysis.
 
 ## Live Preview
 
-- [Challenge chooser](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/)
-- [Fast vs Calm](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/?game=calm)
+- [Calm Route Comparison](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/)
+- [Calm Route Comparison](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/?game=calm)
 - [Fast vs Google Fast](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/?game=google)
 - [Fresh-player preview](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/fresh.html)
 
@@ -45,11 +45,12 @@ There is no build step and no package installation is required.
 
 | URL | Use |
 | --- | --- |
-| `/?game=calm` | Fast vs Calm challenge. |
+| `/` | Calm Route Comparison. |
+| `/?game=calm` | Calm Route Comparison challenge. |
 | `/?game=google` | Fast vs Google Fast challenge. |
-| `/routing/` | Production-path preview of the challenge selector. |
+| `/routing/` | Production-path preview of Calm Route Comparison. |
 | `/routing/fast-vs-google` | Clean public Fast vs Google path. |
-| `/routing/fast-vs-calm` | Clean public Fast vs Calm path. |
+| `/routing/fast-vs-calm` | Legacy public alias for Calm Route Comparison. |
 | `/fresh.html` | New-player QA preview without deleting saved browser data. |
 | `/demo.html` | Compatibility redirect for previously shared links. |
 | `/?view=results&preview=1` | Community-results preview that bypasses the Fast vs Google release lock. |
@@ -112,7 +113,7 @@ The LinkedIn preview image is [`assets/ari-route-arcade-social.png`](assets/ari-
 
 Both active challenges generate random route pairs the way the `livemap-routing` bench does: a random origin and destination is drawn inside the central-Zurich sampling polygon (400 m to 3000 m apart).
 
-- **Fast vs Calm** requests `foot_fast` and `foot_calm` from the routing facade in one call.
+- **Calm Route Comparison** currently uses the curated Calm Quiet and Calm Nature fixture pairs in `src/data/mock-route-pairs.js`. Each session receives a shuffled permutation of all twelve pairs; the session ID keeps that order stable across refresh and resume.
 - **Fast vs Google Fast** requests `foot_fast` from the facade and the Google walking route from the Directions SDK at run time, so it needs both a reachable facade and a configured Google Maps key. Matchups where the two engines snap the endpoints more than 40 m apart are redrawn (fairness gate). Google geometry is never persisted: cached rounds store only our route, metrics, and Google's snapped endpoints, and the Google path is re-fetched live on resume.
 
 - Default endpoint: `POST /api/v1/routing/route` on the same origin.

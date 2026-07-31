@@ -92,7 +92,8 @@
       hard_to_judge: []
     },
     uncertainChoices: ['hard_to_judge'],
-    showRouteMetrics: false
+    showRouteMetrics: false,
+    routeMetricMode: 'distance'
   };
 
   const MEDAL_UNLOCK_FALLBACK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
@@ -141,25 +142,46 @@
       const exclusive = type === 'checkbox' && option.exclusive ? ' data-exclusive-choice' : '';
       const routeOption = ROUTE_SLOTS.find(slot => slot.value === option.value);
       const metricsSlot = withRouteMetrics && routeOption
-        ? `<span class="ari-choice-metrics" data-route-metrics="${routeOption.slot.toLowerCase()}" hidden></span>`
+        ? `<span class="ari-choice-metrics" data-route-metrics="${routeOption.slot.toLowerCase()}" hidden>`
+          + '<strong data-route-metric-primary></strong>'
+          + '<small data-route-metric-secondary hidden></small>'
+          + '</span>'
         : '';
       const icon = type === 'checkbox' ? CHOICE_ICONS[option.value] : null;
       const keyword = type === 'checkbox' ? CHOICE_BOLD_KEYWORDS[option.value] : null;
       const labelContent = icon
         ? `${icon}<span class="ari-choice-body">${boldKeyword(option.label, keyword)}</span>`
-        : `${escapeHtml(option.label)}${metricsSlot}`;
+        : routeOption && metricsSlot
+          ? `<span class="ari-choice-label">${escapeHtml(option.label)}</span>${metricsSlot}`
+          : `${escapeHtml(option.label)}${metricsSlot}`;
       return `<label${className}><input type="${type}" name="${escapeHtml(name)}" value="${escapeHtml(option.value)}"${exclusive}>${labelContent}</label>`;
     }).join('');
   }
 
-  /** Distance only — durations come from each provider's own speed model and
-   *  are not comparable claims. Identical rounding for both routes so the
-   *  number cannot fingerprint the source: 0.1 km, 10 m steps below ~1 km. */
-  function formatRouteMetrics(metadata) {
-    if (!metadata || !Number.isFinite(metadata.distanceMeters)) return '';
-    return metadata.distanceMeters >= 950
-      ? `${(metadata.distanceMeters / 1000).toFixed(1)} km`
-      : `${Math.round(metadata.distanceMeters / 10) * 10} m`;
+  function formatRouteMetrics(metadata, mode = 'distance') {
+    if (!metadata) return null;
+    if (mode === 'duration-vs-fast') {
+      if (!Number.isFinite(metadata.durationSeconds) || !Number.isFinite(metadata.fastDurationSeconds)) {
+        return null;
+      }
+      const differenceSeconds = metadata.durationSeconds - metadata.fastDurationSeconds;
+      let secondary = 'Same time as Fast';
+      if (differenceSeconds > 0 && differenceSeconds < 60) secondary = '<1 min extra vs Fast';
+      else if (differenceSeconds >= 60) secondary = `+${Math.round(differenceSeconds / 60)} min vs Fast`;
+      else if (differenceSeconds < 0 && differenceSeconds > -60) secondary = '<1 min faster than Fast';
+      else if (differenceSeconds <= -60) secondary = `${Math.abs(Math.round(differenceSeconds / 60))} min faster than Fast`;
+      return {
+        primary: `${Math.max(1, Math.round(metadata.durationSeconds / 60))} min`,
+        secondary
+      };
+    }
+    if (!Number.isFinite(metadata.distanceMeters)) return null;
+    return {
+      primary: metadata.distanceMeters >= 950
+        ? `${(metadata.distanceMeters / 1000).toFixed(1)} km`
+        : `${Math.round(metadata.distanceMeters / 10) * 10} m`,
+      secondary: ''
+    };
   }
 
   function createId(prefix) {
@@ -178,12 +200,47 @@
     );
   }
 
+  function hashSessionId(sessionId) {
+    let hash = 2166136261;
+    for (const character of String(sessionId || '')) {
+      hash ^= character.charCodeAt(0);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  function createSeededRandom(seed) {
+    let state = seed >>> 0;
+    return function seededRandom() {
+      state = (state + 0x6D2B79F5) >>> 0;
+      let value = state;
+      value = Math.imul(value ^ (value >>> 15), value | 1);
+      value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+      return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function createSessionPairOrder(pairCount, sessionId) {
+    const count = Math.max(0, Number.parseInt(pairCount, 10) || 0);
+    const order = Array.from({ length: count }, (_, index) => index);
+    const random = createSeededRandom(hashSessionId(sessionId));
+    for (let index = order.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(random() * (index + 1));
+      [order[index], order[swapIndex]] = [order[swapIndex], order[index]];
+    }
+    return order;
+  }
+
   function createMockRoutePairProvider(pairs, label = 'mock route pairs') {
-    return function mockProvider({ roundIndex }) {
+    return function mockProvider({ sessionId, roundIndex }) {
       if (!pairs.length) {
         return Promise.reject(new Error(`No ${label} loaded. Include route-pair data or provide routePairProvider.`));
       }
-      const base = pairs[roundIndex % pairs.length];
+      const pairOrder = sessionId
+        ? createSessionPairOrder(pairs.length, sessionId)
+        : Array.from({ length: pairs.length }, (_, index) => index);
+      const pairIndex = pairOrder[roundIndex % pairs.length];
+      const base = pairs[pairIndex];
       return Promise.resolve({
         ...base,
         pairId: `${base.pairId}-round-${roundIndex + 1}`
@@ -1789,9 +1846,16 @@
         if (!routeType) return;
         const element = els.form.querySelector(`[data-route-metrics="${slot.toLowerCase()}"]`);
         if (!element) return;
-        const text = formatRouteMetrics(state.pair.routes[routeType]?.metadata);
-        element.textContent = text;
-        element.hidden = !text;
+        const metrics = formatRouteMetrics(
+          state.pair.routes[routeType]?.metadata,
+          benchmark.routeMetricMode
+        );
+        const primary = element.querySelector('[data-route-metric-primary]');
+        const secondary = element.querySelector('[data-route-metric-secondary]');
+        primary.textContent = metrics?.primary || '';
+        secondary.textContent = metrics?.secondary || '';
+        secondary.hidden = !metrics?.secondary;
+        element.hidden = !metrics;
       });
     }
 
@@ -2175,6 +2239,7 @@
       mount,
       mockRoutePairProvider,
       createMockRoutePairProvider,
+      createSessionPairOrder,
       consoleAnswerSink,
       consoleProgressSink,
       getHudDialProgress,

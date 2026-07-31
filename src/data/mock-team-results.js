@@ -6,10 +6,10 @@
   const CURRENT_PARTICIPANT_ID = 'sample-irene';
 
   const ASSIGNMENTS = [
-    { A: 'calm_quiet', B: 'calm_nature', C: 'human' },
-    { A: 'human', B: 'calm_quiet', C: 'calm_nature' },
-    { A: 'calm_nature', B: 'human', C: 'calm_quiet' },
-    { A: 'calm_quiet', B: 'human', C: 'calm_nature' }
+    { A: 'calm_quiet', B: 'calm_nature' },
+    { A: 'calm_nature', B: 'calm_quiet' },
+    { A: 'calm_quiet', B: 'calm_nature' },
+    { A: 'calm_nature', B: 'calm_quiet' }
   ];
 
   const PARTICIPANTS = [
@@ -33,7 +33,7 @@
     {
       id: 'sample-maya',
       name: 'Maya Chen',
-      choices: [['calm_nature'], ['human'], ['calm_nature'], ['none_work_well']],
+      choices: [['calm_nature'], ['calm_quiet'], ['calm_nature'], ['none_work_well']],
       reasons: [
         ['not_enough_greenery_water'],
         ['too_complex'],
@@ -45,7 +45,7 @@
     {
       id: 'sample-luca',
       name: 'Luca Rossi',
-      choices: [['human'], ['human'], ['human'], ['calm_quiet']],
+      choices: [['calm_quiet'], ['calm_nature'], ['calm_quiet'], ['calm_quiet']],
       reasons: [
         ['extra_time_distance_not_worth_it'],
         ['too_complex'],
@@ -74,7 +74,7 @@
     {
       id: 'sample-jonas',
       name: 'Jonas Weber',
-      choices: [['human'], ['none_work_well'], ['human'], ['calm_quiet']],
+      choices: [['calm_nature'], ['none_work_well'], ['calm_quiet'], ['calm_quiet']],
       reasons: [
         ['too_complex'],
         ['too_busy_or_crowded', 'extra_time_distance_not_worth_it'],
@@ -90,13 +90,13 @@
         ['calm_nature'],
         ['calm_quiet'],
         ['calm_nature'],
-        ['calm_nature', 'human']
+        ['both_work_well']
       ],
       reasons: [
         ['not_enough_greenery_water'],
         ['too_busy_or_crowded'],
         ['lacks_nice_streets_surroundings'],
-        ['too_similar']
+        []
       ],
       notes: ['', '', 'I preferred the route alongside the water.', '']
     },
@@ -115,7 +115,7 @@
     {
       id: 'sample-alex-2',
       name: 'Alex',
-      choices: [['hard_to_judge'], ['human'], ['human'], ['none_work_well']],
+      choices: [['hard_to_judge'], ['calm_quiet'], ['calm_nature'], ['none_work_well']],
       reasons: [
         [],
         ['extra_time_distance_not_worth_it'],
@@ -127,7 +127,7 @@
   ];
 
   function choiceRecord(outcomes, assignment) {
-    if (outcomes.length === 1 && ['hard_to_judge', 'none_work_well'].includes(outcomes[0])) {
+    if (outcomes.length === 1 && ['hard_to_judge', 'none_work_well', 'both_work_well'].includes(outcomes[0])) {
       return { q1Choice: outcomes[0], q1Choices: [outcomes[0]] };
     }
     const slots = outcomes.map(outcome => {
@@ -163,8 +163,7 @@
           pairId: `calm-route-comparison-0${roundNumber}-round-${roundNumber}`,
           routeAssignment: {
             routeA: assignment.A,
-            routeB: assignment.B,
-            routeC: assignment.C
+            routeB: assignment.B
           },
           labelMap: { ...assignment },
           q2Separate: null,

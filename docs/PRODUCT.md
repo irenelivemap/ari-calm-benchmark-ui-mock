@@ -18,15 +18,17 @@ This prototype tests whether people prefer or trust one walking route over anoth
 
 The current benchmark family includes:
 
-- **Calm Route Comparison**, which compares Calm Quiet, Calm Nature, and a Human/Manual route behind randomized Route A/B/C labels.
+- **Calm Route Comparison**, which compares Calm Quiet and Calm Nature behind randomized Route A/B labels.
 - **Fast vs Google Fast**, which asks which route works better as a fast route.
 - **Fast vs Safe**, planned but not yet implemented.
+
+The current participant-facing phase opens Calm Route Comparison directly and does not show the multi-challenge selector. Fast vs Google remains available through its direct development and compatibility URLs.
 
 Success means a participant can start or resume a session, inspect every visible route, use Street View only when necessary, answer with minimal friction, and produce a record that can be decoded reliably by research and engineering.
 
 ## Primary Task
 
-Compare the blinded route options on the map, choose the answer that fits the current challenge, and explain relevant issues when asked. Fast vs Google uses a single A/B choice; Calm Route Comparison allows one or more A/B/C routes to be selected.
+Compare the blinded route options on the map, choose the answer that fits the current challenge, and explain relevant issues when asked. Both active challenges compare Route A and Route B; Calm also offers `Both work well`, `Both work poorly`, and `I'm not sure` as explicit neutral or shared outcomes.
 
 The map is the primary decision surface. Questions, progress, medals, and results must support comparisons rather than compete with them.
 

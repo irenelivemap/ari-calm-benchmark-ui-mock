@@ -40,10 +40,13 @@
   };
 
   function q1Selections(answer) {
-    if (Array.isArray(answer.q1Choices) && answer.q1Choices.length) return [...answer.q1Choices];
-    const choice = answer.q1Choice || answer.choice;
+    const choices = Array.isArray(answer.q1Choices) && answer.q1Choices.length
+      ? [...answer.q1Choices]
+      : [answer.q1Choice || answer.choice].filter(Boolean);
+    const choice = choices[0];
+    if (choice === 'both_work_well') return ['route_a', 'route_b'];
     if (choice === 'all_three_work_well') return ['route_a', 'route_b', 'route_c'];
-    return choice && choice !== 'multiple_routes' ? [choice] : [];
+    return choices.filter(value => value !== 'multiple_routes');
   }
 
   function selectedRouteTypes(answer) {

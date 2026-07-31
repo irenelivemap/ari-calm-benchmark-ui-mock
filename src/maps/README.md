@@ -2,7 +2,7 @@
 
 The shared benchmark UI should not depend on where the map comes from. It needs a map capable of:
 
-- drawing Route A and Route B, plus Route C when configured
+- drawing the active Route A and Route B pair
 - drawing start and destination markers
 - panning and zooming
 - fitting every active route into the closest useful comparison view

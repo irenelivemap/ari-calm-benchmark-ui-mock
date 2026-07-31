@@ -46,7 +46,7 @@
   ]);
   const ROUTE_TYPES = new Set([
     'fast', 'calm', 'livemap_fast', 'google',
-    'calm_quiet', 'calm_nature'
+    'calm_quiet', 'calm_nature', 'human'
   ]);
   const QUESTION_STEPS = new Set(['q1', 'q2', 'q3']);
 
@@ -197,18 +197,15 @@
     const assignments = ROUTE_SLOTS
       .map(({ key }) => record.routeAssignment?.[key])
       .filter(Boolean);
-    const requiresThreeRoutes = false;
-    const expectedCount = requiresThreeRoutes ? 3 : 2;
+    const isLegacyThreeRouteCalm = record.test === CALM_ROUTE_COMPARISON_TEST_ID
+      && assignments.length === 3;
+    const expectedCount = isLegacyThreeRouteCalm ? 3 : 2;
     if (
       assignments.length !== expectedCount
       || assignments.some(routeType => !ROUTE_TYPES.has(routeType))
       || new Set(assignments).size !== assignments.length
     ) {
-      if (requiresThreeRoutes) {
-        errors.push('routeAssignment must map Route A, Route B, and Route C to three different supported route types.');
-        return;
-      }
-      errors.push('routeAssignment must map Route A and Route B to two different supported route types.');
+      errors.push('routeAssignment must map Route A and Route B to two different supported route types. Legacy Calm records may also include a distinct Route C.');
     }
   }
 
@@ -253,6 +250,13 @@
     ) {
       errors.push('multiple_routes requires at least two Calm route choices.');
     }
+    if (
+      record.test === CALM_ROUTE_COMPARISON_TEST_ID
+      && !record.routeAssignment?.routeC
+      && record.q1Choices.includes('route_c')
+    ) {
+      errors.push('route_c is available only in legacy three-route Calm records.');
+    }
 
     if (record.q2Separate != null && !Q2_CHOICES.has(record.q2Separate)) {
       errors.push('q2Separate is invalid.');
@@ -266,6 +270,7 @@
       const isFastGoogle = record.test === 'ari_fast_vs_google';
       const isCalmRouteComparison = record.test === CALM_ROUTE_COMPARISON_TEST_ID;
       const selectedCalmRoutes = record.q1Choices.filter(choice => ['route_a', 'route_b', 'route_c'].includes(choice));
+      const calmRouteCount = record.routeAssignment?.routeC ? 3 : 2;
       const needsQ2 = !isFastGoogle
         && !isCalmRouteComparison
         && ['route_a', 'route_b', 'either'].includes(record.q1Choice);
@@ -273,7 +278,7 @@
         ? ['route_a', 'route_b', 'both_work_poorly'].includes(record.q1Choice)
         : isCalmRouteComparison
           ? record.q1Choices.includes('none_work_well')
-            || (selectedCalmRoutes.length > 0 && selectedCalmRoutes.length < 3)
+            || (selectedCalmRoutes.length > 0 && selectedCalmRoutes.length < calmRouteCount)
           : ['route_a', 'route_b', 'neither'].includes(record.q1Choice);
       if (needsQ2 && !record.q2Separate) errors.push('q2Separate is required for this Q1 answer.');
       if (!needsQ2 && record.q2Separate) errors.push('q2Separate must be empty for this Q1 answer.');
@@ -281,7 +286,7 @@
       if (!needsQ3 && record.q3Issues.length) errors.push('q3Issues must be empty for this Q1 answer.');
     }
 
-    const requiredLabelSlots = ['A', 'B'];
+    const requiredLabelSlots = record.routeAssignment?.routeC ? ['A', 'B', 'C'] : ['A', 'B'];
     requiredLabelSlots.forEach(slot => {
       const label = record.labels?.[slot];
       if (!isObject(label)) {

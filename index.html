@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ARI Route Benchmark</title>
   <meta name="description" content="Compare routes, reveal better journeys, and help ARI learn what makes a route work.">
-  <meta name="theme-color" content="#101511">
+  <meta name="theme-color" content="#211a2a">
   <link rel="canonical" href="https://game.livemap.sh/routing/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="LiveMap">
@@ -39,14 +39,14 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Fraunces:ital,opsz,wght@1,9..144,300;1,9..144,400;1,9..144,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260731-ds-alignment-21">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260731-calm-only-entry-33">
   <style>
     body {
       margin: 0;
-      background: #fff;
+      background: #f5f5f5;
     }
     .calm-hidden { display: none !important; }
   </style>
@@ -55,11 +55,10 @@
   <header class="calm-intro-header">
     <div class="calm-intro-wrap calm-intro-header-row">
       <div class="calm-intro-header-context">
-        <button class="calm-challenge-menu" id="challenge-menu" type="button" aria-haspopup="dialog" aria-controls="challenge-dialog">
-          <span>Challenges</span>
+        <div class="calm-challenge-context" aria-label="Current challenge">
+          <span>Challenge</span>
           <strong id="challenge-menu-label">Calm Route Comparison</strong>
-          <i aria-hidden="true"></i>
-        </button>
+        </div>
         <button class="calm-test-reset" data-reset-test-data type="button">Reset test data</button>
       </div>
       <div class="calm-intro-header-actions">
@@ -71,7 +70,7 @@
     </div>
   </header>
 
-  <dialog class="calm-challenge-dialog" id="challenge-dialog" aria-labelledby="challenge-dialog-title">
+  <dialog class="calm-challenge-dialog" id="challenge-dialog" aria-labelledby="challenge-dialog-title" hidden inert>
     <div class="calm-challenge-dialog__shell">
       <header class="calm-challenge-dialog__head">
         <div class="calm-challenge-dialog__title">
@@ -146,8 +145,8 @@
       </section>
 
       <section class="calm-info-grid" aria-label="Test overview">
-        <article class="calm-card calm-card--how" data-overview-card>
-          <div class="calm-card-head" tabindex="0" role="button" aria-expanded="true" aria-controls="how-card-body">
+        <article class="calm-card calm-card--how">
+          <div class="calm-card-head">
             <div class="calm-kicker">
               <span class="calm-icon" data-align-group="intro-how-card-head" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-5-2V6l5 2 6-2 5 2v12l-5-2-6 2z"/><path d="M9 8v12M15 6v12"/></svg>
@@ -183,8 +182,8 @@
           </div>
         </article>
 
-        <article class="calm-card calm-card--session" data-overview-card>
-          <div class="calm-card-head" tabindex="0" role="button" aria-expanded="true" aria-controls="session-card-body">
+        <article class="calm-card calm-card--session">
+          <div class="calm-card-head">
             <div class="calm-kicker">
               <span class="calm-icon" data-align-group="intro-session-card-head" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
@@ -249,16 +248,16 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" integrity="sha256-vpYzxNhw4m+zfxz+XFp3GBZnEUAD6hYgeseFDY2ordE=" crossorigin=""></script>
   <script src="./src/app/runtime.js?v=20260729-three-routes-1"></script>
-  <script src="./src/data/mock-route-pairs.js?v=20260730-two-routes-1"></script>
+  <script src="./src/data/mock-route-pairs.js?v=20260731-q1-time-baseline-2"></script>
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
-  <script src="./src/data/calm-benchmark-data.js?v=20260731-two-routes-fix"></script>
+  <script src="./src/data/calm-benchmark-data.js?v=20260731-two-routes-fix-2"></script>
   <script src="./src/data/benchmark-transport.js?v=20260729-team-results-2"></script>
-  <script src="./src/data/mock-team-results.js?v=20260729-sample-results-1"></script>
-  <script src="./src/results/calm-results.js?v=20260730-two-routes-1"></script>
+  <script src="./src/data/mock-team-results.js?v=20260731-two-routes-2"></script>
+  <script src="./src/results/calm-results.js?v=20260731-two-routes-2"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
   <script src="./src/maps/route-overlap.js?v=20260729-street-view-any-point-1"></script>
   <script src="./src/maps/map-adapter.js?v=20260729-street-view-any-point-1"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260731-briefing-6"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260731-session-pair-order-8"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -269,7 +268,6 @@
     const benchmarkRoot = document.getElementById('calm-benchmark-root');
     const challengeDialog = document.getElementById('challenge-dialog');
     const challengeDialogClose = document.getElementById('challenge-dialog-close');
-    const challengeMenu = document.getElementById('challenge-menu');
     const challengeStage = document.querySelector('.calm-challenge-stage');
     const challengeList = document.querySelector('.calm-challenge-list');
     const challengePreview = document.querySelector('.calm-challenge-preview');
@@ -407,7 +405,7 @@
         menuLabel: 'Calm Route Comparison',
         documentTitle: 'ARI Calm Route Comparison',
         heroQuestion: 'Which route would you choose for a calmer walk?',
-        heroQuestionHtml: 'Which route would you choose for a <em class="calm-serif-accent">calmer</em> walk?',
+        heroQuestionHtml: 'Which route would you choose for <span class="calm-hero-phrase">a <em class="calm-serif-accent">calmer</em> walk?</span>',
         heroCopy: 'Compare two possible walking routes. Their source is hidden, so choose only from the route experience you see.',
         definitionQuestion: null,
         definitionAnswer: null,
@@ -423,7 +421,7 @@
           questions: {
             q1: 'Which route would you choose for a calmer walk?',
             q2: '',
-            q3: 'What made the other routes less suitable?'
+            q3: 'What made the other route less suitable?'
           },
           context: null,
           q1Options: [
@@ -446,7 +444,7 @@
           ],
           q3Variants: {
             none_work_well: {
-              question: 'What made all three routes poor options?'
+              question: 'What made both routes poor options?'
             }
           },
           followUps: {
@@ -457,7 +455,8 @@
             hard_to_judge: []
           },
           uncertainChoices: ['hard_to_judge'],
-          showRouteMetrics: false
+          showRouteMetrics: true,
+          routeMetricMode: 'duration-vs-fast'
         },
         routePairProvider: AriCalmBenchmark.mockRoutePairProvider
       }
@@ -489,15 +488,10 @@
     let freshPreviewMode = !runtimeConfig.production
       && (urlParams.get('fresh') === '1' || urlParams.get('preview') === 'fresh');
     const requestedChallenge = AriBenchmarkRuntime.resolveChallenge(window.location, runtimeConfig);
-    const storedChallenge = localStorage.getItem(CHALLENGE_STORAGE);
-    let selectedChallenge = freshPreviewMode
-      ? null
-      : CHALLENGE_CONFIGS[requestedChallenge]
-      ? requestedChallenge
-      : CHALLENGE_CONFIGS[storedChallenge] ? storedChallenge : null;
     const activeChallenge = CHALLENGE_CONFIGS[requestedChallenge]
       ? requestedChallenge
-      : selectedChallenge || 'google';
+      : 'calm';
+    let selectedChallenge = activeChallenge;
     const activeConfig = CHALLENGE_CONFIGS[activeChallenge];
     const dataRepositories = {
       calm: AriCalmBenchmarkData.createLocalRepository(localStorage, {
@@ -792,7 +786,7 @@
         <section class="calm-results-overview-lead" aria-labelledby="calm-overview-title">
           <p class="calm-results-eyebrow">Team pattern</p>
           <h2 id="calm-overview-title">${leadingStatement}</h2>
-          <p>Multiple routes could be selected, so route percentages may total more than 100%.</p>
+          <p>Both routes can be selected together, so route percentages may total more than 100%.</p>
         </section>
         <section class="calm-results-band" aria-labelledby="overall-choice-title">
           <div class="calm-results-band__intro">
@@ -814,12 +808,11 @@
           <div>
             <p class="calm-results-index">03</p>
             <h2 id="calm-position-title">Visible label check</h2>
-            <p>Selection counts for A, B, and C help the team spot possible position effects.</p>
+            <p>Selection counts for A and B help the team spot possible position effects.</p>
           </div>
           <dl>
             <div><dt>Route A selected</dt><dd>${summary.positionBias.selectedAsA}</dd></div>
             <div><dt>Route B selected</dt><dd>${summary.positionBias.selectedAsB}</dd></div>
-            <div><dt>Route C selected</dt><dd>${summary.positionBias.selectedAsC}</dd></div>
           </dl>
         </section>`;
     }
@@ -1110,11 +1103,10 @@
           </section>
         </div>
         <section class="calm-team-position" aria-labelledby="team-position-title">
-          <div><h2 id="team-position-title">A/B/C position check</h2><p>Use this to spot whether the visible label may be influencing choices.</p></div>
+          <div><h2 id="team-position-title">A/B position check</h2><p>Use this to spot whether the visible label may be influencing choices.</p></div>
           <dl>
             <div><dt>Route A selected</dt><dd>${summary.positionBias.selectedAsA}</dd></div>
             <div><dt>Route B selected</dt><dd>${summary.positionBias.selectedAsB}</dd></div>
-            <div><dt>Route C selected</dt><dd>${summary.positionBias.selectedAsC}</dd></div>
           </dl>
         </section>
         <section class="calm-team-records" aria-labelledby="team-records-title">
@@ -1419,15 +1411,6 @@
       card.classList.toggle('is-resumed', !!hasProgress);
       infoGrid.classList.toggle('has-progress', !!hasProgress);
 
-      document.querySelectorAll('[data-overview-card]').forEach(overviewCard => {
-        if (overviewCard.dataset.userToggled === 'true') return;
-        if (hasProgress) {
-          setOverviewCardExpanded(overviewCard, false);
-        } else {
-          setOverviewCardExpanded(overviewCard, true);
-        }
-      });
-
       if (hasProgress) {
         savedProgress = progress;
         updateChallengePreview(count);
@@ -1491,36 +1474,7 @@
       }
     }
 
-    function setOverviewCardExpanded(card, expanded) {
-      const body = card.querySelector('.calm-card-body');
-      const head = card.querySelector('.calm-card-head');
-      if (expanded) {
-        card.classList.remove('is-compact');
-        body.style.maxHeight = `${body.scrollHeight}px`;
-        const release = event => {
-          if (event.propertyName !== 'max-height') return;
-          body.style.maxHeight = '';
-          body.removeEventListener('transitionend', release);
-        };
-        body.addEventListener('transitionend', release);
-      } else {
-        body.style.maxHeight = `${body.scrollHeight}px`;
-        void body.offsetHeight;
-        card.classList.add('is-compact');
-        body.style.maxHeight = '';
-      }
-      if (head) head.setAttribute('aria-expanded', String(expanded));
-      body.toggleAttribute('aria-hidden', !expanded);
-      body.toggleAttribute('inert', !expanded);
-    }
-
-    function checkAlignmentGroups({ tolerance = 1, compactOverviewCards = false } = {}) {
-      if (compactOverviewCards) {
-        document.querySelectorAll('[data-overview-card]').forEach(card => {
-          setOverviewCardExpanded(card, false);
-        });
-      }
-
+    function checkAlignmentGroups({ tolerance = 1 } = {}) {
       const groups = Array.from(document.querySelectorAll('[data-align-group]'))
         .reduce((registry, element) => {
           const name = element.dataset.alignGroup;
@@ -1713,7 +1667,6 @@
       showPage(button.dataset.view);
     });
 
-    challengeMenu.addEventListener('click', () => openChallengeDialog());
     document.querySelectorAll('[data-reset-test-data]').forEach(button => button.addEventListener('click', resetTestData));
     challengeDialogClose.addEventListener('click', () => challengeDialog.close());
     challengeList.addEventListener('click', event => {
@@ -1816,36 +1769,6 @@
       }
     });
 
-    document.addEventListener('click', event => {
-      const compactCard = event.target.closest('[data-overview-card].is-compact');
-      if (compactCard && !event.target.closest('button, a, input, textarea, select')) {
-        compactCard.dataset.userToggled = 'true';
-        setOverviewCardExpanded(compactCard, true);
-        return;
-      }
-
-      const cardHead = event.target.closest('.calm-card-head');
-      if (cardHead && !event.target.closest('button, a, input, textarea, select')) {
-        const overviewCard = cardHead.closest('[data-overview-card]');
-        if (overviewCard) {
-          const expanded = !overviewCard.classList.contains('is-compact');
-          overviewCard.dataset.userToggled = 'true';
-          setOverviewCardExpanded(overviewCard, !expanded);
-        }
-      }
-    });
-
-    document.addEventListener('keydown', event => {
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      const cardHead = event.target.closest('.calm-card-head[tabindex]');
-      if (!cardHead) return;
-      event.preventDefault();
-      const overviewCard = cardHead.closest('[data-overview-card]');
-      if (!overviewCard) return;
-      overviewCard.dataset.userToggled = 'true';
-      setOverviewCardExpanded(overviewCard, overviewCard.classList.contains('is-compact'));
-    });
-
     applyChallengeUi();
     checkResumeState();
     const requestedView = urlParams.get('view');
@@ -1853,9 +1776,6 @@
       ? 'team-results'
       : requestedView === 'results' ? 'results' : 'testing';
     showPage(initialView, { updateUrl: false });
-    if (!selectedChallenge && initialView !== 'team-results') {
-      requestAnimationFrame(() => openChallengeDialog({ required: true }));
-    }
 
     window.ariCalmData = {
       verify: () => dataRepository.verify(),
@@ -1863,12 +1783,7 @@
       exportJsonl: () => dataRepository.exportAnswerJsonl()
     };
     if (new URLSearchParams(window.location.search).get('qa') === 'alignment') {
-      requestAnimationFrame(() => {
-        document.querySelectorAll('[data-overview-card]').forEach(card => {
-          setOverviewCardExpanded(card, false);
-        });
-        setTimeout(checkAlignmentGroups, 420);
-      });
+      requestAnimationFrame(() => setTimeout(checkAlignmentGroups, 420));
     }
   </script>
 </body>

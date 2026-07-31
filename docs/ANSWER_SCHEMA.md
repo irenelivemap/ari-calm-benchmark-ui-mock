@@ -8,7 +8,7 @@ The shared benchmark shell produces one answer record per completed comparison. 
 type RouteType =
   | "calm_quiet"
   | "calm_nature"
-  | "human"
+  | "human" // legacy Calm records only
   | "livemap_fast"
   | "google"
   | "fast" // legacy
@@ -17,15 +17,15 @@ type RouteType =
 type Q1Choice =
   | "route_a"
   | "route_b"
-  | "route_c"
-  | "all_three_work_well"
+  | "route_c" // legacy
+  | "all_three_work_well" // legacy
   | "none_work_well"
   | "either"
   | "neither"
   | "hard_to_judge"
   | "both_work_well"
   | "both_work_poorly"
-  | "multiple_routes"
+  | "multiple_routes" // legacy
   | "not_sure";
 
 type Q3Issue =
@@ -99,7 +99,7 @@ type BenchmarkAnswerV1 = {
   reasons: Q3Issue[];          // Compatibility alias of q3Issues.
   q3Note: string;
   note: string;                // Compatibility alias.
-  metricsShown: boolean;       // Rounded route distances were visible during the comparison.
+  metricsShown: boolean;       // Route time/distance metrics were visible during the comparison.
 
   clientTs: string;
   createdAt: string;
@@ -113,7 +113,7 @@ type RouteSnapshot = {
 };
 ```
 
-The duplicate names (`benchmarkRunId` / `sessionId`, `choice` / `q1Choice`, `reasons` / `q3Issues`) preserve compatibility with the first ARI benchmark dashboard while keeping the current question flow explicit. For Calm Route Comparison, `q1Choices` is authoritative. `q1Choice` is the selected value for one choice and `multiple_routes` when two or three routes are selected.
+The duplicate names (`benchmarkRunId` / `sessionId`, `choice` / `q1Choice`, `reasons` / `q3Issues`) preserve compatibility with the first ARI benchmark dashboard while keeping the current question flow explicit. For current Calm records, `q1Choice` and the single entry in `q1Choices` match. Historical three-route and multi-select records remain readable.
 
 ## Challenge Rules
 
@@ -121,18 +121,20 @@ The duplicate names (`benchmarkRunId` / `sessionId`, `choice` / `q1Choice`, `rea
 
 Q1 choices:
 
-- Any non-empty combination of `route_a`, `route_b`, and `route_c`
-- `none_work_well` by itself
-- `hard_to_judge` by itself
+- `route_a`
+- `route_b`
+- `both_work_well`
+- `none_work_well`
+- `hard_to_judge`
 
-`all_three_work_well` is accepted only as a legacy saved value; the current UI represents it by selecting all three routes.
+`route_c`, `multiple_routes`, and `all_three_work_well` are accepted only for legacy three-route records.
 
 Follow-ups:
 
 | Q1 choice | Q2 | Q3 |
 | --- | --- | --- |
-| One or two route choices | Empty | Required |
-| All three route choices | Empty | Empty |
+| `route_a`, `route_b` | Empty | Required |
+| `both_work_well` | Empty | Empty |
 | `none_work_well` | Empty | Required |
 | `hard_to_judge` | Empty | Empty |
 
@@ -193,7 +195,7 @@ Decode a visible route choice without exposing provider identity to the tester:
 function selectedRouteType(answer) {
   if (answer.q1Choice === 'route_a') return answer.labelMap.A;
   if (answer.q1Choice === 'route_b') return answer.labelMap.B;
-  if (answer.q1Choice === 'route_c') return answer.labelMap.C;
+  if (answer.q1Choice === 'route_c') return answer.labelMap.C; // legacy
   return null;
 }
 ```

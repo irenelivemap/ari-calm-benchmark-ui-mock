@@ -10,7 +10,7 @@ type LatLngTuple = [latitude: number, longitude: number];
 type RouteType =
   | "calm_quiet"
   | "calm_nature"
-  | "human"
+  | "human" // legacy Calm records only
   | "livemap_fast"
   | "google";
 
@@ -21,6 +21,7 @@ type RouteOption = {
   metadata?: {
     distanceMeters?: number;
     durationSeconds?: number;
+    fastDurationSeconds?: number;
     [key: string]: unknown;
   };
 };
@@ -46,7 +47,7 @@ Only the route keys configured for the active challenge are required.
 
 | Challenge | Required route keys | Test ID |
 | --- | --- | --- |
-| Calm Route Comparison | `calm_quiet`, `calm_nature`, `human` | `calm_route_comparison` |
+| Calm Route Comparison | `calm_quiet`, `calm_nature` | `calm_route_comparison` |
 | Fast vs Google Fast | `livemap_fast`, `google` | `ari_fast_vs_google` |
 
 ## Provider Interface
@@ -59,7 +60,7 @@ async function routePairProvider({ sessionId, roundIndex }) {
 
 `pairId` and every route ID must be stable. Retrying a round should return the same logical pair unless the backend explicitly invalidates it.
 
-`src/api/route-pair-generator.js` implements the two-route live contract used by Fast vs Google. Calm Route Comparison currently uses the four curated rounds in `src/data/mock-route-pairs.js`, converted from GeoJSON `[longitude, latitude]` coordinates to this contract's `[latitude, longitude]` tuples.
+`src/api/route-pair-generator.js` implements the two-route live contract used by Fast vs Google. Calm Route Comparison currently uses twelve curated Calm Quiet / Calm Nature rounds in `src/data/mock-route-pairs.js`, converted from GeoJSON `[longitude, latitude]` coordinates to this contract's `[latitude, longitude]` tuples.
 
 ## Example: Fast vs Google Fast
 
@@ -113,8 +114,8 @@ async function routePairProvider({ sessionId, roundIndex }) {
 - Geometry uses `[latitude, longitude]`, not GeoJSON `[longitude, latitude]`.
 - Each geometry contains at least two valid points.
 - Routes have different route types and stable route IDs.
-- The shell randomizes provider routes into visible Route A / Route B or Route A / Route B / Route C slots.
-- Provider identity, hidden scores, and durations are never displayed (durations come from each provider's own speed model and are not comparable). Distance stays hidden in the first question by default; a challenge may opt in to rounded per-route distances through the shell's `showRouteMetrics` (Fast vs Google Fast does), and each answer records whether they were visible via `metricsShown`.
+- The shell randomizes provider routes into visible Route A / Route B slots. The data reader retains compatibility with historical Route C records.
+- Provider identity and hidden scores are never displayed. Fast vs Google shows rounded per-route distance because its provider duration models are not comparable. Calm Route Comparison shows each route's rounded walking time and the extra time against the Fast route supplied for the same round. Each answer records whether route metrics were visible via `metricsShown`.
 - Metadata is stored with the answer's route snapshots and may support later questions or analysis.
 
 ## Production Endpoint

@@ -12,7 +12,7 @@ function answer(overrides = {}) {
     q1Choice: 'route_a',
     q2Separate: null,
     q3Issues: ['too_busy_or_crowded'],
-    labelMap: { A: 'calm_quiet', B: 'calm_nature', C: 'human' },
+    labelMap: { A: 'calm_quiet', B: 'calm_nature' },
     ...overrides
   };
 }
@@ -20,12 +20,19 @@ function answer(overrides = {}) {
 test('decodes selected route labels instead of treating A, B, and C as outcomes', () => {
   assert.equal(Results.selectedRouteType(answer()), 'calm_quiet');
   assert.equal(Results.selectedRouteType(answer({ q1Choice: 'route_b' })), 'calm_nature');
-  assert.equal(Results.selectedRouteType(answer({ q1Choice: 'route_c' })), 'human');
+  assert.equal(Results.selectedRouteType(answer({
+    q1Choice: 'route_c',
+    labelMap: { A: 'calm_quiet', B: 'calm_nature', C: 'human' }
+  })), 'human');
   assert.equal(Results.selectedRouteType(answer({
     q1Choice: 'multiple_routes',
     q1Choices: ['route_a', 'route_b']
   })), 'multiple_routes');
-  assert.deepEqual(Results.selectedRouteTypes(answer({ q1Choice: 'all_three_work_well' })), [
+  assert.deepEqual(Results.selectedRouteTypes(answer({
+    q1Choice: 'all_three_work_well',
+    q1Choices: [],
+    labelMap: { A: 'calm_quiet', B: 'calm_nature', C: 'human' }
+  })), [
     'calm_quiet',
     'calm_nature',
     'human'
@@ -35,7 +42,7 @@ test('decodes selected route labels instead of treating A, B, and C as outcomes'
 test('aggregates public and team metrics from the same rows', () => {
   const result = Results.aggregateAnswers([
     answer(),
-    answer({ captureId: 'capture-2', sessionId: 'session-2', participantName: 'Alex', pairId: 'pair-2', q1Choice: 'route_b', q3Issues: ['too_complex'], labelMap: { A: 'human', B: 'calm_nature', C: 'calm_quiet' } }),
+    answer({ captureId: 'capture-2', sessionId: 'session-2', participantName: 'Alex', pairId: 'pair-2', q1Choice: 'route_b', q3Issues: ['too_complex'], labelMap: { A: 'calm_quiet', B: 'calm_nature' } }),
     answer({ captureId: 'capture-3', q1Choice: 'hard_to_judge', q2Separate: null, q3Issues: [] })
   ]);
 
@@ -45,7 +52,6 @@ test('aggregates public and team metrics from the same rows', () => {
   assert.deepEqual(result.outcomeCounts, {
     calm_quiet: 1,
     calm_nature: 1,
-    human: 0,
     none_work_well: 0,
     hard_to_judge: 1
   });
@@ -57,21 +63,22 @@ test('aggregates public and team metrics from the same rows', () => {
   });
 });
 
-test('counts every selected route in multi-select Calm answers', () => {
+test('counts both routes when both work well', () => {
   const result = Results.aggregateAnswers([
     answer({
-      q1Choice: 'multiple_routes',
-      q1Choices: ['route_a', 'route_c']
+      q1Choice: 'both_work_well',
+      q1Choices: ['both_work_well'],
+      q3Issues: []
     })
   ]);
 
   assert.equal(result.total, 1);
   assert.equal(result.outcomeCounts.calm_quiet, 1);
-  assert.equal(result.outcomeCounts.human, 1);
+  assert.equal(result.outcomeCounts.calm_nature, 1);
   assert.deepEqual(result.positionBias, {
     selectedAsA: 1,
-    selectedAsB: 0,
-    selectedAsC: 1
+    selectedAsB: 1,
+    selectedAsC: 0
   });
 });
 

@@ -95,7 +95,7 @@ test('saves an answer once and answers duplicates idempotently', async () => {
   }
 });
 
-test('accepts Calm Route Comparison answers at the current endpoint', async () => {
+test('keeps legacy three-route Calm answers readable at the current endpoint', async () => {
   const api = await startApi();
   try {
     const url = `${api.base}/api/v1/benchmarks/calm_route_comparison/answers`;

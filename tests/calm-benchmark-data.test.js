@@ -27,6 +27,8 @@ class MemoryStorage {
 
 function validAnswer(overrides = {}) {
   return {
+    test: 'calm_route_comparison',
+    source: 'calm-route-comparison',
     sessionId: 'calm-session-123',
     benchmarkRunId: 'calm-session-123',
     roundId: 'calm-session-123-round-1',
@@ -35,13 +37,13 @@ function validAnswer(overrides = {}) {
     participantName: 'Irene',
     rater: 'Irene',
     pairId: 'pair-1',
-    routeAssignment: { routeA: 'calm', routeB: 'fast' },
+    routeAssignment: { routeA: 'calm_quiet', routeB: 'calm_nature' },
     labels: {
-      A: { routeId: 'calm-route-1', routeType: 'calm', source: 'model' },
-      B: { routeId: 'fast-route-1', routeType: 'fast', source: 'google' }
+      A: { routeId: 'quiet-route-1', routeType: 'calm_quiet', source: 'model' },
+      B: { routeId: 'nature-route-1', routeType: 'calm_nature', source: 'model' }
     },
     q1Choice: 'route_a',
-    q2Separate: 'yes',
+    q2Separate: null,
     q3Issues: ['not_enough_greenery_water'],
     q3Note: '',
     createdAt: '2026-07-13T10:00:00.000Z',
@@ -74,8 +76,8 @@ test('saves a valid answer once and treats retries as idempotent', () => {
 
   const snapshot = repository.getSnapshot();
   assert.equal(snapshot.answers.length, 1);
-  assert.equal(snapshot.answers[0].labelMap.A, 'calm');
-  assert.equal(snapshot.answers[0].labels.B.routeId, 'fast-route-1');
+  assert.equal(snapshot.answers[0].labelMap.A, 'calm_quiet');
+  assert.equal(snapshot.answers[0].labels.B.routeId, 'nature-route-1');
   assert.deepEqual(repository.verify().stats, {
     sessions: 1,
     progressRecords: 0,
@@ -153,7 +155,7 @@ test('exports dashboard-ready newline-delimited JSON', () => {
   const rows = repository.exportAnswerJsonl().split('\n').map(JSON.parse);
   assert.equal(rows.length, 2);
   assert.equal(rows[0].type, 'bench-ux');
-  assert.equal(rows[0].test, 'calm_vs_fast');
+  assert.equal(rows[0].test, 'calm_route_comparison');
   assert.equal(rows[1].captureId, 'calm-session-123-round-2');
 });
 
@@ -215,7 +217,27 @@ test('accepts the current Fast versus Google follow-up reasons', () => {
   assert.equal(result.valid, true);
 });
 
-test('stores a three-route blinded Calm Route Comparison answer', () => {
+test('accepts both current Calm routes together without a follow-up', () => {
+  const result = validateAnswerRecord(validAnswer({
+    q1Choice: 'both_work_well',
+    q1Choices: ['both_work_well'],
+    q3Issues: []
+  }));
+
+  assert.equal(result.valid, true);
+});
+
+test('rejects Route C in a current two-route Calm record', () => {
+  const result = validateAnswerRecord(validAnswer({
+    q1Choice: 'route_c',
+    q1Choices: ['route_c']
+  }));
+
+  assert.equal(result.valid, false);
+  assert.match(result.errors.join(' '), /legacy three-route/);
+});
+
+test('keeps a legacy three-route Calm Route Comparison answer readable', () => {
   const result = validateAnswerRecord(validAnswer({
     test: 'calm_route_comparison',
     source: 'calm-route-comparison',
@@ -239,7 +261,7 @@ test('stores a three-route blinded Calm Route Comparison answer', () => {
   assert.equal(result.record.labels.C.routeId, 'nature-1');
 });
 
-test('stores multiple selected routes for Calm Route Comparison', () => {
+test('keeps legacy multiple Calm route selections readable', () => {
   const result = validateAnswerRecord(validAnswer({
     test: 'calm_route_comparison',
     source: 'calm-route-comparison',
