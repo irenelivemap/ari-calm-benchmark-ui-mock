@@ -825,11 +825,9 @@ html.is-challenge-dialog-open {
   text-transform: uppercase;
   white-space: nowrap;
 }
-.calm-card--how .calm-kicker {
-  background: var(--ari-green);
-}
+.calm-card--how .calm-kicker,
 .calm-card--session .calm-kicker {
-  background: var(--ari-orange);
+  background: #fff;
 }
 
 /* Concave fillet pseudo-elements — quarter-circle joins on both sides */
