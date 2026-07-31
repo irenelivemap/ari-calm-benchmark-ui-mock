@@ -1235,10 +1235,10 @@ html.is-challenge-dialog-open {
   grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr);
   grid-template-areas: "title form";
   gap: 16px 24px;
-  align-items: center;
+  align-items: start;
   overflow: hidden;
   padding: 28px;
-  padding-top: 52px;
+  padding-top: 44px;
   border: 1px solid var(--rank-border);
   background:
     radial-gradient(90% 140% at 82% 0%, var(--rank-aura) 0%, transparent 44%),
@@ -1459,6 +1459,7 @@ html.is-challenge-dialog-open {
 .calm-start-left .calm-kicker {
   /* card-notch--tl: same pattern as the coloured overview cards */
   position: absolute;
+  z-index: 2;
   top: 0;
   bottom: auto;
   left: 0;
