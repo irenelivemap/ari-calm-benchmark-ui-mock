@@ -808,7 +808,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-card--how {
-  background: var(--ari-yellow);
+  background: var(--ari-green);
 }
 
 /* card-notch--tl: eyebrow tab bites top-left corner */
@@ -824,7 +824,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-card--session {
-  background: var(--ari-grey-02);
+  background: var(--ari-orange);
 }
 
 .calm-card-head {
@@ -932,7 +932,12 @@ html.is-challenge-dialog-open {
 }
 
 .calm-card--session .calm-kicker {
-  color: var(--ari-warm-ink);
+  color: var(--ari-plum);
+}
+
+.calm-card--session .calm-card-main,
+.calm-card--session h2 {
+  color: var(--ari-plum);
 }
 
 .calm-icon {
@@ -1138,6 +1143,8 @@ html.is-challenge-dialog-open {
 
 .calm-card--session .calm-session-points div {
   padding-block: 10px;
+  border-top-color: rgba(33, 26, 42, 0.16);
+  color: var(--ari-plum);
 }
 
 .calm-session-points div:first-child {
@@ -1478,37 +1485,37 @@ html.is-challenge-dialog-open {
   padding: 14px 26px;
   border: 1px solid transparent;
   border-radius: calc(0.5em + 8px);
-  background: var(--ari-blurple);
+  background: var(--ari-green-deep);
   color: #fff;
   cursor: pointer;
   font: 700 0.92em/1 var(--ari-font);
   white-space: nowrap;
   text-shadow: none;
   box-shadow:
-    0 14px 30px rgba(138, 144, 243, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24);
-  transition: transform 200ms var(--motion-spring), box-shadow 200ms var(--motion-spring), background 140ms ease;
+    0 14px 30px rgba(7, 95, 61, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: box-shadow 200ms var(--motion-spring), background 140ms ease;
 }
 
 .calm-start-row button:hover:not(:disabled) {
-  background: #9fa4f5;
+  background: #0a7048;
   box-shadow:
-    0 14px 30px rgba(138, 144, 243, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    0 14px 30px rgba(7, 95, 61, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .calm-start-row button:active:not(:disabled) {
-  background: #7a80e8;
+  background: #064f33;
 }
 
 .calm-start-row button:focus-visible {
-  outline: 3px solid rgba(138, 144, 243, 0.7);
+  outline: 3px solid rgba(7, 95, 61, 0.6);
   outline-offset: 3px;
 }
 
 .calm-start-row button:disabled {
   border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(138, 144, 243, 0.28);
+  background: rgba(7, 95, 61, 0.28);
   color: rgba(255, 255, 255, 0.48);
   cursor: not-allowed;
   text-shadow: none;
@@ -3498,22 +3505,22 @@ html.is-challenge-dialog-open {
   min-height: 56px;
   border: 1px solid transparent;
   border-radius: calc(0.5em + 8px);
-  background: var(--ari-blurple);
+  background: var(--ari-green-deep);
   color: #fff;
   cursor: pointer;
   font: 700 0.94rem/1 var(--ari-font);
-  box-shadow: 0 8px 24px rgba(138, 144, 243, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  transition: transform 200ms var(--motion-spring), background 140ms ease, box-shadow 200ms var(--motion-spring);
+  box-shadow: 0 8px 24px rgba(7, 95, 61, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: background 140ms ease, box-shadow 200ms var(--motion-spring);
 }
 
 #challenge-action:hover {
-  background: #9fa4f5;
-  box-shadow: 0 14px 32px rgba(138, 144, 243, 0.44), inset 0 1px 0 rgba(255, 255, 255, 0.26);
+  background: #0a7048;
+  box-shadow: 0 14px 32px rgba(7, 95, 61, 0.44), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 #challenge-action:active {
-  background: #7a80e8;
-  box-shadow: 0 4px 14px rgba(138, 144, 243, 0.28);
+  background: #064f33;
+  box-shadow: 0 4px 14px rgba(7, 95, 61, 0.28);
 }
 
 #challenge-action:focus-visible {
@@ -5943,27 +5950,27 @@ html.is-challenge-dialog-open {
   padding: 13px 28px;
   border-radius: calc(0.5em + 8px);
   border: 1px solid transparent;
-  background: var(--ari-blurple);
+  background: var(--ari-green-deep);
   color: #fff;
   font: inherit;
   font-size: 1.05rem;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(138, 144, 243, 0.32);
-  transition: background 140ms ease, transform 200ms var(--motion-spring), box-shadow 200ms var(--motion-spring);
+  box-shadow: 0 8px 20px rgba(7, 95, 61, 0.32);
+  transition: background 140ms ease, box-shadow 200ms var(--motion-spring);
 }
 
 .ari-onboarding__next:hover {
-  background: #9fa4f5;
-  box-shadow: 0 12px 28px rgba(138, 144, 243, 0.4);
+  background: #0a7048;
+  box-shadow: 0 12px 28px rgba(7, 95, 61, 0.4);
 }
 
 .ari-onboarding__next:active {
-  background: #7a80e8;
+  background: #064f33;
 }
 
 .ari-onboarding__next:focus-visible {
-  outline: 3px solid rgba(138, 144, 243, 0.7);
+  outline: 3px solid rgba(7, 95, 61, 0.6);
   outline-offset: 3px;
 }
 
@@ -6017,33 +6024,31 @@ html.is-challenge-dialog-open {
 
 .ari-btn--primary {
   border-color: transparent;
-  background: var(--ari-blurple);
+  background: var(--ari-green-deep);
   color: #fff;
   font-size: 0.86rem;
   text-shadow: none;
   border-radius: calc(0.5em + 8px);
   box-shadow:
-    0 0 0 3px rgba(138, 144, 243, 0.18),
-    0 10px 24px rgba(138, 144, 243, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  transition: transform 200ms var(--motion-spring), box-shadow 200ms var(--motion-spring), background 140ms ease;
+    0 0 0 3px rgba(7, 95, 61, 0.18),
+    0 10px 24px rgba(7, 95, 61, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: box-shadow 200ms var(--motion-spring), background 140ms ease;
 }
 
 .ari-btn--primary:hover:not(:disabled) {
   border-color: transparent;
-  background: #9fa4f5;
+  background: #0a7048;
   color: #fff;
-  transform: translateY(-2px);
   box-shadow:
-    0 0 0 4px rgba(138, 144, 243, 0.22),
-    0 14px 30px rgba(138, 144, 243, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    0 0 0 4px rgba(7, 95, 61, 0.22),
+    0 14px 30px rgba(7, 95, 61, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
-
 
 .ari-btn--primary:disabled {
   border-color: transparent;
-  background: rgba(138, 144, 243, 0.28);
+  background: rgba(7, 95, 61, 0.28);
   color: rgba(255, 255, 255, 0.62);
   cursor: not-allowed;
   text-shadow: none;
