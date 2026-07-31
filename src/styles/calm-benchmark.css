@@ -667,7 +667,7 @@ html.is-challenge-dialog-open {
   line-height: 1.2;
   font-weight: 700;
   letter-spacing: 0.011em;
-  text-wrap: balance;
+  text-wrap: pretty;
 }
 
 .calm-hero p {
