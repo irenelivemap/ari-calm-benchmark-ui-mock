@@ -773,7 +773,7 @@ html.is-challenge-dialog-open {
   gap: 24px;
   align-items: start;
   margin: 56px 0 24px; /* body→content: 56px */
-  padding-top: 22px; /* room for floating card-tab above cards */
+  padding-top: 40px; /* room for card-tab above cards (~37px tab height) */
 }
 
 .calm-card,
@@ -806,20 +806,59 @@ html.is-challenge-dialog-open {
   background: var(--ari-green);
 }
 
-/* card-tab: rides the top edge — floats above the card */
+/* card-tab: same-colour tab rides the top edge with concave fillets */
 .calm-card--how .calm-kicker,
 .calm-card--session .calm-kicker {
   position: absolute;
-  top: -16px;
+  bottom: 100%;
   left: 24px;
+  margin-bottom: -1px;
   display: inline-flex;
   align-items: center;
-  padding: 4px 14px 5px;
-  border-radius: 999px;
-  background: var(--ari-off-white);
+  gap: 8px;
+  padding: 11px 20px 8px;
+  border-radius: 24px 24px 0 0;
   color: var(--ari-plum);
-  gap: 6px;
-  box-shadow: 0 1px 3px rgba(33, 26, 42, 0.1);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.calm-card--how .calm-kicker {
+  background: var(--ari-green);
+}
+.calm-card--session .calm-kicker {
+  background: var(--ari-orange);
+}
+
+/* Concave fillet pseudo-elements — quarter-circle joins on both sides */
+.calm-card--how .calm-kicker::before,
+.calm-card--how .calm-kicker::after,
+.calm-card--session .calm-kicker::before,
+.calm-card--session .calm-kicker::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+.calm-card--how .calm-kicker::before {
+  left: -24px;
+  background: radial-gradient(circle at top left, transparent 23.5px, var(--ari-green) 24px);
+}
+.calm-card--how .calm-kicker::after {
+  right: -24px;
+  background: radial-gradient(circle at top right, transparent 23.5px, var(--ari-green) 24px);
+}
+.calm-card--session .calm-kicker::before {
+  left: -24px;
+  background: radial-gradient(circle at top left, transparent 23.5px, var(--ari-orange) 24px);
+}
+.calm-card--session .calm-kicker::after {
+  right: -24px;
+  background: radial-gradient(circle at top right, transparent 23.5px, var(--ari-orange) 24px);
 }
 
 .calm-card--session {
@@ -829,7 +868,6 @@ html.is-challenge-dialog-open {
 .calm-card-head {
   border-radius: var(--ari-radius-card) var(--ari-radius-card) 0 0;
   cursor: pointer;
-  padding-top: 16px;
 }
 
 .calm-card-head:focus-visible {
@@ -837,9 +875,6 @@ html.is-challenge-dialog-open {
   outline-offset: -6px;
 }
 
-.calm-card:not(.is-compact):hover .calm-kicker {
-  box-shadow: 0 2px 6px rgba(33, 26, 42, 0.16);
-}
 
 .calm-card-main {
   display: grid;
