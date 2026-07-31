@@ -1233,13 +1233,12 @@ html.is-challenge-dialog-open {
   min-height: 188px;
   grid-column: 1 / -1;
   grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr);
-  grid-template-areas:
-    "label label"
-    "title form";
+  grid-template-areas: "title form";
   gap: 16px 24px;
-  align-items: start;
+  align-items: center;
   overflow: hidden;
   padding: 28px;
+  padding-top: 52px;
   border: 1px solid var(--rank-border);
   background:
     radial-gradient(90% 140% at 82% 0%, var(--rank-aura) 0%, transparent 44%),
@@ -1458,8 +1457,49 @@ html.is-challenge-dialog-open {
 }
 
 .calm-start-left .calm-kicker {
-  grid-area: label;
-  color: rgba(255, 255, 255, 0.72);
+  /* card-notch--tl: same pattern as the coloured overview cards */
+  position: absolute;
+  top: 0;
+  bottom: auto;
+  left: 0;
+  right: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: fit-content;
+  max-width: calc(100% - var(--ari-radius-card));
+  height: 34px;
+  padding: 0 20px 16px 24px;
+  background: #fff;
+  border-top-left-radius: 0;
+  border-bottom-right-radius: 17px;
+  color: var(--ari-plum);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.calm-start-left .calm-kicker::before,
+.calm-start-left .calm-kicker::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+.calm-start-left .calm-kicker::before {
+  right: -18px;
+  top: 0;
+  width: 18px;
+  height: 17px;
+  background: radial-gradient(circle at bottom right, transparent 16.5px, #fff 17px);
+}
+.calm-start-left .calm-kicker::after {
+  left: 0;
+  bottom: -24px;
+  width: 24px;
+  height: 24px;
+  background: radial-gradient(circle at bottom right, transparent 23.5px, #fff 24px);
 }
 
 .calm-start-left h2 {
