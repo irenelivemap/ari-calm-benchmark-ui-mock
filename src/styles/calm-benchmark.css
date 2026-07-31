@@ -773,7 +773,6 @@ html.is-challenge-dialog-open {
   gap: 24px;
   align-items: start;
   margin: 56px 0 24px; /* body→content: 56px */
-  padding-top: 40px; /* room for card-tab above cards (~37px tab height) */
 }
 
 .calm-card,
@@ -787,7 +786,7 @@ html.is-challenge-dialog-open {
   min-height: 420px;
   flex-direction: column;
   gap: 0;
-  overflow: visible;
+  overflow: hidden;
   padding: 24px;
   /* Spacing rhythm: 16px eyebrow→headline applied via padding-top in card-head */
   transition:
@@ -806,18 +805,27 @@ html.is-challenge-dialog-open {
   background: var(--ari-green);
 }
 
-/* card-tab: same-colour tab rides the top edge with concave fillets */
+/* card-notch--tl: page-colour bite in the top-left card corner
+   Exact port of .card-notch + .card-notch--tl from the landing page source.
+   34px depth, twin 17px fillet curves, 24px content inset. */
 .calm-card--how .calm-kicker,
 .calm-card--session .calm-kicker {
   position: absolute;
-  bottom: 100%;
-  left: 24px;
-  margin-bottom: -1px;
+  top: 0;
+  bottom: auto;
+  left: 0;
+  right: auto;
   display: inline-flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
-  padding: 11px 20px 8px;
-  border-radius: 24px 24px 0 0;
+  width: fit-content;
+  max-width: calc(100% - var(--ari-radius-card));
+  height: 34px;
+  padding: 0 20px 16px 24px;
+  background: #fff;
+  border-top-left-radius: 0;
+  border-bottom-right-radius: 17px;
   color: var(--ari-plum);
   font-size: 13px;
   font-weight: 600;
@@ -825,38 +833,33 @@ html.is-challenge-dialog-open {
   text-transform: uppercase;
   white-space: nowrap;
 }
-.calm-card--how .calm-kicker,
-.calm-card--session .calm-kicker {
-  background: #fff;
-}
-
-/* Concave fillet pseudo-elements — quarter-circle joins on both sides */
 .calm-card--how .calm-kicker::before,
 .calm-card--how .calm-kicker::after,
 .calm-card--session .calm-kicker::before,
 .calm-card--session .calm-kicker::after {
   content: "";
   position: absolute;
-  bottom: 0;
-  width: 24px;
-  height: 24px;
   pointer-events: none;
 }
-.calm-card--how .calm-kicker::before {
-  left: -24px;
-  background: radial-gradient(circle at top left, transparent 23.5px, var(--ari-green) 24px);
-}
-.calm-card--how .calm-kicker::after {
-  right: -24px;
-  background: radial-gradient(circle at top right, transparent 23.5px, var(--ari-green) 24px);
-}
+/* Right-side fillet: 17px quarter-circle where notch right edge meets card */
+.calm-card--how .calm-kicker::before,
 .calm-card--session .calm-kicker::before {
-  left: -24px;
-  background: radial-gradient(circle at top left, transparent 23.5px, var(--ari-orange) 24px);
+  right: -18px;
+  top: 0;
+  bottom: auto;
+  width: 18px;
+  height: 17px;
+  background: radial-gradient(circle at bottom right, transparent 16.5px, #fff 17px);
 }
+/* Bottom fillet: 24px quarter-circle below the notch at the left edge */
+.calm-card--how .calm-kicker::after,
 .calm-card--session .calm-kicker::after {
-  right: -24px;
-  background: radial-gradient(circle at top right, transparent 23.5px, var(--ari-orange) 24px);
+  left: 0;
+  top: auto;
+  bottom: -24px;
+  width: 24px;
+  height: 24px;
+  background: radial-gradient(circle at bottom right, transparent 23.5px, #fff 24px);
 }
 
 .calm-card--session {
