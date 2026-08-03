@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-threshold-tick">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-choice-reasons">
   <style>
     body {
       margin: 0;
@@ -1000,6 +1000,36 @@
         </div>`;
     }
 
+    function renderChoiceReasons(summary) {
+      const { choiceReasonCounts, choiceReasonDenom } = summary;
+      if (!choiceReasonDenom) return '';
+      const sorted = [...AriCalmResults.CHOICE_REASONS]
+        .filter(key => choiceReasonCounts[key] > 0)
+        .sort((a, b) => choiceReasonCounts[b] - choiceReasonCounts[a]);
+      if (!sorted.length) return '';
+      const rows = sorted.map(key => {
+        const count = choiceReasonCounts[key];
+        const pct = Math.round(count / choiceReasonDenom * 100);
+        const label = AriCalmResults.CHOICE_REASON_LABELS[key] || key;
+        return `
+          <div class="calm-choice-reason-row">
+            <div class="calm-choice-reason-label">${escapeHtml(label)}</div>
+            <div class="calm-choice-reason-track" aria-hidden="true">
+              <div class="calm-choice-reason-fill" style="width:${pct}%"></div>
+            </div>
+            <div class="calm-choice-reason-value"><span class="calm-choice-reason-base">${count}/${choiceReasonDenom}</span> · ${pct}%</div>
+          </div>`;
+      }).join('');
+      return `
+        <section class="calm-choice-reasons-section" aria-labelledby="choice-reasons-title">
+          <header class="calm-analysis-heading">
+            <h2 id="choice-reasons-title">What made evaluators choose their preferred route?</h2>
+          </header>
+          <p class="calm-choice-reasons-note">Among the ${choiceReasonDenom} comparison${choiceReasonDenom === 1 ? '' : 's'} where a specific Calm route was preferred. Evaluators could select multiple reasons.</p>
+          <div class="calm-choice-reasons">${rows}</div>
+        </section>`;
+    }
+
     function renderCalmOverview(summary, agreement) {
       if (!summary.total) {
         return `
@@ -1050,6 +1080,7 @@
             <div class="calm-outcome-summary__rows">${outcomeRows}</div>
           </div>
         </section>
+        ${renderChoiceReasons(summary)}
         ${renderAgreementOverview(agreement)}`;
     }
 
