@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-choice-reasons">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-choice-compare">
   <style>
     body {
       margin: 0;
@@ -589,6 +589,7 @@
      * FORM: Existing results world extended as an operate surface with a master-detail participant view.
      */
     let calmResultsView = 'overview';
+    let choiceReasonsMode = 'all';
     let selectedResultsParticipantId = '';
     const storedSampleResultsMode = localStorage.getItem(SAMPLE_RESULTS_STORAGE);
     let sampleResultsEnabled = !runtimeConfig.production
@@ -1000,33 +1001,82 @@
         </div>`;
     }
 
-    function renderChoiceReasons(summary) {
-      const { choiceReasonCounts, choiceReasonDenom } = summary;
-      if (!choiceReasonDenom) return '';
+    function choiceReasonRankHtml(counts, denom, colorClass, emphasizedKeys = new Set()) {
       const sorted = [...AriCalmResults.CHOICE_REASONS]
-        .filter(key => choiceReasonCounts[key] > 0)
-        .sort((a, b) => choiceReasonCounts[b] - choiceReasonCounts[a]);
-      if (!sorted.length) return '';
-      const rows = sorted.map(key => {
-        const count = choiceReasonCounts[key];
-        const pct = Math.round(count / choiceReasonDenom * 100);
+        .filter(key => counts[key] > 0)
+        .sort((a, b) => counts[b] - counts[a]);
+      if (!sorted.length) return `<p class="calm-choice-reasons-empty">No reasons recorded for this selection.</p>`;
+      return sorted.map(key => {
+        const count = counts[key];
+        const pct = Math.round(count / denom * 100);
         const label = AriCalmResults.CHOICE_REASON_LABELS[key] || key;
+        const isShared = emphasizedKeys.has(key);
         return `
           <div class="calm-choice-reason-row">
-            <div class="calm-choice-reason-label">${escapeHtml(label)}</div>
+            <div class="calm-choice-reason-label${isShared ? ' is-shared' : ''}">${escapeHtml(label)}</div>
             <div class="calm-choice-reason-track" aria-hidden="true">
-              <div class="calm-choice-reason-fill" style="width:${pct}%"></div>
+              <div class="calm-choice-reason-fill ${colorClass}" style="width:${Math.max(pct, 2)}%"></div>
             </div>
-            <div class="calm-choice-reason-value"><span class="calm-choice-reason-base">${count}/${choiceReasonDenom}</span> · ${pct}%</div>
+            <div class="calm-choice-reason-value"><span class="calm-choice-reason-base">${count}/${denom}</span> · <strong>${pct}%</strong></div>
           </div>`;
       }).join('');
+    }
+
+    function renderChoiceReasons(summary) {
+      const { choiceReasonCounts, choiceReasonDenom, rows } = summary;
+      if (!choiceReasonDenom) return '';
+
+      // per-outcome counts
+      const quietRows = rows.filter(r => r.exactOutcome === 'calm_quiet');
+      const natureRows = rows.filter(r => r.exactOutcome === 'calm_nature');
+      function toCounts(subset) {
+        const c = Object.fromEntries(AriCalmResults.CHOICE_REASONS.map(k => [k, 0]));
+        subset.forEach(r => r.q2Reasons.forEach(k => { if (k in c) c[k] += 1; }));
+        return c;
+      }
+      const quietCounts = toCounts(quietRows);
+      const natureCounts = toCounts(natureRows);
+
+      // shared top reasons (appear in top-3 of both sides)
+      const topN = (counts, n) => [...AriCalmResults.CHOICE_REASONS]
+        .filter(k => counts[k] > 0)
+        .sort((a, b) => counts[b] - counts[a])
+        .slice(0, n);
+      const sharedTop = new Set(topN(quietCounts, 3).filter(k => topN(natureCounts, 3).includes(k)));
+
+      const isAll = choiceReasonsMode === 'all';
+      const toggles = `
+        <div class="calm-choice-mode-group" role="group" aria-label="View mode">
+          <button class="calm-choice-mode${isAll ? ' is-on' : ''}" data-choice-mode="all" type="button">All</button>
+          <button class="calm-choice-mode${!isAll ? ' is-on' : ''}" data-choice-mode="compare" type="button">Compare Calm Quiet vs Calm Nature</button>
+        </div>`;
+
+      const allView = `
+        <div class="calm-choice-reasons"${isAll ? '' : ' hidden'} data-choice-view="all">
+          ${choiceReasonRankHtml(choiceReasonCounts, choiceReasonDenom, 'all')}
+        </div>`;
+
+      const compareView = `
+        <div class="calm-choice-reasons__compare"${!isAll ? '' : ' hidden'} data-choice-view="compare">
+          <div class="calm-choice-reasons__panel">
+            <h3>Calm Quiet chosen <span>${quietRows.length} comparison${quietRows.length === 1 ? '' : 's'}</span></h3>
+            <div class="calm-choice-reasons">${choiceReasonRankHtml(quietCounts, quietRows.length, 'quiet', sharedTop)}</div>
+          </div>
+          <div class="calm-choice-reasons__panel">
+            <h3>Calm Nature chosen <span>${natureRows.length} comparison${natureRows.length === 1 ? '' : 's'}</span></h3>
+            <div class="calm-choice-reasons">${choiceReasonRankHtml(natureCounts, natureRows.length, 'nature', sharedTop)}</div>
+          </div>
+        </div>`;
+
       return `
         <section class="calm-choice-reasons-section" aria-labelledby="choice-reasons-title">
           <header class="calm-analysis-heading">
             <h2 id="choice-reasons-title">What made evaluators choose their preferred route?</h2>
           </header>
-          <p class="calm-choice-reasons-note">Among the ${choiceReasonDenom} comparison${choiceReasonDenom === 1 ? '' : 's'} where a specific Calm route was preferred. Evaluators could select multiple reasons.</p>
-          <div class="calm-choice-reasons">${rows}</div>
+          <p class="calm-choice-reasons-note">Among ${choiceReasonDenom} comparison${choiceReasonDenom === 1 ? '' : 's'} where a specific Calm route was preferred. Evaluators could select multiple reasons.</p>
+          ${toggles}
+          ${allView}
+          ${compareView}
         </section>`;
     }
 
@@ -2001,6 +2051,15 @@
         renderCommunityResults();
         requestAnimationFrame(() => {
           communityResults.querySelector(`[data-results-view="${calmResultsView}"]`)?.focus();
+        });
+        return;
+      }
+      const choiceModeButton = event.target.closest('[data-choice-mode]');
+      if (choiceModeButton && choiceModeButton.dataset.choiceMode !== choiceReasonsMode) {
+        choiceReasonsMode = choiceModeButton.dataset.choiceMode;
+        renderCommunityResults();
+        requestAnimationFrame(() => {
+          communityResults.querySelector(`[data-choice-mode="${choiceReasonsMode}"]`)?.focus();
         });
         return;
       }
