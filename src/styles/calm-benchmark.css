@@ -783,11 +783,24 @@ html.is-challenge-dialog-open {
 }
 
 .calm-info-grid {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr);
   gap: 20px;
   align-items: start;
   margin: 36px 0 20px;
+}
+
+.calm-info-grid.has-progress::before {
+  content: '';
+  position: absolute;
+  top: 44px;
+  left: 20px;
+  bottom: 0;
+  width: 0;
+  border-left: 1.5px dashed rgba(143, 217, 168, 0.35);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .calm-card,
