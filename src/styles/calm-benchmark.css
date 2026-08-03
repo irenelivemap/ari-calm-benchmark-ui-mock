@@ -8198,8 +8198,8 @@ html.is-challenge-dialog-open {
 
 /* Header */
 .calm-rp-header {
-  padding: 40px 0 32px;
-  margin-bottom: 40px;
+  padding: 32px 0 0;
+  margin-bottom: 28px;
 }
 
 .calm-rp-eyebrow {
@@ -8215,7 +8215,7 @@ html.is-challenge-dialog-open {
   font-size: var(--font-size-heading-lg);
   font-weight: 700;
   color: var(--ari-plum);
-  margin: 0 0 16px;
+  margin: 0;
   line-height: 1.2;
   letter-spacing: -0.03em;
 }
