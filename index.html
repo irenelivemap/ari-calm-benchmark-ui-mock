@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-comparison-highlight">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-rp-map-expand">
   <style>
     body {
       margin: 0;
@@ -274,6 +274,18 @@
       <div id="rp-pairs-list" class="calm-rp-pairs-list"></div>
     </div>
   </section>
+
+  <!-- Route pair map fullscreen overlay -->
+  <div class="calm-rp-map-overlay" id="rp-map-overlay" hidden role="dialog" aria-modal="true" aria-label="Expanded route map">
+    <header class="calm-rp-map-overlay__bar">
+      <span class="calm-rp-map-overlay__label" id="rp-overlay-label"></span>
+      <button class="calm-rp-map-overlay__close" id="rp-overlay-close" type="button" aria-label="Close expanded map">&times;</button>
+    </header>
+    <div class="calm-rp-map-wrap calm-rp-map-overlay__inner">
+      <div class="calm-rp-map-controls" id="rp-overlay-toggles" role="group" aria-label="Show or hide routes on map"></div>
+      <div class="calm-rp-map calm-rp-map--overlay" id="rp-overlay-map"></div>
+    </div>
+  </div>
 
   <div id="calm-benchmark-root" hidden></div>
 
@@ -2007,6 +2019,57 @@
 
     // ── Route profiles & pair diagnostics ──────────────────────────────────
 
+    routeProfilesEl.addEventListener('click', function(event) {
+      const expandBtn = event.target.closest('.calm-rp-map-expand');
+      if (expandBtn) {
+        const idx = parseInt(expandBtn.dataset.pairIndex, 10);
+        const routePairs = window.AriCalmBenchmarkMockRoutePairs || [];
+        if (routePairs[idx]) showRpMapOverlay(routePairs[idx], expandBtn.dataset.pairLabel || '', expandBtn.dataset.pairRoute || '');
+        return;
+      }
+    });
+
+    document.getElementById('rp-overlay-close').addEventListener('click', hideRpMapOverlay);
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const overlay = document.getElementById('rp-map-overlay');
+        if (overlay && !overlay.hidden) hideRpMapOverlay();
+      }
+    });
+
+    function showRpMapOverlay(routePair, pairLabel, pairRoute) {
+      const overlay = document.getElementById('rp-map-overlay');
+      const labelEl = document.getElementById('rp-overlay-label');
+      const togglesEl = document.getElementById('rp-overlay-toggles');
+      const mapEl = document.getElementById('rp-overlay-map');
+      labelEl.textContent = pairLabel + (pairRoute ? ' · ' + pairRoute : '');
+      togglesEl.innerHTML = `
+        <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="fast" style="--rp-toggle-color: var(--ari-orange); --rp-toggle-text: var(--ari-plum)">Fast</button>
+        <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_nature" style="--rp-toggle-color: var(--ari-route-a); --rp-toggle-text: #fff">Calm Nature</button>
+        <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_quiet" style="--rp-toggle-color: var(--ari-route-b); --rp-toggle-text: #fff">Calm Quiet</button>
+      `;
+      const prev = mapEl._rpMap;
+      if (prev && typeof prev.remove === 'function') { try { prev.remove(); } catch (_) {} }
+      delete mapEl._rpMap;
+      mapEl.innerHTML = '';
+      overlay.hidden = false;
+      document.body.style.overflow = 'hidden';
+      document.getElementById('rp-overlay-close').focus();
+      initPairMap(mapEl, routePair);
+    }
+
+    function hideRpMapOverlay() {
+      const overlay = document.getElementById('rp-map-overlay');
+      const mapEl = document.getElementById('rp-overlay-map');
+      overlay.hidden = true;
+      document.body.style.overflow = '';
+      const m = mapEl._rpMap;
+      if (m && typeof m.remove === 'function') { try { m.remove(); } catch (_) {} }
+      delete mapEl._rpMap;
+      mapEl.innerHTML = '';
+    }
+
     routeProfilesEl.addEventListener('click', event => {
       const toggleBtn = event.target.closest('.calm-rp-pair__toggle');
       if (!toggleBtn) return;
@@ -2295,6 +2358,7 @@
                   <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="fast" style="--rp-toggle-color: var(--ari-orange); --rp-toggle-text: var(--ari-plum)">Fast</button>
                   <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_nature" style="--rp-toggle-color: var(--ari-route-a); --rp-toggle-text: #fff">Calm Nature</button>
                   <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_quiet" style="--rp-toggle-color: var(--ari-route-b); --rp-toggle-text: #fff">Calm Quiet</button>
+                  <button class="calm-rp-map-expand" type="button" aria-label="Expand map" data-pair-index="${idx}" data-pair-label="${escapeHtml(pairLabel)}" data-pair-route="${escapeHtml(diag.origin_label || 'Start')} → ${escapeHtml(diag.destination_label || 'Destination')}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 2h4v4M6 14H2v-4M14 2l-5.5 5.5M2 14l5.5-5.5"/></svg></button>
                 </div>
                 <div class="calm-rp-map" id="rp-map-${idx}" data-pair-index="${idx}"></div>
               </div>

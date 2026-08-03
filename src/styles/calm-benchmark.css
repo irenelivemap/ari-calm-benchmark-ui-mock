@@ -8490,6 +8490,104 @@ html.is-challenge-dialog-open {
 
 .calm-rp-map-toggle[aria-pressed="false"] { opacity: 0.5; }
 
+.calm-rp-map-expand {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1.5px solid var(--ari-hairline);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ari-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 120ms, color 120ms;
+}
+
+.calm-rp-map-expand:hover {
+  border-color: var(--ari-plum);
+  color: var(--ari-plum);
+}
+
+.calm-rp-map-expand svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+/* Fullscreen map overlay */
+.calm-rp-map-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  background: var(--ari-off-white);
+}
+
+.calm-rp-map-overlay[hidden] { display: none; }
+
+.calm-rp-map-overlay__bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: #fff;
+  border-bottom: 1px solid var(--ari-hairline);
+  flex-shrink: 0;
+}
+
+.calm-rp-map-overlay__label {
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  color: var(--ari-plum);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calm-rp-map-overlay__close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ari-hairline);
+  background: #fff;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--ari-plum);
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+
+.calm-rp-map-overlay__close:hover {
+  background: var(--ari-off-white);
+  border-color: var(--ari-plum);
+}
+
+.calm-rp-map-overlay__inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+  min-height: 0;
+}
+
+.calm-rp-map--overlay {
+  flex: 1;
+  height: auto !important;
+  min-height: 0;
+  border-radius: var(--ari-radius-inner);
+}
+
 .calm-rp-map {
   height: 260px;
   border-radius: var(--ari-radius-inner);
