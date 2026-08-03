@@ -70,6 +70,7 @@
       { value: 'hard_to_judge', label: 'Hard to judge' }
     ],
     q1Multiple: false,
+    q2Multiple: false,
     q2Options: [
       { value: 'yes', label: 'Yes' },
       { value: 'no', label: 'No' },
@@ -99,9 +100,9 @@
   const MEDAL_UNLOCK_FALLBACK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
   const demoPairs = window.AriCalmBenchmarkMockRoutePairs || [];
 
-  const routeAColor = '#C84720';
-  const routeBColor = '#08784D';
-  const routeCColor = '#2864C7';
+  const routeAColor = '#08784D';
+  const routeBColor = '#4A52CC';
+  const routeCColor = '#ff7c60';
 
   function escapeHtml(value) {
     return String(value ?? '')
@@ -126,6 +127,7 @@
         : [...DEFAULT_BENCHMARK_CONFIG.routeTypes],
       q1Options: Array.isArray(config.q1Options) ? config.q1Options : DEFAULT_BENCHMARK_CONFIG.q1Options,
       q1Multiple: config.q1Multiple === true,
+      q2Multiple: config.q2Multiple === true,
       q2Options: Array.isArray(config.q2Options) ? config.q2Options : DEFAULT_BENCHMARK_CONFIG.q2Options,
       q3Options: Array.isArray(config.q3Options) ? config.q3Options : DEFAULT_BENCHMARK_CONFIG.q3Options,
       q3Variants: config.q3Variants && typeof config.q3Variants === 'object' ? config.q3Variants : {},
@@ -136,7 +138,7 @@
     };
   }
 
-  function renderChoiceOptions(options, { name, type = 'radio', withRouteMetrics = false }) {
+  function renderChoiceOptions(options, { name, type = 'radio', withRouteMetrics = false, withIcons = true }) {
     return options.map(option => {
       const className = option.className ? ` class="${escapeHtml(option.className)}"` : '';
       const exclusive = type === 'checkbox' && option.exclusive ? ' data-exclusive-choice' : '';
@@ -147,7 +149,7 @@
           + '<small data-route-metric-secondary hidden></small>'
           + '</span>'
         : '';
-      const icon = type === 'checkbox' ? CHOICE_ICONS[option.value] : null;
+      const icon = type === 'checkbox' && withIcons ? CHOICE_ICONS[option.value] : null;
       const keyword = type === 'checkbox' ? CHOICE_BOLD_KEYWORDS[option.value] : null;
       const labelContent = icon
         ? `${icon}<span class="ari-choice-body">${boldKeyword(option.label, keyword)}</span>`
@@ -165,9 +167,9 @@
         return null;
       }
       const differenceSeconds = metadata.durationSeconds - metadata.fastDurationSeconds;
-      let secondary = 'Same time as Fast';
-      if (differenceSeconds > 0 && differenceSeconds < 60) secondary = '<1 min extra vs Fast';
-      else if (differenceSeconds >= 60) secondary = `+${Math.round(differenceSeconds / 60)} min vs Fast`;
+      let secondary = 'Same time';
+      if (differenceSeconds > 0 && differenceSeconds < 60) secondary = '<1 min';
+      else if (differenceSeconds >= 60) secondary = `+${Math.round(differenceSeconds / 60)} min`;
       else if (differenceSeconds < 0 && differenceSeconds > -60) secondary = '<1 min faster than Fast';
       else if (differenceSeconds <= -60) secondary = `${Math.abs(Math.round(differenceSeconds / 60))} min faster than Fast`;
       return {
@@ -382,8 +384,16 @@
                     ${contextToggleMarkup}
                   </legend>
                   ${contextCopyMarkup}
+                  ${benchmark.routeMetricsHelp ? `
+                    <div class="ari-route-metrics-explainer" data-route-metrics-explainer>
+                      <button class="ari-route-metrics-toggle" data-action="toggle-route-metrics-help" type="button" aria-expanded="false" aria-controls="ari-q1-metrics-help" hidden>
+                        <svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7.25"></circle><path d="M9 8v4"></path><circle cx="9" cy="5.25" r=".75" fill="currentColor" stroke="none"></circle></svg>
+                        <span data-route-metrics-toggle-label>About time estimates</span>
+                      </button>
+                      <p class="ari-route-metrics-help" id="ari-q1-metrics-help" data-route-metrics-help>${escapeHtml(benchmark.routeMetricsHelp)}</p>
+                    </div>` : ''}
                   ${benchmark.q1Multiple ? '<p class="ari-question-hint" id="ari-q1-hint">Select all that apply.</p>' : ''}
-                  <div class="ari-choice-grid ari-choice-grid--two${benchmark.q1Multiple ? ' ari-choice-grid--multiple' : ''}"${benchmark.q1Multiple ? ' aria-describedby="ari-q1-hint"' : ''}>
+                  <div class="ari-choice-grid ari-choice-grid--two${benchmark.q1Multiple ? ' ari-choice-grid--multiple' : ''}"${benchmark.q1Multiple || benchmark.routeMetricsHelp ? ` aria-describedby="${[benchmark.q1Multiple ? 'ari-q1-hint' : '', benchmark.routeMetricsHelp ? 'ari-q1-metrics-help' : ''].filter(Boolean).join(' ')}"` : ''}>
                     ${renderChoiceOptions(benchmark.q1Options, {
                       name: 'q1Choice',
                       type: benchmark.q1Multiple ? 'checkbox' : 'radio',
@@ -395,9 +405,17 @@
 
                 <section class="ari-question-block" data-q2 hidden>
                 <fieldset>
-                  <legend>${escapeHtml(benchmark.questions.q2)}</legend>
-                  <div class="ari-choice-grid">
-                    ${renderChoiceOptions(benchmark.q2Options, { name: 'q2Separate' })}
+                  <legend data-q2-question>${escapeHtml(benchmark.questions.q2)}</legend>
+                  ${benchmark.q2Multiple ? '<p class="ari-question-hint" id="ari-q2-hint">Select all that apply.</p>' : ''}
+                  <div class="ari-choice-grid" data-q2-grid${benchmark.q2Multiple ? ' aria-describedby="ari-q2-hint"' : ''}>
+                    ${renderChoiceOptions(benchmark.q2Options, {
+                      name: benchmark.q2Multiple ? 'q2Reasons' : 'q2Separate',
+                      type: benchmark.q2Multiple ? 'checkbox' : 'radio',
+                      withIcons: false
+                    })}
+                  </div>
+                  <div class="ari-question-note" data-q2-note hidden>
+                    <textarea name="q2Note" aria-label="Add optional details about your answer" placeholder="Add details (optional)"></textarea>
                   </div>
                 </fieldset>
                 </section>
@@ -405,7 +423,8 @@
                 <section class="ari-question-block" data-q3 hidden>
                 <fieldset>
                   <legend data-q3-question>${escapeHtml(benchmark.questions.q3)}</legend>
-                  <p class="ari-question-hint" id="ari-q3-hint">Select all that apply.</p>
+                  <p class="ari-question-hint" id="ari-q3-hint" data-q3-hint>Select all that apply.</p>
+                  <div class="ari-value-route-times" data-q3-route-times hidden></div>
                   <div class="ari-choice-grid" data-q3-grid data-variant-key="default" aria-describedby="ari-q3-hint">
                     ${renderChoiceOptions(benchmark.q3Options, { name: 'q3Issues', type: 'checkbox' })}
                   </div>
@@ -529,6 +548,8 @@
       panelCollapsed: false,
       panelCollapsedBeforeStreetView: null,
       mapAdapter: null,
+      mapDisplayMode: null,
+      routeMetricsHelpExpanded: false,
       mapProvider: useGoogleMaps ? 'google' : useMapLibre ? 'maplibre' : 'leaflet',
       streetViewMode: false,
       streetViewOpen: false,
@@ -572,9 +593,20 @@
       form: root.querySelector('[data-form]'),
       questionScroll: root.querySelector('[data-question-scroll]'),
       q1: root.querySelector('[data-q1]'),
+      q1Grid: root.querySelector('[data-q1] .ari-choice-grid'),
+      routeMetricsExplainer: root.querySelector('[data-route-metrics-explainer]'),
+      routeMetricsHelp: root.querySelector('[data-route-metrics-help]'),
+      routeMetricsToggle: root.querySelector('[data-action="toggle-route-metrics-help"]'),
+      routeMetricsToggleLabel: root.querySelector('[data-route-metrics-toggle-label]'),
       q2: root.querySelector('[data-q2]'),
       q3: root.querySelector('[data-q3]'),
+      q2Question: root.querySelector('[data-q2-question]'),
+      q2Grid: root.querySelector('[data-q2-grid]'),
+      q2NoteWrap: root.querySelector('[data-q2-note]'),
+      q2Note: root.querySelector('textarea[name="q2Note"]'),
       q3Question: root.querySelector('[data-q3-question]'),
+      q3Hint: root.querySelector('[data-q3-hint]'),
+      q3RouteTimes: root.querySelector('[data-q3-route-times]'),
       q3Grid: root.querySelector('[data-q3-grid]'),
       q3NoteWrap: root.querySelector('[data-q3-note]'),
       q3Note: root.querySelector('textarea[name="q3Note"]'),
@@ -1358,8 +1390,9 @@
       openStreetView(point);
     }
 
-    function drawRoutes(pair, { hidden = false } = {}) {
-      state.mapAdapter.drawRoutes(pair, state.assignment);
+    function drawRoutes(pair, { hidden = false, assignment = state.assignment, displayMode = 'calm' } = {}) {
+      state.mapAdapter.drawRoutes(pair, assignment);
+      state.mapDisplayMode = displayMode;
       if (hidden) state.mapAdapter.setRoutesVisible(false, { animate: false });
       requestAnimationFrame(() => {
         fitRoutes({ animate: state.onboardingComplete });
@@ -1466,22 +1499,60 @@
       return variant
         ? {
             key: variantKey,
+            kind: variant.kind || 'reasons',
             question: variant.question || benchmark.questions.q3,
+            hint: Object.prototype.hasOwnProperty.call(variant, 'hint') ? variant.hint : 'Select all that apply.',
+            inputName: variant.inputName || 'q3Issues',
+            inputType: variant.inputType || 'checkbox',
+            noteMode: variant.noteMode || 'selection',
+            withIcons: variant.withIcons !== false,
             options: Array.isArray(variant.options) ? variant.options : benchmark.q3Options
           }
         : {
             key: 'default',
+            kind: 'reasons',
             question: benchmark.questions.q3,
+            hint: 'Select all that apply.',
+            inputName: 'q3Issues',
+            inputType: 'checkbox',
+            noteMode: 'selection',
+            withIcons: true,
             options: benchmark.q3Options
           };
     }
 
-    function q3QuestionHtml(q1Choice, fallback) {
+    function q2QuestionHtml(q1Choice, fallback) {
+      if (!benchmark.q2Multiple) return escapeHtml(fallback);
+      if (q1Choice === 'route_a') {
+        return 'What made you choose <span class="ari-route-question-tag ari-route-question-tag--a">Route A</span>?';
+      }
+      if (q1Choice === 'route_b') {
+        return 'What made you choose <span class="ari-route-question-tag ari-route-question-tag--b">Route B</span>?';
+      }
+      if (q1Choice === 'both_work_well') {
+        return 'What made both routes work well?';
+      }
+      return escapeHtml(fallback);
+    }
+
+    function q3QuestionHtml(q1Choice, variant) {
+      const fallback = typeof variant === 'string' ? variant : variant.question;
+      if (variant?.kind === 'worth_fast') {
+        if (q1Choice === 'route_a') {
+          return 'Is <span class="ari-route-question-tag ari-route-question-tag--a">Route A</span> useful enough to be shown as well as <span class="ari-route-question-tag ari-route-question-tag--fast">Fast</span>?';
+        }
+        if (q1Choice === 'route_b') {
+          return 'Is <span class="ari-route-question-tag ari-route-question-tag--b">Route B</span> useful enough to be shown as well as <span class="ari-route-question-tag ari-route-question-tag--fast">Fast</span>?';
+        }
+        if (q1Choice === 'both_work_well') {
+          return 'Are <span class="ari-route-question-tag ari-route-question-tag--a">Route A</span> and <span class="ari-route-question-tag ari-route-question-tag--b">Route B</span> useful enough to be shown as well as <span class="ari-route-question-tag ari-route-question-tag--fast">Fast</span>?';
+        }
+      }
       if (benchmark.routeTypes.length === 2 && q1Choice === 'route_a') {
-        return 'What made <span class="ari-q3-route-tag ari-q3-route-tag--b">Route B</span> worse?';
+        return 'What made <span class="ari-route-question-tag ari-route-question-tag--b">Route B</span> worse?';
       }
       if (benchmark.routeTypes.length === 2 && q1Choice === 'route_b') {
-        return 'What made <span class="ari-q3-route-tag ari-q3-route-tag--a">Route A</span> worse?';
+        return 'What made <span class="ari-route-question-tag ari-route-question-tag--a">Route A</span> worse?';
       }
       if (benchmark.routeTypes.length === 3) {
         const selectedRoutes = new Set(getQ1Choices().filter(choice => choice.startsWith('route_')));
@@ -1490,10 +1561,61 @@
           .filter(slot => !selectedRoutes.has(slot.value));
         if (selectedRoutes.size === 2 && unselected.length === 1) {
           const route = unselected[0];
-          return `What made <span class="ari-q3-route-tag ari-q3-route-tag--${route.slot.toLowerCase()}">Route ${route.slot}</span> less suitable?`;
+          return `What made <span class="ari-route-question-tag ari-route-question-tag--${route.slot.toLowerCase()}">Route ${route.slot}</span> less suitable?`;
         }
       }
       return escapeHtml(fallback);
+    }
+
+    function formatDuration(metadata) {
+      return Number.isFinite(metadata?.durationSeconds)
+        ? `${Math.max(1, Math.round(metadata.durationSeconds / 60))} min`
+        : 'Time unavailable';
+    }
+
+    function renderQ3RouteTimes(q1Choice, variant) {
+      if (variant.kind !== 'worth_fast' || !state.pair?.routes?.fast) {
+        els.q3RouteTimes.hidden = true;
+        els.q3RouteTimes.innerHTML = '';
+        return;
+      }
+      const routes = [];
+      if (['route_a', 'both_work_well'].includes(q1Choice)) {
+        routes.push({ label: 'Route A', tone: 'a', route: state.pair.routes[state.assignment.routeA] });
+      }
+      if (['route_b', 'both_work_well'].includes(q1Choice)) {
+        routes.push({ label: 'Route B', tone: 'b', route: state.pair.routes[state.assignment.routeB] });
+      }
+      routes.push({ label: 'Fast', tone: 'fast', route: state.pair.routes.fast });
+      els.q3RouteTimes.innerHTML = routes.map(({ label, tone, route }) => `
+        <span class="ari-value-route-times__item ari-value-route-times__item--${tone}">
+          <i aria-hidden="true"></i><strong>${escapeHtml(label)}</strong><span>${escapeHtml(formatDuration(route?.metadata))}</span>
+        </span>
+      `).join('');
+      els.q3RouteTimes.hidden = false;
+    }
+
+    function getWorthFastAssignment(q1Choice) {
+      if (!state.pair?.routes?.fast) return null;
+      if (q1Choice === 'route_a') return { routeA: state.assignment.routeA, routeC: 'fast' };
+      if (q1Choice === 'route_b') return { routeB: state.assignment.routeB, routeC: 'fast' };
+      if (q1Choice === 'both_work_well') {
+        return { routeA: state.assignment.routeA, routeB: state.assignment.routeB, routeC: 'fast' };
+      }
+      return null;
+    }
+
+    function syncQuestionMapRoutes(variant) {
+      if (!state.mapAdapter || !state.pair || !state.assignment) return;
+      const q1Choice = getQ1Choice();
+      const worthAssignment = state.questionStep === 'q3' && variant.kind === 'worth_fast'
+        ? getWorthFastAssignment(q1Choice)
+        : null;
+      const displayMode = worthAssignment ? `worth-fast:${q1Choice}` : 'calm';
+      if (state.mapDisplayMode === displayMode) return;
+      state.mapAdapter.drawRoutes(state.pair, worthAssignment || state.assignment);
+      state.mapDisplayMode = displayMode;
+      requestAnimationFrame(() => fitRoutes({ animate: true }));
     }
 
     function syncQ3Variant() {
@@ -1510,29 +1632,63 @@
       } else {
         els.q3Grid.dataset.worseRoute = q1 === 'route_a'
           ? 'b'
-          : q1 === 'route_b' ? 'a' : q1 === 'both_work_poorly' ? 'both' : '';
+          : q1 === 'route_b'
+            ? 'a'
+            : ['both_work_poorly', 'none_work_well'].includes(q1) ? 'both' : '';
       }
-      if (els.q3Grid.dataset.variantKey !== variant.key) {
-        const selectedIssues = new Set(
-          Array.from(els.q3Grid.querySelectorAll('input[name="q3Issues"]:checked'), input => input.value)
+      const variantSignature = `${variant.key}:${variant.inputName}:${variant.inputType}`;
+      if (els.q3Grid.dataset.variantKey !== variantSignature) {
+        const selectedValues = new Set(
+          Array.from(els.q3Grid.querySelectorAll(`input[name="${variant.inputName}"]:checked`), input => input.value)
         );
-        els.q3Grid.innerHTML = renderChoiceOptions(variant.options, { name: 'q3Issues', type: 'checkbox' });
-        els.q3Grid.querySelectorAll('input[name="q3Issues"]').forEach(input => {
-          input.checked = selectedIssues.has(input.value);
+        els.q3Grid.innerHTML = renderChoiceOptions(variant.options, {
+          name: variant.inputName,
+          type: variant.inputType,
+          withIcons: variant.withIcons
         });
-        els.q3Grid.dataset.variantKey = variant.key;
+        els.q3Grid.querySelectorAll(`input[name="${variant.inputName}"]`).forEach(input => {
+          input.checked = selectedValues.has(input.value);
+        });
+        els.q3Grid.dataset.variantKey = variantSignature;
       }
-      els.q3Question.innerHTML = q3QuestionHtml(q1, variant.question);
+      els.q3Hint.textContent = variant.hint;
+      els.q3Hint.hidden = !variant.hint;
+      if (variant.hint) els.q3Grid.setAttribute('aria-describedby', 'ari-q3-hint');
+      else els.q3Grid.removeAttribute('aria-describedby');
+      els.q3Question.innerHTML = q3QuestionHtml(q1, variant);
+      renderQ3RouteTimes(q1, variant);
       return variant;
     }
 
     function isStepComplete(step) {
       if (step === 'q1') return getQ1Choices().length > 0;
-      if (step === 'q2') return !!els.form.querySelector('input[name="q2Separate"]:checked');
+      if (step === 'q2') {
+        const inputName = benchmark.q2Multiple ? 'q2Reasons' : 'q2Separate';
+        return !!els.form.querySelector(`input[name="${inputName}"]:checked`);
+      }
       if (step === 'q3') {
-        return !!els.form.querySelector('input[name="q3Issues"]:checked');
+        const variant = getQ3Variant();
+        return !!els.form.querySelector(`input[name="${variant.inputName}"]:checked`);
       }
       return false;
+    }
+
+    function syncRouteMetricsHelp() {
+      if (!els.routeMetricsExplainer) return;
+      const firstComparison = state.roundIndex === 0;
+      const showExplanation = firstComparison || state.routeMetricsHelpExpanded;
+      els.routeMetricsToggle.hidden = firstComparison;
+      els.routeMetricsToggle.setAttribute('aria-expanded', String(showExplanation));
+      els.routeMetricsToggleLabel.textContent = showExplanation
+        ? 'Hide time explanation'
+        : 'About time estimates';
+      els.routeMetricsHelp.hidden = !showExplanation;
+      const descriptionIds = [
+        benchmark.q1Multiple ? 'ari-q1-hint' : '',
+        showExplanation ? 'ari-q1-metrics-help' : ''
+      ].filter(Boolean);
+      if (descriptionIds.length) els.q1Grid.setAttribute('aria-describedby', descriptionIds.join(' '));
+      else els.q1Grid.removeAttribute('aria-describedby');
     }
 
     function updateQuestionFlow() {
@@ -1540,14 +1696,18 @@
       const selectedChoices = getQ1Choices();
       const sequence = getQuestionSequence();
       const q3Variant = syncQ3Variant();
+      els.q2Question.innerHTML = q2QuestionHtml(selected, benchmark.questions.q2);
       if (!sequence.includes(state.questionStep)) state.questionStep = sequence[0];
       const stepIndex = sequence.indexOf(state.questionStep);
       els.q1.hidden = state.questionStep !== 'q1';
       els.q2.hidden = state.questionStep !== 'q2';
       els.q3.hidden = state.questionStep !== 'q3';
-      els.panelQuestion.innerHTML = state.questionStep === 'q3'
-        ? q3QuestionHtml(getQ1Choice(), q3Variant.question)
-        : escapeHtml(benchmark.questions[state.questionStep]);
+      syncRouteMetricsHelp();
+      els.panelQuestion.innerHTML = state.questionStep === 'q2'
+        ? q2QuestionHtml(selected, benchmark.questions.q2)
+        : state.questionStep === 'q3'
+          ? q3QuestionHtml(selected, q3Variant)
+          : escapeHtml(benchmark.questions[state.questionStep]);
       syncCollapsedContextToggle();
       els.previous.hidden = stepIndex === 0;
       els.previous.disabled = stepIndex === 0;
@@ -1567,12 +1727,22 @@
         const input = label.querySelector('input');
         label.classList.toggle('is-selected', !!input && input.checked);
       });
+      syncQuestionMapRoutes(q3Variant);
       state.mapAdapter.setSelectedRoutes(
         state.questionStep === 'q1' ? getSelectedRouteKeys() : []
       );
-      const hasQ3Selection = !!els.form.querySelector('input[name="q3Issues"]:checked');
-      els.q3NoteWrap.hidden = !hasQ3Selection;
-      els.q3Note.disabled = !hasQ3Selection;
+      const hasQ2Selection = !!els.form.querySelector('input[name="q2Reasons"]:checked');
+      els.q2NoteWrap.hidden = !hasQ2Selection;
+      els.q2Note.disabled = !hasQ2Selection;
+      if (!hasQ2Selection) els.q2Note.value = '';
+      const hasQ3NoteTrigger = q3Variant.noteMode === 'none'
+        ? false
+        : q3Variant.noteMode === 'other'
+          ? !!els.form.querySelector('input[name="q3Issues"][value="other"]:checked')
+          : !!els.form.querySelector('input[name="q3Issues"]:checked');
+      els.q3NoteWrap.hidden = !hasQ3NoteTrigger;
+      els.q3Note.disabled = !hasQ3NoteTrigger;
+      if (!hasQ3NoteTrigger) els.q3Note.value = '';
       requestAnimationFrame(updateQuestionOverflow);
     }
 
@@ -1798,11 +1968,22 @@
       const q1Choices = form.getAll('q1Choice');
       const q1Choice = q1Choices.length > 1 ? 'multiple_routes' : q1Choices[0] || null;
       const q2Separate = form.get('q2Separate') || null;
+      const q2Reasons = form.getAll('q2Reasons');
+      const q3WorthShowing = form.get('q3WorthShowing') || null;
       const q3Issues = form.getAll('q3Issues');
       const roundId = `${state.sessionId}-round-${state.roundIndex + 1}`;
       const activeSlots = ROUTE_SLOTS.filter(({ key }) => state.assignment[key]);
       const labelMap = Object.fromEntries(activeSlots.map(({ slot, key }) => [slot, state.assignment[key]]));
       const labels = Object.fromEntries(activeSlots.map(({ slot }) => [slot, getRouteLabel(slot)]));
+      const fastRoute = state.pair.routes.fast
+        ? {
+            routeId: state.pair.routes.fast.routeId,
+            routeType: 'fast',
+            source: state.pair.routes.fast.source || 'fast',
+            metadata: state.pair.routes.fast.metadata || null
+          }
+        : null;
+      const q3Variant = getQ3Variant();
       return {
         v: 1,
         type: 'bench-ux',
@@ -1829,11 +2010,16 @@
         choice: q1Choice,
         q1Choices,
         q2Separate,
+        q2Reasons,
+        q2Note: form.get('q2Note') || '',
+        q3WorthShowing,
         q3Issues,
         reasons: [...q3Issues],
         q3Note: form.get('q3Note') || '',
         note: '',
         metricsShown: !!benchmark.showRouteMetrics,
+        fastRouteShown: state.questionStep === 'q3' && q3Variant.kind === 'worth_fast',
+        fastRoute,
         clientTs: createdAt,
         createdAt
       };
@@ -1873,6 +2059,15 @@
       els.form.querySelectorAll('input[name="q2Separate"]').forEach(input => {
         input.checked = input.value === (answer.q2Separate || null);
       });
+      const selectedQ2Reasons = new Set(answer.q2Reasons || []);
+      els.form.querySelectorAll('input[name="q2Reasons"]').forEach(input => {
+        input.checked = selectedQ2Reasons.has(input.value);
+      });
+      els.q2Note.value = answer.q2Note || answer.q2Other || '';
+      syncQ3Variant();
+      els.form.querySelectorAll('input[name="q3WorthShowing"]').forEach(input => {
+        input.checked = input.value === (answer.q3WorthShowing || null);
+      });
       const selectedIssues = new Set(answer.q3Issues || answer.reasons || []);
       els.form.querySelectorAll('input[name="q3Issues"]').forEach(input => {
         input.checked = selectedIssues.has(input.value);
@@ -1899,6 +2094,7 @@
       });
       setRoundBusy(true);
       state.roundIndex = index;
+      state.routeMetricsHelpExpanded = false;
       if (state.onboardingComplete && els.onboarding) els.onboarding.hidden = true;
       if (state.roundIndex > 0) {
         state.onboardingComplete = true;
@@ -1943,8 +2139,9 @@
       resetQuestionScroll();
       setContextExpanded(false);
       updatePanelState(panelCollapsed);
-      updateQuestionFlow();
+      state.mapDisplayMode = null;
       drawRoutes(state.pair, { hidden: deferRouteReveal });
+      updateQuestionFlow();
       setGoalCheckpointVisible(state.goalCheckpointPending);
       if (!state.onboardingComplete) {
         requestAnimationFrame(renderOnboarding);
@@ -1971,11 +2168,33 @@
           });
         }
       }
-      if (event.target.matches?.('input[name="q1Choice"]') && !getQuestionSequence().includes('q3')) {
+      if (event.target.matches?.('input[name="q1Choice"]')) {
         els.form.querySelectorAll('input[name="q3Issues"]').forEach(input => {
           input.checked = false;
         });
+        els.form.querySelectorAll('input[name="q3WorthShowing"]').forEach(input => {
+          input.checked = false;
+        });
         els.q3Note.value = '';
+      }
+      if (event.target.matches?.('input[name="q1Choice"]') && !getQuestionSequence().includes('q2')) {
+        els.form.querySelectorAll('input[name="q2Reasons"]').forEach(input => {
+          input.checked = false;
+        });
+        els.q2Note.value = '';
+      }
+      const changedQ2Reason = event.target.closest?.('input[name="q2Reasons"]');
+      if (changedQ2Reason?.checked) {
+        const reasonInputs = els.form.querySelectorAll('input[name="q2Reasons"]');
+        if (changedQ2Reason.hasAttribute('data-exclusive-choice')) {
+          reasonInputs.forEach(input => {
+            if (input !== changedQ2Reason) input.checked = false;
+          });
+        } else {
+          reasonInputs.forEach(input => {
+            if (input.hasAttribute('data-exclusive-choice')) input.checked = false;
+          });
+        }
       }
       const changedIssue = event.target.closest?.('input[name="q3Issues"]');
       if (changedIssue?.checked) {
@@ -1990,6 +2209,10 @@
           });
         }
       }
+      updateQuestionFlow();
+      autosave();
+    });
+    els.q2Note.addEventListener('input', () => {
       updateQuestionFlow();
       autosave();
     });
@@ -2081,6 +2304,12 @@
     els.contextToggle?.addEventListener('click', () => {
       const expanded = els.contextToggle.getAttribute('aria-expanded') === 'true';
       setContextExpanded(!expanded);
+    });
+
+    els.routeMetricsToggle?.addEventListener('click', () => {
+      state.routeMetricsHelpExpanded = !state.routeMetricsHelpExpanded;
+      syncRouteMetricsHelp();
+      requestAnimationFrame(updateQuestionOverflow);
     });
 
     els.collapsedContextToggle?.addEventListener('click', (e) => {

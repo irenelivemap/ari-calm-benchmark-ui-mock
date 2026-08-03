@@ -17,8 +17,8 @@
   --ari-muted: rgba(33, 26, 42, 0.72);
   --ari-faint: rgba(33, 26, 42, 0.55);
 
-  --ari-route-a: #C84720;
-  --ari-route-b: #08784D;
+  --ari-route-a: #08784D;
+  --ari-route-b: #4A52CC;
   --ari-route-c: #2864C7;
   --ari-amber-deep: #6F3218;
   --ari-hairline: var(--ari-grey-03);
@@ -874,7 +874,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-card--session {
-  background: var(--ari-orange);
+  background: var(--ari-blurple);
 }
 
 .calm-card-main {
@@ -1055,7 +1055,7 @@ html.is-challenge-dialog-open {
   content: "";
   position: absolute;
   inset: -7px;
-  border: 2px solid rgba(143, 217, 168, 0.5);
+  border: 2px solid rgba(74, 82, 204, 0.5);
   border-radius: 50%;
 }
 
@@ -7443,11 +7443,11 @@ html.is-challenge-dialog-open {
 
 /* Keyword colour on selected (light) rows */
 .ari-choice-grid[data-worse-route="a"] label.is-selected .ari-choice-anchor {
-  color: #9B3618;
+  color: #0A6040;
 }
 
 .ari-choice-grid[data-worse-route="b"] label.is-selected .ari-choice-anchor {
-  color: #0A6040;
+  color: #2a2e8f;
 }
 
 .ari-choice-grid[data-worse-route="c"] label.is-selected .ari-choice-anchor {
@@ -7462,12 +7462,12 @@ html.is-challenge-dialog-open {
 
 /* Coloured route name in follow-up question headings */
 .ari-route-question-tag--a {
-  color: #F08A63;
+  color: #4FD19B;
   font-weight: 800;
 }
 
 .ari-route-question-tag--b {
-  color: #4FD19B;
+  color: #8a90f3;
   font-weight: 800;
 }
 
@@ -7477,7 +7477,7 @@ html.is-challenge-dialog-open {
 }
 
 .ari-route-question-tag--fast {
-  color: #8DB4FF;
+  color: #F08A63;
   font-weight: 800;
 }
 
