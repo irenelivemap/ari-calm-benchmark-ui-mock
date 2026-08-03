@@ -7450,7 +7450,6 @@ html.is-challenge-dialog-open {
 .ari-question-block .ari-choice-grid label {
   min-height: 44px;
   border: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 0;
   padding: 10px 8px;
   background: transparent;
@@ -7459,6 +7458,10 @@ html.is-challenge-dialog-open {
   font-weight: 600;
   line-height: 1.25;
   box-shadow: none;
+}
+
+.ari-question-block .ari-choice-grid label + label {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .ari-question-hint {
@@ -7707,7 +7710,6 @@ html.is-challenge-dialog-open {
   grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
   margin: 2px 0 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.14);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .ari-value-route-times[hidden] {
