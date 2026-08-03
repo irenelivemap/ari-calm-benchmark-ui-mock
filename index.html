@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260804-shared-legend">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260804-free-text">
   <style>
     body {
       margin: 0;
@@ -591,6 +591,7 @@
      */
     let calmResultsView = 'overview';
     let choiceReasonsMode = 'all';
+    let freeTextTheme = null;
     let selectedResultsParticipantId = '';
     const storedSampleResultsMode = localStorage.getItem(SAMPLE_RESULTS_STORAGE);
     let sampleResultsEnabled = !runtimeConfig.production
@@ -1085,6 +1086,99 @@
         </section>`;
     }
 
+    const CALM_NOTE_THEMES = [
+      {
+        name: 'Stress & traffic',
+        description: 'Notes highlighting reduced traffic exposure, less need to watch for vehicles, or a greater sense of safety and calm on the route.',
+        terms: ['traffic', 'stress', 'watch', 'safe', 'construction', 'noise', 'busy']
+      },
+      {
+        name: 'Greenery & water',
+        description: 'Notes referencing parks, trees, water, shade, or pleasant natural surroundings as the key differentiator.',
+        terms: ['park', 'water', 'tree', 'green', 'shade', 'surroundings', 'aesthet', 'scenic']
+      },
+      {
+        name: 'Overall feel',
+        description: 'Notes expressing a general sense of pleasantness or calm that goes beyond specific route features.',
+        terms: ['pleasant', 'relax', 'nicer', 'nice', 'calming', 'quieter', 'neighbourhood', 'mood', 'feel', 'felt']
+      }
+    ];
+
+    function renderFreeTextSection(summary) {
+      const notedRows = summary.rows.filter(r => r.q2Note && r.q2Note.trim());
+      if (!notedRows.length) return '';
+
+      function matchesTheme(theme, note) {
+        const lower = note.toLowerCase();
+        return theme.terms.some(t => lower.includes(t));
+      }
+
+      const themes = CALM_NOTE_THEMES.map(theme => ({
+        ...theme,
+        notes: notedRows.filter(r => matchesTheme(theme, r.q2Note))
+      })).sort((a, b) => b.notes.length - a.notes.length);
+
+      const covered = notedRows.filter(r =>
+        !CALM_NOTE_THEMES.some(theme => matchesTheme(theme, r.q2Note))
+      );
+
+      function noteQuoteHtml(r) {
+        const isQuiet = r.exactOutcome === 'calm_quiet';
+        const isNature = r.exactOutcome === 'calm_nature';
+        const routeLabel = isQuiet ? 'Calm Quiet' : isNature ? 'Calm Nature' : null;
+        const routeClass = isQuiet ? 'calm-route-label--quiet' : isNature ? 'calm-route-label--nature' : '';
+        return `
+          <div class="calm-note-quote">
+            <p>${escapeHtml(r.q2Note)}</p>
+            <footer>
+              <span>${escapeHtml(r.participantName || r.rater || '')}</span>
+              ${routeLabel ? `<span class="calm-route-label ${routeClass}">${escapeHtml(routeLabel)}</span>` : ''}
+            </footer>
+          </div>`;
+      }
+
+      function themeRowHtml(theme, isCovered = false) {
+        const pct = notedRows.length ? Math.round(theme.notes.length / notedRows.length * 100) : 0;
+        const isActive = freeTextTheme === theme.name;
+        const quotesHtml = isActive ? `
+          <div class="calm-note-quotes">
+            ${theme.notes.map(noteQuoteHtml).join('')}
+          </div>` : '';
+        return `
+          <div class="calm-note-theme${isCovered ? ' is-covered' : ''}">
+            <button class="calm-note-theme-row${isActive ? ' is-on' : ''}" type="button"
+              data-free-text-theme="${escapeHtml(theme.name)}"
+              aria-pressed="${isActive}" aria-expanded="${isActive}">
+              <div>
+                <div class="calm-note-theme-title">${escapeHtml(theme.name)}<span>${theme.notes.length}/${notedRows.length} · ${pct}%</span></div>
+                <div class="calm-note-theme-bar" aria-hidden="true"><div class="calm-note-theme-fill" style="width:${Math.max(3, pct)}%"></div></div>
+              </div>
+              <div class="calm-note-theme-desc">${escapeHtml(theme.description)}</div>
+              <span class="calm-note-theme-toggle" aria-hidden="true">${isActive ? 'Hide ▴' : `View ${theme.notes.length} ▾`}</span>
+            </button>
+            ${quotesHtml}
+          </div>`;
+      }
+
+      const coveredTheme = covered.length ? {
+        name: 'Repeats structured reasons',
+        description: 'These notes describe considerations already captured in the chart above — quieter streets, green space, water — without adding new qualitative context.',
+        notes: covered
+      } : null;
+
+      return `
+        <section class="calm-free-text-section" aria-labelledby="free-text-title">
+          <header class="calm-analysis-heading">
+            <h2 id="free-text-title">What free text adds</h2>
+          </header>
+          <p class="calm-free-text-note">Qualitative signals not already captured by the structured reason taxonomy above.</p>
+          <div class="calm-note-theme-list">
+            ${themes.map(t => themeRowHtml(t)).join('')}
+            ${coveredTheme ? themeRowHtml(coveredTheme, true) : ''}
+          </div>
+        </section>`;
+    }
+
     function renderCalmOverview(summary, agreement) {
       if (!summary.total) {
         return `
@@ -1136,7 +1230,8 @@
           </div>
         </section>
         ${renderAgreementOverview(agreement)}
-        ${renderChoiceReasons(summary)}`;
+        ${renderChoiceReasons(summary)}
+        ${renderFreeTextSection(summary)}`;
     }
 
     function renderParticipantRows(rows) {
@@ -2065,6 +2160,16 @@
         renderCommunityResults();
         requestAnimationFrame(() => {
           communityResults.querySelector(`[data-choice-mode="${choiceReasonsMode}"]`)?.focus();
+        });
+        return;
+      }
+      const freeTextButton = event.target.closest('[data-free-text-theme]');
+      if (freeTextButton) {
+        const next = freeTextButton.dataset.freeTextTheme;
+        freeTextTheme = freeTextTheme === next ? null : next;
+        renderCommunityResults();
+        requestAnimationFrame(() => {
+          communityResults.querySelector(`[data-free-text-theme="${CSS.escape(freeTextTheme || next)}"]`)?.focus();
         });
         return;
       }
