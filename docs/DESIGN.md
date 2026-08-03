@@ -14,7 +14,7 @@ Calm Route Comparison asks whether Calm Quiet or Calm Nature best fits a calm wa
 - Focused, not cluttered: reduce copy and controls unless they directly help the test.
 - Arcade, but subtle: use a compact game/HUD feeling without making the UI noisy or gimmicky.
 - Clear affordances: buttons must look clickable; status text must not look clickable.
-- Route colors are reserved: orange and green belong to Route A / Route B and route answer buttons only.
+- Route colors are reserved: green and purple belong to Route A / Route B and route answer buttons only.
 - Progressive disclosure: challenge context and extra guidance should appear only when they help the active task.
 - Mobile and laptop both matter: desktop/laptop is primary, but mobile must be readable and usable without excessive scrolling.
 
@@ -48,14 +48,15 @@ Core colors in `src/styles/calm-benchmark.css` follow the public Ari tokens:
 - Blurple primary action: `#8A90F3`
 - Orange brand fill: `#FF7C60`
 - Green brand fill: `#8FD9A8`
-- Route A identity: `#C84720`
-- Route B identity: `#08784D`
+- Route A identity: `#08784D` (green)
+- Route B identity: `#4A52CC` (purple)
+- Fast identity: `#FF7C60` (orange — same as the orange brand fill token)
 
 Rules:
 
-- Use Route A orange and Route B green only for route lines, route markers, and route answer choices.
+- Use Route A green and Route B purple only for route lines, route markers, and route answer choices. Fast orange is reserved for the Fast route line and the Fast session card.
 - Do not use route colors for generic emphasis, progress, onboarding labels, or primary UI actions.
-- The single primary action uses blurple with plum ink. Route orange and green never style generic actions.
+- The single primary action uses blurple with plum ink. Route green, purple, and Fast orange never style generic actions.
 - Secondary buttons should be subtle but visibly clickable.
 - Status chips should use neutral text and transparent or very low-emphasis backgrounds.
 - Check contrast whenever text sits on tinted or dark surfaces.
@@ -93,7 +94,7 @@ Intro page:
 - Direct benchmark links such as `?game=calm` bypass the first-visit chooser. Returning visitors reopen the last selected challenge.
 - The chooser is one continuous arcade stage rather than a web-style menu beside a preview card. Challenge selection is the primary task, Play or Resume is the primary command, and player progress is secondary context.
 - On desktop, the stage uses a `60 / 40` structure: a vertical challenge list on the left and an unframed player-status pane on the right. The cabinet header and its divider provide the outer structure; the stage does not add another enclosing card or outline. On mobile, the same content stacks in task order: challenges, status, then Play or Resume.
-- Challenge keys use full comparison names: `ARI Fast vs Google`, `ARI Fast vs ARI Calm`, and `ARI Fast vs ARI Safe`. The selected available key uses a powered split orange/green surface, a bright frame, an arcade cursor, and `Ready`. Unavailable keys use raised graphite surfaces that are visibly distinct from the cabinet, with readable labels and a quiet `Soon` state.
+- Challenge keys use full comparison names: `ARI Fast vs Google`, `ARI Fast vs ARI Calm`, and `ARI Fast vs ARI Safe`. The selected available key uses a powered split green/purple surface, a bright frame, an arcade cursor, and `Ready`. Unavailable keys use raised graphite surfaces that are visibly distinct from the cabinet, with readable labels and a quiet `Soon` state.
 - The player-status pane never repeats the selected challenge. It shows the current medal, rank, and one concise progress line. Before the final medal the line combines routes with the next medal threshold; after completion it combines routes with the medal count.
 - Challenge order never changes. The medal stays aligned to the center of the middle challenge key, even when the top or bottom key is selected. The route animation begins at two output ports on the selected key, travels as a parallel paired cable, then enters the fixed medal dock. Top and bottom selections use mirrored cable geometry; only the upstream transport cable reroutes.
 - The medal, route endpoints, and rank copy are measured from the rendered layout. Route geometry stays inside the medal's vertical footprint in the status pane, and the rank copy below it is an explicit no-route zone. This keeps longer future rank names clear without masking collisions behind text.
@@ -228,7 +229,7 @@ Rules:
 - Do not use `Route X / Y` or display the next milestone number beside the current route. Put the current route number inside the five-segment dial and let the segments communicate progress toward the next medal.
 - Do not explain upcoming medal names in the active HUD. The dial's five segments communicate progress, while names remain on the resume card until a medal is actually earned.
 - The medal progress dial shows the current route number in its center and exactly five evenly spaced metallic segments show the active route's position within that five-route stage.
-- Incomplete segments stay dark but visible. Completed segments illuminate in neutral ivory, and only the newest segment briefly brightens. Route orange and green are never used.
+- Incomplete segments stay dark but visible. Completed segments illuminate in neutral ivory, and only the newest segment briefly brightens. Route green, purple, and Fast orange are never used.
 - Route 5, 10, 15, 20, 25, and 30 illuminate all five segments before the next stage appears. After route 30, the dial remains at `30` with all five segments illuminated.
 
 Implemented pattern:
@@ -249,12 +250,14 @@ Implemented pattern:
 - Every active question starts from the same vertical origin below the HUD header. Question blocks do not add their own top divider or top padding; the HUD header owns the single separator.
 - The Q1 title and information control occupy the same coordinates when the panel collapses or expands. Collapsed and expanded states share card padding, header spacing, a `12px` title/action gap, and reset browser-default `legend` padding.
 - Collapsed summaries and expanded question legends use the same normal wrapping rule. Question copy fills the available line width before breaking, and identical copy breaks on the same words in both panel states.
-- Route A and Route B use accessible orange and green label colors on transparent rows. Their hover states retain the label color and add a subtle matching tint; never replace route identity with the generic gray/white hover treatment. When selected, they use muted terracotta or forest-green surfaces with white text and a checkmark to preserve route identity without implying correctness. Neutral answers retain the light selected surface.
+- Route A and Route B use accessible green and purple label colors on transparent rows. Their hover states retain the label color and add a subtle matching tint; never replace route identity with the generic gray/white hover treatment. When selected, they use their respective green or purple surface with white text and a checkmark to preserve route identity without implying correctness. Neutral answers retain the light selected surface.
 - `Next question` is clearer than `Submit answer` when the user is moving through follow-up questions.
 - `Back` for Q2/Q3 should be near the question flow, not in the global HUD.
 - Q1 should not show optional free text.
-- When a challenge enables route metrics, each Route A/B answer row carries decision-relevant values in the row's route color. Fast vs Google shows rounded distance only because its provider duration models are not comparable. Calm Route Comparison shows rounded walking time (`26 min`) and the difference from the Fast route supplied for the same round (`+2 min vs Fast`). Neutral answer rows never show metrics.
-- Calm Route Comparison uses a single-choice Q1: Route A, Route B, `Both work well`, `Both work poorly`, or `I'm not sure`. Choosing one route asks what made the other route less suitable; choosing `Both work poorly` asks what made both routes poor options. There is no Q2 in this challenge.
+- When a challenge enables route metrics, each Route A/B answer row carries decision-relevant values in the row's route color. Fast vs Google shows rounded distance only because its provider duration models are not comparable. Calm Route Comparison shows rounded estimated walking time (`26 min`) and a compact delta from Fast mode for the same round (`+2 min`). Comparison 1 shows the full timing explanation; later comparisons replace it with an `About time estimates` disclosure that reveals the same copy on demand. Neutral answer rows never show metrics.
+- After Route A, Route B, or Both work well is chosen and explained, Calm Q3 asks whether the selected Calm route option(s) are useful enough to be shown as well as Fast. The map draws Fast in orange alongside only the selected Calm route(s), and a compact flat strip lists each visible route's rounded time before the Yes / No / I'm not sure choices.
+- Both work poorly never receives the value-vs-Fast Q3. Its only follow-up is the dedicated rejection-reasons checklist, after which the round ends.
+- Calm Route Comparison uses a single-choice Q1: Route A, Route B, `Both work well`, `Both work poorly`, or `I'm not sure`. Choosing one route first asks what made that route preferable, then asks what made the other route less suitable. Choosing `Both work well` asks what made both routes work well and then completes the round. Q2 accepts multiple reasons, treats `I'm not sure` as exclusive, and reveals an optional detail field after any reason is selected. Choosing `Both work poorly` asks `What made you choose neither route?`, clarifies that reasons may apply to one or both routes, and offers its own multi-select rejection reasons with the same optional-detail behavior.
 - While Q1 is active, every selected route remains at full opacity and its normal width; only unselected routes recede to half opacity. Hover or keyboard focus may temporarily thicken one route, but must never dim another selected route. Neutral choices restore equal route visibility, and advancing to a follow-up resets all routes to equal visibility for inspection.
 - Q1 does not display a route situation. A small information control beside the question reveals the calm definition only when requested; do not add a separate context row or text label.
 - Q1 keeps that information control beside the question in both panel states. From the collapsed state, selecting it expands the panel and opens the calm definition; selecting the rest of the collapsed card expands with the definition closed.
@@ -296,7 +299,7 @@ Rules:
 - Medals are letterpress seals. Locked medals stay dark and desaturated; earned medals keep the same seal and icon geometry but gain a tier-specific metallic material: bronze, silver, gold, emerald, diamond-blue, then master-violet. The next empty slot remains visible as the motivator.
 - Locked medals recede with distance: the next milestone renders at full presence with a near-white rim and icon, and each later seal steps down toward ~38%, so the shelf itself points at the active goal without arcs, rims, or added elements — including on a fresh card where nothing is earned yet. Only the seals carry the gradient — medal names keep a readability floor (≥82% presence) so every goal stays legible, including the final aspirational one. Hover, focus, or flip restores full presence. Do not add ornament to mark the next medal; light does the pointing.
 - The next medal's seal fills from the bottom with its own tier metal in proportion to stage progress — the reward materializing is the countdown, and it is never written as text. The fill uses the tier's metallic ramp (never a flat color; the medal-palette rule against route-color values applies to the fill too) at slightly translucent strength, while the icon and rim stay near-white for legibility. The full earned treatment — full-strength metal, tier icon color, glow — snaps in only at completion, so earning reads as the coin setting. Exact numbers live on the medal's flip face and in its screen-reader label (`next goal, 5 of 10 routes`).
-- Earned medal color is an achievement state, not a route identity. Do not reuse the exact Route A orange or Route B green values in the medal palette.
+- Earned medal color is an achievement state, not a route identity. Do not reuse the exact Route A green or Route B purple values in the medal palette.
 - Resume-card medals are buttons. The front shows the icon and medal name; tapping/clicking flips the medal to show the route count needed to earn it.
 - Celebration happens in words (serif italic rank in the title), not in effects. No neon, no pulsing glow.
 - Reward count only. Never reward speed — no timers or time-based scores, they bias answers.
@@ -321,7 +324,7 @@ Rules:
 - After `Finish round`, the question panel keeps its expanded footprint while the old question fades out. `Complete` appears beside the dial and the old route pair fades from the map.
 - The newly earned dial segment flashes hot coral, briefly enlarges, and settles to completed ivory. Existing illuminated segments dim slightly during the flare so the progress change is unmistakable.
 - Hold the coral activation and `Complete` message long enough to register as one beat, approximately `0.9s`, before returning to the normal question state.
-- Coral is a temporary activation state only. It must not remain in the dial or replace the Route A orange identity.
+- Coral is a temporary activation state only. It must not remain in the dial or replace the Route A green identity.
 - The next route pair fades in and the new Q1 fades into the same expanded panel. Finishing a round must never collapse the question panel or change its height.
 - At medal thresholds, the standard round transition resolves first and flows directly into the medal unlock reveal.
 - Keep the complete beat under one second, do not move the map camera beyond fitting the newly loaded pair, and replace fades with immediate state changes when reduced motion is requested.
@@ -330,11 +333,15 @@ Rules:
 
 - Calm Route Comparison results are available from the beginning through the persistent `Results` navigation item. At zero responses, show the dashboard's empty state rather than a comparison-count lock.
 - Calm results use two primary views: `Overview` for team-wide evidence and `Participants` for named individual records.
-- `Overview` shows comparison, participant, and route-pair totals; decoded route-selection rates; selected reasons; and the A/B visible-label check.
+- `Overview` answers the first research question in a strict reading order: team tester and comparison totals first; then the percentage where Calm Nature worked as an option (`Calm Nature + Both work well`); then the complete Q1 outcome distribution for Calm Quiet, Calm Nature, both, neither, and uncertainty; then the overall Quiet-versus-Nature preference and its uncertainty. Pair-level agreement and the participant heatmap remain supporting evidence below this summary. Overall repeated judgments use participant-clustered 95% intervals, while individual route pairs use Wilson 95% intervals.
+- The Quiet-versus-Nature overview includes only comparisons where one route was selected. It shows the aggregate preference split, whether its participant-clustered interval rules out an even split, how many route pairs each approach led, ties, and the median within-pair majority. A small numerical lead must not be described as a clear winner when its interval includes 50%.
+- The Overview participant-by-pair heatmap keeps route pairs as columns and participants as rows. Its row summaries describe viability, single-route preference, and decisiveness without ranking participants or treating variation across different routes as error.
+- Calm Quiet and Calm Nature use decoded route identities in Results. Because A/B presentation is randomized, the participant-facing A/B route colors must not be reused as if they permanently represented Quiet or Nature. Results use Ari blurple for Calm Quiet and Ari green for Calm Nature; shared, rejected, and uncertain outcomes recede into the neutral Ari greys.
+- Preview data includes 15 deterministic illustrative testers across all 12 embedded route pairs so clear agreement, mixed judgment, rejection, and uncertainty states remain inspectable without entering production data.
 - `Participants` lists every contributor by name. The participant attached to the current local session appears first with a restrained `You` badge. Selecting a name shows only that person's counts, decoded choices, reasons, optional written details, and round-by-round records.
 - Names and optional written details are explicitly described as visible to the evaluation team at the point of entry.
 - Participant identity uses the stable session identifier rather than the display name, so duplicate names remain separate records.
-- Individual records are descriptive, not evaluative: never score agreement, rank people, or label a choice as aligned or misaligned with the team.
+- Individual records are descriptive, not evaluative: never rank people or label a choice as correct, aligned, or misaligned with the team.
 - When the data API is configured, the dashboard merges the shared answer feed with local answers. Without it, the UI clearly identifies the results as device-only preview data.
 - Preview builds with no saved answers open on deterministic illustrative results and offer a `Use saved data` switch; populated previews offer `View sample data`. Sample records never enter the saved answer repository, exports, or production UI.
 - Tied or neutral-only route selections use neutral copy and never manufacture a leading route.
