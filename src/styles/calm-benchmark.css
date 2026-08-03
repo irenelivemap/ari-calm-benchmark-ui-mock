@@ -8490,31 +8490,40 @@ html.is-challenge-dialog-open {
 
 .calm-rp-map-toggle[aria-pressed="false"] { opacity: 0.5; }
 
+/* Canvas wraps the map div so the expand button can overlay it without
+   being clipped by the map's overflow:hidden + border-radius. */
+.calm-rp-map-canvas {
+  position: relative;
+}
+
 .calm-rp-map-expand {
-  margin-left: auto;
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 10;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1.5px solid var(--ari-hairline);
+  border: 1.5px solid rgba(255,255,255,0.7);
   border-radius: 6px;
-  background: #fff;
-  color: var(--ari-muted);
+  background: rgba(255,255,255,0.85);
+  color: var(--ari-plum);
   cursor: pointer;
-  flex-shrink: 0;
-  transition: border-color 120ms, color 120ms;
+  backdrop-filter: blur(4px);
+  transition: background 120ms, border-color 120ms;
 }
 
 .calm-rp-map-expand:hover {
+  background: #fff;
   border-color: var(--ari-plum);
-  color: var(--ari-plum);
 }
 
 .calm-rp-map-expand svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   display: block;
 }
 
