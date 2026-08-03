@@ -7640,14 +7640,14 @@ html.is-challenge-dialog-open {
 
 .ari-question-block .ari-choice-grid label.ari-choice--route-a.is-selected {
   border-color: color-mix(in srgb, var(--ari-route-a) 60%, transparent);
-  background: var(--ari-route-a);
+  background: color-mix(in srgb, var(--ari-route-a) 75%, #fff);
   color: #fff;
   box-shadow: none;
 }
 
 .ari-question-block .ari-choice-grid label.ari-choice--route-b.is-selected {
   border-color: color-mix(in srgb, var(--ari-route-b) 60%, transparent);
-  background: var(--ari-route-b);
+  background: color-mix(in srgb, var(--ari-route-b) 75%, #fff);
   color: #fff;
   box-shadow: none;
 }
