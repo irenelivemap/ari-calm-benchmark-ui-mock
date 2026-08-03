@@ -8199,7 +8199,6 @@ html.is-challenge-dialog-open {
 /* Header */
 .calm-rp-header {
   padding: 40px 0 32px;
-  border-bottom: 1px solid var(--ari-hairline);
   margin-bottom: 40px;
 }
 
