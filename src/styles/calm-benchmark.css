@@ -8206,7 +8206,6 @@ html.is-challenge-dialog-open {
 .calm-rp-lead {
   font-size: var(--font-size-detail);
   color: var(--ari-muted);
-  max-width: 640px;
   margin: 0;
   line-height: 1.6;
 }

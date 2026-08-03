@@ -248,7 +248,6 @@
     <div class="calm-route-profiles__inner">
       <header class="calm-rp-header">
         <div class="calm-rp-header__text">
-          <p class="calm-rp-eyebrow">Route configuration</p>
           <h2 class="calm-rp-title">How the route profiles are configured</h2>
           <p class="calm-rp-lead">Each profile combines route distance with different environmental attributes. A higher weight means that an attribute has more influence on the route calculation.</p>
         </div>
@@ -2334,7 +2333,7 @@
           const dir = w.direction === 'reward' ? '↑' : '↓';
           const dirClass = w.direction === 'reward' ? 'rp-reward' : 'rp-penalty';
           return `<tr class="${dirClass}">
-            <th scope="row"><span class="rp-attr-label">${escapeHtml(w.label)}</span> <span class="rp-attr-dir" aria-label="${w.direction === 'reward' ? 'higher is better' : 'lower is better'}">${dir}</span></th>
+            <th scope="row"><span class="rp-attr-label">${escapeHtml(w.label)}</span></th>
             <td>${rpWeightCell(w.fast)}</td>
             <td>${rpWeightCell(w.calm_nature)}</td>
             <td>${rpWeightCell(w.calm_quiet)}</td>
