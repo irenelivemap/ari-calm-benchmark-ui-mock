@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-stacked-dist">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-verdict-bands">
   <style>
     body {
       margin: 0;
@@ -895,22 +895,27 @@
       `).join('');
     }
 
-    function renderAgreementSegment(key, count, total) {
+    function renderAgreementSegment(key, count, total, isLead = false) {
       if (!count || !total) return '';
       const value = (count / total) * 100;
       const label = `${agreementOutcomeLabel(key)}: ${count} of ${total}, ${Math.round(value)}%`;
-      return `<span data-outcome="${escapeHtml(key)}" style="width:${value}%"><span class="ari-visually-hidden">${escapeHtml(label)}</span></span>`;
+      return `<span data-outcome="${escapeHtml(key)}"${isLead ? ' class="is-lead"' : ''} style="width:${value}%"><span class="ari-visually-hidden">${escapeHtml(label)}</span></span>`;
     }
 
     function renderPairAgreement(pair) {
       const sorted = [...AriCalmResults.EXACT_OUTCOMES]
         .filter(key => pair.counts[key] > 0)
         .sort((a, b) => pair.counts[b] - pair.counts[a]);
-      const segments = sorted.map(key => renderAgreementSegment(key, pair.counts[key], pair.total)).join('');
+      const segments = sorted
+        .map((key, i) => renderAgreementSegment(key, pair.counts[key], pair.total, i === 0 && pair.clearExactAgreement))
+        .join('');
       const modalLabel = pair.modalOutcome ? agreementOutcomeLabel(pair.modalOutcome) : 'Tie';
       const ariaLabel = pair.substantiveTotal
         ? `${compactPairLabel(pair.pairId)}: ${modalLabel}, ${pair.exactAgreementPercent}%, ${pair.leadingOutcomeCount} of ${pair.substantiveTotal} substantive responses${pair.couldNotJudgeCount ? `, ${pair.couldNotJudgeCount} could not tell` : ''}`
         : `${compactPairLabel(pair.pairId)}: no substantive responses`;
+      const valueCell = pair.clearExactAgreement
+        ? `<strong>${pair.exactAgreementPercent}%</strong> ${escapeHtml(modalLabel)}`
+        : `${pair.exactAgreementPercent}% ${escapeHtml(modalLabel)}`;
       return `
         <article class="calm-agreement-chart__row" data-outcome="${escapeHtml(pair.modalOutcome || 'tie')}">
           <div class="calm-agreement-chart__pair">
@@ -920,6 +925,7 @@
             ${segments}
             <i class="calm-agreement-chart__threshold" aria-hidden="true"></i>
           </div>
+          <div class="calm-agreement-chart__value">${valueCell}</div>
         </article>`;
     }
 
@@ -952,6 +958,8 @@
         b.exactAgreementPercent - a.exactAgreementPercent
         || a.pairId.localeCompare(b.pairId, undefined, { numeric: true })
       );
+      const clearPairs = sortedPairs.filter(pair => pair.clearExactAgreement);
+      const mixedPairs = sortedPairs.filter(pair => !pair.clearExactAgreement);
       const failureSentence = agreement.clearNeitherPairs
         ? `<p>For <strong>${agreement.clearNeitherPairs} pair${agreement.clearNeitherPairs === 1 ? '' : 's'}</strong>, evaluators agreed that neither generated route worked well.</p>`
         : '';
@@ -973,7 +981,7 @@
             <header class="calm-agreement-chart__header">
               <div>
                 <h3>Agreement by origin–destination pair</h3>
-                <p>Share of evaluators who selected the most common option for each pair.</p>
+                <p>Each bar shows the full mix of responses. The solid share is the winning option; muted segments are the remaining votes.</p>
               </div>
               <div class="calm-agreement-legend" aria-label="Response legend">${renderAgreementLegend(AriCalmResults.SUBSTANTIVE_OUTCOMES)}</div>
             </header>
@@ -981,7 +989,12 @@
               <span></span>
               <div><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span><strong>${thresholdPercent}% clear agreement</strong></div>
             </div>
-            <div class="calm-agreement-chart__rows">${sortedPairs.map(renderPairAgreement).join('')}</div>
+            <div class="calm-agreement-chart__rows">
+              <h4 class="calm-agreement-chart__group">Clear agreement · ${clearPairs.length} of ${totalPairs} pairs</h4>
+              ${clearPairs.map(renderPairAgreement).join('')}
+              <h4 class="calm-agreement-chart__group">No clear winner · ${mixedPairs.length} of ${totalPairs} pairs</h4>
+              ${mixedPairs.map(renderPairAgreement).join('')}
+            </div>
           </div>
 
         </section>`;
