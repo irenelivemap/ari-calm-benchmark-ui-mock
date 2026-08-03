@@ -844,7 +844,9 @@ html.is-challenge-dialog-open {
   height: 35px;
   margin-bottom: -1px;
   z-index: 2;
-  padding: 0 20px 16px 24px;
+  /* No bottom padding: content must center in the full 35px tab, or the icon
+     chip (22px/32px) overflows the card's top edge and overflow:hidden cuts it. */
+  padding: 0 20px 0 24px;
   background: var(--ari-off-white);
   border-top-left-radius: 0;
   border-bottom-right-radius: 17px;
@@ -1425,7 +1427,9 @@ html.is-challenge-dialog-open {
   height: 35px;
   margin-bottom: -1px;
   z-index: 2;
-  padding: 0 20px 16px 24px;
+  /* No bottom padding — same reason as the how/session kicker: the icon chip
+     must center in the full 35px tab or the card's top edge cuts it. */
+  padding: 0 20px 0 24px;
   background: var(--ari-off-white);
   border-top-left-radius: 0;
   border-bottom-right-radius: 17px;
