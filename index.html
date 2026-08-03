@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260804-panel-heading">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260804-shared-legend">
   <style>
     body {
       margin: 0;
@@ -1057,6 +1057,9 @@
           ${choiceReasonRankHtml(choiceReasonCounts, choiceReasonDenom, 'all')}
         </div>`;
 
+      const sharedLegend = sharedTop.size > 0
+        ? `<p class="calm-choice-reasons__shared-legend"><strong>Bold</strong> = appears in the top 3 for both routes.</p>`
+        : '';
       const compareView = `
         <div class="calm-choice-reasons__compare"${!isAll ? '' : ' hidden'} data-choice-view="compare">
           <div class="calm-choice-reasons__panel">
@@ -1067,7 +1070,8 @@
             <h3><span class="calm-route-label calm-route-label--nature">Calm Nature</span> chosen</h3>
             <div class="calm-choice-reasons">${choiceReasonRankHtml(natureCounts, natureRows.length, 'nature', sharedTop)}</div>
           </div>
-        </div>`;
+        </div>
+        ${sharedLegend}`;
 
       return `
         <section class="calm-choice-reasons-section" aria-labelledby="choice-reasons-title">

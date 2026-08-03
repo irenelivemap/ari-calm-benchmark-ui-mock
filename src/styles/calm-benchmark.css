@@ -2763,6 +2763,12 @@ html.is-challenge-dialog-open {
   max-width: none;
 }
 
+.calm-choice-reasons__shared-legend {
+  margin: 16px 0 0;
+  color: var(--ari-muted);
+  font: var(--font-small);
+}
+
 .calm-choice-reasons-empty {
   color: var(--ari-muted);
   font: var(--font-small);
