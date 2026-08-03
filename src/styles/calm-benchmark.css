@@ -2577,11 +2577,11 @@ html.is-challenge-dialog-open {
   display: block;
   min-width: 2px;
   height: 100%;
-  background: var(--ari-green);
+  background: var(--ari-route-a);
 }
 
 .calm-outcome-row[data-outcome="calm_quiet"] .calm-outcome-row__bar span {
-  background: var(--ari-blurple);
+  background: var(--ari-route-b);
 }
 
 .calm-outcome-row[data-outcome="both_work_well"] .calm-outcome-row__bar span {
