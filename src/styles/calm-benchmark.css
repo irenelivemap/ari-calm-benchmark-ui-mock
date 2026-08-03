@@ -887,7 +887,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-card--session {
-  background: var(--ari-blurple);
+  background: color-mix(in srgb, var(--ari-blurple) 62%, #fff);
 }
 
 .calm-card-main {
