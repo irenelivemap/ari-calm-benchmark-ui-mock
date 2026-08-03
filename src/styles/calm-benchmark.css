@@ -8653,7 +8653,7 @@ html.is-challenge-dialog-open {
 .calm-rp-comparison-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--font-size-fine);
+  font-size: var(--font-size-small);
   white-space: nowrap;
 }
 
@@ -8673,7 +8673,7 @@ html.is-challenge-dialog-open {
   color: var(--ari-muted);
 }
 
-.rp-row-fast   th { font-weight: 400; color: var(--ari-muted); }
+.rp-row-fast   th { font-weight: 600; color: var(--ari-muted); }
 .rp-row-nature th { font-weight: 600; color: var(--ari-plum); }
 .rp-row-quiet  th { font-weight: 600; color: var(--ari-plum); }
 
