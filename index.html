@@ -1248,7 +1248,6 @@
             <td data-label="Choice"><span class="calm-team-outcome" data-outcome="${escapeHtml(row.outcome)}">${escapeHtml(choices)}</span></td>
             <td data-label="Reasons">${escapeHtml(reasons)}</td>
             <td data-label="Details">${escapeHtml(row.note || '—')}</td>
-            <td data-label="Date">${escapeHtml(formatUpdated(row.date))}</td>
           </tr>`;
       }).join('');
     }
@@ -1354,7 +1353,7 @@
               </div>
               <div class="calm-team-table-wrap" tabindex="0">
                 <table>
-                  <thead><tr><th>Comparison</th><th>Route pair</th><th>Choice</th><th>Reasons</th><th>Details</th><th>Date</th></tr></thead>
+                  <thead><tr><th>Comparison</th><th>Route pair</th><th>Choice</th><th>Reasons</th><th>Details</th></tr></thead>
                   <tbody>${renderParticipantRows(participantSummary.rows)}</tbody>
                 </table>
               </div>
