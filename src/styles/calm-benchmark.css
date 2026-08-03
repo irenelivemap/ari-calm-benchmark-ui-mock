@@ -2735,25 +2735,12 @@ html.is-challenge-dialog-open {
   letter-spacing: -0.02em;
 }
 
-.calm-route-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 100px;
-  font-size: var(--font-size-small);
-  font-weight: 600;
-  letter-spacing: 0;
-  color: #fff;
-  vertical-align: middle;
-  line-height: 1.5;
+.calm-route-label--quiet {
+  color: var(--ari-route-b);
 }
 
-.calm-route-chip--quiet {
-  background: var(--ari-route-b);
-}
-
-.calm-route-chip--nature {
-  background: var(--ari-route-a);
+.calm-route-label--nature {
+  color: var(--ari-route-a);
 }
 
 .calm-choice-reasons {
