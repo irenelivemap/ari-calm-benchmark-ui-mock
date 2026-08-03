@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-rp-table-spacing">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-rp-remove-attr-cost">
   <style>
     body {
       margin: 0;
@@ -2420,35 +2420,6 @@
             </div>
           </div>
 
-          <section class="calm-rp-attrs" aria-labelledby="rp-attrs-title-${escapeHtml(diag.pairId)}">
-            <h3 class="calm-rp-section-title" id="rp-attrs-title-${escapeHtml(diag.pairId)}">How do the routes differ?</h3>
-            <div class="calm-rp-attrs__split">
-              <div>
-                <p class="calm-rp-attrs__group-label">Nature-related attributes <span class="rp-direction-note">(↑ higher is better)</span></p>
-                ${rpAttrTable(ma, ['tree_canopy','green_space','proximity_to_water'], weights)}
-              </div>
-              <div>
-                <p class="calm-rp-attrs__group-label">Quiet-related attributes <span class="rp-direction-note">(↓ lower is better)</span></p>
-                ${rpAttrTable(ma, ['noise_exposure','accident_risk'], weights)}
-                <p class="rp-attr-note">Main-road exposure: Not available in route-level diagnostics.</p>
-              </div>
-            </div>
-            ${rpAttrSummary(ma)}
-          </section>
-
-          <section class="calm-rp-costs" aria-labelledby="rp-costs-title-${escapeHtml(diag.pairId)}">
-            <h3 class="calm-rp-section-title" id="rp-costs-title-${escapeHtml(diag.pairId)}">Why did each profile choose this route?</h3>
-            <p class="calm-rp-costs__intro">Each profile evaluates possible routes by combining route distance with the attributes that matter to that profile. This produces an adjusted route cost. A lower cost means that a route is more attractive to that profile.</p>
-            <div class="calm-rp-cost-diagram" aria-hidden="true">
-              <span>Route distance + weighted route attributes</span>
-              <span class="rp-arrow">↓</span>
-              <span>Adjusted route cost</span>
-              <span class="rp-arrow">↓</span>
-              <span>Lower cost wins</span>
-            </div>
-            <p class="calm-rp-costs__caveat">Adjusted costs can only be compared between routes within the same profile.</p>
-            ${rpCostSection(ec, fastMeta.distanceMeters, natureMeta.distanceMeters, quietMeta.distanceMeters)}
-          </section>
         </div>
       </article>`;
     }
