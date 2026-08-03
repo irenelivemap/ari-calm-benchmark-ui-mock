@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-rp-overlap-col">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-rp-combined-cols">
   <style>
     body {
       margin: 0;
@@ -2330,6 +2330,10 @@
       if (val === '–' || val === 'Same') return val;
       return `<mark class="marker-lime">${val}</mark>`;
     }
+    function rpCombined(main, delta) {
+      if (delta === '–' || delta === 'Same') return main;
+      return `${main} ${rpMark(delta)}`;
+    }
 
     function renderPairDiagnosticCard(diag, routePair, idx) {
       if (!routePair) return '';
@@ -2380,37 +2384,33 @@
                     const natOverlap = rpRouteOverlapPercent(natGeom, fastGeom);
                     const qOverlap   = rpRouteOverlapPercent(qGeom,   fastGeom);
                     const overlapCol = natOverlap != null || qOverlap != null;
+                    const natTimeDiff = natSameAsFast ? '–' : rpFmtDiff(natureMeta.durationSeconds, fastMeta.durationSeconds, true);
+                    const natDistDiff = natSameAsFast ? '–' : rpFmtDiff(natureMeta.distanceMeters, fastMeta.distanceMeters, false);
+                    const qTimeDiff  = rpFmtDiff(quietMeta.durationSeconds, fastMeta.durationSeconds, true);
+                    const qDistDiff  = rpFmtDiff(quietMeta.distanceMeters, fastMeta.distanceMeters, false);
                     return `<thead><tr>
                     <th scope="col">Route</th>
                     <th scope="col">Walking time</th>
-                    <th scope="col">Extra time</th>
                     <th scope="col">Distance</th>
-                    <th scope="col">Extra distance</th>
                     ${overlapCol ? '<th scope="col">Overlap with Fast</th>' : ''}
                   </tr></thead>
                   <tbody>
                     <tr class="rp-row-fast">
                       <th scope="row">Fast</th>
                       <td>${rpFmtTime(fastMeta.durationSeconds)}</td>
-                      <td>–</td>
                       <td>${rpFmtDist(fastMeta.distanceMeters)}</td>
-                      <td>–</td>
                       ${overlapCol ? '<td>–</td>' : ''}
                     </tr>
                     <tr class="rp-row-nature">
                       <th scope="row">${escapeHtml(natRouteLabel)}</th>
-                      <td>${rpFmtTime(natureMeta.durationSeconds)}</td>
-                      <td>${rpMark(natSameAsFast ? '–' : rpFmtDiff(natureMeta.durationSeconds, fastMeta.durationSeconds, true))}</td>
-                      <td>${rpFmtDist(natureMeta.distanceMeters)}</td>
-                      <td>${rpMark(natSameAsFast ? '–' : rpFmtDiff(natureMeta.distanceMeters, fastMeta.distanceMeters, false))}</td>
+                      <td>${rpCombined(rpFmtTime(natureMeta.durationSeconds), natTimeDiff)}</td>
+                      <td>${rpCombined(rpFmtDist(natureMeta.distanceMeters), natDistDiff)}</td>
                       ${overlapCol ? `<td>${natOverlap != null ? natOverlap + '%' : '–'}</td>` : ''}
                     </tr>
                     <tr class="rp-row-quiet">
                       <th scope="row">Calm Quiet</th>
-                      <td>${rpFmtTime(quietMeta.durationSeconds)}</td>
-                      <td>${rpMark(rpFmtDiff(quietMeta.durationSeconds, fastMeta.durationSeconds, true))}</td>
-                      <td>${rpFmtDist(quietMeta.distanceMeters)}</td>
-                      <td>${rpMark(rpFmtDiff(quietMeta.distanceMeters, fastMeta.distanceMeters, false))}</td>
+                      <td>${rpCombined(rpFmtTime(quietMeta.durationSeconds), qTimeDiff)}</td>
+                      <td>${rpCombined(rpFmtDist(quietMeta.distanceMeters), qDistDiff)}</td>
                       ${overlapCol ? `<td>${qOverlap != null ? qOverlap + '%' : '–'}</td>` : ''}
                     </tr>
                   </tbody>`;
