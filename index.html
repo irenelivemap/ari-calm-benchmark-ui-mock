@@ -65,6 +65,7 @@
         <nav class="calm-tabs" aria-label="Benchmark sections">
           <button type="button" data-view="testing" aria-current="page">Home</button>
           <button type="button" data-view="results">Results</button>
+          <button type="button" data-view="route-profiles">Route profiles</button>
         </nav>
       </div>
     </div>
@@ -243,6 +244,39 @@
     <div id="team-results-content" class="calm-team-wrap"></div>
   </section>
 
+  <section id="route-profiles" class="calm-route-profiles calm-hidden" aria-label="Route profiles and pair diagnostics">
+    <div class="calm-route-profiles__inner">
+      <header class="calm-rp-header">
+        <div class="calm-rp-header__text">
+          <p class="calm-rp-eyebrow">Route configuration</p>
+          <h2 class="calm-rp-title">How the route profiles are configured</h2>
+          <p class="calm-rp-lead">Each profile combines route distance with different environmental attributes. A higher weight means that an attribute has more influence on the route calculation.</p>
+        </div>
+      </header>
+      <div class="calm-rp-weights">
+        <table class="calm-rp-weights-table" aria-label="Profile weight configuration">
+          <thead>
+            <tr>
+              <th scope="col">Attribute</th>
+              <th scope="col">Fast</th>
+              <th scope="col">Calm Nature</th>
+              <th scope="col">Calm Quiet</th>
+            </tr>
+          </thead>
+          <tbody id="rp-weights-tbody"></tbody>
+        </table>
+        <div class="calm-rp-weights-summary">
+          <p><strong>Calm Nature</strong> strongly prioritises trees, green space and water. <strong>Calm Quiet</strong> strongly avoids noise, main roads and areas with higher accident risk, while giving some additional value to nature.</p>
+          <p class="calm-rp-caveat">The weights describe how each profile is configured. They do not guarantee that Calm Nature will always generate the greenest route or that Calm Quiet will always generate the quietest route.</p>
+        </div>
+      </div>
+      <div class="calm-rp-pairs-header">
+        <h2 class="calm-rp-pairs-title">Route pairs</h2>
+      </div>
+      <div id="rp-pairs-list" class="calm-rp-pairs-list"></div>
+    </div>
+  </section>
+
   <div id="calm-benchmark-root" hidden></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -252,6 +286,7 @@
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
   <script src="./src/data/calm-benchmark-data.js?v=20260731-calm-worth-fast-1"></script>
   <script src="./src/data/benchmark-transport.js?v=20260729-team-results-2"></script>
+  <script src="./src/data/mock-route-diagnostics.js?v=20260803-route-profiles-1"></script>
   <script src="./src/data/mock-team-results.js?v=20260731-nature-wins-sample-1"></script>
   <script src="./src/results/calm-results.js?v=20260731-calm-agreement-results-1"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
@@ -265,6 +300,7 @@
     const communityResultsContent = document.getElementById('community-results-content');
     const teamResults = document.getElementById('team-results');
     const teamResultsContent = document.getElementById('team-results-content');
+    const routeProfilesEl = document.getElementById('route-profiles');
     const benchmarkRoot = document.getElementById('calm-benchmark-root');
     const challengeDialog = document.getElementById('challenge-dialog');
     const challengeDialogClose = document.getElementById('challenge-dialog-close');
@@ -1331,6 +1367,7 @@
       intro.classList.toggle('calm-hidden', view !== 'testing');
       communityResults.classList.toggle('calm-hidden', view !== 'results');
       teamResults.classList.toggle('calm-hidden', !isTeam);
+      routeProfilesEl.classList.toggle('calm-hidden', view !== 'route-profiles');
       benchmarkRoot.hidden = true;
 
       document.querySelectorAll('.calm-tabs [data-view]').forEach(button => {
@@ -1342,6 +1379,7 @@
         void loadRemoteTeamResults();
       }
       if (isTeam) renderTeamResults();
+      if (view === 'route-profiles') renderRouteProfiles();
       if (updateUrl) updateViewQuery(view);
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
@@ -1781,6 +1819,7 @@
       intro.classList.add('calm-hidden');
       communityResults.classList.add('calm-hidden');
       teamResults.classList.add('calm-hidden');
+      routeProfilesEl.classList.add('calm-hidden');
       introHeader.classList.add('calm-hidden');
       benchmarkRoot.hidden = false;
 
@@ -1965,6 +2004,280 @@
         setTimeout(() => URL.revokeObjectURL(url), 0);
       }
     });
+
+    // ── Route profiles & pair diagnostics ──────────────────────────────────
+
+    routeProfilesEl.addEventListener('click', event => {
+      const toggleBtn = event.target.closest('.calm-rp-pair__toggle');
+      if (!toggleBtn) return;
+      const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+      const bodyId = toggleBtn.getAttribute('aria-controls');
+      const body = document.getElementById(bodyId);
+      if (!body) return;
+      toggleBtn.setAttribute('aria-expanded', String(!expanded));
+      body.hidden = expanded;
+      if (!expanded) {
+        const mapEl = body.querySelector('.calm-rp-map[id]');
+        if (mapEl && !mapEl._leafletMap && window.L) {
+          const idx = parseInt(mapEl.dataset.pairIndex, 10);
+          const routePairs = window.AriCalmBenchmarkMockRoutePairs || [];
+          if (routePairs[idx]) initPairMap(mapEl, routePairs[idx]);
+        }
+      }
+    });
+
+    function initPairMap(mapEl, routePair) {
+      if (!window.L || mapEl._leafletMap) return;
+      const map = L.map(mapEl, { zoomControl: true, attributionControl: false, zoomSnap: 0.5 });
+      mapEl._leafletMap = map;
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap © CARTO'
+      }).addTo(map);
+      const routeColors = { fast: '#94928d', calm_nature: '#8fd9a8', calm_quiet: '#8a90f3' };
+      const routeWeights = { fast: 3, calm_nature: 4, calm_quiet: 4 };
+      const drawOrder = ['fast', 'calm_quiet', 'calm_nature'];
+      const layers = {};
+      drawOrder.forEach(key => {
+        const route = routePair.routes[key];
+        if (!route || !route.geometry || !route.geometry.length) return;
+        layers[key] = L.polyline(route.geometry, {
+          color: routeColors[key],
+          weight: routeWeights[key],
+          opacity: 0.9
+        }).addTo(map);
+      });
+      const allPoints = Object.values(layers).flatMap(l => l.getLatLngs());
+      if (allPoints.length) map.fitBounds(L.latLngBounds(allPoints), { padding: [16, 16], maxZoom: 16 });
+    }
+
+    function rpWeightCell(value) {
+      if (value === 0) return '<span class="rp-weight rp-weight--zero">–</span>';
+      const barWidth = Math.round(value * 100);
+      return `<span class="rp-weight rp-weight--bar" style="--w:${barWidth}%">${value.toFixed(1)}</span>`;
+    }
+
+    function rpAttrTable(metricAverages, keys, weights) {
+      const rows = keys.map(key => {
+        const w = weights[key];
+        if (!w) return '';
+        const vFast = metricAverages.fast ? metricAverages.fast[key] : null;
+        const vNature = metricAverages.calm_nature ? metricAverages.calm_nature[key] : null;
+        const vQuiet = metricAverages.calm_quiet ? metricAverages.calm_quiet[key] : null;
+        if (vFast == null && vNature == null && vQuiet == null) return '';
+        const vals = { fast: vFast, calm_nature: vNature, calm_quiet: vQuiet };
+        const candidates = Object.keys(vals).filter(k => vals[k] != null);
+        const bestKey = candidates.reduce((a, b) => {
+          if (vals[a] == null) return b;
+          if (vals[b] == null) return a;
+          return w.direction === 'reward' ? (vals[a] >= vals[b] ? a : b) : (vals[a] <= vals[b] ? a : b);
+        });
+        function rpCell(val, pKey) {
+          if (val == null) return '<td>–</td>';
+          return `<td${pKey === bestKey ? ' class="rp-best"' : ''}>${val.toFixed(2)}</td>`;
+        }
+        return `<tr><th scope="row">${escapeHtml(w.label)}</th>${rpCell(vFast,'fast')}${rpCell(vNature,'calm_nature')}${rpCell(vQuiet,'calm_quiet')}</tr>`;
+      }).join('');
+      return `<table class="calm-rp-attr-table"><thead><tr><th scope="col">Attribute</th><th scope="col">Fast</th><th scope="col">Nature</th><th scope="col">Quiet</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
+
+    function rpAttrSummary(ma) {
+      const lines = [];
+      const vNatureCanopy = ma.calm_nature && ma.fast ? ma.calm_nature.tree_canopy - ma.fast.tree_canopy : null;
+      if (vNatureCanopy != null && vNatureCanopy > 0.1) {
+        lines.push(`Calm Nature has notably more tree canopy coverage than Fast (${ma.calm_nature.tree_canopy.toFixed(2)} vs ${ma.fast.tree_canopy.toFixed(2)}).`);
+      }
+      const vQuietNoise = ma.calm_quiet && ma.fast ? ma.fast.noise_exposure - ma.calm_quiet.noise_exposure : null;
+      if (vQuietNoise != null && vQuietNoise > 0.1) {
+        lines.push(`Calm Quiet has substantially lower noise exposure than Fast (${ma.calm_quiet.noise_exposure.toFixed(2)} vs ${ma.fast.noise_exposure.toFixed(2)}).`);
+      }
+      if (!lines.length) lines.push('The routes show moderate differences across environmental attributes.');
+      return `<p class="calm-rp-attr-summary">${escapeHtml(lines.join(' '))}</p>`;
+    }
+
+    function rpCostSection(ec, fastDist, natureDist, quietDist) {
+      const parts = [];
+      if (ec.calm_quiet) {
+        const winner = ec.calm_quiet.fast > ec.calm_quiet.calm_quiet ? 'Calm Quiet' : 'Fast';
+        const distNote = quietDist > fastDist
+          ? `add ${Math.round(quietDist - fastDist)} m of distance`
+          : `are ${Math.round(fastDist - quietDist)} m shorter`;
+        parts.push(`<div class="calm-rp-cost-profile">
+          <h4 class="rp-profile-label rp-profile-label--quiet">Quiet-focused profile</h4>
+          <p>Under the Quiet-focused profile, <strong>${escapeHtml(winner)}</strong> wins with a lower adjusted cost.</p>
+          <table class="calm-rp-cost-table">
+            <thead><tr><th scope="col">Route</th><th scope="col">Adjusted cost (m)</th></tr></thead>
+            <tbody>
+              <tr class="rp-row-fast"><th scope="row">Fast</th><td>${Math.round(ec.calm_quiet.fast).toLocaleString()}</td></tr>
+              <tr class="rp-row-quiet"><th scope="row">Calm Quiet</th><td>${Math.round(ec.calm_quiet.calm_quiet).toLocaleString()}</td></tr>
+            </tbody>
+          </table>
+          <p class="rp-cost-tradeoff">Trade-off: Calm Quiet routes ${distNote} but avoid noisier and higher-risk segments.</p>
+        </div>`);
+      }
+      if (ec.calm_nature) {
+        const winner = ec.calm_nature.fast > ec.calm_nature.calm_nature ? 'Calm Nature' : 'Fast';
+        const distNote = natureDist > fastDist
+          ? `add ${Math.round(natureDist - fastDist)} m of distance`
+          : `are ${Math.round(fastDist - natureDist)} m shorter`;
+        parts.push(`<div class="calm-rp-cost-profile">
+          <h4 class="rp-profile-label rp-profile-label--nature">Nature-focused profile</h4>
+          <p>Under the Nature-focused profile, <strong>${escapeHtml(winner)}</strong> wins with a lower adjusted cost.</p>
+          <table class="calm-rp-cost-table">
+            <thead><tr><th scope="col">Route</th><th scope="col">Adjusted cost (m)</th></tr></thead>
+            <tbody>
+              <tr class="rp-row-fast"><th scope="row">Fast</th><td>${Math.round(ec.calm_nature.fast).toLocaleString()}</td></tr>
+              <tr class="rp-row-nature"><th scope="row">Calm Nature</th><td>${Math.round(ec.calm_nature.calm_nature).toLocaleString()}</td></tr>
+            </tbody>
+          </table>
+          <p class="rp-cost-tradeoff">Trade-off: Calm Nature routes ${distNote} but include more greenery and natural areas.</p>
+        </div>`);
+      }
+      return `<div class="calm-rp-cost-profiles">${parts.join('')}</div>`;
+    }
+
+    function rpFmtTime(s) { return `${Math.round(s / 60)} min`; }
+    function rpFmtDist(m) { return m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`; }
+    function rpFmtDiff(val, ref, isTime) {
+      if (!val || !ref) return '–';
+      const diff = val - ref;
+      if (Math.abs(diff) < (isTime ? 30 : 20)) return 'Same';
+      const sign = diff > 0 ? '+' : '';
+      return isTime ? `${sign}${Math.round(diff / 60)} min` : `${sign}${Math.round(diff)} m`;
+    }
+
+    function renderPairDiagnosticCard(diag, routePair, idx) {
+      if (!routePair) return '';
+      const pairNum = String(diag.pairId).match(/\d+$/)?.[0] || '?';
+      const pairLabel = `Pair ${pairNum.padStart(2, '0')}`;
+      const weights = (window.AriCalmBenchmarkDiagnostics || {}).configured_weights || {};
+      const fastMeta = (routePair.routes.fast || {}).metadata || {};
+      const natureMeta = (routePair.routes.calm_nature || {}).metadata || {};
+      const quietMeta = (routePair.routes.calm_quiet || {}).metadata || {};
+      const ma = diag.metric_averages || {};
+      const ec = diag.effective_costs_m || {};
+      const natSameAsFast = Math.abs((natureMeta.distanceMeters || 0) - (fastMeta.distanceMeters || 0)) < 1;
+      const natRouteLabel = natSameAsFast ? 'Same route as Fast' : 'Calm Nature';
+
+      return `<article class="calm-rp-pair" id="rp-pair-${escapeHtml(diag.pairId)}">
+        <header class="calm-rp-pair__header">
+          <button class="calm-rp-pair__toggle" type="button" aria-expanded="false" aria-controls="rp-pair-body-${escapeHtml(diag.pairId)}">
+            <span class="calm-rp-pair__label">${escapeHtml(pairLabel)}</span>
+            <span class="calm-rp-pair__dot" aria-hidden="true">·</span>
+            <span class="calm-rp-pair__route">${escapeHtml(diag.origin_label || 'Start')} → ${escapeHtml(diag.destination_label || 'Destination')}</span>
+            <span class="calm-rp-pair__chevron" aria-hidden="true"></span>
+          </button>
+        </header>
+        <div class="calm-rp-pair__body" id="rp-pair-body-${escapeHtml(diag.pairId)}" hidden>
+          <div class="calm-rp-pair__split">
+            <div class="calm-rp-pair__map-col">
+              <div class="calm-rp-map" id="rp-map-${idx}" data-pair-index="${idx}"></div>
+              <div class="calm-rp-map-legend">
+                <span class="rp-legend-fast">Fast</span>
+                <span class="rp-legend-nature">Calm Nature</span>
+                <span class="rp-legend-quiet">Calm Quiet</span>
+              </div>
+            </div>
+            <div class="calm-rp-pair__data-col">
+              <h3 class="calm-rp-section-title">Route comparison</h3>
+              <table class="calm-rp-comparison-table">
+                <thead><tr>
+                  <th scope="col">Route</th>
+                  <th scope="col">Walking time</th>
+                  <th scope="col">Extra time</th>
+                  <th scope="col">Distance</th>
+                  <th scope="col">Extra distance</th>
+                </tr></thead>
+                <tbody>
+                  <tr class="rp-row-fast">
+                    <th scope="row">Fast</th>
+                    <td>${rpFmtTime(fastMeta.durationSeconds)}</td>
+                    <td>–</td>
+                    <td>${rpFmtDist(fastMeta.distanceMeters)}</td>
+                    <td>–</td>
+                  </tr>
+                  <tr class="rp-row-nature">
+                    <th scope="row">${escapeHtml(natRouteLabel)}</th>
+                    <td>${rpFmtTime(natureMeta.durationSeconds)}</td>
+                    <td>${natSameAsFast ? '–' : rpFmtDiff(natureMeta.durationSeconds, fastMeta.durationSeconds, true)}</td>
+                    <td>${rpFmtDist(natureMeta.distanceMeters)}</td>
+                    <td>${natSameAsFast ? '–' : rpFmtDiff(natureMeta.distanceMeters, fastMeta.distanceMeters, false)}</td>
+                  </tr>
+                  <tr class="rp-row-quiet">
+                    <th scope="row">Calm Quiet</th>
+                    <td>${rpFmtTime(quietMeta.durationSeconds)}</td>
+                    <td>${rpFmtDiff(quietMeta.durationSeconds, fastMeta.durationSeconds, true)}</td>
+                    <td>${rpFmtDist(quietMeta.distanceMeters)}</td>
+                    <td>${rpFmtDiff(quietMeta.distanceMeters, fastMeta.distanceMeters, false)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <section class="calm-rp-attrs" aria-labelledby="rp-attrs-title-${escapeHtml(diag.pairId)}">
+            <h3 class="calm-rp-section-title" id="rp-attrs-title-${escapeHtml(diag.pairId)}">How do the routes differ?</h3>
+            <div class="calm-rp-attrs__split">
+              <div>
+                <p class="calm-rp-attrs__group-label">Nature-related attributes <span class="rp-direction-note">(↑ higher is better)</span></p>
+                ${rpAttrTable(ma, ['tree_canopy','green_space','proximity_to_water'], weights)}
+              </div>
+              <div>
+                <p class="calm-rp-attrs__group-label">Quiet-related attributes <span class="rp-direction-note">(↓ lower is better)</span></p>
+                ${rpAttrTable(ma, ['noise_exposure','accident_risk'], weights)}
+                <p class="rp-attr-note">Main-road exposure: Not available in route-level diagnostics.</p>
+              </div>
+            </div>
+            ${rpAttrSummary(ma)}
+          </section>
+
+          <section class="calm-rp-costs" aria-labelledby="rp-costs-title-${escapeHtml(diag.pairId)}">
+            <h3 class="calm-rp-section-title" id="rp-costs-title-${escapeHtml(diag.pairId)}">Why did each profile choose this route?</h3>
+            <p class="calm-rp-costs__intro">Each profile evaluates possible routes by combining route distance with the attributes that matter to that profile. This produces an adjusted route cost. A lower cost means that a route is more attractive to that profile.</p>
+            <div class="calm-rp-cost-diagram" aria-hidden="true">
+              <span>Route distance + weighted route attributes</span>
+              <span class="rp-arrow">↓</span>
+              <span>Adjusted route cost</span>
+              <span class="rp-arrow">↓</span>
+              <span>Lower cost wins</span>
+            </div>
+            <p class="calm-rp-costs__caveat">Adjusted costs can only be compared between routes within the same profile.</p>
+            ${rpCostSection(ec, fastMeta.distanceMeters, natureMeta.distanceMeters, quietMeta.distanceMeters)}
+          </section>
+        </div>
+      </article>`;
+    }
+
+    let rpRendered = false;
+    function renderRouteProfiles() {
+      if (rpRendered) return;
+      const diagnostics = window.AriCalmBenchmarkDiagnostics;
+      if (!diagnostics) return;
+      rpRendered = true;
+      const { configured_weights, pairs } = diagnostics;
+      const routePairs = window.AriCalmBenchmarkMockRoutePairs || [];
+
+      const tbody = document.getElementById('rp-weights-tbody');
+      if (tbody) {
+        tbody.innerHTML = Object.entries(configured_weights).map(([, w]) => {
+          const dir = w.direction === 'reward' ? '↑' : '↓';
+          const dirClass = w.direction === 'reward' ? 'rp-reward' : 'rp-penalty';
+          return `<tr class="${dirClass}">
+            <th scope="row"><span class="rp-attr-label">${escapeHtml(w.label)}</span> <span class="rp-attr-dir" aria-label="${w.direction === 'reward' ? 'higher is better' : 'lower is better'}">${dir}</span></th>
+            <td>${rpWeightCell(w.fast)}</td>
+            <td>${rpWeightCell(w.calm_nature)}</td>
+            <td>${rpWeightCell(w.calm_quiet)}</td>
+          </tr>`;
+        }).join('');
+      }
+
+      const pairsList = document.getElementById('rp-pairs-list');
+      if (pairsList) {
+        pairsList.innerHTML = pairs.map((diag, i) => renderPairDiagnosticCard(diag, routePairs[i], i)).join('');
+      }
+    }
+
+    // ── End route profiles ──────────────────────────────────────────────────
 
     applyChallengeUi();
     checkResumeState();
