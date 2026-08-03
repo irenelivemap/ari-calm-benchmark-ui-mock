@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-substantive-bars">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-plot-hardening">
   <style>
     body {
       margin: 0;
@@ -907,15 +907,22 @@
         .filter(key => pair.counts[key] > 0)
         .sort((a, b) => pair.counts[b] - pair.counts[a]);
       const segments = sorted
-        .map((key, i) => renderAgreementSegment(key, pair.counts[key], pair.substantiveTotal, i === 0 && pair.clearExactAgreement))
+        .map(key => renderAgreementSegment(key, pair.counts[key], pair.substantiveTotal, pair.clearExactAgreement && key === pair.modalOutcome))
         .join('');
       const modalLabel = pair.modalOutcome ? agreementOutcomeLabel(pair.modalOutcome) : 'Tie';
       const ariaLabel = pair.substantiveTotal
         ? `${compactPairLabel(pair.pairId)}: ${modalLabel}, ${pair.exactAgreementPercent}%, ${pair.leadingOutcomeCount} of ${pair.substantiveTotal} substantive responses${pair.couldNotJudgeCount ? `, ${pair.couldNotJudgeCount} could not tell` : ''}`
         : `${compactPairLabel(pair.pairId)}: no substantive responses`;
-      const valueCell = pair.clearExactAgreement
-        ? `<strong>${pair.exactAgreementPercent}%</strong> ${escapeHtml(modalLabel)}`
-        : `${pair.exactAgreementPercent}% ${escapeHtml(modalLabel)}`;
+      // Floor the displayed % for contested pairs so rounding can never show a
+      // value at or above the clear-agreement threshold in the wrong group.
+      const displayPercent = pair.clearExactAgreement
+        ? pair.exactAgreementPercent
+        : Math.floor(pair.substantiveTotal ? (pair.leadingOutcomeCount / pair.substantiveTotal) * 100 : 0);
+      const valueCell = !pair.substantiveTotal
+        ? 'No substantive votes'
+        : pair.clearExactAgreement
+          ? `<strong>${displayPercent}%</strong> ${escapeHtml(modalLabel)}`
+          : `${displayPercent}% ${escapeHtml(modalLabel)}`;
       return `
         <article class="calm-agreement-chart__row" data-outcome="${escapeHtml(pair.modalOutcome || 'tie')}">
           <div class="calm-agreement-chart__pair">
@@ -927,28 +934,6 @@
           </div>
           <div class="calm-agreement-chart__value">${valueCell}</div>
         </article>`;
-    }
-
-    function renderFullVoteDistributionRow(pair) {
-      const segments = AriCalmResults.EXACT_OUTCOMES
-        .map(key => renderAgreementSegment(key, pair.counts[key], pair.total))
-        .join('');
-      const modalLabel = pair.modalOutcome ? agreementOutcomeLabel(pair.modalOutcome) : 'Tie';
-      const percentageCell = key => `${percentage(pair.counts[key], pair.total)}% <small>(${pair.counts[key]})</small>`;
-      return `
-        <tr>
-          <th scope="row">
-            <span>${escapeHtml(compactPairLabel(pair.pairId))}</span>
-            <span class="calm-vote-distribution-bar" role="img" aria-label="${escapeHtml(compactPairLabel(pair.pairId))} full response distribution">${segments}</span>
-          </th>
-          <td>${percentageCell('calm_nature')}</td>
-          <td>${percentageCell('calm_quiet')}</td>
-          <td>${percentageCell('both_work_well')}</td>
-          <td>${percentageCell('none_work_well')}</td>
-          <td>${percentageCell('hard_to_judge')}</td>
-          <td>${escapeHtml(modalLabel)}</td>
-          <td><strong>${pair.exactAgreementPercent}%</strong> <small>(${pair.leadingOutcomeCount}/${pair.substantiveTotal})</small></td>
-        </tr>`;
     }
 
     function renderAgreementOverview(agreement) {
@@ -990,10 +975,8 @@
               <div><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span><strong>${thresholdPercent}% clear agreement</strong></div>
             </div>
             <div class="calm-agreement-chart__rows">
-              <h4 class="calm-agreement-chart__group">Clear agreement</h4>
-              ${clearPairs.map(renderPairAgreement).join('')}
-              <h4 class="calm-agreement-chart__group">No clear winner</h4>
-              ${mixedPairs.map(renderPairAgreement).join('')}
+              ${clearPairs.length ? `<h4 class="calm-agreement-chart__group">Clear agreement</h4>${clearPairs.map(renderPairAgreement).join('')}` : ''}
+              ${mixedPairs.length ? `<h4 class="calm-agreement-chart__group">No clear winner</h4>${mixedPairs.map(renderPairAgreement).join('')}` : ''}
             </div>
           </div>
 

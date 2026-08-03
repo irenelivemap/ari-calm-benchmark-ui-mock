@@ -2864,6 +2864,12 @@ html.is-challenge-dialog-open {
   box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.8);
 }
 
+.calm-agreement-chart__plot > span.is-lead {
+  /* The winner's width must stay exact so it reads truthfully against the
+     threshold line; minority segments absorb any min-width overflow. */
+  flex-shrink: 0;
+}
+
 .calm-agreement-chart__plot > span:not(.is-lead) {
   opacity: 0.3;
 }
