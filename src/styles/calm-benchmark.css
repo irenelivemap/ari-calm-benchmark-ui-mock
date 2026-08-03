@@ -2725,6 +2725,11 @@ html.is-challenge-dialog-open {
   align-items: start;
 }
 
+.calm-choice-reasons__compare[hidden],
+.calm-choice-reasons[data-choice-view][hidden] {
+  display: none;
+}
+
 .calm-choice-reasons__panel h3 {
   margin: 0 0 20px;
   color: var(--ari-ink);
