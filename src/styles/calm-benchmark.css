@@ -1140,7 +1140,7 @@ html.is-challenge-dialog-open {
   height: 7px;
   margin-top: 0.62em;
   border-radius: 50%;
-  background: var(--ari-amber-deep);
+  background: var(--ari-plum);
 }
 
 .calm-session-points b {
