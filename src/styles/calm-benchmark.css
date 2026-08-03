@@ -2281,11 +2281,11 @@ html.is-challenge-dialog-open {
 }
 
 .calm-results-dashboard-summary .calm-results-profile-label[data-profile="nature"] {
-  color: var(--ari-plum);
+  color: var(--ari-route-a);
 }
 
 .calm-results-dashboard-summary .calm-results-profile-label[data-profile="quiet"] {
-  color: #5a579f;
+  color: var(--ari-route-b);
 }
 
 .calm-results-toolbar {
