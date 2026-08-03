@@ -907,7 +907,7 @@
         .filter(key => pair.counts[key] > 0)
         .sort((a, b) => pair.counts[b] - pair.counts[a]);
       const segments = sorted
-        .map(key => renderAgreementSegment(key, pair.counts[key], pair.substantiveTotal, key === pair.modalOutcome))
+        .map(key => renderAgreementSegment(key, pair.counts[key], pair.substantiveTotal, pair.clearExactAgreement && key === pair.modalOutcome))
         .join('');
       const modalLabel = pair.modalOutcome ? agreementOutcomeLabel(pair.modalOutcome) : 'Tie';
       const ariaLabel = pair.substantiveTotal
