@@ -8312,6 +8312,12 @@ html.is-challenge-dialog-open {
   background: var(--ari-green);
 }
 
+/* Penalised attributes (noise, main roads, accident risk) fill in brand
+   blurple — not Route B purple, which is reserved for route identity. */
+.rp-penalty .rp-weight-rail::after {
+  background: var(--ari-blurple);
+}
+
 .calm-rp-weights-summary {
   font-size: var(--font-size-small);
   color: var(--ari-plum);
