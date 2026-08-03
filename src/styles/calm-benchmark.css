@@ -8658,10 +8658,15 @@ html.is-challenge-dialog-open {
 
 .calm-rp-comparison-table th,
 .calm-rp-comparison-table td {
-  padding: 8px 14px 8px 0;
+  padding: 12px 24px 12px 0;
   text-align: left;
   border-bottom: 1px solid var(--ari-hairline);
   vertical-align: middle;
+}
+
+.calm-rp-comparison-table th:first-child,
+.calm-rp-comparison-table td:first-child {
+  padding-left: 2px;
 }
 
 .calm-rp-comparison-table thead th {
@@ -8670,6 +8675,12 @@ html.is-challenge-dialog-open {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--ari-muted);
+  padding-bottom: 8px;
+}
+
+/* Give the inline delta mark a small gap from the preceding value */
+.calm-rp-comparison-table td .marker-lime {
+  margin-left: 5px;
 }
 
 .rp-row-fast   th { font-weight: 600; color: var(--ari-muted); }
