@@ -810,6 +810,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-card--how {
+  --kicker-floor: var(--ari-green);
   background: var(--ari-green);
   padding-top: 52px; /* 34px notch + 18px breathing room */
 }
@@ -836,7 +837,7 @@ html.is-challenge-dialog-open {
   max-width: calc(100% - var(--ari-radius-card));
   height: 34px;
   padding: 0 20px 16px 24px;
-  background: linear-gradient(to bottom, var(--ari-off-white) 26px, transparent);
+  background: linear-gradient(to bottom, var(--ari-off-white) 28px, var(--kicker-floor, var(--ari-off-white)));
   border-top-left-radius: 0;
   border-bottom-right-radius: 17px;
   color: var(--ari-plum);
@@ -876,6 +877,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-card--session {
+  --kicker-floor: var(--ari-blurple);
   background: var(--ari-blurple);
 }
 
@@ -1416,7 +1418,7 @@ html.is-challenge-dialog-open {
   max-width: calc(100% - var(--ari-radius-card));
   height: 34px;
   padding: 0 20px 16px 24px;
-  background: linear-gradient(to bottom, var(--ari-off-white) 26px, transparent);
+  background: linear-gradient(to bottom, var(--ari-off-white) 28px, var(--rank-surface-top));
   border-top-left-radius: 0;
   border-bottom-right-radius: 17px;
   color: var(--ari-plum);
