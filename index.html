@@ -2026,19 +2026,43 @@
       }
     });
 
+    function rpCssVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function rpRouteOverlapPercent(geomA, geomB, precision) {
+      precision = precision || 5;
+      if (!geomA || !geomB || geomA.length < 2 || geomB.length < 2) return null;
+      function segKey(p1, p2) {
+        const k1 = Number(p1[0]).toFixed(precision) + ',' + Number(p1[1]).toFixed(precision);
+        const k2 = Number(p2[0]).toFixed(precision) + ',' + Number(p2[1]).toFixed(precision);
+        return k1 <= k2 ? k1 + '|' + k2 : k2 + '|' + k1;
+      }
+      const setA = new Set();
+      for (let i = 1; i < geomA.length; i++) setA.add(segKey(geomA[i - 1], geomA[i]));
+      const setB = new Set();
+      for (let i = 1; i < geomB.length; i++) setB.add(segKey(geomB[i - 1], geomB[i]));
+      let shared = 0;
+      setA.forEach(function(k) { if (setB.has(k)) shared++; });
+      if (!setA.size) return null;
+      return Math.round((shared / setA.size) * 100);
+    }
+
     function initPairMap(mapEl, routePair) {
       if (!window.L || mapEl._leafletMap) return;
-      const map = L.map(mapEl, { zoomControl: true, attributionControl: false, zoomSnap: 0.5 });
+      const map = L.map(mapEl, { zoomControl: false, attributionControl: false, zoomSnap: 0.5 });
       mapEl._leafletMap = map;
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap © CARTO'
+        maxZoom: 19
       }).addTo(map);
-      const routeColors = { fast: '#94928d', calm_nature: '#8fd9a8', calm_quiet: '#8a90f3' };
+      const grey04 = rpCssVar('--ari-grey-04') || '#94928d';
+      const green  = rpCssVar('--ari-green')   || '#8fd9a8';
+      const blurple = rpCssVar('--ari-blurple') || '#8a90f3';
+      const routeColors  = { fast: grey04, calm_nature: green, calm_quiet: blurple };
       const routeWeights = { fast: 3, calm_nature: 4, calm_quiet: 4 };
       const drawOrder = ['fast', 'calm_quiet', 'calm_nature'];
       const layers = {};
-      drawOrder.forEach(key => {
+      drawOrder.forEach(function(key) {
         const route = routePair.routes[key];
         if (!route || !route.geometry || !route.geometry.length) return;
         layers[key] = L.polyline(route.geometry, {
@@ -2047,8 +2071,25 @@
           opacity: 0.9
         }).addTo(map);
       });
-      const allPoints = Object.values(layers).flatMap(l => l.getLatLngs());
+      mapEl._rpLayers = layers;
+      const allPoints = Object.values(layers).flatMap(function(l) { return l.getLatLngs(); });
       if (allPoints.length) map.fitBounds(L.latLngBounds(allPoints), { padding: [16, 16], maxZoom: 16 });
+
+      // Wire up toggle buttons in the same map-col
+      const mapWrap = mapEl.closest('.calm-rp-map-wrap');
+      if (mapWrap) {
+        mapWrap.querySelectorAll('.calm-rp-map-toggle').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            const key = btn.dataset.route;
+            const visible = btn.getAttribute('aria-pressed') === 'true';
+            btn.setAttribute('aria-pressed', String(!visible));
+            if (layers[key]) {
+              if (visible) { map.removeLayer(layers[key]); }
+              else { layers[key].addTo(map); }
+            }
+          });
+        });
+      }
     }
 
     function rpWeightCell(value) {
@@ -2084,14 +2125,24 @@
     function rpAttrSummary(ma) {
       const lines = [];
       const vNatureCanopy = ma.calm_nature && ma.fast ? ma.calm_nature.tree_canopy - ma.fast.tree_canopy : null;
-      if (vNatureCanopy != null && vNatureCanopy > 0.1) {
-        lines.push(`Calm Nature has notably more tree canopy coverage than Fast (${ma.calm_nature.tree_canopy.toFixed(2)} vs ${ma.fast.tree_canopy.toFixed(2)}).`);
+      if (vNatureCanopy != null) {
+        if (vNatureCanopy > 0.2) lines.push('Calm Nature has substantially more tree canopy than Fast.');
+        else if (vNatureCanopy > 0.1) lines.push('Calm Nature has notably more tree canopy than Fast.');
+      }
+      const vNatureGreen = ma.calm_nature && ma.fast ? ma.calm_nature.green_space - ma.fast.green_space : null;
+      if (vNatureGreen != null && vNatureGreen > 0.15 && !lines.length) {
+        lines.push('Calm Nature passes through considerably more green space than Fast.');
       }
       const vQuietNoise = ma.calm_quiet && ma.fast ? ma.fast.noise_exposure - ma.calm_quiet.noise_exposure : null;
-      if (vQuietNoise != null && vQuietNoise > 0.1) {
-        lines.push(`Calm Quiet has substantially lower noise exposure than Fast (${ma.calm_quiet.noise_exposure.toFixed(2)} vs ${ma.fast.noise_exposure.toFixed(2)}).`);
+      if (vQuietNoise != null) {
+        if (vQuietNoise > 0.2) lines.push('Calm Quiet has substantially lower noise exposure than Fast.');
+        else if (vQuietNoise > 0.1) lines.push('Calm Quiet has notably lower noise exposure than Fast.');
       }
-      if (!lines.length) lines.push('The routes show moderate differences across environmental attributes.');
+      const vQuietRisk = ma.calm_quiet && ma.fast ? ma.fast.accident_risk - ma.calm_quiet.accident_risk : null;
+      if (vQuietRisk != null && vQuietRisk > 0.15 && lines.length < 2) {
+        lines.push('Calm Quiet avoids higher-risk segments more than Fast.');
+      }
+      if (!lines.length) lines.push('The routes show moderate differences across environmental attributes for this pair.');
       return `<p class="calm-rp-attr-summary">${escapeHtml(lines.join(' '))}</p>`;
     }
 
@@ -2099,11 +2150,14 @@
       const parts = [];
       if (ec.calm_quiet) {
         const winner = ec.calm_quiet.fast > ec.calm_quiet.calm_quiet ? 'Calm Quiet' : 'Fast';
-        const distNote = quietDist > fastDist
-          ? `add ${Math.round(quietDist - fastDist)} m of distance`
-          : `are ${Math.round(fastDist - quietDist)} m shorter`;
+        const distDiff = Math.round(quietDist - fastDist);
+        const distNote = distDiff > 20
+          ? `Calm Quiet is ${distDiff} m longer than Fast.`
+          : distDiff < -20
+            ? `Calm Quiet is ${Math.abs(distDiff)} m shorter than Fast.`
+            : 'Calm Quiet and Fast are the same length.';
         parts.push(`<div class="calm-rp-cost-profile">
-          <h4 class="rp-profile-label rp-profile-label--quiet">Quiet-focused profile</h4>
+          <p class="rp-profile-label rp-profile-label--quiet">Quiet-focused profile</p>
           <p>Under the Quiet-focused profile, <strong>${escapeHtml(winner)}</strong> wins with a lower adjusted cost.</p>
           <table class="calm-rp-cost-table">
             <thead><tr><th scope="col">Route</th><th scope="col">Adjusted cost (m)</th></tr></thead>
@@ -2112,16 +2166,19 @@
               <tr class="rp-row-quiet"><th scope="row">Calm Quiet</th><td>${Math.round(ec.calm_quiet.calm_quiet).toLocaleString()}</td></tr>
             </tbody>
           </table>
-          <p class="rp-cost-tradeoff">Trade-off: Calm Quiet routes ${distNote} but avoid noisier and higher-risk segments.</p>
+          <p class="rp-cost-tradeoff">${escapeHtml(distNote)}</p>
         </div>`);
       }
       if (ec.calm_nature) {
         const winner = ec.calm_nature.fast > ec.calm_nature.calm_nature ? 'Calm Nature' : 'Fast';
-        const distNote = natureDist > fastDist
-          ? `add ${Math.round(natureDist - fastDist)} m of distance`
-          : `are ${Math.round(fastDist - natureDist)} m shorter`;
+        const distDiff = Math.round(natureDist - fastDist);
+        const distNote = distDiff > 20
+          ? `Calm Nature is ${distDiff} m longer than Fast.`
+          : distDiff < -20
+            ? `Calm Nature is ${Math.abs(distDiff)} m shorter than Fast.`
+            : 'Calm Nature and Fast are the same length.';
         parts.push(`<div class="calm-rp-cost-profile">
-          <h4 class="rp-profile-label rp-profile-label--nature">Nature-focused profile</h4>
+          <p class="rp-profile-label rp-profile-label--nature">Nature-focused profile</p>
           <p>Under the Nature-focused profile, <strong>${escapeHtml(winner)}</strong> wins with a lower adjusted cost.</p>
           <table class="calm-rp-cost-table">
             <thead><tr><th scope="col">Route</th><th scope="col">Adjusted cost (m)</th></tr></thead>
@@ -2130,7 +2187,7 @@
               <tr class="rp-row-nature"><th scope="row">Calm Nature</th><td>${Math.round(ec.calm_nature.calm_nature).toLocaleString()}</td></tr>
             </tbody>
           </table>
-          <p class="rp-cost-tradeoff">Trade-off: Calm Nature routes ${distNote} but include more greenery and natural areas.</p>
+          <p class="rp-cost-tradeoff">${escapeHtml(distNote)}</p>
         </div>`);
       }
       return `<div class="calm-rp-cost-profiles">${parts.join('')}</div>`;
@@ -2171,47 +2228,59 @@
         <div class="calm-rp-pair__body" id="rp-pair-body-${escapeHtml(diag.pairId)}" hidden>
           <div class="calm-rp-pair__split">
             <div class="calm-rp-pair__map-col">
-              <div class="calm-rp-map" id="rp-map-${idx}" data-pair-index="${idx}"></div>
-              <div class="calm-rp-map-legend">
-                <span class="rp-legend-fast">Fast</span>
-                <span class="rp-legend-nature">Calm Nature</span>
-                <span class="rp-legend-quiet">Calm Quiet</span>
+              <div class="calm-rp-map-wrap">
+                <div class="calm-rp-map-controls" role="group" aria-label="Show or hide routes on map">
+                  <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="fast" style="--rp-toggle-color: var(--ari-grey-04)">Fast</button>
+                  <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_nature" style="--rp-toggle-color: var(--ari-green)">Calm Nature</button>
+                  <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_quiet" style="--rp-toggle-color: var(--ari-blurple)">Calm Quiet</button>
+                </div>
+                <div class="calm-rp-map" id="rp-map-${idx}" data-pair-index="${idx}"></div>
               </div>
             </div>
             <div class="calm-rp-pair__data-col">
               <h3 class="calm-rp-section-title">Route comparison</h3>
-              <table class="calm-rp-comparison-table">
-                <thead><tr>
-                  <th scope="col">Route</th>
-                  <th scope="col">Walking time</th>
-                  <th scope="col">Extra time</th>
-                  <th scope="col">Distance</th>
-                  <th scope="col">Extra distance</th>
-                </tr></thead>
-                <tbody>
-                  <tr class="rp-row-fast">
-                    <th scope="row">Fast</th>
-                    <td>${rpFmtTime(fastMeta.durationSeconds)}</td>
-                    <td>–</td>
-                    <td>${rpFmtDist(fastMeta.distanceMeters)}</td>
-                    <td>–</td>
-                  </tr>
-                  <tr class="rp-row-nature">
-                    <th scope="row">${escapeHtml(natRouteLabel)}</th>
-                    <td>${rpFmtTime(natureMeta.durationSeconds)}</td>
-                    <td>${natSameAsFast ? '–' : rpFmtDiff(natureMeta.durationSeconds, fastMeta.durationSeconds, true)}</td>
-                    <td>${rpFmtDist(natureMeta.distanceMeters)}</td>
-                    <td>${natSameAsFast ? '–' : rpFmtDiff(natureMeta.distanceMeters, fastMeta.distanceMeters, false)}</td>
-                  </tr>
-                  <tr class="rp-row-quiet">
-                    <th scope="row">Calm Quiet</th>
-                    <td>${rpFmtTime(quietMeta.durationSeconds)}</td>
-                    <td>${rpFmtDiff(quietMeta.durationSeconds, fastMeta.durationSeconds, true)}</td>
-                    <td>${rpFmtDist(quietMeta.distanceMeters)}</td>
-                    <td>${rpFmtDiff(quietMeta.distanceMeters, fastMeta.distanceMeters, false)}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div class="calm-rp-comparison-wrap">
+                <table class="calm-rp-comparison-table">
+                  <thead><tr>
+                    <th scope="col">Route</th>
+                    <th scope="col">Walking time</th>
+                    <th scope="col">Extra time</th>
+                    <th scope="col">Distance</th>
+                    <th scope="col">Extra distance</th>
+                  </tr></thead>
+                  <tbody>
+                    <tr class="rp-row-fast">
+                      <th scope="row">Fast</th>
+                      <td>${rpFmtTime(fastMeta.durationSeconds)}</td>
+                      <td>–</td>
+                      <td>${rpFmtDist(fastMeta.distanceMeters)}</td>
+                      <td>–</td>
+                    </tr>
+                    <tr class="rp-row-nature">
+                      <th scope="row">${escapeHtml(natRouteLabel)}</th>
+                      <td>${rpFmtTime(natureMeta.durationSeconds)}</td>
+                      <td>${natSameAsFast ? '–' : rpFmtDiff(natureMeta.durationSeconds, fastMeta.durationSeconds, true)}</td>
+                      <td>${rpFmtDist(natureMeta.distanceMeters)}</td>
+                      <td>${natSameAsFast ? '–' : rpFmtDiff(natureMeta.distanceMeters, fastMeta.distanceMeters, false)}</td>
+                    </tr>
+                    <tr class="rp-row-quiet">
+                      <th scope="row">Calm Quiet</th>
+                      <td>${rpFmtTime(quietMeta.durationSeconds)}</td>
+                      <td>${rpFmtDiff(quietMeta.durationSeconds, fastMeta.durationSeconds, true)}</td>
+                      <td>${rpFmtDist(quietMeta.distanceMeters)}</td>
+                      <td>${rpFmtDiff(quietMeta.distanceMeters, fastMeta.distanceMeters, false)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              ${(function() {
+                const natGeom = (routePair.routes.calm_nature || {}).geometry;
+                const qGeom   = (routePair.routes.calm_quiet  || {}).geometry;
+                const pct = rpRouteOverlapPercent(natGeom, qGeom);
+                return pct != null
+                  ? `<p class="rp-overlap-note">Overlap between Calm Nature and Calm Quiet: ${pct}%</p>`
+                  : '';
+              })()}
             </div>
           </div>
 

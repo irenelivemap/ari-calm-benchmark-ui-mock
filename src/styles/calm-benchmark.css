@@ -8163,25 +8163,30 @@ html.is-challenge-dialog-open {
    ============================================================ */
 
 .calm-route-profiles {
-  background: #f8f7f5;
-  min-height: 100vh;
+  background: var(--ari-off-white);
+  min-height: calc(100vh - 82px);
   padding: 0 0 80px;
+  font-family: var(--ari-font);
+  font: var(--font-body);
+  color: var(--ari-ink);
+  letter-spacing: -0.024em;
+  -webkit-font-smoothing: antialiased;
 }
 
 .calm-route-profiles__inner {
-  max-width: 1100px;
+  width: min(1180px, calc(100% - 56px));
   margin: 0 auto;
-  padding: 0 24px;
 }
 
+/* Header */
 .calm-rp-header {
-  padding: 56px 0 32px;
-  border-bottom: 1px solid rgba(33, 26, 42, 0.10);
+  padding: 40px 0 32px;
+  border-bottom: 1px solid var(--ari-hairline);
   margin-bottom: 40px;
 }
 
 .calm-rp-eyebrow {
-  font-size: 12px;
+  font-size: var(--font-size-micro);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -8190,15 +8195,16 @@ html.is-challenge-dialog-open {
 }
 
 .calm-rp-title {
-  font-size: clamp(22px, 3vw, 32px);
+  font-size: var(--font-size-heading-lg);
   font-weight: 700;
   color: var(--ari-plum);
   margin: 0 0 16px;
   line-height: 1.2;
+  letter-spacing: -0.03em;
 }
 
 .calm-rp-lead {
-  font-size: 16px;
+  font-size: var(--font-size-detail);
   color: var(--ari-muted);
   max-width: 640px;
   margin: 0;
@@ -8221,9 +8227,9 @@ html.is-challenge-dialog-open {
 .calm-rp-weights-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: var(--font-size-small);
   background: #fff;
-  border-radius: 16px;
+  border-radius: var(--ari-radius-inner);
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(33, 26, 42, 0.08);
 }
@@ -8232,13 +8238,13 @@ html.is-challenge-dialog-open {
 .calm-rp-weights-table td {
   padding: 10px 16px;
   text-align: left;
-  border-bottom: 1px solid rgba(33, 26, 42, 0.06);
+  border-bottom: 1px solid var(--ari-hairline);
 }
 
 .calm-rp-weights-table thead th {
   background: var(--ari-plum);
   color: #fff;
-  font-size: 12px;
+  font-size: var(--font-size-micro);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -8249,12 +8255,10 @@ html.is-challenge-dialog-open {
   border-bottom: none;
 }
 
-.calm-rp-weights-table tbody tr th {
-  color: var(--ari-plum);
-}
+.calm-rp-weights-table tbody tr th { color: var(--ari-plum); }
 
 .rp-attr-dir {
-  font-size: 12px;
+  font-size: var(--font-size-micro);
   color: var(--ari-muted);
   margin-left: 4px;
 }
@@ -8264,7 +8268,7 @@ html.is-challenge-dialog-open {
   align-items: center;
   gap: 6px;
   font-variant-numeric: tabular-nums;
-  font-size: 13px;
+  font-size: var(--font-size-fine);
 }
 
 .rp-weight--zero { color: var(--ari-faint); }
@@ -8282,7 +8286,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-rp-weights-summary {
-  font-size: 15px;
+  font-size: var(--font-size-small);
   color: var(--ari-plum);
   line-height: 1.65;
 }
@@ -8290,66 +8294,66 @@ html.is-challenge-dialog-open {
 .calm-rp-weights-summary p { margin: 0 0 12px; }
 
 .calm-rp-caveat {
-  font-size: 13px;
+  font-size: var(--font-size-fine);
   color: var(--ari-muted);
   padding-left: 16px;
-  border-left: 3px solid rgba(33, 26, 42, 0.12);
+  border-left: 3px solid var(--ari-hairline);
   line-height: 1.5;
 }
 
 /* Pairs section header */
 .calm-rp-pairs-header {
-  border-top: 1px solid rgba(33, 26, 42, 0.10);
-  padding-top: 40px;
-  margin-bottom: 24px;
+  border-top: 1px solid var(--ari-hairline);
+  padding-top: 32px;
+  margin-bottom: 20px;
 }
 
 .calm-rp-pairs-title {
-  font-size: clamp(18px, 2.5vw, 26px);
+  font-size: var(--font-size-micro);
   font-weight: 700;
-  color: var(--ari-plum);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ari-muted);
   margin: 0;
 }
 
 .calm-rp-pairs-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* Individual pair card */
 .calm-rp-pair {
   background: #fff;
-  border-radius: 20px;
+  border-radius: var(--ari-radius-inner);
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(33, 26, 42, 0.07);
 }
-
-.calm-rp-pair__header { display: contents; }
 
 .calm-rp-pair__toggle {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 20px 24px;
+  padding: 18px 24px;
   background: none;
   border: none;
   text-align: left;
   cursor: pointer;
-  font-family: inherit;
+  font-family: var(--ari-font);
   transition: background 150ms;
 }
 
 .calm-rp-pair__toggle:hover { background: rgba(33, 26, 42, 0.03); }
 
 .calm-rp-pair__toggle:focus-visible {
-  outline: 2px solid var(--ari-plum);
+  outline: 2px solid var(--ari-focus);
   outline-offset: -2px;
 }
 
 .calm-rp-pair__label {
-  font-size: 13px;
+  font-size: var(--font-size-fine);
   font-weight: 700;
   color: var(--ari-muted);
   letter-spacing: 0.04em;
@@ -8365,7 +8369,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-rp-pair__route {
-  font-size: 15px;
+  font-size: var(--font-size-small);
   font-weight: 600;
   color: var(--ari-plum);
   flex: 1;
@@ -8378,7 +8382,7 @@ html.is-challenge-dialog-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 250ms ease;
+  transition: transform 250ms var(--motion-settle);
 }
 
 .calm-rp-pair__chevron::before {
@@ -8391,12 +8395,10 @@ html.is-challenge-dialog-open {
   transform: rotate(45deg) translate(-2px, -2px);
 }
 
-.calm-rp-pair__toggle[aria-expanded="true"] .calm-rp-pair__chevron {
-  transform: rotate(180deg);
-}
+.calm-rp-pair__toggle[aria-expanded="true"] .calm-rp-pair__chevron { transform: rotate(180deg); }
 
 .calm-rp-pair__body {
-  border-top: 1px solid rgba(33, 26, 42, 0.06);
+  border-top: 1px solid var(--ari-hairline);
   padding: 24px;
 }
 
@@ -8404,25 +8406,69 @@ html.is-challenge-dialog-open {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 @media (max-width: 720px) {
   .calm-rp-pair__split { grid-template-columns: 1fr; }
 }
 
+/* Map */
+.calm-rp-map-wrap { display: flex; flex-direction: column; }
+
+.calm-rp-map-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.calm-rp-map-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--ari-radius-btn);
+  border: 1.5px solid var(--ari-hairline);
+  background: #fff;
+  font-family: var(--ari-font);
+  font-size: var(--font-size-micro);
+  font-weight: 600;
+  color: var(--ari-plum);
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms, opacity 120ms;
+  letter-spacing: 0;
+}
+
+.calm-rp-map-toggle::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rp-toggle-color, var(--ari-grey-04));
+  flex-shrink: 0;
+}
+
+.calm-rp-map-toggle[aria-pressed="true"] {
+  border-color: var(--rp-toggle-color, var(--ari-grey-04));
+  background: var(--rp-toggle-color, var(--ari-grey-04));
+  color: var(--ari-plum);
+}
+
+.calm-rp-map-toggle[aria-pressed="false"] { opacity: 0.5; }
+
 .calm-rp-map {
   height: 260px;
-  border-radius: 12px;
+  border-radius: var(--ari-radius-inner);
   overflow: hidden;
-  background: #e8e6e0;
+  background: var(--ari-grey-02);
 }
 
 .calm-rp-map-legend {
   display: flex;
   gap: 16px;
   margin-top: 10px;
-  font-size: 12px;
+  font-size: var(--font-size-micro);
   font-weight: 600;
   color: var(--ari-plum);
 }
@@ -8432,20 +8478,27 @@ html.is-challenge-dialog-open {
 .rp-legend-quiet::before {
   content: '';
   display: inline-block;
-  width: 24px;
+  width: 20px;
   height: 3px;
   border-radius: 2px;
   vertical-align: middle;
-  margin-right: 6px;
+  margin-right: 5px;
 }
 
-.rp-legend-fast::before   { background: #94928d; }
+.rp-legend-fast::before   { background: var(--ari-grey-04); }
 .rp-legend-nature::before { background: var(--ari-green); }
 .rp-legend-quiet::before  { background: var(--ari-blurple); }
 
-/* Section titles */
+.rp-overlap-note {
+  font-size: var(--font-size-micro);
+  color: var(--ari-muted);
+  margin: 10px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Section titles inside pair body */
 .calm-rp-section-title {
-  font-size: 13px;
+  font-size: var(--font-size-fine);
   font-weight: 700;
   color: var(--ari-muted);
   letter-spacing: 0.05em;
@@ -8454,22 +8507,25 @@ html.is-challenge-dialog-open {
 }
 
 /* Comparison table */
+.calm-rp-comparison-wrap { overflow-x: auto; }
+
 .calm-rp-comparison-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: var(--font-size-fine);
+  white-space: nowrap;
 }
 
 .calm-rp-comparison-table th,
 .calm-rp-comparison-table td {
-  padding: 8px 12px 8px 0;
+  padding: 8px 14px 8px 0;
   text-align: left;
-  border-bottom: 1px solid rgba(33, 26, 42, 0.06);
+  border-bottom: 1px solid var(--ari-hairline);
   vertical-align: middle;
 }
 
 .calm-rp-comparison-table thead th {
-  font-size: 11px;
+  font-size: var(--font-size-micro);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -8504,7 +8560,7 @@ html.is-challenge-dialog-open {
 
 /* Attribute tables */
 .calm-rp-attrs {
-  border-top: 1px solid rgba(33, 26, 42, 0.06);
+  border-top: 1px solid var(--ari-hairline);
   padding-top: 24px;
   margin-bottom: 28px;
 }
@@ -8521,7 +8577,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-rp-attrs__group-label {
-  font-size: 12px;
+  font-size: var(--font-size-micro);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -8529,46 +8585,39 @@ html.is-challenge-dialog-open {
   margin: 0 0 10px;
 }
 
-.rp-direction-note {
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
-}
+.rp-direction-note { font-weight: 400; text-transform: none; letter-spacing: 0; }
 
 .calm-rp-attr-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: var(--font-size-fine);
 }
 
 .calm-rp-attr-table th,
 .calm-rp-attr-table td {
   padding: 7px 10px 7px 0;
   text-align: left;
-  border-bottom: 1px solid rgba(33, 26, 42, 0.06);
+  border-bottom: 1px solid var(--ari-hairline);
 }
 
 .calm-rp-attr-table thead th {
-  font-size: 11px;
+  font-size: var(--font-size-micro);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ari-muted);
 }
 
-.calm-rp-attr-table td.rp-best {
-  font-weight: 700;
-  color: var(--ari-plum);
-}
+.calm-rp-attr-table td.rp-best { font-weight: 700; color: var(--ari-plum); }
 
 .rp-attr-note {
-  font-size: 12px;
+  font-size: var(--font-size-micro);
   color: var(--ari-faint);
   margin: 10px 0 0;
 }
 
 .calm-rp-attr-summary {
-  font-size: 13px;
+  font-size: var(--font-size-fine);
   color: var(--ari-muted);
   margin: 16px 0 0;
   line-height: 1.55;
@@ -8576,19 +8625,19 @@ html.is-challenge-dialog-open {
 
 /* Cost section */
 .calm-rp-costs {
-  border-top: 1px solid rgba(33, 26, 42, 0.06);
+  border-top: 1px solid var(--ari-hairline);
   padding-top: 24px;
 }
 
 .calm-rp-costs__intro {
-  font-size: 14px;
+  font-size: var(--font-size-small);
   color: var(--ari-plum);
   margin: 0 0 16px;
   line-height: 1.6;
 }
 
 .calm-rp-costs__caveat {
-  font-size: 12px;
+  font-size: var(--font-size-micro);
   color: var(--ari-faint);
   margin: 12px 0 20px;
 }
@@ -8597,26 +8646,22 @@ html.is-challenge-dialog-open {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  font-size: 13px;
+  font-size: var(--font-size-fine);
   color: var(--ari-plum);
   background: rgba(33, 26, 42, 0.03);
-  border-radius: 10px;
+  border-radius: var(--ari-radius-inner);
   padding: 14px 20px;
   margin: 0 0 8px;
   width: fit-content;
   gap: 2px;
 }
 
-.calm-rp-cost-diagram .rp-arrow {
-  color: var(--ari-muted);
-  font-size: 16px;
-  line-height: 1.2;
-}
+.calm-rp-cost-diagram .rp-arrow { color: var(--ari-muted); font-size: 16px; line-height: 1.2; }
 
 .calm-rp-cost-profiles {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 16px;
 }
 
 @media (max-width: 720px) {
@@ -8625,37 +8670,28 @@ html.is-challenge-dialog-open {
 
 .calm-rp-cost-profile {
   background: rgba(33, 26, 42, 0.02);
-  border-radius: 12px;
+  border-radius: var(--ari-radius-inner);
   padding: 16px;
-  border: 1px solid rgba(33, 26, 42, 0.06);
+  border: 1px solid var(--ari-hairline);
 }
 
 .rp-profile-label {
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-micro);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  margin: 0 0 10px;
+  margin: 0 0 12px;
+  padding: 3px 10px;
+  border-radius: var(--ari-radius-btn);
 }
 
-.rp-profile-label--nature {
-  display: inline-block;
-  background: var(--ari-green);
-  color: var(--ari-plum);
-  padding: 2px 8px;
-  border-radius: 6px;
-}
-
-.rp-profile-label--quiet {
-  display: inline-block;
-  background: var(--ari-blurple);
-  color: var(--ari-plum);
-  padding: 2px 8px;
-  border-radius: 6px;
-}
+.rp-profile-label--nature { background: var(--ari-green);   color: var(--ari-plum); }
+.rp-profile-label--quiet  { background: var(--ari-blurple); color: var(--ari-plum); }
 
 .calm-rp-cost-profile p {
-  font-size: 13px;
+  font-size: var(--font-size-fine);
   color: var(--ari-plum);
   margin: 0 0 10px;
   line-height: 1.5;
@@ -8664,19 +8700,19 @@ html.is-challenge-dialog-open {
 .calm-rp-cost-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: var(--font-size-fine);
   margin-bottom: 10px;
 }
 
 .calm-rp-cost-table th,
 .calm-rp-cost-table td {
-  padding: 6px 10px 6px 0;
+  padding: 7px 10px 7px 0;
   text-align: left;
-  border-bottom: 1px solid rgba(33, 26, 42, 0.06);
+  border-bottom: 1px solid var(--ari-hairline);
 }
 
 .calm-rp-cost-table thead th {
-  font-size: 11px;
+  font-size: var(--font-size-micro);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -8684,7 +8720,7 @@ html.is-challenge-dialog-open {
 }
 
 .rp-cost-tradeoff {
-  font-size: 12px;
+  font-size: var(--font-size-micro);
   color: var(--ari-muted);
   margin: 6px 0 0 !important;
 }
