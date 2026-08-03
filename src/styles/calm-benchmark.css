@@ -2243,7 +2243,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-results-dashboard-header {
-  padding: 40px 0 32px;
+  padding: 28px 0 20px;
   border-bottom: 1px solid var(--ari-hairline);
 }
 
@@ -2293,7 +2293,7 @@ html.is-challenge-dialog-open {
   gap: 24px;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 0;
+  padding: 16px 0;
   border-bottom: 1px solid var(--ari-hairline);
 }
 
@@ -2429,7 +2429,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-outcome-overview {
-  padding: 48px 0 56px;
+  padding: 36px 0 28px;
 }
 
 .calm-outcome-overview > header {
@@ -2597,7 +2597,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-pair-agreement-section {
-  padding: 56px 0 80px;
+  padding: 36px 0 40px;
 }
 
 .calm-analysis-heading {
@@ -2680,6 +2680,7 @@ html.is-challenge-dialog-open {
 
 .calm-choice-reasons-section {
   border-top: 1px solid var(--ari-hairline);
+  padding-top: 32px;
 }
 
 .calm-choice-reasons-section > .calm-analysis-heading {
@@ -2903,7 +2904,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-agreement-chart {
-  margin-top: 56px;
+  margin-top: 24px;
 }
 
 .calm-agreement-chart__header {
@@ -4818,7 +4819,7 @@ html.is-challenge-dialog-open {
   }
 
   .calm-pair-agreement-section {
-    padding: 48px 0 56px;
+    padding: 28px 0 32px;
   }
 
   .calm-agreement-metrics {
