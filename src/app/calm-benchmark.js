@@ -1740,11 +1740,12 @@
       els.q2NoteWrap.hidden = !hasQ2Selection;
       els.q2Note.disabled = !hasQ2Selection;
       if (!hasQ2Selection) els.q2Note.value = '';
+      const q3InputName = q3Variant.inputName || 'q3Issues';
       const hasQ3NoteTrigger = q3Variant.noteMode === 'none'
         ? false
         : q3Variant.noteMode === 'other'
-          ? !!els.form.querySelector('input[name="q3Issues"][value="other"]:checked')
-          : !!els.form.querySelector('input[name="q3Issues"]:checked');
+          ? !!els.form.querySelector(`input[name="${q3InputName}"][value="other"]:checked`)
+          : !!els.form.querySelector(`input[name="${q3InputName}"]:checked`);
       els.q3NoteWrap.hidden = !hasQ3NoteTrigger;
       els.q3Note.disabled = !hasQ3NoteTrigger;
       if (!hasQ3NoteTrigger) els.q3Note.value = '';
