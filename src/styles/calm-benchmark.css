@@ -843,6 +843,7 @@ html.is-challenge-dialog-open {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
+  box-shadow: 0 0 0 2px var(--ari-off-white);
 }
 .calm-card--how .calm-kicker::before,
 .calm-card--how .calm-kicker::after,
@@ -860,7 +861,7 @@ html.is-challenge-dialog-open {
   bottom: auto;
   width: 18px;
   height: 17px;
-  background: radial-gradient(circle at bottom right, transparent 16.5px, var(--ari-off-white) 17px);
+  background: radial-gradient(circle at bottom right, transparent 15.5px, var(--ari-off-white) 17px);
 }
 /* Bottom fillet: 24px quarter-circle below the notch at the left edge */
 .calm-card--how .calm-kicker::after,
@@ -870,7 +871,7 @@ html.is-challenge-dialog-open {
   bottom: -24px;
   width: 24px;
   height: 25px;
-  background: radial-gradient(circle at bottom right, transparent 23.5px, var(--ari-off-white) 24px);
+  background: radial-gradient(circle at bottom right, transparent 22.5px, var(--ari-off-white) 24px);
 }
 
 .calm-card--session {
@@ -1422,6 +1423,7 @@ html.is-challenge-dialog-open {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
+  box-shadow: 0 0 0 2px var(--ari-off-white);
 }
 .calm-start-left .calm-kicker::before,
 .calm-start-left .calm-kicker::after {
@@ -1434,14 +1436,14 @@ html.is-challenge-dialog-open {
   top: 0;
   width: 18px;
   height: 17px;
-  background: radial-gradient(circle at bottom right, transparent 16.5px, var(--ari-off-white) 17px);
+  background: radial-gradient(circle at bottom right, transparent 15.5px, var(--ari-off-white) 17px);
 }
 .calm-start-left .calm-kicker::after {
   left: 0;
   bottom: -24px;
   width: 24px;
   height: 25px;
-  background: radial-gradient(circle at bottom right, transparent 23.5px, var(--ari-off-white) 24px);
+  background: radial-gradient(circle at bottom right, transparent 22.5px, var(--ari-off-white) 24px);
 }
 
 .calm-start-left h2 {
