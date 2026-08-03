@@ -2729,16 +2729,10 @@ html.is-challenge-dialog-open {
 }
 
 .calm-choice-reasons__panel h3 {
-  margin: 0;
+  margin: 0 0 16px;
   color: var(--ari-ink);
   font: 600 var(--font-size-body)/1.2 var(--ari-font);
   letter-spacing: -0.02em;
-}
-
-.calm-panel-count {
-  margin: 4px 0 16px;
-  color: var(--ari-muted);
-  font: var(--font-small);
 }
 
 .calm-route-chip {
