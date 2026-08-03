@@ -2827,6 +2827,16 @@ html.is-challenge-dialog-open {
   transform: translateX(-50%);
 }
 
+.calm-agreement-chart__threshold-header strong::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  height: 12px;
+  border-left: 2px solid var(--ari-ink);
+  opacity: 0.85;
+}
+
 .calm-agreement-chart__axis {
   align-items: start;
   margin-top: 4px;
