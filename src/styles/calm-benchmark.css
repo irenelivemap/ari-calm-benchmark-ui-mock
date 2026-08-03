@@ -2502,7 +2502,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-outcome-summary__lead > strong[data-profile="nature"] {
-  color: var(--ari-plum);
+  color: var(--ari-route-a);
 }
 
 .calm-outcome-summary__lead > small {
@@ -3617,12 +3617,18 @@ html.is-challenge-dialog-open {
 }
 
 .calm-result-row[data-result-key="fast"] .calm-result-bar span,
-.calm-result-row[data-result-key="route_a"] .calm-result-bar span {
+.calm-result-row[data-result-key="route_a"] .calm-result-bar span,
+.calm-result-row[data-result-key="calm_nature"] .calm-result-bar span {
   background: var(--ari-route-a);
 }
 
-.calm-result-row[data-result-key="both"] .calm-result-bar span {
-  background: #6d8277;
+.calm-result-row[data-result-key="calm_quiet"] .calm-result-bar span {
+  background: var(--ari-route-b);
+}
+
+.calm-result-row[data-result-key="both"] .calm-result-bar span,
+.calm-result-row[data-result-key="both_work_well"] .calm-result-bar span {
+  background: color-mix(in srgb, var(--ari-yellow) 42%, var(--ari-grey-03));
 }
 
 .calm-result-row[data-result-key="neither"] .calm-result-bar span,
@@ -3944,6 +3950,21 @@ html.is-challenge-dialog-open {
 .calm-team-outcome[data-outcome="fast"] {
   background: #f8e4dc;
   color: #913314;
+}
+
+.calm-team-outcome[data-outcome="calm_nature"] {
+  background: color-mix(in srgb, var(--ari-route-a) 14%, #fff);
+  color: var(--ari-route-a);
+}
+
+.calm-team-outcome[data-outcome="calm_quiet"] {
+  background: color-mix(in srgb, var(--ari-route-b) 14%, #fff);
+  color: var(--ari-route-b);
+}
+
+.calm-team-outcome[data-outcome="both_work_well"] {
+  background: color-mix(in srgb, var(--ari-yellow) 22%, #fff);
+  color: var(--ari-ink);
 }
 
 .calm-team-outcome[data-outcome="neither"],
@@ -9213,8 +9234,8 @@ html.is-challenge-dialog-open {
   border-radius: var(--ari-radius-btn);
 }
 
-.rp-profile-label--nature { background: var(--ari-green);   color: var(--ari-plum); }
-.rp-profile-label--quiet  { background: var(--ari-blurple); color: var(--ari-plum); }
+.rp-profile-label--nature { background: var(--ari-route-a); color: #fff; }
+.rp-profile-label--quiet  { background: var(--ari-route-b); color: #fff; }
 
 .calm-rp-cost-profile p {
   font-size: var(--font-size-small);
