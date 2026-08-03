@@ -2802,6 +2802,31 @@ html.is-challenge-dialog-open {
   gap: 24px;
 }
 
+.calm-agreement-chart__threshold-header {
+  display: grid;
+  grid-template-columns: minmax(104px, 0.58fr) minmax(280px, 3.2fr) minmax(96px, 0.6fr);
+  gap: 24px;
+  margin-bottom: 4px;
+  color: var(--ari-muted);
+  font: var(--font-nano);
+  letter-spacing: 0.006em;
+}
+
+.calm-agreement-chart__threshold-header > div {
+  position: relative;
+  height: 18px;
+}
+
+.calm-agreement-chart__threshold-header strong {
+  position: absolute;
+  bottom: 0;
+  left: var(--agreement-threshold);
+  font-size: 1em;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
 .calm-agreement-chart__axis {
   align-items: start;
   margin-top: 4px;
