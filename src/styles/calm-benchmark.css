@@ -2729,17 +2729,37 @@ html.is-challenge-dialog-open {
 }
 
 .calm-choice-reasons__panel h3 {
-  margin: 0 0 20px;
+  margin: 0;
   color: var(--ari-ink);
   font: 600 var(--font-size-body)/1.2 var(--ari-font);
   letter-spacing: -0.02em;
 }
 
-.calm-choice-reasons__panel h3 span {
-  margin-left: 6px;
+.calm-panel-count {
+  margin: 4px 0 16px;
   color: var(--ari-muted);
-  font-weight: 400;
+  font: var(--font-small);
+}
+
+.calm-route-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 100px;
   font-size: var(--font-size-small);
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #fff;
+  vertical-align: middle;
+  line-height: 1.5;
+}
+
+.calm-route-chip--quiet {
+  background: var(--ari-route-b);
+}
+
+.calm-route-chip--nature {
+  background: var(--ari-route-a);
 }
 
 .calm-choice-reasons {
