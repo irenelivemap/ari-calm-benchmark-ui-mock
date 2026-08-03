@@ -783,7 +783,6 @@ html.is-challenge-dialog-open {
 }
 
 .calm-info-grid {
-  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr);
   gap: 20px;
@@ -791,21 +790,18 @@ html.is-challenge-dialog-open {
   margin: 36px 0 20px;
 }
 
-.calm-info-grid.has-progress::before {
-  content: '';
-  position: absolute;
-  top: 44px;
-  left: 20px;
-  bottom: 0;
-  width: 0;
-  border-left: 1.5px dashed rgba(143, 217, 168, 0.35);
-  pointer-events: none;
-  z-index: 0;
-}
-
 .calm-card,
 .calm-start-card {
   border-radius: var(--ari-radius-card);
+}
+
+/* The top-left corner sits entirely under the off-white kicker tab, so it is
+   never visible. Keeping it square avoids the card background's antialiased
+   corner curve ghosting through the kicker as a faint arc. */
+.calm-card--how,
+.calm-card--session,
+.calm-start-card {
+  border-top-left-radius: 0;
 }
 
 .calm-card {
@@ -4830,6 +4826,7 @@ html.is-challenge-dialog-open {
   .calm-card,
   .calm-start-card {
     border-radius: var(--ari-radius-inner);
+    border-top-left-radius: 0;
   }
 
   .calm-card {
