@@ -2640,16 +2640,16 @@ html.is-challenge-dialog-open {
 .calm-agreement-chart__row[data-outcome="calm_quiet"] .calm-agreement-chart__fill,
 .calm-agreement-chart__plot > span[data-outcome="calm_quiet"],
 .calm-vote-distribution-bar > span[data-outcome="calm_quiet"] {
-  background: var(--ari-blurple);
-  color: var(--ari-plum);
+  background: var(--ari-route-b);
+  color: #fff;
 }
 
 .calm-agreement-legend span[data-outcome="calm_nature"] i,
 .calm-agreement-chart__row[data-outcome="calm_nature"] .calm-agreement-chart__fill,
 .calm-agreement-chart__plot > span[data-outcome="calm_nature"],
 .calm-vote-distribution-bar > span[data-outcome="calm_nature"] {
-  background: var(--ari-green);
-  color: var(--ari-plum);
+  background: var(--ari-route-a);
+  color: #fff;
 }
 
 .calm-agreement-legend span[data-outcome="both_work_well"] i,
