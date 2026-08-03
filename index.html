@@ -1239,10 +1239,12 @@
           ? row.reasons.map(reason => AriCalmResults.REASON_LABELS[reason] || reason).join(', ')
           : 'None';
         const comparison = row.roundNumber ? `#${row.roundNumber}` : '—';
+        const pairNum = row.pairId ? row.pairId.replace(/^.*-(\d+)$/, '$1') : '—';
+        const pairLabel = pairNum !== '—' ? `Pair ${pairNum}` : '—';
         return `
           <tr>
             <td data-label="Comparison">${escapeHtml(comparison)}</td>
-            <td data-label="Route pair">${escapeHtml(row.pairId)}</td>
+            <td data-label="Route pair">${escapeHtml(pairLabel)}</td>
             <td data-label="Choice"><span class="calm-team-outcome" data-outcome="${escapeHtml(row.outcome)}">${escapeHtml(choices)}</span></td>
             <td data-label="Reasons">${escapeHtml(reasons)}</td>
             <td data-label="Details">${escapeHtml(row.note || '—')}</td>
