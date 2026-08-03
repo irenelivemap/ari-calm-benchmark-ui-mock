@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-weight-rails-2">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-weight-rails-3">
   <style>
     body {
       margin: 0;
@@ -266,7 +266,7 @@
         </table>
         <div class="calm-rp-weights-summary">
           <p><strong>Calm Nature</strong> strongly prioritises trees, green space and water. <strong>Calm Quiet</strong> strongly avoids noise, main roads and areas with higher accident risk, while giving some additional value to nature.</p>
-          <p class="calm-rp-caveat">The weights describe how each profile is configured. They do not guarantee that Calm Nature will always generate the greenest route or that Calm Quiet will always generate the quietest route.</p>
+          <p class="calm-rp-caveat">The weights show how strongly each route attribute influences the profile. They range from 0 to 1: the higher the weight, the more influence that attribute has on which route is selected.</p>
         </div>
       </div>
       <div class="calm-rp-pairs-header">
