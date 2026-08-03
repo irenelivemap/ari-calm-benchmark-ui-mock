@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260731-calm-only-entry-33">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260731-nature-support-2">
   <style>
     body {
       margin: 0;
@@ -248,16 +248,16 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" integrity="sha256-vpYzxNhw4m+zfxz+XFp3GBZnEUAD6hYgeseFDY2ordE=" crossorigin=""></script>
   <script src="./src/app/runtime.js?v=20260729-three-routes-1"></script>
-  <script src="./src/data/mock-route-pairs.js?v=20260731-q1-time-baseline-2"></script>
+  <script src="./src/data/mock-route-pairs.js?v=20260731-calm-worth-fast-1"></script>
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
-  <script src="./src/data/calm-benchmark-data.js?v=20260731-two-routes-fix-2"></script>
+  <script src="./src/data/calm-benchmark-data.js?v=20260731-calm-worth-fast-1"></script>
   <script src="./src/data/benchmark-transport.js?v=20260729-team-results-2"></script>
-  <script src="./src/data/mock-team-results.js?v=20260731-two-routes-2"></script>
-  <script src="./src/results/calm-results.js?v=20260731-two-routes-2"></script>
+  <script src="./src/data/mock-team-results.js?v=20260731-nature-wins-sample-1"></script>
+  <script src="./src/results/calm-results.js?v=20260731-calm-agreement-results-1"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
   <script src="./src/maps/route-overlap.js?v=20260729-street-view-any-point-1"></script>
-  <script src="./src/maps/map-adapter.js?v=20260729-street-view-any-point-1"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260731-session-pair-order-8"></script>
+  <script src="./src/maps/map-adapter.js?v=20260731-calm-worth-fast-1"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260731-calm-time-disclosure-1"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -420,7 +420,7 @@
           routeTypes: ['calm_quiet', 'calm_nature'],
           questions: {
             q1: 'Which route would you choose for a calmer walk?',
-            q2: '',
+            q2: 'What made you choose this route?',
             q3: 'What made the other route less suitable?'
           },
           context: null,
@@ -432,7 +432,18 @@
             { value: 'hard_to_judge', label: "I'm not sure", exclusive: true }
           ],
           q1Multiple: false,
-          q2Options: [],
+          q2Multiple: true,
+          q2Options: [
+            { value: 'quieter_or_less_busy_streets', label: 'Quieter or less busy streets' },
+            { value: 'more_trees_or_green_space', label: 'More trees or green space' },
+            { value: 'more_near_water', label: 'More of the route is near water' },
+            { value: 'less_need_to_watch_traffic', label: 'Less need to watch for traffic' },
+            { value: 'takes_less_time', label: 'Takes less time' },
+            { value: 'easier_to_follow', label: 'Easier to follow' },
+            { value: 'familiar_route_or_area', label: 'I know this route or area better' },
+            { value: 'other', label: 'Other' },
+            { value: 'not_sure', label: "I'm not sure", exclusive: true }
+          ],
           q3Options: [
             { value: 'not_enough_greenery_water', label: 'Not enough greenery or water' },
             { value: 'too_busy_or_crowded', label: 'Too busy or crowded' },
@@ -443,20 +454,78 @@
             { value: 'other', label: 'Other' }
           ],
           q3Variants: {
+            route_a: {
+              kind: 'worth_fast',
+              question: 'Is Route A useful enough to be shown as well as Fast?',
+              hint: '',
+              inputName: 'q3WorthShowing',
+              inputType: 'radio',
+              noteMode: 'none',
+              withIcons: false,
+              options: [
+                { value: 'yes', label: 'Yes' },
+                { value: 'no', label: 'No' },
+                { value: 'not_sure', label: "I'm not sure" }
+              ]
+            },
+            route_b: {
+              kind: 'worth_fast',
+              question: 'Is Route B useful enough to be shown as well as Fast?',
+              hint: '',
+              inputName: 'q3WorthShowing',
+              inputType: 'radio',
+              noteMode: 'none',
+              withIcons: false,
+              options: [
+                { value: 'yes', label: 'Yes' },
+                { value: 'no', label: 'No' },
+                { value: 'not_sure', label: "I'm not sure" }
+              ]
+            },
+            both_work_well: {
+              kind: 'worth_fast',
+              question: 'Are both routes useful enough to be shown as well as Fast?',
+              hint: '',
+              inputName: 'q3WorthShowing',
+              inputType: 'radio',
+              noteMode: 'none',
+              withIcons: false,
+              options: [
+                { value: 'yes', label: 'Yes' },
+                { value: 'no', label: 'No' },
+                { value: 'not_sure', label: "I'm not sure" }
+              ]
+            },
             none_work_well: {
-              question: 'What made both routes poor options?'
+              kind: 'reasons',
+              question: 'What made you choose neither route?',
+              hint: 'Select all that apply to one or both routes.',
+              noteMode: 'selection',
+              withIcons: false,
+              options: [
+                { value: 'streets_too_busy_or_noisy', label: 'Streets are too busy or noisy' },
+                { value: 'not_enough_trees_or_green_space', label: 'Not enough trees or green space' },
+                { value: 'not_enough_route_near_water', label: 'Not enough of the route is near water' },
+                { value: 'too_much_attention_traffic', label: 'Too much attention needed around traffic' },
+                { value: 'takes_too_long', label: 'Takes too long' },
+                { value: 'hard_to_follow', label: 'Hard to follow' },
+                { value: 'prefer_another_known_route', label: 'I know another route I would prefer' },
+                { value: 'other', label: 'Other' },
+                { value: 'not_sure', label: "I'm not sure", exclusive: true }
+              ]
             }
           },
           followUps: {
-            route_a: ['q3'],
-            route_b: ['q3'],
-            both_work_well: [],
+            route_a: ['q2', 'q3'],
+            route_b: ['q2', 'q3'],
+            both_work_well: ['q2', 'q3'],
             none_work_well: ['q3'],
             hard_to_judge: []
           },
           uncertainChoices: ['hard_to_judge'],
           showRouteMetrics: true,
-          routeMetricMode: 'duration-vs-fast'
+          routeMetricMode: 'duration-vs-fast',
+          routeMetricsHelp: 'Times are estimates. The “+” time shows how much longer each route takes than Fast mode for the same start and destination.'
         },
         routePairProvider: AriCalmBenchmark.mockRoutePairProvider
       }
@@ -756,7 +825,158 @@
         </div>`;
     }
 
-    function renderCalmOverview(summary) {
+    function compactPairLabel(pairId) {
+      const match = String(pairId || '').match(/(\d+)(?!.*\d)/);
+      return match ? `Pair ${String(Number(match[1])).padStart(2, '0')}` : String(pairId || 'Unknown pair');
+    }
+
+    const AGREEMENT_OUTCOME_LABELS = {
+      calm_nature: 'Nature-focused',
+      calm_quiet: 'Quiet-focused',
+      both_work_well: 'Either route',
+      none_work_well: 'Neither route',
+      hard_to_judge: 'Can’t tell'
+    };
+
+    function agreementOutcomeLabel(key) {
+      return AGREEMENT_OUTCOME_LABELS[key]
+        || AriCalmResults.OUTCOME_LABELS[key]
+        || key;
+    }
+
+    function renderAgreementLegend(keys = AriCalmResults.EXACT_OUTCOMES) {
+      return keys.map(key => `
+        <span data-outcome="${escapeHtml(key)}"><i aria-hidden="true"></i>${escapeHtml(agreementOutcomeLabel(key))}</span>
+      `).join('');
+    }
+
+    function renderAgreementSegment(key, count, total) {
+      if (!count || !total) return '';
+      const value = (count / total) * 100;
+      const label = `${agreementOutcomeLabel(key)}: ${count} of ${total}, ${Math.round(value)}%`;
+      return `<span data-outcome="${escapeHtml(key)}" style="width:${value}%"><span class="ari-visually-hidden">${escapeHtml(label)}</span></span>`;
+    }
+
+    function renderPairAgreement(pair) {
+      const modalLabel = pair.modalOutcome ? agreementOutcomeLabel(pair.modalOutcome) : 'Tie';
+      const ariaLabel = pair.substantiveTotal
+        ? `${compactPairLabel(pair.pairId)}: ${modalLabel}, ${pair.exactAgreementPercent}%, ${pair.leadingOutcomeCount} of ${pair.substantiveTotal} substantive responses${pair.couldNotJudgeCount ? `, ${pair.couldNotJudgeCount} could not tell` : ''}`
+        : `${compactPairLabel(pair.pairId)}: no substantive responses`;
+      return `
+        <article class="calm-agreement-chart__row" data-outcome="${escapeHtml(pair.modalOutcome || 'tie')}">
+          <div class="calm-agreement-chart__pair">
+            <strong>${escapeHtml(compactPairLabel(pair.pairId))}</strong>
+          </div>
+          <div class="calm-agreement-chart__plot" role="img" aria-label="${escapeHtml(ariaLabel)}">
+            <span class="calm-agreement-chart__fill" style="width:${pair.exactAgreementPercent}%"></span>
+            <i class="calm-agreement-chart__threshold" aria-hidden="true"></i>
+          </div>
+        </article>`;
+    }
+
+    function renderFullVoteDistributionRow(pair) {
+      const segments = AriCalmResults.EXACT_OUTCOMES
+        .map(key => renderAgreementSegment(key, pair.counts[key], pair.total))
+        .join('');
+      const modalLabel = pair.modalOutcome ? agreementOutcomeLabel(pair.modalOutcome) : 'Tie';
+      const percentageCell = key => `${percentage(pair.counts[key], pair.total)}% <small>(${pair.counts[key]})</small>`;
+      return `
+        <tr>
+          <th scope="row">
+            <span>${escapeHtml(compactPairLabel(pair.pairId))}</span>
+            <span class="calm-vote-distribution-bar" role="img" aria-label="${escapeHtml(compactPairLabel(pair.pairId))} full response distribution">${segments}</span>
+          </th>
+          <td>${percentageCell('calm_nature')}</td>
+          <td>${percentageCell('calm_quiet')}</td>
+          <td>${percentageCell('both_work_well')}</td>
+          <td>${percentageCell('none_work_well')}</td>
+          <td>${percentageCell('hard_to_judge')}</td>
+          <td>${escapeHtml(modalLabel)}</td>
+          <td><strong>${pair.exactAgreementPercent}%</strong> <small>(${pair.leadingOutcomeCount}/${pair.substantiveTotal})</small></td>
+        </tr>`;
+    }
+
+    function renderAgreementOverview(agreement) {
+      const totalPairs = agreement.pairs.length;
+      const thresholdPercent = Math.round(agreement.clearAgreementThreshold * 100);
+      const sortedPairs = [...agreement.pairs].sort((a, b) =>
+        b.exactAgreementPercent - a.exactAgreementPercent
+        || a.pairId.localeCompare(b.pairId, undefined, { numeric: true })
+      );
+      const failureSentence = agreement.clearNeitherPairs
+        ? `<p>For <strong>${agreement.clearNeitherPairs} pair${agreement.clearNeitherPairs === 1 ? '' : 's'}</strong>, evaluators agreed that neither generated route worked well.</p>`
+        : '';
+      const mixedSentence = agreement.mixedExactPairs === 1
+        ? 'The remaining <strong>1</strong> case had mixed judgments and needs further investigation.'
+        : `The remaining <strong>${agreement.mixedExactPairs}</strong> cases had mixed judgments and need further investigation.`;
+
+      return `
+        <section class="calm-pair-agreement-section" aria-labelledby="pair-agreement-title" style="--agreement-threshold:${thresholdPercent}%">
+          <header class="calm-analysis-heading">
+            <h2 id="pair-agreement-title">Did evaluators agree on the best Calm option?</h2>
+          </header>
+          <div class="calm-agreement-answer">
+            <p>Evaluators reached clear agreement on <strong class="marker-lime marker-static">${agreement.clearExactPairs} of ${totalPairs} origin–destination pairs.</strong> ${mixedSentence}</p>
+            ${failureSentence}
+          </div>
+          <dl class="calm-agreement-metrics">
+            <div>
+              <dt>Clear agreement</dt>
+              <dd><strong>${agreement.clearExactPairs} of ${totalPairs} ODs</strong><span>At least ${thresholdPercent}% chose the same option</span></dd>
+            </div>
+            <div>
+              <dt>Mixed cases</dt>
+              <dd><strong>${agreement.mixedExactPairs} of ${totalPairs} ODs</strong><span>No option reached ${thresholdPercent}%</span></dd>
+            </div>
+            <div>
+              <dt>Could not judge</dt>
+              <dd><strong>${agreement.couldNotJudgePercent}% of responses</strong><span>Evaluators selected “I can’t tell”</span></dd>
+            </div>
+          </dl>
+          <div class="calm-agreement-chart">
+            <header class="calm-agreement-chart__header">
+              <div>
+                <h3>Agreement by origin–destination pair</h3>
+                <p>Share of evaluators who selected the most common option for each pair.</p>
+              </div>
+              <div class="calm-agreement-legend" aria-label="Response legend">${renderAgreementLegend(AriCalmResults.SUBSTANTIVE_OUTCOMES)}</div>
+            </header>
+            <div class="calm-agreement-chart__axis" aria-hidden="true">
+              <span></span>
+              <div><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span><strong>${thresholdPercent}% clear agreement</strong></div>
+            </div>
+            <div class="calm-agreement-chart__rows">${sortedPairs.map(renderPairAgreement).join('')}</div>
+          </div>
+          <p class="calm-agreement-interpretation">High agreement identifies relatively clear benchmark cases. Mixed judgments may reflect a real trade-off, an ambiguous route pair, or insufficient information. Agreement does not mean that the selected route is objectively correct.</p>
+          <div class="calm-agreement-disclosures">
+            <details>
+              <summary>View full vote distributions</summary>
+              <div class="calm-agreement-table-wrap">
+                <table class="calm-agreement-table">
+                  <thead><tr><th scope="col">OD</th><th scope="col">Nature</th><th scope="col">Quiet</th><th scope="col">Either</th><th scope="col">Neither</th><th scope="col">Can’t tell</th><th scope="col">Most selected</th><th scope="col">Agreement</th></tr></thead>
+                  <tbody>${sortedPairs.map(renderFullVoteDistributionRow).join('')}</tbody>
+                </table>
+              </div>
+            </details>
+          </div>
+        </section>`;
+    }
+
+    function renderOutcomeSummaryRow(label, key, count, total) {
+      const value = percentage(count, total);
+      return `
+        <div class="calm-outcome-row" data-outcome="${escapeHtml(key)}">
+          <div class="calm-outcome-row__copy">
+            <span class="calm-outcome-row__label">${escapeHtml(label)}</span>
+            <span class="calm-outcome-row__value"><small>${count}/${total} ·</small><strong>${value}%</strong></span>
+          </div>
+          <div class="calm-outcome-row__bar" role="img" aria-label="${escapeHtml(label)}: ${value}%">
+            <span style="width:${value}%"></span>
+          </div>
+        </div>`;
+    }
+
+    function renderCalmOverview(summary, agreement) {
       if (!summary.total) {
         return `
           <section class="calm-results-dashboard-empty" aria-labelledby="calm-overview-empty-title">
@@ -767,54 +987,46 @@
           </section>`;
       }
 
-      const outcomeEntries = AriCalmResults.OUTCOMES.map(key => [
-        AriCalmResults.OUTCOME_LABELS[key], summary.outcomeCounts[key], key
-      ]);
-      const reasonEntries = AriCalmResults.REASONS
-        .map(key => [AriCalmResults.REASON_LABELS[key], summary.reasonCounts[key], key])
-        .sort((a, b) => b[1] - a[1]);
-      const reasonResponseCount = summary.rows.filter(row => row.reasons.length > 0).length;
-      const selectedRouteCount = ['calm_quiet', 'calm_nature']
-        .reduce((total, key) => total + summary.outcomeCounts[key], 0);
-      const leadingStatement = summary.leadingRoute
-        ? `${escapeHtml(AriCalmResults.OUTCOME_LABELS[summary.leadingRoute])} was selected in <strong>${percentage(summary.outcomeCounts[summary.leadingRoute], summary.total)}%</strong> of comparisons.`
-        : selectedRouteCount
-          ? 'No single route leads the team selections.'
-          : 'No route preference has emerged yet.';
+      const outcomeRows = [
+        ['Calm Quiet selected', 'calm_quiet'],
+        ['Calm Nature selected', 'calm_nature'],
+        ['Both work well', 'both_work_well'],
+        ['Neither route worked', 'none_work_well'],
+        ["I'm not sure", 'hard_to_judge']
+      ]
+        .map(([label, key], stableIndex) => ({
+          label,
+          key,
+          count: agreement.exactCounts[key],
+          stableIndex
+        }))
+        .sort((a, b) => b.count - a.count || a.stableIndex - b.stableIndex)
+        .map(outcome => renderOutcomeSummaryRow(
+          outcome.label,
+          outcome.key,
+          outcome.count,
+          agreement.total
+        ))
+        .join('');
+      const natureWorkedCount = agreement.exactCounts.calm_nature
+        + agreement.exactCounts.both_work_well;
 
       return `
-        <section class="calm-results-overview-lead" aria-labelledby="calm-overview-title">
-          <p class="calm-results-eyebrow">Team pattern</p>
-          <h2 id="calm-overview-title">${leadingStatement}</h2>
-          <p>Both routes can be selected together, so route percentages may total more than 100%.</p>
-        </section>
-        <section class="calm-results-band" aria-labelledby="overall-choice-title">
-          <div class="calm-results-band__intro">
-            <p class="calm-results-index">01</p>
-            <h2 id="overall-choice-title">Route selection rates</h2>
-            <p>Decoded route types across all completed team evaluations.</p>
+        <section class="calm-outcome-overview" aria-labelledby="calm-overview-title">
+          <header>
+            <h2 id="calm-overview-title">Which option did the team consider the best fit for a Calm route?</h2>
+          </header>
+          <div class="calm-outcome-summary">
+            <div class="calm-outcome-summary__lead">
+              <span>Calm Nature was selected</span>
+              <strong data-profile="nature">${agreement.natureSupportPercent}%</strong>
+              <small>${natureWorkedCount} of ${agreement.total} comparisons</small>
+              <small class="calm-outcome-summary__definition">(Calm Nature + Both work well)</small>
+            </div>
+            <div class="calm-outcome-summary__rows">${outcomeRows}</div>
           </div>
-          <div class="calm-results-chart">${renderBarRows(outcomeEntries, summary.total, 'calm-result-row--outcome')}</div>
         </section>
-        <section class="calm-results-band" aria-labelledby="less-suitable-title">
-          <div class="calm-results-band__intro">
-            <p class="calm-results-index">02</p>
-            <h2 id="less-suitable-title">Reasons selected</h2>
-            <p>Participants could select more than one reason.</p>
-          </div>
-          <div class="calm-results-chart">${renderBarRows(reasonEntries, reasonResponseCount)}</div>
-        </section>
-        <section class="calm-team-position calm-results-position" aria-labelledby="calm-position-title">
-          <div>
-            <p class="calm-results-index">03</p>
-            <h2 id="calm-position-title">Visible label check</h2>
-            <p>Selection counts for A and B help the team spot possible position effects.</p>
-          </div>
-          <dl>
-            <div><dt>Route A selected</dt><dd>${summary.positionBias.selectedAsA}</dd></div>
-            <div><dt>Route B selected</dt><dd>${summary.positionBias.selectedAsB}</dd></div>
-          </dl>
-        </section>`;
+        ${renderAgreementOverview(agreement)}`;
     }
 
     function renderParticipantRows(rows) {
@@ -956,6 +1168,7 @@
       }
       const answers = calmResultsAnswers();
       const summary = AriCalmResults.aggregateAnswers(answers);
+      const agreement = AriCalmResults.analyzeAgreement(answers);
       const participantSummaries = AriCalmResults.summarizeParticipants(answers);
       const latest = dataRepository.getLatestProgress();
       const currentParticipantId = sampleResultsEnabled
@@ -963,20 +1176,17 @@
         : latest?.sessionId || latest?.benchmarkRunId || '';
       const activeContent = calmResultsView === 'participants'
         ? renderCalmParticipants(answers, participantSummaries, currentParticipantId)
-        : renderCalmOverview(summary);
+        : renderCalmOverview(summary, agreement);
 
       communityResultsContent.innerHTML = `
         <header class="calm-results-dashboard-header">
-          <div>
-            <p class="calm-results-eyebrow">Calm Route Comparison</p>
-            <h1>Team results</h1>
-            <p>Explore shared route patterns or review a participant’s evaluation record.</p>
+          <h1>Team results</h1>
+          <div class="calm-results-dashboard-summary">
+            <p class="calm-results-dashboard-summary__lead"><strong>${summary.participants} team member${summary.participants === 1 ? '' : 's'} familiar with Zürich</strong> evaluated <strong>${summary.routePairs} origin–destination pair${summary.routePairs === 1 ? '' : 's'}</strong> in a blind side-by-side comparison, completing <strong>${summary.total} route comparison${summary.total === 1 ? '' : 's'}</strong>.</p>
+            <p>For each pair, the routes were shown as Route A and Route B, so evaluators did not know which profile generated them. One came from a <strong class="calm-results-profile-label" data-profile="nature">Nature-focused profile</strong>, with more emphasis on greenery, tree canopy, and proximity to water. The other came from a <strong class="calm-results-profile-label" data-profile="quiet">Quiet-focused profile</strong>, with more emphasis on avoiding noise, main roads, and areas with higher accident risk.</p>
+            <p>Evaluators judged whether Route A, Route B, both, or neither worked as a Calm route, or whether they were unsure.</p>
+            <p>The results help us compare model hypotheses and identify cases to investigate. They reflect structured internal judgments, not the preferences of Zürich pedestrians as a whole.</p>
           </div>
-          <dl aria-label="Team result totals">
-            <div><dt>Comparisons</dt><dd>${summary.total}</dd></div>
-            <div><dt>Participants</dt><dd>${summary.participants}</dd></div>
-            <div><dt>Route pairs</dt><dd>${summary.routePairs}</dd></div>
-          </dl>
         </header>
         ${renderCalmResultsSwitcher(participantSummaries.length)}
         <div class="calm-results-dashboard-panel" data-results-panel="${calmResultsView}">
