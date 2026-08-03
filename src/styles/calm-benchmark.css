@@ -7533,6 +7533,31 @@ html.is-challenge-dialog-open {
   }
 }
 
+.ari-q1-flag {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 10px 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ari-q1-flag input[type="checkbox"] {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  accent-color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+}
+
+.ari-q1-flag:has(input:checked) {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .ari-question-note[hidden] {
   display: none;
 }

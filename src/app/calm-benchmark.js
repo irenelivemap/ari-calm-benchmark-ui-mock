@@ -400,6 +400,11 @@
                       withRouteMetrics: benchmark.showRouteMetrics
                     })}
                   </div>
+                  ${benchmark.q1Flag ? `
+                  <label class="ari-q1-flag">
+                    <input type="checkbox" name="q1KnowsBetter" value="${escapeHtml(benchmark.q1Flag.value)}">
+                    <span>${escapeHtml(benchmark.q1Flag.label)}</span>
+                  </label>` : ''}
                 </fieldset>
                 </section>
 
@@ -1967,6 +1972,7 @@
       const form = new FormData(els.form);
       const q1Choices = form.getAll('q1Choice');
       const q1Choice = q1Choices.length > 1 ? 'multiple_routes' : q1Choices[0] || null;
+      const q1KnowsBetter = form.get('q1KnowsBetter') !== null;
       const q2Separate = form.get('q2Separate') || null;
       const q2Reasons = form.getAll('q2Reasons');
       const q3WorthShowing = form.get('q3WorthShowing') || null;
@@ -2009,6 +2015,7 @@
         q1Choice,
         choice: q1Choice,
         q1Choices,
+        q1KnowsBetter,
         q2Separate,
         q2Reasons,
         q2Note: form.get('q2Note') || '',
