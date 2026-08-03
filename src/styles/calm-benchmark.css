@@ -8283,23 +8283,33 @@ html.is-challenge-dialog-open {
 .rp-weight {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  font-family: var(--ari-arcade-font);
   font-variant-numeric: tabular-nums;
   font-size: var(--font-size-fine);
 }
 
 .rp-weight--zero { color: var(--ari-faint); }
 
-.rp-weight--bar::after {
-  content: '';
+/* The rail is always drawn, even at weight 0 — an empty rail reads as
+   "considered, no influence", which is different from missing data. */
+.rp-weight-rail {
   display: inline-block;
-  width: var(--w, 0%);
-  max-width: 60px;
-  min-width: 4px;
+  width: 72px;
   height: 6px;
+  flex: none;
+  overflow: hidden;
   border-radius: 3px;
+  background: rgba(33, 26, 42, 0.08);
+}
+
+.rp-weight-rail::after {
+  content: '';
+  display: block;
+  width: var(--w, 0%);
+  height: 100%;
+  border-radius: inherit;
   background: var(--ari-green);
-  vertical-align: middle;
 }
 
 .calm-rp-weights-summary {
