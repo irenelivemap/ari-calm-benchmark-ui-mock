@@ -7683,12 +7683,12 @@ html.is-challenge-dialog-open {
 
 /* Coloured route name in follow-up question headings */
 .ari-route-question-tag--a {
-  color: #4FD19B;
+  color: color-mix(in srgb, var(--ari-route-a) 65%, #fff);
   font-weight: 800;
 }
 
 .ari-route-question-tag--b {
-  color: #8a90f3;
+  color: color-mix(in srgb, var(--ari-route-b) 65%, #fff);
   font-weight: 800;
 }
 
@@ -7698,7 +7698,7 @@ html.is-challenge-dialog-open {
 }
 
 .ari-route-question-tag--fast {
-  color: #F08A63;
+  color: color-mix(in srgb, var(--ari-orange) 80%, #fff);
   font-weight: 800;
 }
 
@@ -7754,15 +7754,15 @@ html.is-challenge-dialog-open {
 }
 
 .ari-value-route-times__item--a {
-  color: #F08A63;
+  color: color-mix(in srgb, var(--ari-route-a) 65%, #fff);
 }
 
 .ari-value-route-times__item--b {
-  color: #4FD19B;
+  color: color-mix(in srgb, var(--ari-route-b) 65%, #fff);
 }
 
 .ari-value-route-times__item--fast {
-  color: #8DB4FF;
+  color: color-mix(in srgb, var(--ari-orange) 80%, #fff);
 }
 
 /* No tick in Q3 — the light row background is selection signal enough */
