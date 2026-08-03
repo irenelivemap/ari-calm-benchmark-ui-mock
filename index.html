@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260804-participants-colors">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260804-participant-pair-cards">
   <style>
     body {
       margin: 0;
@@ -1230,25 +1230,98 @@
         ${renderFreeTextSection(summary)}`;
     }
 
-    function renderParticipantRows(rows) {
-      return rows.map(row => {
-        const choices = row.outcomes
-          .map(outcome => AriCalmResults.OUTCOME_LABELS[outcome] || 'Unknown')
-          .join(', ');
-        const reasons = row.reasons.length
-          ? row.reasons.map(reason => AriCalmResults.REASON_LABELS[reason] || reason).join(', ')
-          : 'None';
-        const comparison = row.roundNumber ? `#${row.roundNumber}` : '—';
-        const pairNum = row.pairId ? row.pairId.replace(/^.*-(\d+)$/, '$1') : '—';
-        const pairLabel = pairNum !== '—' ? `Pair ${pairNum}` : '—';
+    function renderParticipantPairCards(rows) {
+      const diagPairs = (window.AriCalmBenchmarkDiagnostics || {}).pairs || [];
+      const routePairsList = window.AriCalmBenchmarkMockRoutePairs || [];
+      const diagMap = new Map(diagPairs.map((p, i) => [p.pairId, { diag: p, routePair: routePairsList[i] }]));
+
+      function routeTypeLabel(type) {
+        if (type === 'calm_nature') return `<span class="calm-route-label calm-route-label--nature">Calm Nature</span>`;
+        if (type === 'calm_quiet') return `<span class="calm-route-label calm-route-label--quiet">Calm Quiet</span>`;
+        return escapeHtml(type || '—');
+      }
+
+      return rows.map((row, i) => {
+        const pairNum = String(row.pairId || '').replace(/^.*-(\d+)$/, '$1');
+        const pairLabel = pairNum && pairNum !== row.pairId ? `Pair ${pairNum.padStart(2, '0')}` : row.pairId || '—';
+        const { diag, routePair } = diagMap.get(row.pairId) || {};
+        const routeName = diag ? `${diag.origin_label || 'Start'} → ${diag.destination_label || 'End'}` : '';
+        const outcomeLabel = AriCalmResults.OUTCOME_LABELS[row.outcome] || 'Unknown';
+        const assignment = row.raw?.routeAssignment || row.raw?.labelMap || {};
+        const assignA = assignment.routeA || assignment.A;
+        const assignB = assignment.routeB || assignment.B;
+        const reasons = row.q2Reasons.map(k => AriCalmResults.CHOICE_REASON_LABELS[k] || k).filter(Boolean);
+        const worthMap = { yes: 'Yes', not_sure: 'Not sure', no: 'No' };
+        const worthLabel = row.q3WorthShowing ? (worthMap[row.q3WorthShowing] || row.q3WorthShowing) : null;
+
+        let routeTableHtml = '';
+        if (routePair) {
+          const fastMeta = (routePair.routes?.fast || {}).metadata || {};
+          const natureMeta = (routePair.routes?.calm_nature || {}).metadata || {};
+          const quietMeta = (routePair.routes?.calm_quiet || {}).metadata || {};
+          routeTableHtml = `
+            <table class="calm-pp-route-table">
+              <thead><tr><th>Route</th><th>Time</th><th>Distance</th></tr></thead>
+              <tbody>
+                <tr class="rp-row-fast"><th scope="row">Fast</th>
+                  <td>${rpFmtTime(fastMeta.durationSeconds)}</td>
+                  <td>${rpFmtDist(fastMeta.distanceMeters)}</td></tr>
+                <tr class="rp-row-nature"><th scope="row">Calm Nature</th>
+                  <td>${rpCombined(rpFmtTime(natureMeta.durationSeconds), rpFmtDiff(natureMeta.durationSeconds, fastMeta.durationSeconds, true))}</td>
+                  <td>${rpCombined(rpFmtDist(natureMeta.distanceMeters), rpFmtDiff(natureMeta.distanceMeters, fastMeta.distanceMeters, false))}</td></tr>
+                <tr class="rp-row-quiet"><th scope="row">Calm Quiet</th>
+                  <td>${rpCombined(rpFmtTime(quietMeta.durationSeconds), rpFmtDiff(quietMeta.durationSeconds, fastMeta.durationSeconds, true))}</td>
+                  <td>${rpCombined(rpFmtDist(quietMeta.distanceMeters), rpFmtDiff(quietMeta.distanceMeters, fastMeta.distanceMeters, false))}</td></tr>
+              </tbody>
+            </table>`;
+        }
+
+        const bodyId = `calm-pp-body-${escapeHtml(row.pairId)}-${i}`;
         return `
-          <tr>
-            <td data-label="Comparison">${escapeHtml(comparison)}</td>
-            <td data-label="Route pair">${escapeHtml(pairLabel)}</td>
-            <td data-label="Choice"><span class="calm-team-outcome" data-outcome="${escapeHtml(row.outcome)}">${escapeHtml(choices)}</span></td>
-            <td data-label="Reasons">${escapeHtml(reasons)}</td>
-            <td data-label="Details">${escapeHtml(row.note || '—')}</td>
-          </tr>`;
+          <article class="calm-pp-card">
+            <button class="calm-pp-card__header" type="button" aria-expanded="false" aria-controls="${bodyId}">
+              <span class="calm-pp-pair-label">${escapeHtml(pairLabel)}</span>
+              ${routeName ? `<span class="calm-pp-route-name">${escapeHtml(routeName)}</span>` : ''}
+              <span class="calm-team-outcome" data-outcome="${escapeHtml(row.outcome)}">${escapeHtml(outcomeLabel)}</span>
+              <span class="calm-pp-chevron" aria-hidden="true"></span>
+            </button>
+            <div id="${bodyId}" class="calm-pp-card__body" hidden>
+              <div class="calm-pp-card__inner">
+                <section class="calm-pp-answers">
+                  <h4 class="calm-pp-section-title">Your evaluation</h4>
+                  ${assignA || assignB ? `<div class="calm-pp-assignment">
+                    <span><span class="calm-pp-slot-label">Route A</span>${routeTypeLabel(assignA)}</span>
+                    <span><span class="calm-pp-slot-label">Route B</span>${routeTypeLabel(assignB)}</span>
+                  </div>` : ''}
+                  <div class="calm-pp-field">
+                    <span class="calm-pp-label">Choice</span>
+                    <span class="calm-team-outcome" data-outcome="${escapeHtml(row.outcome)}">${escapeHtml(outcomeLabel)}</span>
+                  </div>
+                  ${reasons.length ? `<div class="calm-pp-field calm-pp-field--reasons">
+                    <span class="calm-pp-label">Reasons</span>
+                    <ul class="calm-pp-reasons-list">${reasons.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>
+                  </div>` : ''}
+                  ${row.q2Note ? `<div class="calm-pp-field">
+                    <span class="calm-pp-label">Note</span>
+                    <p class="calm-pp-note-text">"${escapeHtml(row.q2Note)}"</p>
+                  </div>` : ''}
+                  ${worthLabel ? `<div class="calm-pp-field">
+                    <span class="calm-pp-label">Worth showing</span>
+                    <span>${escapeHtml(worthLabel)}</span>
+                  </div>` : ''}
+                  ${row.note ? `<div class="calm-pp-field">
+                    <span class="calm-pp-label">Comment</span>
+                    <p class="calm-pp-note-text">"${escapeHtml(row.note)}"</p>
+                  </div>` : ''}
+                </section>
+                ${routeTableHtml || diag ? `<section class="calm-pp-route-details">
+                  <h4 class="calm-pp-section-title">Route details</h4>
+                  ${routeTableHtml}
+                  <a class="calm-pp-view-rp" href="#" data-view-rp-pair="${escapeHtml(row.pairId)}">View in Route Profiles →</a>
+                </section>` : ''}
+              </div>
+            </div>
+          </article>`;
       }).join('');
     }
 
@@ -1347,16 +1420,9 @@
                   : '<p class="calm-participant-empty-note">No reasons selected.</p>'}</div>
               </section>
             </div>
-            <section class="calm-team-records calm-participant-records" aria-labelledby="participant-records-title">
-              <div class="calm-team-records__head">
-                <h2 id="participant-records-title">Evaluation records</h2>
-              </div>
-              <div class="calm-team-table-wrap" tabindex="0">
-                <table>
-                  <thead><tr><th>Comparison</th><th>Route pair</th><th>Choice</th><th>Reasons</th><th>Details</th></tr></thead>
-                  <tbody>${renderParticipantRows(participantSummary.rows)}</tbody>
-                </table>
-              </div>
+            <section class="calm-participant-cards" aria-labelledby="participant-records-title">
+              <h2 id="participant-records-title" class="calm-pp-cards-title">Evaluation records</h2>
+              <div class="calm-pp-cards-list">${renderParticipantPairCards(participantSummary.rows)}</div>
             </section>
           </section>
         </div>`;
@@ -2166,6 +2232,43 @@
         renderCommunityResults();
         requestAnimationFrame(() => {
           communityResults.querySelector(`[data-free-text-theme="${CSS.escape(freeTextTheme || next)}"]`)?.focus();
+        });
+        return;
+      }
+      const ppCardHeader = event.target.closest('.calm-pp-card__header');
+      if (ppCardHeader) {
+        const expanded = ppCardHeader.getAttribute('aria-expanded') === 'true';
+        const body = document.getElementById(ppCardHeader.getAttribute('aria-controls'));
+        if (body) {
+          ppCardHeader.setAttribute('aria-expanded', String(!expanded));
+          body.hidden = expanded;
+        }
+        return;
+      }
+      const viewRpLink = event.target.closest('[data-view-rp-pair]');
+      if (viewRpLink) {
+        event.preventDefault();
+        const pairId = viewRpLink.dataset.viewRpPair;
+        showPage('route-profiles');
+        requestAnimationFrame(() => {
+          const pairEl = document.getElementById(`rp-pair-${pairId}`);
+          if (!pairEl) return;
+          pairEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const toggle = pairEl.querySelector('.calm-rp-pair__toggle');
+          if (toggle && toggle.getAttribute('aria-expanded') !== 'true') {
+            const bodyId = toggle.getAttribute('aria-controls');
+            const rpBody = document.getElementById(bodyId);
+            if (rpBody) {
+              toggle.setAttribute('aria-expanded', 'true');
+              rpBody.hidden = false;
+              const mapEl = rpBody.querySelector('.calm-rp-map[id]');
+              if (mapEl && !mapEl._rpMap) {
+                const idx = parseInt(mapEl.dataset.pairIndex, 10);
+                const rps = window.AriCalmBenchmarkMockRoutePairs || [];
+                if (rps[idx]) initPairMap(mapEl, rps[idx]);
+              }
+            }
+          }
         });
         return;
       }
