@@ -2840,18 +2840,6 @@ html.is-challenge-dialog-open {
   position: relative;
   display: flex;
   justify-content: space-between;
-  padding-bottom: 18px;
-}
-
-.calm-agreement-chart__axis strong {
-  position: absolute;
-  bottom: 0;
-  left: var(--agreement-threshold);
-  color: var(--ari-ink);
-  font-size: 1em;
-  font-weight: 700;
-  white-space: nowrap;
-  transform: translateX(-50%);
 }
 
 .calm-agreement-chart__row {
