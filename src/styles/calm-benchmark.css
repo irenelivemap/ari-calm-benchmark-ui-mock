@@ -804,6 +804,8 @@ html.is-challenge-dialog-open {
   gap: 0;
   overflow: hidden;
   padding: 24px;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   /* top padding overridden per card variant below */
 }
 
@@ -834,7 +836,7 @@ html.is-challenge-dialog-open {
   max-width: calc(100% - var(--ari-radius-card));
   height: 34px;
   padding: 0 20px 16px 24px;
-  background: var(--ari-off-white);
+  background: linear-gradient(to bottom, var(--ari-off-white) 26px, transparent);
   border-top-left-radius: 0;
   border-bottom-right-radius: 17px;
   color: var(--ari-plum);
@@ -843,7 +845,6 @@ html.is-challenge-dialog-open {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
-  box-shadow: 0 0 0 2px var(--ari-off-white);
 }
 .calm-card--how .calm-kicker::before,
 .calm-card--how .calm-kicker::after,
@@ -1187,6 +1188,7 @@ html.is-challenge-dialog-open {
   overflow: hidden;
   padding: 28px;
   padding-top: 44px;
+  transform: translateZ(0);
   background:
     radial-gradient(90% 140% at 82% 0%, var(--rank-aura) 0%, transparent 44%),
     linear-gradient(180deg, var(--rank-surface-top) 0%, var(--rank-surface-bottom) 100%);
@@ -1414,7 +1416,7 @@ html.is-challenge-dialog-open {
   max-width: calc(100% - var(--ari-radius-card));
   height: 34px;
   padding: 0 20px 16px 24px;
-  background: var(--ari-off-white);
+  background: linear-gradient(to bottom, var(--ari-off-white) 26px, transparent);
   border-top-left-radius: 0;
   border-bottom-right-radius: 17px;
   color: var(--ari-plum);
@@ -1423,7 +1425,6 @@ html.is-challenge-dialog-open {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
-  box-shadow: 0 0 0 2px var(--ari-off-white);
 }
 .calm-start-left .calm-kicker::before,
 .calm-start-left .calm-kicker::after {
