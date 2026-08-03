@@ -7768,16 +7768,19 @@ html.is-challenge-dialog-open {
 .ari-value-route-times__item strong {
   overflow: hidden;
   color: currentColor;
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-size: 0.72rem;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+  opacity: 0.8;
 }
 
 .ari-value-route-times__item span {
-  color: rgba(255, 255, 255, 0.92);
-  font-weight: 700;
+  color: #fff;
+  font-size: 0.96rem;
+  font-weight: 800;
   white-space: nowrap;
+  letter-spacing: -0.02em;
 }
 
 .ari-value-route-times__item--a {
