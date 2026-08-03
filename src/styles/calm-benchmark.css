@@ -2764,7 +2764,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-choice-reasons__shared-legend {
-  margin: 16px 0 0;
+  margin: 16px 0 32px;
   color: var(--ari-muted);
   font: var(--font-small);
 }
