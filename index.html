@@ -940,8 +940,7 @@
       const totalPairs = agreement.pairs.length;
       const thresholdPercent = Math.round(agreement.clearAgreementThreshold * 100);
       const sortedPairs = [...agreement.pairs].sort((a, b) =>
-        b.exactAgreementPercent - a.exactAgreementPercent
-        || a.pairId.localeCompare(b.pairId, undefined, { numeric: true })
+        a.pairId.localeCompare(b.pairId, undefined, { numeric: true })
       );
       const clearPairs = sortedPairs.filter(pair => pair.clearExactAgreement);
       const mixedPairs = sortedPairs.filter(pair => !pair.clearExactAgreement);
