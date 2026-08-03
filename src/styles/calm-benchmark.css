@@ -8365,7 +8365,7 @@ html.is-challenge-dialog-open {
 
 .calm-rp-pair__toggle {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 10px;
   width: 100%;
   padding: 18px 24px;
@@ -8409,6 +8409,7 @@ html.is-challenge-dialog-open {
 
 .calm-rp-pair__chevron {
   flex-shrink: 0;
+  align-self: center;
   width: 20px;
   height: 20px;
   display: flex;
