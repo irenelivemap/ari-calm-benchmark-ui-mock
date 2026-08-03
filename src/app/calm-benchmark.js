@@ -1593,8 +1593,8 @@
       }
       routes.push({ label: 'Fast', tone: 'fast', route: state.pair.routes.fast });
       els.q3RouteTimes.innerHTML = routes.map(({ label, tone, route }) => `
-        <span class="ari-value-route-times__item ari-value-route-times__item--${tone}">
-          <i aria-hidden="true"></i><strong>${escapeHtml(label)}</strong><span>${escapeHtml(formatDuration(route?.metadata))}</span>
+        <span class="ari-value-route-times__item ari-value-route-times__item--${tone}" aria-label="${escapeHtml(label)}: ${escapeHtml(formatDuration(route?.metadata))}">
+          <i aria-hidden="true"></i><span aria-hidden="true">${escapeHtml(formatDuration(route?.metadata))}</span>
         </span>
       `).join('');
       els.q3RouteTimes.hidden = false;
