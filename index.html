@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-rp-remove-attr-cost">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-rp-no-toggles">
   <style>
     body {
       margin: 0;
@@ -282,7 +282,6 @@
       <button class="calm-rp-map-overlay__close" id="rp-overlay-close" type="button" aria-label="Close expanded map">&times;</button>
     </header>
     <div class="calm-rp-map-wrap calm-rp-map-overlay__inner">
-      <div class="calm-rp-map-controls" id="rp-overlay-toggles" role="group" aria-label="Show or hide routes on map"></div>
       <div class="calm-rp-map calm-rp-map--overlay" id="rp-overlay-map"></div>
     </div>
   </div>
@@ -2041,14 +2040,8 @@
     function showRpMapOverlay(routePair, pairLabel, pairRoute) {
       const overlay = document.getElementById('rp-map-overlay');
       const labelEl = document.getElementById('rp-overlay-label');
-      const togglesEl = document.getElementById('rp-overlay-toggles');
       const mapEl = document.getElementById('rp-overlay-map');
       labelEl.textContent = pairLabel + (pairRoute ? ' · ' + pairRoute : '');
-      togglesEl.innerHTML = `
-        <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="fast" style="--rp-toggle-color: var(--ari-orange); --rp-toggle-text: var(--ari-plum)">Fast</button>
-        <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_nature" style="--rp-toggle-color: var(--ari-route-a); --rp-toggle-text: #fff">Calm Nature</button>
-        <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_quiet" style="--rp-toggle-color: var(--ari-route-b); --rp-toggle-text: #fff">Calm Quiet</button>
-      `;
       const prev = mapEl._rpMap;
       if (prev && typeof prev.remove === 'function') { try { prev.remove(); } catch (_) {} }
       delete mapEl._rpMap;
@@ -2362,11 +2355,6 @@
           <div class="calm-rp-pair__split">
             <div class="calm-rp-pair__map-col">
               <div class="calm-rp-map-wrap">
-                <div class="calm-rp-map-controls" role="group" aria-label="Show or hide routes on map">
-                  <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="fast" style="--rp-toggle-color: var(--ari-orange); --rp-toggle-text: var(--ari-plum)">Fast</button>
-                  <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_nature" style="--rp-toggle-color: var(--ari-route-a); --rp-toggle-text: #fff">Calm Nature</button>
-                  <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_quiet" style="--rp-toggle-color: var(--ari-route-b); --rp-toggle-text: #fff">Calm Quiet</button>
-                </div>
                 <div class="calm-rp-map-canvas">
                   <div class="calm-rp-map" id="rp-map-${idx}" data-pair-index="${idx}"></div>
                   <button class="calm-rp-map-expand" type="button" aria-label="Expand map" data-pair-index="${idx}" data-pair-label="${escapeHtml(pairLabel)}" data-pair-route="${escapeHtml(diag.origin_label || 'Start')} → ${escapeHtml(diag.destination_label || 'Destination')}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 2h4v4M6 14H2v-4M14 2l-5.5 5.5M2 14l5.5-5.5"/></svg></button>
