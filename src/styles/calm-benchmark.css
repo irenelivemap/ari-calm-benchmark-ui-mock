@@ -2641,6 +2641,7 @@ html.is-challenge-dialog-open {
 
 .calm-agreement-legend span[data-outcome="calm_quiet"] i,
 .calm-agreement-chart__row[data-outcome="calm_quiet"] .calm-agreement-chart__fill,
+.calm-agreement-chart__plot > span[data-outcome="calm_quiet"],
 .calm-vote-distribution-bar > span[data-outcome="calm_quiet"] {
   background: var(--ari-blurple);
   color: var(--ari-plum);
@@ -2648,6 +2649,7 @@ html.is-challenge-dialog-open {
 
 .calm-agreement-legend span[data-outcome="calm_nature"] i,
 .calm-agreement-chart__row[data-outcome="calm_nature"] .calm-agreement-chart__fill,
+.calm-agreement-chart__plot > span[data-outcome="calm_nature"],
 .calm-vote-distribution-bar > span[data-outcome="calm_nature"] {
   background: var(--ari-green);
   color: var(--ari-plum);
@@ -2655,6 +2657,7 @@ html.is-challenge-dialog-open {
 
 .calm-agreement-legend span[data-outcome="both_work_well"] i,
 .calm-agreement-chart__row[data-outcome="both_work_well"] .calm-agreement-chart__fill,
+.calm-agreement-chart__plot > span[data-outcome="both_work_well"],
 .calm-vote-distribution-bar > span[data-outcome="both_work_well"] {
   background: color-mix(in srgb, var(--ari-yellow) 42%, var(--ari-grey-03));
   color: var(--ari-ink);
@@ -2662,12 +2665,14 @@ html.is-challenge-dialog-open {
 
 .calm-agreement-legend span[data-outcome="none_work_well"] i,
 .calm-agreement-chart__row[data-outcome="none_work_well"] .calm-agreement-chart__fill,
+.calm-agreement-chart__plot > span[data-outcome="none_work_well"],
 .calm-vote-distribution-bar > span[data-outcome="none_work_well"] {
   background: var(--ari-grey-04);
   color: var(--ari-plum);
 }
 
 .calm-agreement-legend span[data-outcome="hard_to_judge"] i,
+.calm-agreement-chart__plot > span[data-outcome="hard_to_judge"],
 .calm-vote-distribution-bar > span[data-outcome="hard_to_judge"] {
   background: color-mix(in srgb, var(--ari-grey-03) 56%, var(--ari-off-white));
   color: var(--ari-ink);
@@ -2845,11 +2850,17 @@ html.is-challenge-dialog-open {
 }
 
 .calm-agreement-chart__plot {
+  display: flex;
   position: relative;
   height: 18px;
   overflow: hidden;
   border-radius: 4px;
   background: var(--ari-grey-02);
+}
+
+.calm-agreement-chart__plot > span {
+  min-width: 2px;
+  height: 100%;
 }
 
 .calm-agreement-chart__plot::after {
