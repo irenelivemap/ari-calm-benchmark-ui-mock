@@ -8673,7 +8673,7 @@ html.is-challenge-dialog-open {
   color: var(--ari-muted);
 }
 
-.rp-row-fast   th { font-weight: 600; color: var(--ari-muted); }
+.rp-row-fast   th { font-weight: 400; color: var(--ari-muted); }
 .rp-row-nature th { font-weight: 600; color: var(--ari-plum); }
 .rp-row-quiet  th { font-weight: 600; color: var(--ari-plum); }
 
@@ -8693,19 +8693,6 @@ html.is-challenge-dialog-open {
 .rp-row-nature th::before { background: var(--ari-route-a); }
 .rp-row-quiet  th::before { background: var(--ari-route-b); }
 
-/* Extra time (col 3) and extra distance (col 5) are the key comparison metrics */
-.calm-rp-comparison-table thead th:nth-child(3),
-.calm-rp-comparison-table thead th:nth-child(5) {
-  color: var(--ari-plum);
-}
-
-.rp-row-nature > *:nth-child(3),
-.rp-row-nature > *:nth-child(5),
-.rp-row-quiet  > *:nth-child(3),
-.rp-row-quiet  > *:nth-child(5) {
-  font-weight: 700;
-  color: var(--ari-plum);
-}
 
 /* Attribute tables */
 .calm-rp-attrs {
