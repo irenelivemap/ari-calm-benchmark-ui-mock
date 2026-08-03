@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-rp-no-toggles">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-no-vote-dist">
   <style>
     body {
       margin: 0;
@@ -980,17 +980,6 @@
             <div class="calm-agreement-chart__rows">${sortedPairs.map(renderPairAgreement).join('')}</div>
           </div>
 
-          <div class="calm-agreement-disclosures">
-            <details>
-              <summary>View full vote distributions</summary>
-              <div class="calm-agreement-table-wrap">
-                <table class="calm-agreement-table">
-                  <thead><tr><th scope="col">OD</th><th scope="col">Nature</th><th scope="col">Quiet</th><th scope="col">Either</th><th scope="col">Neither</th><th scope="col">Can’t tell</th><th scope="col">Most selected</th><th scope="col">Agreement</th></tr></thead>
-                  <tbody>${sortedPairs.map(renderFullVoteDistributionRow).join('')}</tbody>
-                </table>
-              </div>
-            </details>
-          </div>
         </section>`;
     }
 
