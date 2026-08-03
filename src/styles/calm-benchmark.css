@@ -7567,13 +7567,13 @@ html.is-challenge-dialog-open {
 
 .ari-question-block .ari-choice-grid label.ari-choice--route-a {
   background: transparent;
-  color: #F08A63;
+  color: color-mix(in srgb, var(--ari-route-a) 65%, #fff);
   box-shadow: none;
 }
 
 .ari-question-block .ari-choice-grid label.ari-choice--route-b {
   background: transparent;
-  color: #4FD19B;
+  color: color-mix(in srgb, var(--ari-route-b) 65%, #fff);
   box-shadow: none;
 }
 
@@ -7589,13 +7589,13 @@ html.is-challenge-dialog-open {
 }
 
 .ari-question-block .ari-choice-grid label.ari-choice--route-a:hover {
-  background: rgba(147, 65, 38, 0.3);
-  color: #F5A17F;
+  background: color-mix(in srgb, var(--ari-route-a) 28%, transparent);
+  color: color-mix(in srgb, var(--ari-route-a) 75%, #fff);
 }
 
 .ari-question-block .ari-choice-grid label.ari-choice--route-b:hover {
-  background: rgba(23, 107, 77, 0.32);
-  color: #66DDAA;
+  background: color-mix(in srgb, var(--ari-route-b) 28%, transparent);
+  color: color-mix(in srgb, var(--ari-route-b) 75%, #fff);
 }
 
 .ari-question-block .ari-choice-grid label.ari-choice--route-c:hover {
@@ -7639,15 +7639,15 @@ html.is-challenge-dialog-open {
 }
 
 .ari-question-block .ari-choice-grid label.ari-choice--route-a.is-selected {
-  border-color: rgba(240, 138, 99, 0.78);
-  background: #934126;
+  border-color: color-mix(in srgb, var(--ari-route-a) 60%, transparent);
+  background: var(--ari-route-a);
   color: #fff;
   box-shadow: none;
 }
 
 .ari-question-block .ari-choice-grid label.ari-choice--route-b.is-selected {
-  border-color: rgba(79, 209, 155, 0.72);
-  background: #176B4D;
+  border-color: color-mix(in srgb, var(--ari-route-b) 60%, transparent);
+  background: var(--ari-route-b);
   color: #fff;
   box-shadow: none;
 }
