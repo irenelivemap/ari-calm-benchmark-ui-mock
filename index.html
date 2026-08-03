@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-weight-rails-3">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260803-rp-map-identity">
   <style>
     body {
       margin: 0;
@@ -2018,7 +2018,7 @@
       body.hidden = expanded;
       if (!expanded) {
         const mapEl = body.querySelector('.calm-rp-map[id]');
-        if (mapEl && !mapEl._leafletMap && window.L) {
+        if (mapEl && !mapEl._rpMap) {
           const idx = parseInt(mapEl.dataset.pairIndex, 10);
           const routePairs = window.AriCalmBenchmarkMockRoutePairs || [];
           if (routePairs[idx]) initPairMap(mapEl, routePairs[idx]);
@@ -2048,47 +2048,105 @@
       return Math.round((shared / setA.size) * 100);
     }
 
-    function initPairMap(mapEl, routePair) {
-      if (!window.L || mapEl._leafletMap) return;
-      const map = L.map(mapEl, { zoomControl: false, attributionControl: false, zoomSnap: 0.5 });
-      mapEl._leafletMap = map;
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19
-      }).addTo(map);
-      const grey04 = rpCssVar('--ari-grey-04') || '#94928d';
-      const green  = rpCssVar('--ari-green')   || '#8fd9a8';
-      const blurple = rpCssVar('--ari-blurple') || '#8a90f3';
-      const routeColors  = { fast: grey04, calm_nature: green, calm_quiet: blurple };
-      const routeWeights = { fast: 3, calm_nature: 4, calm_quiet: 4 };
-      const drawOrder = ['fast', 'calm_quiet', 'calm_nature'];
-      const layers = {};
-      drawOrder.forEach(function(key) {
-        const route = routePair.routes[key];
-        if (!route || !route.geometry || !route.geometry.length) return;
-        layers[key] = L.polyline(route.geometry, {
-          color: routeColors[key],
-          weight: routeWeights[key],
-          opacity: 0.9
-        }).addTo(map);
-      });
-      mapEl._rpLayers = layers;
-      const allPoints = Object.values(layers).flatMap(function(l) { return l.getLatLngs(); });
-      if (allPoints.length) map.fitBounds(L.latLngBounds(allPoints), { padding: [16, 16], maxZoom: 16 });
+    async function initPairMap(mapEl, routePair) {
+      if (mapEl._rpMap) return;
+      mapEl._rpMap = true; // mark as initialising to prevent double-init
 
-      // Wire up toggle buttons in the same map-col
-      const mapWrap = mapEl.closest('.calm-rp-map-wrap');
-      if (mapWrap) {
-        mapWrap.querySelectorAll('.calm-rp-map-toggle').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            const key = btn.dataset.route;
-            const visible = btn.getAttribute('aria-pressed') === 'true';
-            btn.setAttribute('aria-pressed', String(!visible));
-            if (layers[key]) {
-              if (visible) { map.removeLayer(layers[key]); }
-              else { layers[key].addTo(map); }
-            }
-          });
+      const orange  = rpCssVar('--ari-orange')   || '#FF7C60';
+      const routeA  = rpCssVar('--ari-route-a')  || '#08784D';
+      const routeB  = rpCssVar('--ari-route-b')  || '#4A52CC';
+      const routeColors  = { fast: orange, calm_nature: routeA, calm_quiet: routeB };
+      const routeWidths  = { fast: 3, calm_nature: 4.5, calm_quiet: 4.5 };
+      const drawOrder    = ['fast', 'calm_quiet', 'calm_nature']; // nature on top
+
+      const maps = window.AriCalmBenchmarkMaps;
+      const useMapLibre = maps && maps.hasMapLibre && maps.hasMapLibre() && window.maplibregl;
+
+      if (useMapLibre) {
+        let style;
+        try { style = await maps.loadLivemapMapStyle(); } catch (_) {}
+        if (!style) style = 'https://tiles.openfreemap.org/styles/bright';
+
+        const mlMap = new maplibregl.Map({
+          container: mapEl,
+          style,
+          attributionControl: false,
+          zoom: 13,
+          center: [8.54, 47.377]
         });
+        mapEl._rpMap = mlMap;
+
+        mlMap.once('load', function() {
+          let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+          drawOrder.forEach(function(key) {
+            const route = routePair.routes[key];
+            if (!route || !route.geometry || !route.geometry.length) return;
+            // geometry is [lat, lng]; GeoJSON needs [lng, lat]
+            const coords = route.geometry.map(function(p) { return [p[1], p[0]]; });
+            coords.forEach(function(c) {
+              if (c[0] < minLng) minLng = c[0];
+              if (c[1] < minLat) minLat = c[1];
+              if (c[0] > maxLng) maxLng = c[0];
+              if (c[1] > maxLat) maxLat = c[1];
+            });
+            mlMap.addSource('rp-' + key, {
+              type: 'geojson',
+              data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } }
+            });
+            mlMap.addLayer({
+              id: 'rp-' + key,
+              type: 'line',
+              source: 'rp-' + key,
+              layout: { 'line-cap': 'round', 'line-join': 'round' },
+              paint: { 'line-color': routeColors[key], 'line-width': routeWidths[key], 'line-opacity': 0.9 }
+            });
+          });
+          if (minLng !== Infinity) {
+            mlMap.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 24, maxZoom: 16, duration: 0 });
+          }
+          const mapWrap = mapEl.closest('.calm-rp-map-wrap');
+          if (mapWrap) {
+            mapWrap.querySelectorAll('.calm-rp-map-toggle').forEach(function(btn) {
+              btn.addEventListener('click', function() {
+                const key = btn.dataset.route;
+                const visible = btn.getAttribute('aria-pressed') === 'true';
+                btn.setAttribute('aria-pressed', String(!visible));
+                if (mlMap.getLayer('rp-' + key)) {
+                  mlMap.setLayoutProperty('rp-' + key, 'visibility', visible ? 'none' : 'visible');
+                }
+              });
+            });
+          }
+        });
+
+      } else if (window.L) {
+        // Leaflet fallback when MapLibre is unavailable
+        const lMap = L.map(mapEl, { zoomControl: false, attributionControl: false, zoomSnap: 0.5 });
+        mapEl._rpMap = lMap;
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(lMap);
+        const layers = {};
+        drawOrder.forEach(function(key) {
+          const route = routePair.routes[key];
+          if (!route || !route.geometry || !route.geometry.length) return;
+          layers[key] = L.polyline(route.geometry, {
+            color: routeColors[key], weight: routeWidths[key], opacity: 0.9
+          }).addTo(lMap);
+        });
+        const allPoints = Object.values(layers).flatMap(function(l) { return l.getLatLngs(); });
+        if (allPoints.length) lMap.fitBounds(L.latLngBounds(allPoints), { padding: [16, 16], maxZoom: 16 });
+        const mapWrap = mapEl.closest('.calm-rp-map-wrap');
+        if (mapWrap) {
+          mapWrap.querySelectorAll('.calm-rp-map-toggle').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              const key = btn.dataset.route;
+              const visible = btn.getAttribute('aria-pressed') === 'true';
+              btn.setAttribute('aria-pressed', String(!visible));
+              if (layers[key]) {
+                if (visible) { lMap.removeLayer(layers[key]); } else { layers[key].addTo(lMap); }
+              }
+            });
+          });
+        }
       }
     }
 
@@ -2218,24 +2276,25 @@
       const ec = diag.effective_costs_m || {};
       const natSameAsFast = Math.abs((natureMeta.distanceMeters || 0) - (fastMeta.distanceMeters || 0)) < 1;
       const natRouteLabel = natSameAsFast ? 'Same route as Fast' : 'Calm Nature';
+      const isFirst = idx === 0;
 
       return `<article class="calm-rp-pair" id="rp-pair-${escapeHtml(diag.pairId)}">
         <header class="calm-rp-pair__header">
-          <button class="calm-rp-pair__toggle" type="button" aria-expanded="false" aria-controls="rp-pair-body-${escapeHtml(diag.pairId)}">
+          <button class="calm-rp-pair__toggle" type="button" aria-expanded="${isFirst}" aria-controls="rp-pair-body-${escapeHtml(diag.pairId)}">
             <span class="calm-rp-pair__label">${escapeHtml(pairLabel)}</span>
             <span class="calm-rp-pair__dot" aria-hidden="true">·</span>
             <span class="calm-rp-pair__route">${escapeHtml(diag.origin_label || 'Start')} → ${escapeHtml(diag.destination_label || 'Destination')}</span>
             <span class="calm-rp-pair__chevron" aria-hidden="true"></span>
           </button>
         </header>
-        <div class="calm-rp-pair__body" id="rp-pair-body-${escapeHtml(diag.pairId)}" hidden>
+        <div class="calm-rp-pair__body" id="rp-pair-body-${escapeHtml(diag.pairId)}"${isFirst ? '' : ' hidden'}>
           <div class="calm-rp-pair__split">
             <div class="calm-rp-pair__map-col">
               <div class="calm-rp-map-wrap">
                 <div class="calm-rp-map-controls" role="group" aria-label="Show or hide routes on map">
-                  <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="fast" style="--rp-toggle-color: var(--ari-grey-04)">Fast</button>
-                  <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_nature" style="--rp-toggle-color: var(--ari-green)">Calm Nature</button>
-                  <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_quiet" style="--rp-toggle-color: var(--ari-blurple)">Calm Quiet</button>
+                  <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="fast" style="--rp-toggle-color: var(--ari-orange); --rp-toggle-text: var(--ari-plum)">Fast</button>
+                  <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_nature" style="--rp-toggle-color: var(--ari-route-a); --rp-toggle-text: #fff">Calm Nature</button>
+                  <button class="calm-rp-map-toggle" type="button" aria-pressed="true" data-route="calm_quiet" style="--rp-toggle-color: var(--ari-route-b); --rp-toggle-text: #fff">Calm Quiet</button>
                 </div>
                 <div class="calm-rp-map" id="rp-map-${idx}" data-pair-index="${idx}"></div>
               </div>
@@ -2346,6 +2405,9 @@
       const pairsList = document.getElementById('rp-pairs-list');
       if (pairsList) {
         pairsList.innerHTML = pairs.map((diag, i) => renderPairDiagnosticCard(diag, routePairs[i], i)).join('');
+        // First pair starts expanded — init its map immediately
+        const firstMapEl = pairsList.querySelector('.calm-rp-map[id]');
+        if (firstMapEl && routePairs[0]) initPairMap(firstMapEl, routePairs[0]);
       }
     }
 

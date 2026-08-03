@@ -8485,7 +8485,7 @@ html.is-challenge-dialog-open {
 .calm-rp-map-toggle[aria-pressed="true"] {
   border-color: var(--rp-toggle-color, var(--ari-grey-04));
   background: var(--rp-toggle-color, var(--ari-grey-04));
-  color: var(--ari-plum);
+  color: var(--rp-toggle-text, var(--ari-plum));
 }
 
 .calm-rp-map-toggle[aria-pressed="false"] { opacity: 0.5; }
@@ -8569,27 +8569,21 @@ html.is-challenge-dialog-open {
 .rp-row-nature th { font-weight: 600; color: var(--ari-plum); }
 .rp-row-quiet  th { font-weight: 600; color: var(--ari-plum); }
 
-.rp-row-nature th::before {
-  content: '';
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ari-green);
-  margin-right: 6px;
-  vertical-align: middle;
-}
-
+.rp-row-fast th::before,
+.rp-row-nature th::before,
 .rp-row-quiet th::before {
   content: '';
   display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--ari-blurple);
   margin-right: 6px;
   vertical-align: middle;
 }
+
+.rp-row-fast   th::before { background: var(--ari-orange); }
+.rp-row-nature th::before { background: var(--ari-route-a); }
+.rp-row-quiet  th::before { background: var(--ari-route-b); }
 
 /* Attribute tables */
 .calm-rp-attrs {
