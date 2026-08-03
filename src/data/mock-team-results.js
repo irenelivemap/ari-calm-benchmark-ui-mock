@@ -51,17 +51,31 @@
     calm_quiet: [
       'quieter_or_less_busy_streets',
       'less_need_to_watch_traffic',
-      'easier_to_follow'
+      'easier_to_follow',
+      'takes_less_time',
+      'know_route_or_area',
+      'quieter_or_less_busy_streets',
+      'less_need_to_watch_traffic',
+      'not_sure'
     ],
     calm_nature: [
       'more_trees_or_green_space',
       'more_near_water',
-      'quieter_or_less_busy_streets'
+      'quieter_or_less_busy_streets',
+      'takes_less_time',
+      'know_route_or_area',
+      'more_trees_or_green_space',
+      'more_near_water',
+      'not_sure'
     ],
     both_work_well: [
       'quieter_or_less_busy_streets',
       'more_trees_or_green_space',
-      'easier_to_follow'
+      'easier_to_follow',
+      'more_near_water',
+      'takes_less_time',
+      'know_route_or_area',
+      'less_need_to_watch_traffic'
     ]
   };
 
