@@ -1356,7 +1356,9 @@
     function updateViewQuery(view) {
       const next = new URL(window.location.href);
       if (view === 'testing') next.searchParams.delete('view');
-      else next.searchParams.set('view', view === 'results' ? 'results' : 'team-results');
+      else if (view === 'results') next.searchParams.set('view', 'results');
+      else if (view === 'route-profiles') next.searchParams.set('view', 'route-profiles');
+      else next.searchParams.set('view', 'team-results');
       window.history.replaceState({}, '', `${next.pathname}${next.search}${next.hash}`);
     }
 
@@ -2353,7 +2355,9 @@
     const requestedView = urlParams.get('view');
     const initialView = requestedView === 'team-results' && runtimeConfig.enableTeamResults
       ? 'team-results'
-      : requestedView === 'results' ? 'results' : 'testing';
+      : requestedView === 'results' ? 'results'
+      : requestedView === 'route-profiles' ? 'route-profiles'
+      : 'testing';
     showPage(initialView, { updateUrl: false });
 
     window.ariCalmData = {
