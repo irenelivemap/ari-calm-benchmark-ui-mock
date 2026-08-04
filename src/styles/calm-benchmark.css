@@ -6124,12 +6124,12 @@ html.is-challenge-dialog-open {
 
 .ari-map__tools .ari-street-toggle.is-active {
   border-color: rgba(16, 21, 17, 0.9);
-  background: rgba(16, 18, 17, 0.92);
+  background: #101211;
   box-shadow: none;
 }
 
 .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__label {
-  background: rgba(16, 18, 17, 0.92);
+  background: #101211;
   color: #fff;
 }
 
@@ -8443,12 +8443,12 @@ html.is-challenge-dialog-open {
 
   .ari-map__tools .ari-street-toggle.is-active {
     border-color: rgba(16, 21, 17, 0.9);
-    background: rgba(16, 18, 17, 0.92);
+    background: #101211;
     box-shadow: none;
   }
 
   .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__label {
-    background: rgba(16, 18, 17, 0.92);
+    background: #101211;
     color: #fff;
   }
 
