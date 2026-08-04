@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260804-routes-tab-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260804-my-results-1">
   <style>
     body {
       margin: 0;
@@ -606,6 +606,10 @@
     const urlParams = new URLSearchParams(window.location.search);
     let freshPreviewMode = !runtimeConfig.production
       && (urlParams.get('fresh') === '1' || urlParams.get('preview') === 'fresh');
+    const RESEARCHER_STORAGE = 'ari-calm-researcher-mode-v1';
+    if (urlParams.get('researcher') === '1') localStorage.setItem(RESEARCHER_STORAGE, '1');
+    else if (urlParams.get('researcher') === '0') localStorage.removeItem(RESEARCHER_STORAGE);
+    const researcherMode = localStorage.getItem(RESEARCHER_STORAGE) === '1';
     const requestedChallenge = AriBenchmarkRuntime.resolveChallenge(window.location, runtimeConfig);
     const activeChallenge = CHALLENGE_CONFIGS[requestedChallenge]
       ? requestedChallenge
@@ -869,7 +873,7 @@
         <div class="calm-results-toolbar">
           <nav class="calm-results-switcher" aria-label="Calm results view">
             <button type="button" data-results-view="overview" aria-pressed="${calmResultsView === 'overview'}">Overview</button>
-            <button type="button" data-results-view="participants" aria-pressed="${calmResultsView === 'participants'}">Participants</button>
+            <button type="button" data-results-view="participants" aria-pressed="${calmResultsView === 'participants'}">${researcherMode ? 'Participants' : 'My results'}</button>
             <button type="button" data-results-view="routes" aria-pressed="${calmResultsView === 'routes'}">Routes</button>
           </nav>
           <div class="calm-results-toolbar__meta">
@@ -1338,7 +1342,21 @@
       }).join('');
     }
 
+    function myParticipantIds() {
+      if (sampleResultsEnabled) return new Set([AriMockTeamResults.CURRENT_PARTICIPANT_ID]);
+      const localAnswers = dataRepository.getSnapshot().answers || [];
+      return new Set(
+        localAnswers
+          .map(answer => answer.participantId || answer.sessionId || answer.benchmarkRunId)
+          .filter(Boolean)
+      );
+    }
+
     function renderCalmParticipants(answers, participantSummaries, currentParticipantId) {
+      if (!researcherMode) {
+        const mine = myParticipantIds();
+        participantSummaries = participantSummaries.filter(item => mine.has(item.participantId));
+      }
       const orderedParticipants = [...participantSummaries].sort((a, b) => {
         if (a.participantId === currentParticipantId) return -1;
         if (b.participantId === currentParticipantId) return 1;
@@ -1352,11 +1370,17 @@
       }
 
       if (!orderedParticipants.length) {
-        return `
+        return researcherMode ? `
           <section class="calm-results-dashboard-empty" aria-labelledby="calm-participants-empty-title">
             <p class="calm-results-eyebrow">Participants</p>
             <h2 id="calm-participants-empty-title">No participant records yet.</h2>
             <p>Names and individual evaluation records will appear after the first completed comparison.</p>
+            <button type="button" class="calm-results-action" data-results-action="continue">Start comparing →</button>
+          </section>` : `
+          <section class="calm-results-dashboard-empty" aria-labelledby="calm-participants-empty-title">
+            <p class="calm-results-eyebrow">My results</p>
+            <h2 id="calm-participants-empty-title">Your results will appear here.</h2>
+            <p>Complete your first comparison to see your route choices and reasons.</p>
             <button type="button" class="calm-results-action" data-results-action="continue">Start comparing →</button>
           </section>`;
       }
@@ -1401,18 +1425,20 @@
           </button>`;
       }).join('');
 
+      const showParticipantList = researcherMode || orderedParticipants.length > 1;
       return `
-        <div class="calm-participants-layout">
+        <div class="calm-participants-layout${showParticipantList ? '' : ' calm-participants-layout--single'}">
+          ${showParticipantList ? `
           <aside class="calm-participant-list" aria-labelledby="calm-participant-list-title">
             <div class="calm-participant-list__head">
-              <h2 id="calm-participant-list-title">Participants</h2>
+              <h2 id="calm-participant-list-title">${researcherMode ? 'Participants' : 'Your sessions'}</h2>
               <span>${orderedParticipants.length}</span>
             </div>
             <div class="calm-participant-list__items">${participantButtons}</div>
-          </aside>
+          </aside>` : ''}
           <section class="calm-participant-detail" aria-labelledby="calm-participant-detail-title">
             <header class="calm-participant-detail__header">
-              <p class="calm-results-eyebrow">Participant record</p>
+              <p class="calm-results-eyebrow">${researcherMode ? 'Participant record' : 'My results'}</p>
               <h2 id="calm-participant-detail-title">${escapeHtml(selectedParticipantLabel)}${isCurrentParticipant ? '<span>You</span>' : ''}</h2>
               <p>${selectedPerson.comparisons} completed comparison${selectedPerson.comparisons === 1 ? '' : 's'} across ${selectedPerson.routePairs} route pair${selectedPerson.routePairs === 1 ? '' : 's'}. Updated ${formatUpdated(selectedPerson.lastUpdated)}.</p>
             </header>

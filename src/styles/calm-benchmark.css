@@ -3361,6 +3361,12 @@ html.is-challenge-dialog-open {
   min-height: 570px;
 }
 
+/* "My results" with a single session — no session picker needed. */
+.calm-participants-layout--single {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+}
+
 .calm-participant-list {
   border-right: 1px solid var(--ari-hairline);
   background: #f4f6f4;
