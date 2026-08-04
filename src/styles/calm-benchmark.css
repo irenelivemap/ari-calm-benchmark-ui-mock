@@ -9310,6 +9310,15 @@ html.is-challenge-dialog-open {
   background: var(--ari-grey-02);
 }
 
+/* Pair map inside a My-results evaluation card */
+.calm-pp-map-wrap {
+  margin-bottom: 14px;
+}
+
+.calm-pp-map {
+  height: 220px;
+}
+
 .calm-rp-map-legend {
   display: flex;
   gap: 16px;
