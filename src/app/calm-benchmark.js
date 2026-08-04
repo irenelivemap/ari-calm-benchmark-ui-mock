@@ -378,7 +378,7 @@
 
           <aside class="ari-question-card" aria-label="Benchmark questions" data-question-card>
             <div class="ari-card-header">
-              <button class="ari-hud-exit" data-action="exit" type="button" aria-label="Exit test — progress is saved" title="Exit — progress is saved">&times;</button>
+              <button class="ari-hud-exit" data-action="exit" type="button" aria-label="Exit test — progress is saved" title="Exit — progress is saved"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"></path></svg></button>
               <span class="ari-hud-sep" aria-hidden="true"></span>
               <div class="ari-hud-medals" data-hud-medals aria-label="Medal progress"></div>
               <span class="ari-round-complete" data-round-complete aria-live="polite" aria-hidden="true"><span aria-hidden="true">&#10003;</span>Complete</span>
@@ -494,7 +494,7 @@
 
           <div class="ari-onboarding__intro ari-onboarding__intro--briefing" data-onboarding-panel="-1">
             <div class="ari-onboarding__panel-header">
-              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro">&times;</button>
+              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"></path></svg></button>
             </div>
             <b>Before you start</b>
             <span>Imagine you are on your way somewhere in Zürich. You are not in a rush, but you still want to arrive in a reasonable amount of time. You would prefer a calmer way to get there.</span>
@@ -504,7 +504,7 @@
 
           <div class="ari-onboarding__intro" data-onboarding-panel="0">
             <div class="ari-onboarding__panel-header">
-              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro">&times;</button>
+              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"></path></svg></button>
               <p class="ari-onboarding__step-count" aria-label="Step 1 of 3">1 / 3</p>
             </div>
             <b>Compare the routes</b>
@@ -514,7 +514,7 @@
 
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="street" data-onboarding-panel="1" hidden aria-hidden="true">
             <div class="ari-onboarding__panel-header">
-              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro">&times;</button>
+              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"></path></svg></button>
               <p class="ari-onboarding__step-count" aria-label="Step 2 of 3">2 / 3</p>
             </div>
             <b>Explore the map</b>
@@ -524,7 +524,7 @@
 
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="answer" data-onboarding-panel="2" hidden aria-hidden="true">
             <div class="ari-onboarding__panel-header">
-              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro">&times;</button>
+              <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"></path></svg></button>
               <p class="ari-onboarding__step-count" aria-label="Step 3 of 3">3 / 3</p>
             </div>
             <b>Choose when ready</b>
@@ -2320,9 +2320,23 @@
       else if (event.target.closest('[data-action="skip-onboarding"]')) finishOnboarding();
     });
     els.onboarding.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        finishOnboarding();
+        return;
+      }
       if (event.key !== 'Tab') return;
+      const panel = getActiveOnboardingPanel();
+      const controls = panel
+        ? [...panel.querySelectorAll('button:not([hidden]):not([disabled])')]
+        : [];
+      if (!controls.length) return;
+      const currentIndex = controls.indexOf(document.activeElement);
+      const nextIndex = event.shiftKey
+        ? (currentIndex <= 0 ? controls.length - 1 : currentIndex - 1)
+        : (currentIndex + 1) % controls.length;
       event.preventDefault();
-      (getActiveOnboardingPanel()?.querySelector('[data-action="next-onboarding"]') || els.onboardingSkip)?.focus({ preventScroll: true });
+      controls[nextIndex].focus({ preventScroll: true });
     });
 
     els.retrySystem.addEventListener('click', () => {
