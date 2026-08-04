@@ -31,6 +31,7 @@ test('provides a deterministic, varied Calm team-results fixture', () => {
   assert.ok(summary.positionBias.selectedAsA > 0);
   assert.ok(summary.positionBias.selectedAsB > 0);
   assert.equal(summary.positionBias.selectedAsC, 0);
+  assert.ok(answers.some(answer => answer.q1KnowsBetter === true));
 
   const agreement = Results.analyzeAgreement(answers);
   assert.equal(agreement.participants.length, 15);

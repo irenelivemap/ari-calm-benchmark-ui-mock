@@ -2325,13 +2325,6 @@ html.is-challenge-dialog-open {
   margin: 0 auto;
 }
 
-.calm-results-loading {
-  max-width: 56ch;
-  padding: 72px 0;
-  color: var(--ari-muted);
-  font: var(--font-body);
-}
-
 .calm-results-dashboard-header {
   padding: 28px 0 20px;
   border-bottom: 1px solid var(--ari-hairline);
@@ -3647,34 +3640,6 @@ html.is-challenge-dialog-open {
   border-top: 1px solid var(--ari-hairline);
 }
 
-.calm-participant-analysis-disclosure {
-  margin-bottom: 48px;
-  border-top: 1px solid var(--ari-hairline);
-  border-bottom: 1px solid var(--ari-hairline);
-}
-
-.calm-participant-analysis-disclosure summary {
-  min-height: 56px;
-  padding: 16px 2px;
-  color: var(--ari-ink);
-  cursor: pointer;
-  font: var(--font-heading-sm);
-  list-style-position: inside;
-}
-
-.calm-participant-analysis-disclosure summary:hover {
-  color: var(--ari-plum);
-}
-
-.calm-participant-analysis-disclosure summary:focus-visible {
-  outline: 2px solid var(--ari-focus);
-  outline-offset: 3px;
-}
-
-.calm-participant-analysis-disclosure .calm-participant-analysis {
-  padding: 30px 0 38px;
-}
-
 .calm-participant-empty-note {
   margin: 18px 0 0;
   color: var(--ari-faint);
@@ -3699,8 +3664,6 @@ html.is-challenge-dialog-open {
 .calm-participant-cards {
   padding-top: 34px;
   padding-bottom: 48px;
-  content-visibility: auto;
-  contain-intrinsic-size: 900px;
 }
 
 .calm-pp-cards-title {
@@ -3909,7 +3872,34 @@ html.is-challenge-dialog-open {
 }
 
 .calm-pp-answers {
+  display: grid;
+  gap: 22px;
   padding: 20px 22px;
+}
+
+.calm-pp-answer {
+  display: grid;
+  gap: 8px;
+  max-width: 76ch;
+}
+
+.calm-pp-question {
+  margin: 0;
+  color: var(--ari-muted);
+  font-size: var(--font-size-fine);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.calm-pp-response {
+  margin: 0;
+  color: var(--ari-ink);
+  font-size: var(--font-size-small);
+  line-height: 1.45;
+}
+
+.calm-pp-response strong {
+  font-weight: 700;
 }
 
 .calm-pp-route-details {
@@ -3987,6 +3977,8 @@ html.is-challenge-dialog-open {
 
 .calm-pp-note-text {
   margin: 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--ari-grey-03);
   font-style: italic;
   color: var(--ari-muted);
   line-height: 1.45;
@@ -9756,6 +9748,7 @@ html.is-challenge-dialog-open {
 
 .calm-pp-map {
   height: 360px;
+  transition: height 200ms cubic-bezier(.2, .8, .2, 1);
 }
 
 .calm-pp-map-wrap.is-large .calm-pp-map {
@@ -9820,6 +9813,12 @@ html.is-challenge-dialog-open {
   .calm-pp-map-wrap.is-large .calm-pp-map {
     height: 55vh;
     min-height: 380px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calm-pp-map {
+    transition: none;
   }
 }
 

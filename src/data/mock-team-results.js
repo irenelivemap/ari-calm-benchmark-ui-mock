@@ -207,6 +207,7 @@
           routeAssignment: { routeA: assignment.A, routeB: assignment.B },
           labelMap: { ...assignment },
           q2Separate: null,
+          q1KnowsBetter: seed % 11 === 0,
           q2Reasons,
           q2Note,
           q3WorthShowing: [Q, N, B].includes(outcome)
