@@ -312,7 +312,7 @@
               <div class="ari-map__canvas" data-map-canvas aria-label="Interactive route comparison map"></div>
               <div class="ari-map__tools" aria-label="Map tools">
                 <button class="ari-icon-btn ari-icon-btn--street ari-street-toggle" data-action="toggle-street-view" type="button" aria-label="Turn on Street View" title="Street View — inspect any map point at street level" aria-controls="${streetViewerId}" aria-pressed="false">
-                  <span class="ari-street-toggle__label" data-street-toggle-label aria-hidden="true">Street View</span>
+                  <span class="ari-street-toggle__label" aria-hidden="true"><span data-street-toggle-label>Street View</span><span class="ari-street-toggle__hint">Tap any point on the map to explore</span></span>
                   <span class="ari-street-toggle__glyph" aria-hidden="true">360°</span>
                 </button>
                 <div class="ari-map__navigation" role="group" aria-label="Map navigation">
@@ -1149,11 +1149,7 @@
       );
       els.streetViewToggle.title = enabled ? 'Turn off Street View (or press Esc)' : 'Street View — inspect any map point at street level';
       els.streetViewToggleLabel.textContent = enabled ? 'Exit Street View' : 'Street View';
-      if (enabled && !state.streetViewOpen) {
-        if (els.streetViewHint.hidden) showStreetHint();
-      } else {
-        hideStreetHint();
-      }
+      hideStreetHint();
       state.mapAdapter.setStreetViewEnabled(enabled);
     }
 
