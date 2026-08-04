@@ -972,6 +972,11 @@ html.is-challenge-dialog-open {
   font-weight: inherit;
 }
 
+/* Fill each line before wrapping — balance breaks this long heading too early. */
+.calm-card--how h2 {
+  text-wrap: pretty;
+}
+
 .calm-route-steps {
   display: flex;
   min-height: 148px;
