@@ -3,7 +3,7 @@
   if (typeof module === 'object' && module.exports) module.exports = data;
   if (root) root.AriCalmBenchmarkDiagnostics = data;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
-  // Generated from route diagnostics exports (rounds 1-21, 24, 25).
+  // Generated from route diagnostics exports (rounds 1-21, 23, 25).
   // Labels reverse-geocoded from route endpoints; metric averages are 0-5 scale.
   return {
   "configured_weights": {
@@ -832,7 +832,38 @@
       "pairId": "calm-route-comparison-22",
       "origin_label": "Hottingen",
       "destination_label": "Fluntern",
-      "metric_averages": null
+      "metric_averages": {
+        "fast": {
+          "tree_coverage": 1.36,
+          "lights": 3.91,
+          "water": 0.17,
+          "green": 0.97,
+          "accident": 2.26,
+          "crime": 0,
+          "noise": 2.04,
+          "presence": 0.55
+        },
+        "calm_quiet": {
+          "tree_coverage": 2.12,
+          "lights": 3.8,
+          "water": 0.29,
+          "green": 0.63,
+          "accident": 1.52,
+          "crime": 0,
+          "noise": 1.06,
+          "presence": 0.2
+        },
+        "calm_nature": {
+          "tree_coverage": 1.46,
+          "lights": 3.96,
+          "water": 0.17,
+          "green": 1.09,
+          "accident": 2.23,
+          "crime": 0,
+          "noise": 2,
+          "presence": 0.54
+        }
+      }
     },
     {
       "pairId": "calm-route-comparison-23",
