@@ -6123,20 +6123,20 @@ html.is-challenge-dialog-open {
 }
 
 .ari-map__tools .ari-street-toggle.is-active {
-  border-color: var(--ari-route-a);
-  background: var(--ari-route-a);
+  border-color: rgba(16, 21, 17, 0.9);
+  background: rgba(16, 18, 17, 0.92);
   box-shadow: none;
 }
 
 .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__label {
-  background: var(--ari-route-a);
+  background: rgba(16, 18, 17, 0.92);
   color: #fff;
 }
 
 .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__glyph {
-  border-left-color: rgba(255, 255, 255, 0.22);
-  background: rgba(0, 0, 0, 0.12);
-  color: #fff;
+  border-left-color: rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .ari-map__navigation {
@@ -8442,20 +8442,20 @@ html.is-challenge-dialog-open {
   }
 
   .ari-map__tools .ari-street-toggle.is-active {
-    border-color: var(--ari-route-a);
-    background: var(--ari-route-a);
+    border-color: rgba(16, 21, 17, 0.9);
+    background: rgba(16, 18, 17, 0.92);
     box-shadow: none;
   }
 
   .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__label {
-    background: var(--ari-route-a);
+    background: rgba(16, 18, 17, 0.92);
     color: #fff;
   }
 
   .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__glyph {
-    border-left-color: rgba(255, 255, 255, 0.22);
-    background: rgba(0, 0, 0, 0.12);
-    color: #fff;
+    border-left-color: rgba(255, 255, 255, 0.16);
+    background: rgba(0, 0, 0, 0.18);
+    color: rgba(255, 255, 255, 0.85);
   }
 
   .ari-street-viewer {
