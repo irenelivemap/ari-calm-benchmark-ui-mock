@@ -23,6 +23,7 @@ test('keeps participant records explorable and easy to interpret', () => {
   assert.match(html, /Do you know another Calm route that would work better\?/);
   assert.doesNotMatch(html, /Known alternative/);
   assert.doesNotMatch(html, /querySelectorAll\('\.calm-pp-card__header\[aria-expanded="true"\]'/);
+  assert.match(css, /\.calm-pp-route-table tbody tr\.is-selected th::before\s*\{[^}]*content:\s*'✓'/s);
 });
 
 test('supports complete onboarding keyboard navigation', () => {

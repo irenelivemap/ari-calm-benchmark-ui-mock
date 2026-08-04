@@ -3873,8 +3873,8 @@ html.is-challenge-dialog-open {
 
 .calm-pp-answers {
   display: grid;
-  gap: 22px;
-  padding: 20px 22px;
+  gap: 24px;
+  padding: 20px;
 }
 
 .calm-pp-answer {
@@ -3886,16 +3886,14 @@ html.is-challenge-dialog-open {
 .calm-pp-question {
   margin: 0;
   color: var(--ari-muted);
-  font-size: var(--font-size-fine);
+  font: var(--font-fine);
   font-weight: 600;
-  line-height: 1.45;
 }
 
 .calm-pp-response {
   margin: 0;
   color: var(--ari-ink);
-  font-size: var(--font-size-small);
-  line-height: 1.45;
+  font: var(--font-small);
 }
 
 .calm-pp-response strong {
@@ -3904,7 +3902,7 @@ html.is-challenge-dialog-open {
 
 .calm-pp-route-details {
   border-top: 1px solid var(--ari-hairline);
-  padding: 20px 22px;
+  padding: 20px;
   background: var(--ari-off-white);
 }
 
@@ -3964,24 +3962,24 @@ html.is-challenge-dialog-open {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 8px;
 }
 
 .calm-pp-reasons-list li {
-  padding: 2px 8px;
-  border-radius: 3px;
+  padding: 4px 8px;
+  border-radius: 4px;
   background: var(--ari-grey-02);
   color: var(--ari-ink);
-  font-size: 0.88em;
+  font: var(--font-fine);
 }
 
 .calm-pp-note-text {
   margin: 0;
   padding-left: 12px;
   border-left: 2px solid var(--ari-grey-03);
+  font: var(--font-small);
   font-style: italic;
   color: var(--ari-muted);
-  line-height: 1.45;
 }
 
 .calm-pp-route-table {
@@ -4020,6 +4018,18 @@ html.is-challenge-dialog-open {
 .calm-pp-route-table tbody tr.is-selected th,
 .calm-pp-route-table tbody tr.is-selected td {
   font-weight: 700;
+}
+
+.calm-pp-route-table tbody tr.is-selected th::before {
+  content: '✓';
+  width: 8px;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  color: var(--selected-route-color);
+  font: 800 12px/1 var(--ari-font);
+  text-align: center;
+  vertical-align: baseline;
 }
 
 .calm-pp-route-table tbody tr.is-muted th,
