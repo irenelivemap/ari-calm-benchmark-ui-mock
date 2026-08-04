@@ -83,6 +83,8 @@
         supplied.routingApiBase || rootLike.ARI_ROUTING_API || '/api/v1/routing'
       ).replace(/\/$/, ''),
       dataApiBase: String(supplied.dataApiBase || '').replace(/\/$/, ''),
+      supabaseUrl: String(supplied.supabaseUrl || '').replace(/\/$/, ''),
+      supabaseAnonKey: String(supplied.supabaseAnonKey || ''),
       googleMapsKey: String(supplied.googleMapsKey || rootLike.ARI_GOOGLE_MAPS_KEY || ''),
       allowQueryConfig: supplied.allowQueryConfig ?? !production,
       showReset: supplied.showReset ?? !production,

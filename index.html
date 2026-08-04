@@ -291,6 +291,7 @@
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
   <script src="./src/data/calm-benchmark-data.js?v=20260731-calm-worth-fast-1"></script>
   <script src="./src/data/benchmark-transport.js?v=20260804-persist-endpoint-1"></script>
+  <script src="./src/data/supabase-transport.js?v=20260804-supabase-1"></script>
   <script src="./src/data/mock-route-diagnostics.js?v=20260803-route-profiles-1"></script>
   <script src="./src/data/mock-team-results.js?v=20260731-nature-wins-sample-1"></script>
   <script src="./src/results/calm-results.js?v=20260731-calm-agreement-results-1"></script>
@@ -635,12 +636,18 @@
     ) {
       sampleResultsEnabled = true;
     }
-    const remoteTransport = runtimeConfig.dataApiBase
-      ? AriBenchmarkTransport.createHttpTransport({
-          baseUrl: runtimeConfig.dataApiBase,
+    const remoteTransport = runtimeConfig.supabaseUrl && runtimeConfig.supabaseAnonKey
+      ? AriSupabaseTransport.createSupabaseTransport({
+          url: runtimeConfig.supabaseUrl,
+          anonKey: runtimeConfig.supabaseAnonKey,
           storage: localStorage
         })
-      : null;
+      : runtimeConfig.dataApiBase
+        ? AriBenchmarkTransport.createHttpTransport({
+            baseUrl: runtimeConfig.dataApiBase,
+            storage: localStorage
+          })
+        : null;
     const remoteTeamResults = {
       status: remoteTransport ? 'idle' : 'local',
       answers: [],
