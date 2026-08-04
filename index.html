@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260804-street-view-btn-9">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260804-street-view-btn-10">
   <style>
     body {
       margin: 0;
@@ -498,43 +498,49 @@
           q3Variants: {
             route_a: {
               kind: 'worth_fast',
-              question: 'Is Route A useful enough to be shown as well as Fast?',
+              question: 'Compared with only seeing Fast, how much does adding Route A improve things for you?',
               hint: '',
               inputName: 'q3WorthShowing',
               inputType: 'radio',
               noteMode: 'selection',
               withIcons: false,
               options: [
-                { value: 'yes', label: 'Yes' },
-                { value: 'no', label: 'No' },
+                { value: 'a_lot', label: 'A lot' },
+                { value: 'somewhat', label: 'Somewhat' },
+                { value: 'a_little', label: 'A little' },
+                { value: 'not_at_all', label: 'Not at all' },
                 { value: 'not_sure', label: "I'm not sure" }
               ]
             },
             route_b: {
               kind: 'worth_fast',
-              question: 'Is Route B useful enough to be shown as well as Fast?',
+              question: 'Compared with only seeing Fast, how much does adding Route B improve things for you?',
               hint: '',
               inputName: 'q3WorthShowing',
               inputType: 'radio',
               noteMode: 'selection',
               withIcons: false,
               options: [
-                { value: 'yes', label: 'Yes' },
-                { value: 'no', label: 'No' },
+                { value: 'a_lot', label: 'A lot' },
+                { value: 'somewhat', label: 'Somewhat' },
+                { value: 'a_little', label: 'A little' },
+                { value: 'not_at_all', label: 'Not at all' },
                 { value: 'not_sure', label: "I'm not sure" }
               ]
             },
             both_work_well: {
               kind: 'worth_fast',
-              question: 'Are both routes useful enough to be shown as well as Fast?',
+              question: 'Compared with only seeing Fast, how much does also having any of these calmer routes improve things for you?',
               hint: '',
               inputName: 'q3WorthShowing',
               inputType: 'radio',
               noteMode: 'selection',
               withIcons: false,
               options: [
-                { value: 'yes', label: 'Yes' },
-                { value: 'no', label: 'No' },
+                { value: 'a_lot', label: 'A lot' },
+                { value: 'somewhat', label: 'Somewhat' },
+                { value: 'a_little', label: 'A little' },
+                { value: 'not_at_all', label: 'Not at all' },
                 { value: 'not_sure', label: "I'm not sure" }
               ]
             },
@@ -1251,7 +1257,7 @@
         const assignA = assignment.routeA || assignment.A;
         const assignB = assignment.routeB || assignment.B;
         const reasons = row.q2Reasons.map(k => AriCalmResults.CHOICE_REASON_LABELS[k] || k).filter(Boolean);
-        const worthMap = { yes: 'Yes', not_sure: 'Not sure', no: 'No' };
+        const worthMap = { a_lot: 'A lot', somewhat: 'Somewhat', a_little: 'A little', not_at_all: 'Not at all', not_sure: "I'm not sure" };
         const worthLabel = row.q3WorthShowing ? (worthMap[row.q3WorthShowing] || row.q3WorthShowing) : null;
 
         let routeTableHtml = '';

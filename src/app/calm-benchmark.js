@@ -1540,13 +1540,13 @@
       const fallback = typeof variant === 'string' ? variant : variant.question;
       if (variant?.kind === 'worth_fast') {
         if (q1Choice === 'route_a') {
-          return 'Is <span class="ari-route-question-tag ari-route-question-tag--a">Route A</span> useful enough to be shown as well as <span class="ari-route-question-tag ari-route-question-tag--fast">Fast</span>?';
+          return 'Compared with only seeing <span class="ari-route-question-tag ari-route-question-tag--fast">Fast</span>, how much does adding <span class="ari-route-question-tag ari-route-question-tag--a">Route A</span> improve things for you?';
         }
         if (q1Choice === 'route_b') {
-          return 'Is <span class="ari-route-question-tag ari-route-question-tag--b">Route B</span> useful enough to be shown as well as <span class="ari-route-question-tag ari-route-question-tag--fast">Fast</span>?';
+          return 'Compared with only seeing <span class="ari-route-question-tag ari-route-question-tag--fast">Fast</span>, how much does adding <span class="ari-route-question-tag ari-route-question-tag--b">Route B</span> improve things for you?';
         }
         if (q1Choice === 'both_work_well') {
-          return 'Are <span class="ari-route-question-tag ari-route-question-tag--a">Route A</span> and <span class="ari-route-question-tag ari-route-question-tag--b">Route B</span> useful enough to be shown as well as <span class="ari-route-question-tag ari-route-question-tag--fast">Fast</span>?';
+          return 'Compared with only seeing <span class="ari-route-question-tag ari-route-question-tag--fast">Fast</span>, how much does also having any of these calmer routes improve things for you?';
         }
       }
       if (benchmark.routeTypes.length === 2 && q1Choice === 'route_a') {

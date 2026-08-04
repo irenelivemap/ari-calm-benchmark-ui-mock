@@ -167,7 +167,7 @@
                 : [])
             ]
           : [];
-        const worthCycle = ['yes', 'yes', 'yes', 'not_sure', 'no'];
+        const worthCycle = ['a_lot', 'a_lot', 'somewhat', 'somewhat', 'a_little', 'not_at_all', 'not_sure'];
         const q3Note = [Q, N, B].includes(outcome) && seed % 4 === 0
           ? Q3_NOTES[seed % Q3_NOTES.length]
           : '';

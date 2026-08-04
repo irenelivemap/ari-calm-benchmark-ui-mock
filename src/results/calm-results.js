@@ -23,7 +23,7 @@
     'none_work_well'
   ];
   const Q2_CHOICES = ['yes', 'no', 'not_sure'];
-  const Q3_WORTH_CHOICES = ['yes', 'no', 'not_sure'];
+  const Q3_WORTH_CHOICES = ['a_lot', 'somewhat', 'a_little', 'not_at_all', 'not_sure'];
   const REASONS = [
     'not_enough_greenery_water',
     'too_busy_or_crowded',

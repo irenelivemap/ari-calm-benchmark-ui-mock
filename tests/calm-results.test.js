@@ -13,7 +13,7 @@ function answer(overrides = {}) {
     q2Separate: null,
     q2Reasons: ['quieter_or_less_busy_streets'],
     q2Note: '',
-    q3WorthShowing: 'yes',
+    q3WorthShowing: 'a_lot',
     q3Issues: ['too_busy_or_crowded'],
     labelMap: { A: 'calm_quiet', B: 'calm_nature' },
     ...overrides
@@ -73,7 +73,7 @@ test('aggregates public and team metrics from the same rows', () => {
     hard_to_judge: 1
   });
   assert.equal(result.reasonCounts.too_busy_or_crowded, 1);
-  assert.deepEqual(result.q3WorthShowingCounts, { yes: 2, no: 0, not_sure: 0 });
+  assert.deepEqual(result.q3WorthShowingCounts, { a_lot: 2, somewhat: 0, a_little: 0, not_at_all: 0, not_sure: 0 });
   assert.deepEqual(result.positionBias, {
     selectedAsA: 1,
     selectedAsB: 1,
@@ -97,13 +97,13 @@ test('counts the dedicated Both work poorly reasons', () => {
 
 test('aggregates whether selected Calm routes are worth showing beyond Fast', () => {
   const result = Results.aggregateAnswers([
-    answer({ captureId: 'capture-1', q3WorthShowing: 'yes', q3Issues: [] }),
-    answer({ captureId: 'capture-2', q3WorthShowing: 'no', q3Issues: [] }),
+    answer({ captureId: 'capture-1', q3WorthShowing: 'a_lot', q3Issues: [] }),
+    answer({ captureId: 'capture-2', q3WorthShowing: 'not_at_all', q3Issues: [] }),
     answer({ captureId: 'capture-3', q3WorthShowing: 'not_sure', q3Issues: [] }),
     answer({ captureId: 'capture-4', q1Choice: 'none_work_well', q3WorthShowing: null, q3Issues: ['takes_too_long'] })
   ]);
 
-  assert.deepEqual(result.q3WorthShowingCounts, { yes: 1, no: 1, not_sure: 1 });
+  assert.deepEqual(result.q3WorthShowingCounts, { a_lot: 1, somewhat: 0, a_little: 0, not_at_all: 1, not_sure: 1 });
 });
 
 test('counts both routes when both work well', () => {
