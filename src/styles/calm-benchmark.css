@@ -6132,14 +6132,14 @@ html.is-challenge-dialog-open {
 }
 
 .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__label {
-  background: transparent;
+  background: var(--ari-route-a);
   color: #fff;
 }
 
 .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__glyph {
   border-left-color: rgba(255, 255, 255, 0.22);
-  background: rgba(0, 0, 0, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.12);
+  color: #fff;
 }
 
 .ari-map__navigation {
@@ -8446,14 +8446,14 @@ html.is-challenge-dialog-open {
   }
 
   .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__label {
-    background: transparent;
+    background: var(--ari-route-a);
     color: #fff;
   }
 
   .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__glyph {
     border-left-color: rgba(255, 255, 255, 0.22);
-    background: rgba(0, 0, 0, 0.1);
-    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.12);
+    color: #fff;
   }
 
   .ari-street-viewer {
