@@ -374,6 +374,14 @@
         });
       }
       const routeKeys = activeRouteKeys(assignment);
+      ROUTE_KEYS.filter(routeKey => !routeKeys.includes(routeKey)).forEach(routeKey => {
+        ['case', 'line', 'hit'].forEach(kind => {
+          const layerId = `ari-route-${routeSuffix(routeKey)}-${kind}`;
+          if (map.getLayer(layerId)) map.removeLayer(layerId);
+        });
+        const sourceId = maplibreRouteSourceId(routeKey);
+        if (map.getSource(sourceId)) map.removeSource(sourceId);
+      });
       const routeGeometries = Object.fromEntries(routeKeys.map(routeKey => [
         routeKey,
         normalizeLatLngs(pair.routes[assignment[routeKey]].geometry)
@@ -418,6 +426,14 @@
               'line-opacity': layer.opacity * (layer.kind === 'hit' ? 1 : state.routeVisibility)
             }
           });
+        } else {
+          map.setPaintProperty(layer.id, 'line-color', color);
+          map.setPaintProperty(layer.id, 'line-width', layer.width);
+          map.setPaintProperty(
+            layer.id,
+            'line-opacity',
+            layer.opacity * (layer.kind === 'hit' ? 1 : state.routeVisibility)
+          );
         }
         if (layer.kind !== 'hit') {
           state.maplibreVisuals[layer.route].push({
@@ -740,26 +756,27 @@
     }
 
     function applyRouteVisibility(value) {
-      state.routeVisibility = value;
+      const clampedValue = Math.min(1, Math.max(0, Number(value) || 0));
+      state.routeVisibility = clampedValue;
       applyRouteEmphasis();
       if (state.provider === 'maplibre') {
         if (!state.map) return;
         state.maplibreMarkers.forEach(marker => {
-          marker.getElement().style.opacity = String(value);
+          marker.getElement().style.opacity = String(clampedValue);
         });
         return;
       }
       if (state.provider === 'google') {
         state.googleOverlays.forEach(overlay => {
-          if (!overlay.getPath && typeof overlay.setOpacity === 'function') overlay.setOpacity(value);
+          if (!overlay.getPath && typeof overlay.setOpacity === 'function') overlay.setOpacity(clampedValue);
         });
         return;
       }
 
       state.routeLayers?.eachLayer(layer => {
         const element = typeof layer.getElement === 'function' ? layer.getElement() : null;
-        if (element) element.style.opacity = String(value);
-        else if (typeof layer.setOpacity === 'function') layer.setOpacity(value);
+        if (element) element.style.opacity = String(clampedValue);
+        else if (typeof layer.setOpacity === 'function') layer.setOpacity(clampedValue);
       });
     }
 

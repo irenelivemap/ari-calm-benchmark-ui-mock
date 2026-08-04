@@ -22,6 +22,18 @@
     'none_work_well', 'not_sure', 'multiple_routes'
   ]);
   const Q2_CHOICES = new Set(['yes', 'no', 'not_sure']);
+  const Q3_WORTH_CHOICES = new Set(['yes', 'no', 'not_sure']);
+  const Q2_REASONS = new Set([
+    'quieter_or_less_busy_streets',
+    'more_trees_or_green_space',
+    'more_near_water',
+    'less_need_to_watch_traffic',
+    'takes_less_time',
+    'easier_to_follow',
+    'familiar_route_or_area',
+    'other',
+    'not_sure'
+  ]);
   const Q3_ISSUES = new Set([
     'not_enough_greenery_water',
     'too_busy_or_crowded',
@@ -29,6 +41,13 @@
     'extra_time_distance_not_worth_it',
     'too_similar',
     'too_complex',
+    'streets_too_busy_or_noisy',
+    'not_enough_trees_or_green_space',
+    'not_enough_route_near_water',
+    'too_much_attention_traffic',
+    'takes_too_long',
+    'hard_to_follow',
+    'prefer_another_known_route',
     'other',
     'longer_time',
     'longer_distance',
@@ -107,6 +126,7 @@
     const q3Issues = Array.isArray(input.q3Issues)
       ? [...input.q3Issues]
       : Array.isArray(input.reasons) ? [...input.reasons] : [];
+    const q2Reasons = Array.isArray(input.q2Reasons) ? [...input.q2Reasons] : null;
     const routeTypes = Object.fromEntries(ROUTE_SLOTS.map(descriptor => [
       descriptor.slot,
       input[descriptor.typeKey]
@@ -136,6 +156,12 @@
       choice: q1Choice,
       q1Choices,
       q2Separate: input.q2Separate || null,
+      ...(q2Reasons ? { q2Reasons } : {}),
+      q2Note: input.q2Note || input.q2Other || '',
+      ...(Object.prototype.hasOwnProperty.call(input, 'q2Other') ? { q2Other: input.q2Other || '' } : {}),
+      ...(Object.prototype.hasOwnProperty.call(input, 'q3WorthShowing')
+        ? { q3WorthShowing: input.q3WorthShowing || null }
+        : {}),
       q3Issues,
       reasons: [...q3Issues],
       q3Note: input.q3Note || input.note || '',
@@ -163,6 +189,8 @@
       ),
       origin: input.origin ? clone(input.origin) : null,
       destination: input.destination ? clone(input.destination) : null,
+      fastRouteShown: input.fastRouteShown === true,
+      fastRoute: input.fastRoute ? clone(input.fastRoute) : null,
       clientTs: input.clientTs || createdAt,
       createdAt
     };
@@ -211,6 +239,9 @@
 
   function validateAnswerRecord(input, { allowPartial = false } = {}) {
     const record = normalizeAnswerRecord(input);
+    const hasQ2ReasonsField = Object.prototype.hasOwnProperty.call(input || {}, 'q2Reasons');
+    const hasQ3WorthField = Object.prototype.hasOwnProperty.call(input || {}, 'q3WorthShowing');
+    const q2Reasons = Array.isArray(record.q2Reasons) ? record.q2Reasons : [];
     const errors = [];
     const warnings = [];
 
@@ -262,28 +293,71 @@
       errors.push('q2Separate is invalid.');
     }
 
+    const invalidQ2Reasons = q2Reasons.filter(reason => !Q2_REASONS.has(reason));
+    if (invalidQ2Reasons.length) errors.push(`q2Reasons contains invalid values: ${invalidQ2Reasons.join(', ')}.`);
+    if (new Set(q2Reasons).size !== q2Reasons.length) errors.push('q2Reasons contains duplicates.');
+    if (q2Reasons.includes('not_sure') && q2Reasons.length > 1) {
+      errors.push('q2Reasons not_sure must be selected alone.');
+    }
+    if (record.q2Other && !q2Reasons.includes('other')) {
+      errors.push('q2Other must be empty unless q2Reasons includes other.');
+    }
+    if (record.q2Note && !q2Reasons.length) {
+      errors.push('q2Note must be empty when q2Reasons is empty.');
+    }
+
     const invalidIssues = record.q3Issues.filter(issue => !Q3_ISSUES.has(issue));
     if (invalidIssues.length) errors.push(`q3Issues contains invalid values: ${invalidIssues.join(', ')}.`);
     if (new Set(record.q3Issues).size !== record.q3Issues.length) errors.push('q3Issues contains duplicates.');
+    if (record.q3Issues.includes('not_sure') && record.q3Issues.length > 1) {
+      errors.push('q3Issues not_sure must be selected alone.');
+    }
+    if (record.q3WorthShowing != null && !Q3_WORTH_CHOICES.has(record.q3WorthShowing)) {
+      errors.push('q3WorthShowing is invalid.');
+    }
 
     if (!allowPartial && Q1_CHOICES.has(record.q1Choice)) {
       const isFastGoogle = record.test === 'ari_fast_vs_google';
       const isCalmRouteComparison = record.test === CALM_ROUTE_COMPARISON_TEST_ID;
       const selectedCalmRoutes = record.q1Choices.filter(choice => ['route_a', 'route_b', 'route_c'].includes(choice));
       const calmRouteCount = record.routeAssignment?.routeC ? 3 : 2;
-      const needsQ2 = !isFastGoogle
+      const needsLegacyQ2 = !isFastGoogle
         && !isCalmRouteComparison
         && ['route_a', 'route_b', 'either'].includes(record.q1Choice);
-      const needsQ3 = isFastGoogle
+      const needsCalmQ2 = isCalmRouteComparison
+        && ['route_a', 'route_b', 'both_work_well'].includes(record.q1Choice);
+      const needsCalmWorthQ3 = isCalmRouteComparison
+        && ['route_a', 'route_b', 'both_work_well'].includes(record.q1Choice);
+      const needsCalmRejectionReasons = isCalmRouteComparison
+        && record.q1Choices.includes('none_work_well');
+      const needsLegacyQ3Issues = isFastGoogle
         ? ['route_a', 'route_b', 'both_work_poorly'].includes(record.q1Choice)
         : isCalmRouteComparison
-          ? record.q1Choices.includes('none_work_well')
+          ? needsCalmRejectionReasons
             || (selectedCalmRoutes.length > 0 && selectedCalmRoutes.length < calmRouteCount)
           : ['route_a', 'route_b', 'neither'].includes(record.q1Choice);
-      if (needsQ2 && !record.q2Separate) errors.push('q2Separate is required for this Q1 answer.');
-      if (!needsQ2 && record.q2Separate) errors.push('q2Separate must be empty for this Q1 answer.');
-      if (needsQ3 && !record.q3Issues.length) errors.push('At least one q3Issue is required for this Q1 answer.');
-      if (!needsQ3 && record.q3Issues.length) errors.push('q3Issues must be empty for this Q1 answer.');
+      if (needsLegacyQ2 && !record.q2Separate) errors.push('q2Separate is required for this Q1 answer.');
+      if (!needsLegacyQ2 && record.q2Separate) errors.push('q2Separate must be empty for this Q1 answer.');
+      if (needsCalmQ2 && hasQ2ReasonsField && !q2Reasons.length) errors.push('At least one q2Reason is required for this Q1 answer.');
+      if (!needsCalmQ2 && q2Reasons.length) errors.push('q2Reasons must be empty for this Q1 answer.');
+      if (isCalmRouteComparison && hasQ3WorthField) {
+        if (needsCalmWorthQ3 && !record.q3WorthShowing) {
+          errors.push('q3WorthShowing is required for this Q1 answer.');
+        }
+        if (!needsCalmWorthQ3 && record.q3WorthShowing) {
+          errors.push('q3WorthShowing must be empty for this Q1 answer.');
+        }
+        if (needsCalmRejectionReasons && !record.q3Issues.length) {
+          errors.push('At least one q3Issue is required for this Q1 answer.');
+        }
+        if (!needsCalmRejectionReasons && record.q3Issues.length) {
+          errors.push('q3Issues must be empty for this Q1 answer.');
+        }
+      } else {
+        if (record.q3WorthShowing) errors.push('q3WorthShowing must be empty for this test.');
+        if (needsLegacyQ3Issues && !record.q3Issues.length) errors.push('At least one q3Issue is required for this Q1 answer.');
+        if (!needsLegacyQ3Issues && record.q3Issues.length) errors.push('q3Issues must be empty for this Q1 answer.');
+      }
     }
 
     const requiredLabelSlots = record.routeAssignment?.routeC ? ['A', 'B', 'C'] : ['A', 'B'];

@@ -11,6 +11,9 @@ function answer(overrides = {}) {
     clientTs: '2026-07-13T10:00:00.000Z',
     q1Choice: 'route_a',
     q2Separate: null,
+    q2Reasons: ['quieter_or_less_busy_streets'],
+    q2Note: '',
+    q3WorthShowing: 'yes',
     q3Issues: ['too_busy_or_crowded'],
     labelMap: { A: 'calm_quiet', B: 'calm_nature' },
     ...overrides
@@ -39,11 +42,25 @@ test('decodes selected route labels instead of treating A, B, and C as outcomes'
   ]);
 });
 
+test('preserves the selected-route reasons for the results layer', () => {
+  const row = Results.normalizeRow(answer({
+    q2Reasons: ['more_trees_or_green_space'],
+    q2Note: 'More shade'
+  }));
+  assert.deepEqual(row.q2Reasons, ['more_trees_or_green_space']);
+  assert.equal(row.q2Note, 'More shade');
+});
+
+test('keeps legacy Q2 Other details readable', () => {
+  const row = Results.normalizeRow(answer({ q2Note: '', q2Other: 'A legacy detail' }));
+  assert.equal(row.q2Note, 'A legacy detail');
+});
+
 test('aggregates public and team metrics from the same rows', () => {
   const result = Results.aggregateAnswers([
     answer(),
     answer({ captureId: 'capture-2', sessionId: 'session-2', participantName: 'Alex', pairId: 'pair-2', q1Choice: 'route_b', q3Issues: ['too_complex'], labelMap: { A: 'calm_quiet', B: 'calm_nature' } }),
-    answer({ captureId: 'capture-3', q1Choice: 'hard_to_judge', q2Separate: null, q3Issues: [] })
+    answer({ captureId: 'capture-3', q1Choice: 'hard_to_judge', q2Separate: null, q3WorthShowing: null, q3Issues: [] })
   ]);
 
   assert.equal(result.total, 3);
@@ -56,11 +73,37 @@ test('aggregates public and team metrics from the same rows', () => {
     hard_to_judge: 1
   });
   assert.equal(result.reasonCounts.too_busy_or_crowded, 1);
+  assert.deepEqual(result.q3WorthShowingCounts, { yes: 2, no: 0, not_sure: 0 });
   assert.deepEqual(result.positionBias, {
     selectedAsA: 1,
     selectedAsB: 1,
     selectedAsC: 0
   });
+});
+
+test('counts the dedicated Both work poorly reasons', () => {
+  const result = Results.aggregateAnswers([
+    answer({
+      q1Choice: 'none_work_well',
+      q2Reasons: [],
+      q3WorthShowing: null,
+      q3Issues: ['streets_too_busy_or_noisy', 'takes_too_long']
+    })
+  ]);
+
+  assert.equal(result.reasonCounts.streets_too_busy_or_noisy, 1);
+  assert.equal(result.reasonCounts.takes_too_long, 1);
+});
+
+test('aggregates whether selected Calm routes are worth showing beyond Fast', () => {
+  const result = Results.aggregateAnswers([
+    answer({ captureId: 'capture-1', q3WorthShowing: 'yes', q3Issues: [] }),
+    answer({ captureId: 'capture-2', q3WorthShowing: 'no', q3Issues: [] }),
+    answer({ captureId: 'capture-3', q3WorthShowing: 'not_sure', q3Issues: [] }),
+    answer({ captureId: 'capture-4', q1Choice: 'none_work_well', q3WorthShowing: null, q3Issues: ['takes_too_long'] })
+  ]);
+
+  assert.deepEqual(result.q3WorthShowingCounts, { yes: 1, no: 1, not_sure: 1 });
 });
 
 test('counts both routes when both work well', () => {
@@ -80,6 +123,112 @@ test('counts both routes when both work well', () => {
     selectedAsB: 1,
     selectedAsC: 0
   });
+});
+
+test('preserves the exact Q1 judgment before expanding both-work support', () => {
+  assert.equal(Results.exactOutcome(answer({ q1Choice: 'route_a' })), 'calm_quiet');
+  assert.equal(Results.exactOutcome(answer({ q1Choice: 'route_b' })), 'calm_nature');
+  assert.equal(Results.exactOutcome(answer({ q1Choice: 'both_work_well' })), 'both_work_well');
+  assert.equal(Results.exactOutcome(answer({ q1Choice: 'both_work_poorly' })), 'none_work_well');
+  assert.equal(Results.exactOutcome(answer({ q1Choice: 'not_sure' })), 'hard_to_judge');
+  assert.equal(
+    Results.canonicalPairId('calm-route-comparison-07-round-3'),
+    'calm-route-comparison-07'
+  );
+  assert.equal(Results.canonicalPairId('external-pair-4'), 'external-pair-4');
+});
+
+test('analyzes viability, exclusive preference, pair agreement, and participant patterns', () => {
+  const answers = [
+    answer({ captureId: 'p1-1', sessionId: 'p1', participantName: 'One', pairId: 'pair-1', q1Choice: 'route_a' }),
+    answer({ captureId: 'p2-1', sessionId: 'p2', participantName: 'Two', pairId: 'pair-1', q1Choice: 'route_a' }),
+    answer({ captureId: 'p3-1', sessionId: 'p3', participantName: 'Three', pairId: 'pair-1', q1Choice: 'both_work_well' }),
+    answer({ captureId: 'p4-1', sessionId: 'p4', participantName: 'Four', pairId: 'pair-1', q1Choice: 'none_work_well' }),
+    answer({ captureId: 'p1-2', sessionId: 'p1', participantName: 'One', pairId: 'pair-2', q1Choice: 'route_b' }),
+    answer({ captureId: 'p2-2', sessionId: 'p2', participantName: 'Two', pairId: 'pair-2', q1Choice: 'route_b' }),
+    answer({ captureId: 'p3-2', sessionId: 'p3', participantName: 'Three', pairId: 'pair-2', q1Choice: 'route_b' }),
+    answer({ captureId: 'p4-2', sessionId: 'p4', participantName: 'Four', pairId: 'pair-2', q1Choice: 'hard_to_judge' })
+  ];
+
+  const result = Results.analyzeAgreement(answers);
+
+  assert.equal(result.total, 8);
+  assert.equal(result.anyWorks, 6);
+  assert.equal(result.anyWorksPercent, 75);
+  assert.equal(result.quietPreferencePercent, 40);
+  assert.equal(result.naturePreferencePercent, 60);
+  assert.equal(result.decisivenessPercent, 63);
+  assert.equal(result.quietLeadingPairs, 1);
+  assert.equal(result.natureLeadingPairs, 1);
+  assert.equal(result.tiedPreferencePairs, 0);
+  assert.equal(result.medianPreferenceAgreementPercent, 100);
+  assert.equal(result.pairs.length, 2);
+  assert.equal(result.pairs[0].anyWorksPercent, 75);
+  assert.equal(result.pairs[0].preferredCalmType, 'calm_quiet');
+  assert.equal(result.pairs[0].preferenceAgreementPercent, 100);
+  assert.equal(result.pairs[1].modalOutcome, 'calm_nature');
+  assert.equal(result.pairs[1].substantiveTotal, 3);
+  assert.equal(result.pairs[1].couldNotJudgeCount, 1);
+  assert.equal(result.pairs[1].couldNotJudgePercent, 25);
+  assert.equal(result.pairs[1].exactAgreementPercent, 100);
+  assert.equal(result.pairs[1].clearExactAgreement, true);
+  assert.equal(result.clearExactPairs, 1);
+  assert.equal(result.mixedExactPairs, 1);
+  assert.equal(result.clearNeitherPairs, 0);
+  assert.equal(result.couldNotJudgeCount, 1);
+  assert.equal(result.couldNotJudgePercent, 13);
+  assert.equal(result.clearAgreementThreshold, 0.7);
+  assert.equal(result.participants.length, 4);
+  assert.equal(result.participants.find(item => item.participantId === 'p1').anyWorksPercent, 100);
+});
+
+test('calculates 70% agreement from substantive responses and reports uncertainty separately', () => {
+  const answers = [];
+  const addResponses = (pairId, outcomes) => outcomes.forEach((q1Choice, index) => {
+    answers.push(answer({
+      captureId: `${pairId}-${index}`,
+      sessionId: `${pairId}-participant-${index}`,
+      participantName: `Evaluator ${index + 1}`,
+      pairId,
+      q1Choice
+    }));
+  });
+
+  addResponses('pair-1', [
+    ...Array(7).fill('none_work_well'),
+    ...Array(3).fill('hard_to_judge')
+  ]);
+  addResponses('pair-2', [
+    ...Array(7).fill('route_b'),
+    ...Array(3).fill('route_a')
+  ]);
+  addResponses('pair-3', [
+    ...Array(6).fill('route_b'),
+    ...Array(4).fill('route_a')
+  ]);
+
+  const result = Results.analyzeAgreement(answers);
+
+  assert.equal(result.pairs[0].substantiveTotal, 7);
+  assert.equal(result.pairs[0].exactAgreementPercent, 100);
+  assert.equal(result.pairs[0].clearExactAgreement, true);
+  assert.equal(result.pairs[1].exactAgreementPercent, 70);
+  assert.equal(result.pairs[1].clearExactAgreement, true);
+  assert.equal(result.pairs[2].exactAgreementPercent, 60);
+  assert.equal(result.pairs[2].clearExactAgreement, false);
+  assert.equal(result.clearExactPairs, 2);
+  assert.equal(result.mixedExactPairs, 1);
+  assert.equal(result.clearNeitherPairs, 1);
+  assert.equal(result.couldNotJudgeCount, 3);
+  assert.equal(result.couldNotJudgePercent, 10);
+});
+
+test('returns bounded Wilson uncertainty intervals', () => {
+  assert.deepEqual(Results.wilsonInterval(0, 0), { low: 0, high: 0 });
+  assert.deepEqual(Results.wilsonInterval(15, 15), { low: 80, high: 100 });
+  const interval = Results.wilsonInterval(8, 15);
+  assert.ok(interval.low >= 0 && interval.low < 54);
+  assert.ok(interval.high <= 100 && interval.high > 54);
 });
 
 test('filters the unified dashboard without mutating public totals', () => {

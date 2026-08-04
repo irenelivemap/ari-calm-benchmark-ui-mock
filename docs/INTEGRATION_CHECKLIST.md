@@ -82,10 +82,12 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 ### Calm Route Comparison
 
-- [x] Route keys are `calm_quiet` and `calm_nature`.
-- [x] No Q2 is shown.
+- [x] Assignable route keys are `calm_quiet` and `calm_nature`; every fixture also supplies a non-randomized `fast` reference route.
+- [x] Route A/B and Both work well selections show the Calm preference-reasons Q2; the remaining neutral choices skip it.
 - [x] Q1 offers Route A, Route B, Both work well, Both work poorly, and I'm not sure.
-- [x] Q3 is required when one or two routes are selected, or when None work well is selected.
+- [x] Route A, Route B, and Both work well require the value-vs-Fast Q3 and redraw the relevant Calm route(s) with Fast and all visible times.
+- [x] Both work poorly ends after its rejection-reasons follow-up and never receives the value-vs-Fast Q3.
+- [x] Both work poorly uses the dedicated one-or-both-routes rejection reasons and exclusive I'm not sure option.
 
 ### Fast vs Google Fast
 

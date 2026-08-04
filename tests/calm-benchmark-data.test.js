@@ -44,7 +44,10 @@ function validAnswer(overrides = {}) {
     },
     q1Choice: 'route_a',
     q2Separate: null,
-    q3Issues: ['not_enough_greenery_water'],
+    q2Reasons: ['quieter_or_less_busy_streets'],
+    q2Note: '',
+    q3WorthShowing: 'yes',
+    q3Issues: [],
     q3Note: '',
     createdAt: '2026-07-13T10:00:00.000Z',
     ...overrides
@@ -62,7 +65,7 @@ function validProgress(overrides = {}) {
     pairId: 'pair-1',
     routeAssignment: { routeA: 'calm', routeB: 'fast' },
     questionStep: 'q2',
-    partialAnswer: validAnswer({ q2Separate: null, q3Issues: [] }),
+    partialAnswer: validAnswer({ q2Separate: null, q2Reasons: [], q3WorthShowing: null, q3Issues: [] }),
     savedAt: '2026-07-13T10:01:00.000Z',
     ...overrides
   };
@@ -86,15 +89,44 @@ test('saves a valid answer once and treats retries as idempotent', () => {
 });
 
 test('rejects submitted answers that do not satisfy conditional questions', () => {
-  const result = validateAnswerRecord(validAnswer({ q3Issues: [] }));
+  const result = validateAnswerRecord(validAnswer({ q3WorthShowing: null }));
   assert.equal(result.valid, false);
-  assert.match(result.errors.join(' '), /q3Issue/);
+  assert.match(result.errors.join(' '), /q3WorthShowing/);
+
+  const missingQ2 = validateAnswerRecord(validAnswer({ q2Reasons: [] }));
+  assert.equal(missingQ2.valid, false);
+  assert.match(missingQ2.errors.join(' '), /q2Reason/);
+
+  const orphanedOther = validateAnswerRecord(validAnswer({ q2Other: 'A different reason' }));
+  assert.equal(orphanedOther.valid, false);
+  assert.match(orphanedOther.errors.join(' '), /q2Other/);
 
   const repository = createLocalRepository(new MemoryStorage());
   assert.throws(
-    () => repository.saveAnswer(validAnswer({ q3Issues: [] })),
+    () => repository.saveAnswer(validAnswer({ q3WorthShowing: null })),
     error => error instanceof DataValidationError
   );
+});
+
+test('keeps completed Calm answers from before Q2 reasons readable', () => {
+  const historicalAnswer = validAnswer();
+  delete historicalAnswer.q2Reasons;
+  delete historicalAnswer.q2Note;
+  delete historicalAnswer.q2Other;
+
+  const result = validateAnswerRecord(historicalAnswer);
+  assert.equal(result.valid, true);
+  assert.equal(result.record.q2Reasons, undefined);
+
+  const repository = createLocalRepository(new MemoryStorage({
+    'ari-calm-route-comparison-dataset-v1': JSON.stringify({
+      v: 1,
+      type: 'calm-benchmark-dataset',
+      test: 'calm_route_comparison',
+      answers: [historicalAnswer]
+    })
+  }), { storageKey: 'ari-calm-route-comparison-dataset-v1' });
+  assert.equal(repository.verify().valid, true);
 });
 
 test('stores partial progress and returns the latest resumable session', () => {
@@ -113,6 +145,8 @@ test('stores partial progress and returns the latest resumable session', () => {
       pairId: 'pair-2',
       q1Choice: null,
       q2Separate: null,
+      q2Reasons: [],
+      q3WorthShowing: null,
       q3Issues: []
     }),
     savedAt: '2026-07-13T10:02:00.000Z'
@@ -195,6 +229,8 @@ test('stores ARI Fast versus Google Fast preview records with their own route ty
     },
     q1Choice: 'route_a',
     q2Separate: null,
+    q2Reasons: [],
+    q3WorthShowing: null,
     q3Issues: ['misses_nicer_route']
   });
 
@@ -211,26 +247,138 @@ test('accepts the current Fast versus Google follow-up reasons', () => {
     test: 'ari_fast_vs_google',
     q1Choice: 'route_a',
     q2Separate: null,
+    q2Reasons: [],
+    q3WorthShowing: null,
     q3Issues: ['unnecessary_detour', 'may_not_be_walkable']
   }));
 
   assert.equal(result.valid, true);
 });
 
-test('accepts both current Calm routes together without a follow-up', () => {
+test('accepts Both work well with Q2 reasons and a value-vs-Fast answer', () => {
   const result = validateAnswerRecord(validAnswer({
     q1Choice: 'both_work_well',
     q1Choices: ['both_work_well'],
+    q2Reasons: ['easier_to_follow'],
+    q3WorthShowing: 'yes',
     q3Issues: []
   }));
 
   assert.equal(result.valid, true);
 });
 
+test('requires a Q2 reason when both Calm routes work well', () => {
+  const result = validateAnswerRecord(validAnswer({
+    q1Choice: 'both_work_well',
+    q1Choices: ['both_work_well'],
+    q2Reasons: [],
+    q3WorthShowing: 'yes',
+    q3Issues: []
+  }));
+
+  assert.equal(result.valid, false);
+  assert.match(result.errors.join(' '), /q2Reason/);
+});
+
+test('requires the value-vs-Fast answer for Route A, Route B, and Both work well', () => {
+  ['route_a', 'route_b', 'both_work_well'].forEach(q1Choice => {
+    const result = validateAnswerRecord(validAnswer({
+      q1Choice,
+      q1Choices: [q1Choice],
+      q2Reasons: ['easier_to_follow'],
+      q3WorthShowing: null,
+      q3Issues: []
+    }));
+    assert.equal(result.valid, false);
+    assert.match(result.errors.join(' '), /q3WorthShowing/);
+  });
+});
+
+test('accepts optional Q2 details after any selected reason', () => {
+  const result = validateAnswerRecord(validAnswer({
+    q2Reasons: ['takes_less_time'],
+    q2Note: 'The time difference mattered today.'
+  }));
+
+  assert.equal(result.valid, true);
+  assert.equal(result.record.q2Note, 'The time difference mattered today.');
+});
+
+test('rejects Q2 details without a selected reason', () => {
+  const result = validateAnswerRecord(validAnswer({
+    q1Choice: 'hard_to_judge',
+    q1Choices: ['hard_to_judge'],
+    q2Reasons: [],
+    q2Note: 'No reason selected.',
+    q3WorthShowing: null,
+    q3Issues: []
+  }));
+
+  assert.equal(result.valid, false);
+  assert.match(result.errors.join(' '), /q2Note/);
+});
+
+test('accepts the dedicated Both work poorly rejection reasons', () => {
+  const result = validateAnswerRecord(validAnswer({
+    q1Choice: 'none_work_well',
+    q1Choices: ['none_work_well'],
+    q2Reasons: [],
+    q3WorthShowing: null,
+    q3Issues: [
+      'streets_too_busy_or_noisy',
+      'not_enough_trees_or_green_space',
+      'not_enough_route_near_water',
+      'too_much_attention_traffic',
+      'takes_too_long',
+      'hard_to_follow',
+      'prefer_another_known_route'
+    ]
+  }));
+
+  assert.equal(result.valid, true);
+});
+
+test('Both work poorly never accepts the value-vs-Fast Q3 field', () => {
+  const result = validateAnswerRecord(validAnswer({
+    q1Choice: 'none_work_well',
+    q1Choices: ['none_work_well'],
+    q2Reasons: [],
+    q3WorthShowing: 'yes',
+    q3Issues: ['takes_too_long']
+  }));
+
+  assert.equal(result.valid, false);
+  assert.match(result.errors.join(' '), /q3WorthShowing must be empty/);
+});
+
+test('keeps pre-value-question Route A records readable', () => {
+  const historicalAnswer = validAnswer({ q3Issues: ['too_busy_or_crowded'] });
+  delete historicalAnswer.q3WorthShowing;
+
+  const result = validateAnswerRecord(historicalAnswer);
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.record.q3Issues, ['too_busy_or_crowded']);
+});
+
+test('requires I am not sure to be the only Q3 reason', () => {
+  const result = validateAnswerRecord(validAnswer({
+    q1Choice: 'none_work_well',
+    q1Choices: ['none_work_well'],
+    q2Reasons: [],
+    q3WorthShowing: null,
+    q3Issues: ['not_sure', 'takes_too_long']
+  }));
+
+  assert.equal(result.valid, false);
+  assert.match(result.errors.join(' '), /not_sure must be selected alone/);
+});
+
 test('rejects Route C in a current two-route Calm record', () => {
   const result = validateAnswerRecord(validAnswer({
     q1Choice: 'route_c',
-    q1Choices: ['route_c']
+    q1Choices: ['route_c'],
+    q3WorthShowing: null,
+    q2Reasons: []
   }));
 
   assert.equal(result.valid, false);
@@ -238,7 +386,7 @@ test('rejects Route C in a current two-route Calm record', () => {
 });
 
 test('keeps a legacy three-route Calm Route Comparison answer readable', () => {
-  const result = validateAnswerRecord(validAnswer({
+  const legacyAnswer = validAnswer({
     test: 'calm_route_comparison',
     source: 'calm-route-comparison',
     routeAssignment: {
@@ -253,8 +401,11 @@ test('keeps a legacy three-route Calm Route Comparison answer readable', () => {
     },
     q1Choice: 'route_c',
     q2Separate: null,
+    q2Reasons: [],
     q3Issues: ['too_busy_or_crowded']
-  }));
+  });
+  delete legacyAnswer.q3WorthShowing;
+  const result = validateAnswerRecord(legacyAnswer);
 
   assert.equal(result.valid, true);
   assert.equal(result.record.labelMap.C, 'calm_nature');
@@ -262,7 +413,7 @@ test('keeps a legacy three-route Calm Route Comparison answer readable', () => {
 });
 
 test('keeps legacy multiple Calm route selections readable', () => {
-  const result = validateAnswerRecord(validAnswer({
+  const legacyAnswer = validAnswer({
     test: 'calm_route_comparison',
     source: 'calm-route-comparison',
     routeAssignment: {
@@ -278,8 +429,11 @@ test('keeps legacy multiple Calm route selections readable', () => {
     q1Choice: 'multiple_routes',
     q1Choices: ['route_a', 'route_c'],
     q2Separate: null,
+    q2Reasons: [],
     q3Issues: ['too_busy_or_crowded']
-  }));
+  });
+  delete legacyAnswer.q3WorthShowing;
+  const result = validateAnswerRecord(legacyAnswer);
 
   assert.equal(result.valid, true);
   assert.equal(result.record.q1Choice, 'multiple_routes');
@@ -301,6 +455,8 @@ test('rejects a neutral Calm choice combined with a route', () => {
       C: { routeId: 'nature-1', routeType: 'calm_nature', source: 'calm_nature' }
     },
     q1Choices: ['route_a', 'hard_to_judge'],
+    q2Reasons: [],
+    q3WorthShowing: null,
     q3Issues: []
   }));
 

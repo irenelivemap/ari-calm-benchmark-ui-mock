@@ -28,6 +28,17 @@ type Q1Choice =
   | "multiple_routes" // legacy
   | "not_sure";
 
+type Q2Reason =
+  | "quieter_or_less_busy_streets"
+  | "more_trees_or_green_space"
+  | "more_near_water"
+  | "less_need_to_watch_traffic"
+  | "takes_less_time"
+  | "easier_to_follow"
+  | "familiar_route_or_area"
+  | "other"
+  | "not_sure";
+
 type Q3Issue =
   // Calm Route Comparison
   | "not_enough_greenery_water"
@@ -36,7 +47,15 @@ type Q3Issue =
   | "extra_time_distance_not_worth_it"
   | "too_similar"
   | "too_complex"
+  | "streets_too_busy_or_noisy"
+  | "not_enough_trees_or_green_space"
+  | "not_enough_route_near_water"
+  | "too_much_attention_traffic"
+  | "takes_too_long"
+  | "hard_to_follow"
+  | "prefer_another_known_route"
   | "other"
+  | "not_sure"
   // Fast vs Google Fast
   | "longer_time"
   | "unnecessary_detour"
@@ -44,7 +63,6 @@ type Q3Issue =
   | "crossing_friction"
   | "misses_nicer_route"
   | "may_not_be_walkable"
-  | "not_sure"
   // Accepted legacy values from the first Fast benchmark
   | "longer_distance"
   | "unclear_shortcut"
@@ -94,12 +112,19 @@ type BenchmarkAnswerV1 = {
   q1Choice: Q1Choice;
   choice: Q1Choice;            // Compatibility alias of q1Choice.
   q1Choices: Q1Choice[];       // Canonical Q1 selections; may contain multiple Calm routes.
-  q2Separate: "yes" | "no" | "not_sure" | null;
+  q2Separate: "yes" | "no" | "not_sure" | null; // Legacy non-current challenge field.
+  q2Reasons: Q2Reason[];       // Why the participant selected Route A or Route B.
+  q2Note: string;              // Optional supporting detail after any Q2 reason is selected.
+  q2Other?: string;            // Legacy detail field from the first Calm Q2 implementation.
+  q3WorthShowing?: "yes" | "no" | "not_sure" | null;
+                                  // Current Calm value-vs-Fast answer. Omitted by historical records.
   q3Issues: Q3Issue[];
   reasons: Q3Issue[];          // Compatibility alias of q3Issues.
   q3Note: string;
   note: string;                // Compatibility alias.
   metricsShown: boolean;       // Route time/distance metrics were visible during the comparison.
+  fastRouteShown: boolean;     // Fast was drawn as the reference route during the value question.
+  fastRoute: RouteSnapshot | null; // Exact Fast reference and timing supplied for this round.
 
   clientTs: string;
   createdAt: string;
@@ -133,10 +158,12 @@ Follow-ups:
 
 | Q1 choice | Q2 | Q3 |
 | --- | --- | --- |
-| `route_a`, `route_b` | Empty | Required |
-| `both_work_well` | Empty | Empty |
-| `none_work_well` | Empty | Required |
+| `route_a`, `route_b` | Preference reasons required | `q3WorthShowing` required |
+| `both_work_well` | Preference reasons required | `q3WorthShowing` required |
+| `none_work_well` | Empty | Rejection reasons required; `q3WorthShowing` empty |
 | `hard_to_judge` | Empty | Empty |
+
+For Route A, Route B, and Both work well, the Q3 map redraws the selected Calm route(s) with the round's Fast reference and displays every visible route's rounded time. Fast remains a reference route only: it is never assigned to Route A or Route B. Historical Calm records without `q3WorthShowing` retain their previous validation behavior.
 
 ### Fast vs Google Fast
 
@@ -157,6 +184,9 @@ Follow-ups:
 | `both_work_well`, `not_sure` | Empty | Empty |
 
 When Q3 is required, at least one issue must be selected. `q3Note` is optional supporting text.
+For `none_work_well`, the Q3 prompt asks what made the participant choose neither route and uses the dedicated one-or-both-routes rejection reasons. `not_sure` is exclusive, and an optional note appears after any reason is selected.
+
+When Calm Q2 is required, at least one `q2Reasons` value must be selected. `not_sure` is exclusive with the concrete reasons. After any reason is selected, `q2Note` may contain optional supporting detail. Historical records may use `q2Other` for detail entered after selecting `other`; records saved before Calm Q2 was introduced may omit these additive fields and remain readable.
 
 ## Progress Record
 

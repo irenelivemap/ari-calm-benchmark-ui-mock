@@ -8,10 +8,10 @@ test('provides a deterministic, varied Calm team-results fixture', () => {
   const summary = Results.aggregateAnswers(answers);
   const participants = Results.summarizeParticipants(answers);
 
-  assert.equal(answers.length, 32);
-  assert.equal(new Set(answers.map(answer => answer.captureId)).size, 32);
-  assert.equal(summary.participants, 8);
-  assert.equal(summary.routePairs, 4);
+  assert.equal(answers.length, 180);
+  assert.equal(new Set(answers.map(answer => answer.captureId)).size, 180);
+  assert.equal(summary.participants, 15);
+  assert.equal(summary.routePairs, 12);
   assert.ok(summary.outcomeCounts.calm_quiet > 0);
   assert.ok(summary.outcomeCounts.calm_nature > 0);
   assert.ok(summary.outcomeCounts.none_work_well > 0);
@@ -21,4 +21,14 @@ test('provides a deterministic, varied Calm team-results fixture', () => {
   assert.ok(summary.positionBias.selectedAsA > 0);
   assert.ok(summary.positionBias.selectedAsB > 0);
   assert.equal(summary.positionBias.selectedAsC, 0);
+
+  const agreement = Results.analyzeAgreement(answers);
+  assert.equal(agreement.participants.length, 15);
+  assert.equal(agreement.pairs.length, 12);
+  assert.ok(agreement.clearExactPairs > 0);
+  assert.ok(agreement.pairs.some(pair => pair.modalOutcome === 'none_work_well'));
+  assert.ok(agreement.pairs.some(pair => pair.modalOutcome === null));
+  assert.ok(agreement.naturePreferencePercent > agreement.quietPreferencePercent);
+  assert.ok(agreement.natureLeadingPairs > agreement.quietLeadingPairs);
+  assert.ok(agreement.quietPreferenceInterval.high < 50);
 });

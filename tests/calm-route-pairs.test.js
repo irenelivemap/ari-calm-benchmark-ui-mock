@@ -19,27 +19,27 @@ const EXPECTED_ENDPOINTS = [
 ];
 
 const EXPECTED_POINT_COUNTS = [
-  [98, 99],
-  [49, 43],
-  [75, 83],
-  [61, 66],
-  [79, 104],
-  [144, 115],
-  [99, 74],
-  [34, 36],
-  [82, 80],
-  [108, 67],
-  [58, 45],
-  [68, 59]
+  [98, 99, 91],
+  [49, 43, 51],
+  [75, 83, 62],
+  [61, 66, 60],
+  [79, 104, 103],
+  [144, 115, 149],
+  [99, 74, 75],
+  [34, 36, 39],
+  [82, 80, 71],
+  [108, 67, 70],
+  [58, 45, 40],
+  [68, 59, 59]
 ];
 
 const EXPECTED_FAST_DURATIONS = [1441, 934, 1277, 1270, 1571, 1650, 1482, 690, 1324, 1458, 920, 1084];
 
-test('loads the twelve supplied Calm Quiet and Calm Nature rounds', () => {
+test('loads the twelve supplied Calm Quiet, Calm Nature, and Fast reference routes', () => {
   assert.equal(pairs.length, 12);
 
   pairs.forEach((pair, roundIndex) => {
-    assert.deepEqual(Object.keys(pair.routes), ['calm_quiet', 'calm_nature']);
+    assert.deepEqual(Object.keys(pair.routes), ['calm_quiet', 'calm_nature', 'fast']);
     const endpoints = Object.values(pair.routes).map(route => [
       route.geometry[0],
       route.geometry.at(-1)
@@ -51,7 +51,12 @@ test('loads the twelve supplied Calm Quiet and Calm Nature rounds', () => {
       assert.equal(route.geometry.length, EXPECTED_POINT_COUNTS[roundIndex][routeIndex]);
       assert.ok(route.metadata.distanceMeters > 0);
       assert.ok(route.metadata.durationSeconds > 0);
-      assert.equal(route.metadata.fastDurationSeconds, EXPECTED_FAST_DURATIONS[roundIndex]);
+      if (route.source === 'fast') {
+        assert.equal(route.metadata.durationSeconds, EXPECTED_FAST_DURATIONS[roundIndex]);
+        assert.equal(route.metadata.profile, 'foot_fast');
+      } else {
+        assert.equal(route.metadata.fastDurationSeconds, EXPECTED_FAST_DURATIONS[roundIndex]);
+      }
     });
   });
 });
