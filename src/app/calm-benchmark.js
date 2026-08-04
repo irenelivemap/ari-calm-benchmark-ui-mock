@@ -1,5 +1,6 @@
 (function () {
   const DEFAULT_TOTAL_ROUNDS = 10;
+  const HUD_SEGMENT_COUNT = 5;
   const ROUTE_SLOTS = [
     { slot: 'A', key: 'routeA', value: 'route_a', className: 'ari-choice--route-a' },
     { slot: 'B', key: 'routeB', value: 'route_b', className: 'ari-choice--route-b' },
@@ -224,13 +225,18 @@
 
   function createSessionPairOrder(pairCount, sessionId) {
     const count = Math.max(0, Number.parseInt(pairCount, 10) || 0);
-    const order = Array.from({ length: count }, (_, index) => index);
     const random = createSeededRandom(hashSessionId(sessionId));
-    for (let index = order.length - 1; index > 0; index -= 1) {
-      const swapIndex = Math.floor(random() * (index + 1));
-      [order[index], order[swapIndex]] = [order[swapIndex], order[index]];
-    }
-    return order;
+    const shuffle = order => {
+      for (let index = order.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(random() * (index + 1));
+        [order[index], order[swapIndex]] = [order[swapIndex], order[index]];
+      }
+      return order;
+    };
+    const firstGroupSize = Math.min(10, count);
+    const firstGroup = Array.from({ length: firstGroupSize }, (_, index) => index);
+    const remainingGroup = Array.from({ length: count - firstGroupSize }, (_, index) => firstGroupSize + index);
+    return [...shuffle(firstGroup), ...shuffle(remainingGroup)];
   }
 
   function createMockRoutePairProvider(pairs, label = 'mock route pairs') {
@@ -276,8 +282,8 @@
     const stageLength = Math.max(1, target.at - stageStart);
     const stagePosition = allEarned ? stageLength : Math.max(0, routeNumber - stageStart);
     const illuminated = allEarned
-      ? 5
-      : Math.max(0, Math.min(5, Math.ceil((stagePosition / stageLength) * 5)));
+      ? HUD_SEGMENT_COUNT
+      : Math.max(0, Math.min(HUD_SEGMENT_COUNT, Math.ceil((stagePosition / stageLength) * HUD_SEGMENT_COUNT)));
 
     return {
       allEarned,
@@ -658,8 +664,8 @@
       const progress = getHudDialProgress(routeNumber, state.completedRounds, milestones);
       const { allEarned, illuminated, newlyIlluminated, target } = progress;
       const progressLabel = allEarned
-        ? `Route ${routeNumber}. All medals earned. ${target.name}, 5 of 5 segments illuminated.`
-        : `Route ${routeNumber}. Next medal: ${target.name} at ${target.at} routes. ${illuminated} of 5 segments illuminated.`;
+        ? `Route ${routeNumber}. All medals earned. ${target.name}, ${HUD_SEGMENT_COUNT} of ${HUD_SEGMENT_COUNT} segments illuminated.`
+        : `Route ${routeNumber}. Next medal: ${target.name} at ${target.at} routes. ${illuminated} of ${HUD_SEGMENT_COUNT} segments illuminated.`;
       els.hudMedals.dataset.target = String(target.at);
       els.hudMedals.dataset.illuminated = String(illuminated);
       els.hudMedals.dataset.progressLabel = progressLabel;
@@ -667,7 +673,7 @@
       els.hudMedals.innerHTML = `
         <span class="ari-hud-dial ${allEarned ? 'is-complete' : ''}" aria-hidden="true">
           <span class="ari-hud-dial__segments">
-            ${Array.from({ length: 5 }, (_, index) => {
+            ${Array.from({ length: HUD_SEGMENT_COUNT }, (_, index) => {
               const classes = [
                 'ari-hud-dial__segment',
                 index < illuminated ? 'is-illuminated' : '',

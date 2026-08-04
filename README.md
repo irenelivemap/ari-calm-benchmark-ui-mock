@@ -113,7 +113,7 @@ The LinkedIn preview image is [`assets/ari-route-arcade-social.png`](assets/ari-
 
 Both active challenges generate random route pairs the way the `livemap-routing` bench does: a random origin and destination is drawn inside the central-Zurich sampling polygon (400 m to 3000 m apart).
 
-- **Calm Route Comparison** currently uses the curated Calm Quiet and Calm Nature fixture pairs in `src/data/mock-route-pairs.js`. Each session receives a shuffled permutation of all twelve pairs; the session ID keeps that order stable across refresh and resume.
+- **Calm Route Comparison** currently uses 23 curated Calm Quiet and Calm Nature fixture pairs in `src/data/mock-route-pairs.js`. Each session receives pairs 1–10 in a shuffled order, followed by pairs 11–23 in a second shuffled order; the session ID keeps both groups stable across refresh and resume.
 - **Fast vs Google Fast** requests `foot_fast` from the facade and the Google walking route from the Directions SDK at run time, so it needs both a reachable facade and a configured Google Maps key. Matchups where the two engines snap the endpoints more than 40 m apart are redrawn (fairness gate). Google geometry is never persisted: cached rounds store only our route, metrics, and Google's snapped endpoints, and the Google path is re-fetched live on resume.
 
 - Default endpoint: `POST /api/v1/routing/route` on the same origin.

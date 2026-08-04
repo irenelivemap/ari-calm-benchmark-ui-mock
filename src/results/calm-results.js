@@ -59,7 +59,7 @@
     'less_need_to_watch_traffic',
     'takes_less_time',
     'easier_to_follow',
-    'know_route_or_area',
+    'familiar_route_or_area',
     'other',
     'not_sure'
   ];
@@ -71,7 +71,7 @@
     less_need_to_watch_traffic: 'Less need to watch for traffic',
     takes_less_time: 'Takes less time',
     easier_to_follow: 'Easier to follow',
-    know_route_or_area: 'I know this route or area better',
+    familiar_route_or_area: 'I know this route or area better',
     other: 'Other',
     not_sure: "I'm not sure"
   };

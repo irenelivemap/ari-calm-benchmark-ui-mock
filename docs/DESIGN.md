@@ -112,7 +112,7 @@ Intro page:
 - The `How it works` and `Session` overview cards are always expanded. Their notch labels are headings, not interactive controls, and returning testers see the same complete overview as new testers.
 - Side-by-side overview cards use a `360px` desktop height. Their title rows are content-driven so translated or wrapped headings cannot collide with the card body. Below `900px`, both cards return to content-driven height.
 - The intro question and route label form one responsive typographic lockup: they fill one line on wide desktop and wrap naturally at narrower widths. The fixed route slot continuously swaps between Route A and Route B; pointer and keyboard interaction must not stop this authored comparison cue, while reduced-motion mode keeps Route A static.
-- The expanded Session card uses `10+ comparisons.` as a flexible goal, reassures testers with `Every careful comparison helps.`, gives the target duration as `About 6 to 8 min`, confirms `Desktop and mobile` support, and introduces the medal goal with `Become a Cosmic Explorer.` / `Unlock a new medal every 5 comparisons.`
+- The expanded Session card uses `23 comparisons.` as the full route-pair journey, reassures testers with `Every careful comparison helps.`, gives the target duration as `About 6 to 8 min`, confirms `Desktop and mobile` support, and introduces the four-medal progression culminating in `Cosmic Explorer` at 23 comparisons.
 - The resume card is an evolving rank world. It begins as the near-black arcade cabinet, then progressively gains street geometry, a traced trail, a horizon, map contours, constellations, and a cosmic field as medals are earned.
 - Rank motifs remain low-contrast behind the content and never change the card layout or ivory action. The latest rank controls the surface tint, border light, and title accent. The countdown caption stays neutral white regardless of rank — tinted text there reads as a route color.
 - Crossing a medal threshold reveals the new world layer outward from that medal's position once. Reloading or revisiting an already earned tier must not replay the animation, and reduced-motion users receive the final state immediately.
@@ -228,9 +228,9 @@ Rules:
 - Route numbers are zero-padded to three digits (`001`, `002` … `010`) for a scoreboard feel.
 - Do not use `Route X / Y` or display the next milestone number beside the current route. Put the current route number inside the five-segment dial and let the segments communicate progress toward the next medal.
 - Do not explain upcoming medal names in the active HUD. The dial's five segments communicate progress, while names remain on the resume card until a medal is actually earned.
-- The medal progress dial shows the current route number in its center and exactly five evenly spaced metallic segments show the active route's position within that five-route stage.
+- The medal progress dial shows the current route number in its center and five evenly spaced metallic segments show proportional progress within the active medal stage.
 - Incomplete segments stay dark but visible. Completed segments illuminate in neutral ivory, and only the newest segment briefly brightens. Route green, purple, and Fast orange are never used.
-- Route 5, 10, 15, 20, 25, and 30 illuminate all five segments before the next stage appears. After route 30, the dial remains at `30` with all five segments illuminated.
+- Routes 5, 10, 15, and 23 complete each medal stage before the next appears. After route 23, the dial remains at `23` with the full shelf earned.
 
 Implemented pattern:
 
@@ -288,15 +288,15 @@ Rules:
 - At standard widths, the action cluster uses no more than about 40% of the card, aligns to the card's right padding, and bottom-aligns with the two-row medal shelf rather than centering against the whole card.
 - At narrow widths, the action cluster stacks below the medal shelf, remains left-aligned, and the Resume button spans the available width.
 - Selecting `Resume →` opens the active question panel immediately. Fresh sessions keep the existing onboarding-led collapsed state.
-- The fill goal is the next milestone (5 → 10 → 15 → 20 → 25 → 30) and rolls forward as medals are earned. Past the final goal there is no next medal and no fill; the fully lit shelf tells the story on its own.
+- The fill goal is the next milestone (5 → 10 → 15 → 23) and rolls forward as medals are earned. Past the final goal there is no next medal and no fill; the fully lit shelf tells the story on its own.
 - There is no `New session` / reset control on the card. Clearing progress is a dev action (localStorage), not a tester affordance.
 - Contrast floor on the dark card: body text at `rgba(255,255,255,0.84)` minimum, small-caps labels at `0.72` minimum. The old `0.55` floor was too low for small text — reserve values below `0.72` for decorative elements only, never for text that must be read.
 
 ## Gamification Rules
 
-- Milestone ranks: 5 `Street Scout`, 10 `Trail Seeker`, 15 `Horizon Chaser`, 20 `World Mapper`, 25 `Star Navigator`, 30 `Cosmic Explorer`.
-- Every medal reserves the same centered two-line label area. The six resume-card medals use a three-by-two shelf at standard widths and switch to two columns at `340px` and below, including equivalent high-zoom layouts. Never shrink, truncate, or horizontally scroll medal names.
-- Medals are letterpress seals. Locked medals stay dark and desaturated; earned medals keep the same seal and icon geometry but gain a tier-specific metallic material: bronze, silver, gold, emerald, diamond-blue, then master-violet. The next empty slot remains visible as the motivator.
+- Milestone ranks: 5 `Street Scout`, 10 `Trail Seeker`, 15 `World Mapper`, 23 `Cosmic Explorer`.
+- Every medal reserves the same centered two-line label area. The four resume-card medals use a four-column shelf at standard widths and switch to two columns at `340px` and below, including equivalent high-zoom layouts. Never shrink, truncate, or horizontally scroll medal names.
+- Medals are letterpress seals. Locked medals stay dark and desaturated; earned medals keep the same seal and icon geometry but gain a tier-specific metallic material: bronze, silver, gold, then master-violet. The next empty slot remains visible as the motivator.
 - Locked medals recede with distance: the next milestone renders at full presence with a near-white rim and icon, and each later seal steps down toward ~38%, so the shelf itself points at the active goal without arcs, rims, or added elements — including on a fresh card where nothing is earned yet. Only the seals carry the gradient — medal names keep a readability floor (≥82% presence) so every goal stays legible, including the final aspirational one. Hover, focus, or flip restores full presence. Do not add ornament to mark the next medal; light does the pointing.
 - The next medal's seal fills from the bottom with its own tier metal in proportion to stage progress — the reward materializing is the countdown, and it is never written as text. The fill uses the tier's metallic ramp (never a flat color; the medal-palette rule against route-color values applies to the fill too) at slightly translucent strength, while the icon and rim stay near-white for legibility. The full earned treatment — full-strength metal, tier icon color, glow — snaps in only at completion, so earning reads as the coin setting. Exact numbers live on the medal's flip face and in its screen-reader label (`next goal, 5 of 10 routes`).
 - Earned medal color is an achievement state, not a route identity. Do not reuse the exact Route A green or Route B purple values in the medal palette.

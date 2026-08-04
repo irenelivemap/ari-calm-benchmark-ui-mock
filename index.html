@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260804-pp-map-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260804-four-medals-1">
   <style>
     body {
       margin: 0;
@@ -190,7 +190,7 @@
           <div id="session-card-body" class="calm-card-body">
             <div class="calm-card-body-inner">
               <div class="calm-card-main">
-                <h2>10+ <span>comparisons.</span></h2>
+                <h2>23 <span>comparisons.</span></h2>
                 <div class="calm-session-content">
                   <div class="calm-session-points">
                     <div>About 6 to 8 min</div>
@@ -270,11 +270,33 @@
     </div>
   </section>
 
-  <!-- Route pair map fullscreen overlay -->
-  <div class="calm-rp-map-overlay" id="rp-map-overlay" hidden role="dialog" aria-modal="true" aria-label="Expanded route map">
+  <!-- Route pair map explorer -->
+  <div class="calm-rp-map-overlay" id="rp-map-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="rp-overlay-label">
     <header class="calm-rp-map-overlay__bar">
-      <span class="calm-rp-map-overlay__label" id="rp-overlay-label"></span>
-      <button class="calm-rp-map-overlay__close" id="rp-overlay-close" type="button" aria-label="Close expanded map">&times;</button>
+      <div class="calm-rp-map-overlay__identity">
+        <span class="calm-rp-map-overlay__position" id="rp-overlay-position"></span>
+        <span class="calm-rp-map-overlay__label" id="rp-overlay-label"></span>
+        <span class="calm-team-outcome calm-rp-map-overlay__outcome" id="rp-overlay-outcome" hidden></span>
+      </div>
+      <div class="calm-rp-map-overlay__actions">
+        <div class="calm-rp-map-overlay__paging" id="rp-overlay-paging" hidden>
+          <button type="button" id="rp-overlay-prev" aria-label="View previous pair">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 4.5-5.5 5.5 5.5 5.5"/></svg>
+            <span>Previous</span>
+          </button>
+          <button type="button" id="rp-overlay-next" aria-label="View next pair">
+            <span>Next</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.5 4.5 5.5 5.5-5.5 5.5"/></svg>
+          </button>
+        </div>
+        <button class="calm-rp-map-overlay__fit" id="rp-overlay-fit" type="button">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 3H3v4.5M12.5 3H17v4.5M7.5 17H3v-4.5M12.5 17H17v-4.5"/></svg>
+          <span>Fit routes</span>
+        </button>
+        <button class="calm-rp-map-overlay__close" id="rp-overlay-close" type="button" aria-label="Close map explorer">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4.5 4.5 11 11m0-11-11 11"/></svg>
+        </button>
+      </div>
     </header>
     <div class="calm-rp-map-wrap calm-rp-map-overlay__inner">
       <div class="calm-rp-map calm-rp-map--overlay" id="rp-overlay-map"></div>
@@ -292,7 +314,7 @@
   <script src="./src/data/benchmark-transport.js?v=20260804-persist-endpoint-1"></script>
   <script src="./src/data/supabase-transport.js?v=20260804-supabase-1"></script>
   <script src="./src/data/mock-route-diagnostics.js?v=20260804-route-pairs-23-2"></script>
-  <script src="./src/data/mock-team-results.js?v=20260731-nature-wins-sample-1"></script>
+  <script src="./src/data/mock-team-results.js?v=20260804-full-23-pairs-1"></script>
   <script src="./src/results/calm-results.js?v=20260731-calm-agreement-results-1"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
   <script src="./src/maps/route-overlap.js?v=20260729-street-view-any-point-1"></script>
@@ -591,10 +613,13 @@
      * FIRST VIEWPORT: Calm title and evidence totals lead; Overview and Participants form the primary fork.
      * FORM: Existing results world extended as an operate surface with a master-detail participant view.
      */
-    let calmResultsView = 'overview';
+    let calmResultsView = 'participants';
     let choiceReasonsMode = 'all';
     let freeTextTheme = null;
     let selectedResultsParticipantId = '';
+    let rpExplorerItems = [];
+    let rpExplorerIndex = -1;
+    let rpExplorerTrigger = null;
     const storedSampleResultsMode = localStorage.getItem(SAMPLE_RESULTS_STORAGE);
     let sampleResultsEnabled = !runtimeConfig.production
       && (storedSampleResultsMode === 'sample' || storedSampleResultsMode === '1');
@@ -610,6 +635,9 @@
     if (urlParams.get('researcher') === '1') localStorage.setItem(RESEARCHER_STORAGE, '1');
     else if (urlParams.get('researcher') === '0') localStorage.removeItem(RESEARCHER_STORAGE);
     const researcherMode = localStorage.getItem(RESEARCHER_STORAGE) === '1';
+    if (!researcherMode) {
+      document.querySelectorAll('[data-reset-test-data]').forEach(button => button.remove());
+    }
     const requestedChallenge = AriBenchmarkRuntime.resolveChallenge(window.location, runtimeConfig);
     const activeChallenge = CHALLENGE_CONFIGS[requestedChallenge]
       ? requestedChallenge
@@ -631,11 +659,16 @@
       })
     };
     const dataRepository = dataRepositories[activeChallenge];
-    if (
+    const hasSavedAnswers = (dataRepository.getSnapshot().answers || []).length > 0;
+    if (!researcherMode) {
+      sampleResultsEnabled = !runtimeConfig.production
+        && activeChallenge === 'calm'
+        && !hasSavedAnswers;
+    } else if (
       !runtimeConfig.production
       && activeChallenge === 'calm'
       && storedSampleResultsMode === null
-      && !(dataRepository.getSnapshot().answers || []).length
+      && !hasSavedAnswers
     ) {
       sampleResultsEnabled = true;
     }
@@ -865,24 +898,26 @@
             : remoteTeamResults.status === 'error'
               ? 'Team sync unavailable · showing saved device data'
               : 'Preview data on this device';
-      const sampleToggle = runtimeConfig.production ? '' : `
+      const sampleToggle = runtimeConfig.production || !researcherMode ? '' : `
         <button type="button" class="calm-results-sample-toggle" data-results-action="${sampleResultsEnabled ? 'saved-data' : 'sample-data'}">
           ${sampleResultsEnabled ? 'Use saved data' : 'View sample data'}
         </button>`;
-      return `
-        <div class="calm-results-toolbar">
-          <nav class="calm-results-switcher" aria-label="Calm results view">
-            <button type="button" data-results-view="overview" aria-pressed="${calmResultsView === 'overview'}">Overview</button>
-            <button type="button" data-results-view="participants" aria-pressed="${calmResultsView === 'participants'}">${researcherMode ? 'Participants' : 'My results'}</button>
-            <button type="button" data-results-view="routes" aria-pressed="${calmResultsView === 'routes'}">Routes</button>
-          </nav>
+      const resultsMeta = researcherMode ? `
           <div class="calm-results-toolbar__meta">
             <p role="status">
               <span>${participantCount} participant${participantCount === 1 ? '' : 's'} represented</span>
               <small data-state="${sourceState}">${sourceLabel}</small>
             </p>
             ${sampleToggle}
-          </div>
+          </div>` : '';
+      return `
+        <div class="calm-results-toolbar${researcherMode ? '' : ' calm-results-toolbar--participant'}">
+          <nav class="calm-results-switcher" aria-label="Calm results view">
+            <button type="button" data-results-view="overview" aria-pressed="false" disabled>Overview <span class="calm-results-switcher__soon">Soon</span></button>
+            <button type="button" data-results-view="participants" aria-pressed="${calmResultsView === 'participants'}">${researcherMode ? 'Participants' : 'My results'}</button>
+            ${researcherMode ? `<button type="button" data-results-view="routes" aria-pressed="${calmResultsView === 'routes'}">Routes</button>` : ''}
+          </nav>
+          ${resultsMeta}
         </div>`;
     }
 
@@ -1252,24 +1287,42 @@
       const routePairsList = window.AriCalmBenchmarkMockRoutePairs || [];
       const diagMap = new Map(diagPairs.map((p, i) => [p.pairId, { diag: p, routePair: routePairsList[i], pairIndex: i }]));
 
-      function routeTypeLabel(type) {
-        if (type === 'calm_nature') return `<span class="calm-route-label calm-route-label--nature">Calm Nature</span>`;
-        if (type === 'calm_quiet') return `<span class="calm-route-label calm-route-label--quiet">Calm Quiet</span>`;
-        return escapeHtml(type || '—');
-      }
-
+      rpExplorerItems = rows.map((row, rowIndex) => {
+        const match = diagMap.get(row.pairId);
+        if (!match?.routePair) return null;
+        const pairNum = String(row.pairId || '').replace(/^.*-(\d+)$/, '$1');
+        return {
+          rowIndex,
+          routePair: match.routePair,
+          pairLabel: pairNum && pairNum !== row.pairId ? `Pair ${pairNum.padStart(2, '0')}` : row.pairId || '—',
+          routeName: match.diag ? `${match.diag.origin_label || 'Start'} → ${match.diag.destination_label || 'End'}` : '',
+          outcome: row.outcome,
+          outcomeLabel: AriCalmResults.OUTCOME_LABELS[row.outcome] || 'Unknown'
+        };
+      }).filter(Boolean);
       return rows.map((row, i) => {
         const pairNum = String(row.pairId || '').replace(/^.*-(\d+)$/, '$1');
         const pairLabel = pairNum && pairNum !== row.pairId ? `Pair ${pairNum.padStart(2, '0')}` : row.pairId || '—';
+        const comparisonNumber = Number.isFinite(Number(row.roundNumber)) ? Number(row.roundNumber) : i + 1;
+        const cardLabel = researcherMode ? pairLabel : `#${comparisonNumber}`;
         const { diag, routePair, pairIndex } = diagMap.get(row.pairId) || {};
         const routeName = diag ? `${diag.origin_label || 'Start'} → ${diag.destination_label || 'End'}` : '';
         const outcomeLabel = AriCalmResults.OUTCOME_LABELS[row.outcome] || 'Unknown';
-        const assignment = row.raw?.routeAssignment || row.raw?.labelMap || {};
-        const assignA = assignment.routeA || assignment.A;
-        const assignB = assignment.routeB || assignment.B;
         const reasons = row.q2Reasons.map(k => AriCalmResults.CHOICE_REASON_LABELS[k] || k).filter(Boolean);
         const worthMap = { a_lot: 'A lot', somewhat: 'Somewhat', a_little: 'A little', not_at_all: 'Not at all', not_sure: "I'm not sure" };
         const worthLabel = row.q3WorthShowing ? (worthMap[row.q3WorthShowing] || row.q3WorthShowing) : null;
+        const selectedRouteTypes = row.exactOutcome === 'both_work_well'
+          ? ['calm_nature', 'calm_quiet']
+          : ['calm_nature', 'calm_quiet'].includes(row.exactOutcome)
+            ? [row.exactOutcome]
+            : [];
+        const hasSelectedRoute = selectedRouteTypes.length > 0;
+        const routeRowState = routeType => selectedRouteTypes.includes(routeType)
+          ? ' is-selected'
+          : hasSelectedRoute ? ' is-muted' : '';
+        const selectedRouteAria = (routeType, label) => selectedRouteTypes.includes(routeType)
+          ? ` aria-current="true" aria-label="${label}, selected route"`
+          : '';
 
         let routeTableHtml = '';
         if (routePair) {
@@ -1280,13 +1333,13 @@
             <table class="calm-pp-route-table">
               <thead><tr><th>Route</th><th>Time</th><th>Distance</th></tr></thead>
               <tbody>
-                <tr class="rp-row-fast"><th scope="row">Fast</th>
+                <tr class="rp-row-fast${routeRowState('fast')}"><th scope="row">Fast</th>
                   <td>${rpFmtTime(fastMeta.durationSeconds)}</td>
                   <td>${rpFmtDist(fastMeta.distanceMeters)}</td></tr>
-                <tr class="rp-row-nature"><th scope="row">Calm Nature</th>
+                <tr class="rp-row-nature${routeRowState('calm_nature')}"${selectedRouteAria('calm_nature', 'Calm Nature')}><th scope="row">Calm Nature</th>
                   <td>${rpCombined(rpFmtTime(natureMeta.durationSeconds), rpFmtDiff(natureMeta.durationSeconds, fastMeta.durationSeconds, true))}</td>
                   <td>${rpCombined(rpFmtDist(natureMeta.distanceMeters), rpFmtDiff(natureMeta.distanceMeters, fastMeta.distanceMeters, false))}</td></tr>
-                <tr class="rp-row-quiet"><th scope="row">Calm Quiet</th>
+                <tr class="rp-row-quiet${routeRowState('calm_quiet')}"${selectedRouteAria('calm_quiet', 'Calm Quiet')}><th scope="row">Calm Quiet</th>
                   <td>${rpCombined(rpFmtTime(quietMeta.durationSeconds), rpFmtDiff(quietMeta.durationSeconds, fastMeta.durationSeconds, true))}</td>
                   <td>${rpCombined(rpFmtDist(quietMeta.distanceMeters), rpFmtDiff(quietMeta.distanceMeters, fastMeta.distanceMeters, false))}</td></tr>
               </tbody>
@@ -1297,7 +1350,7 @@
         return `
           <article class="calm-pp-card">
             <button class="calm-pp-card__header" type="button" aria-expanded="false" aria-controls="${bodyId}">
-              <span class="calm-pp-pair-label">${escapeHtml(pairLabel)}</span>
+              <span class="calm-pp-pair-label">${escapeHtml(cardLabel)}</span>
               ${routeName ? `<span class="calm-pp-route-name">${escapeHtml(routeName)}</span>` : ''}
               <span class="calm-team-outcome" data-outcome="${escapeHtml(row.outcome)}">${escapeHtml(outcomeLabel)}</span>
               <span class="calm-pp-chevron" aria-hidden="true"></span>
@@ -1305,15 +1358,6 @@
             <div id="${bodyId}" class="calm-pp-card__body" hidden>
               <div class="calm-pp-card__inner">
                 <section class="calm-pp-answers">
-                  <h4 class="calm-pp-section-title">Your evaluation</h4>
-                  ${assignA || assignB ? `<div class="calm-pp-assignment">
-                    <span><span class="calm-pp-slot-label">Route A</span>${routeTypeLabel(assignA)}</span>
-                    <span><span class="calm-pp-slot-label">Route B</span>${routeTypeLabel(assignB)}</span>
-                  </div>` : ''}
-                  <div class="calm-pp-field">
-                    <span class="calm-pp-label">Choice</span>
-                    <span class="calm-team-outcome" data-outcome="${escapeHtml(row.outcome)}">${escapeHtml(outcomeLabel)}</span>
-                  </div>
                   ${reasons.length ? `<div class="calm-pp-field calm-pp-field--reasons">
                     <span class="calm-pp-label">Reasons</span>
                     <ul class="calm-pp-reasons-list">${reasons.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>
@@ -1332,12 +1376,12 @@
                   </div>` : ''}
                 </section>
                 ${routeTableHtml || diag ? `<section class="calm-pp-route-details">
-                  <h4 class="calm-pp-section-title">Route details</h4>
+                  <h4 class="calm-pp-section-title">Route details${researcherMode ? '' : ` <span class="calm-pp-section-context">· ${escapeHtml(pairLabel)}</span>`}</h4>
                   ${routePair && Number.isInteger(pairIndex) ? `
                   <div class="calm-rp-map-wrap calm-pp-map-wrap">
                     <div class="calm-rp-map-canvas">
-                      <div class="calm-rp-map calm-pp-map" id="pp-map-${i}" data-pair-index="${pairIndex}"></div>
-                      <button class="calm-rp-map-expand" type="button" aria-label="Expand map" data-pair-index="${pairIndex}" data-pair-label="${escapeHtml(pairLabel)}" data-pair-route="${escapeHtml(routeName)}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 2h4v4M6 14H2v-4M14 2l-5.5 5.5M2 14l5.5-5.5"/></svg></button>
+                      <div class="calm-rp-map calm-pp-map" id="pp-map-${i}" data-pair-index="${pairIndex}" data-selected-routes="${selectedRouteTypes.join(',')}"${hasSelectedRoute ? ` aria-label="Map with ${selectedRouteTypes.map(routeType => routeType === 'calm_nature' ? 'Calm Nature' : 'Calm Quiet').join(' and ')} emphasized as selected"` : ''}></div>
+                      <button class="calm-pp-map-size" type="button" data-pp-map-size aria-pressed="false" aria-label="Show a larger map"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 3H3v4.5M12.5 3H17v4.5M7.5 17H3v-4.5M12.5 17H17v-4.5"/></svg><span>Larger map</span></button>
                     </div>
                   </div>` : ''}
                   ${routeTableHtml}
@@ -1444,15 +1488,20 @@
           </aside>` : ''}
           <section class="calm-participant-detail" aria-labelledby="calm-participant-detail-title">
             <header class="calm-participant-detail__header">
-              <p class="calm-results-eyebrow">${researcherMode ? 'Participant record' : 'My results'}</p>
+              ${researcherMode ? '<p class="calm-results-eyebrow">Participant record</p>' : ''}
               <h2 id="calm-participant-detail-title">${escapeHtml(selectedParticipantLabel)}${isCurrentParticipant ? '<span>You</span>' : ''}</h2>
-              <p>${selectedPerson.comparisons} completed comparison${selectedPerson.comparisons === 1 ? '' : 's'} across ${selectedPerson.routePairs} route pair${selectedPerson.routePairs === 1 ? '' : 's'}. Updated ${formatUpdated(selectedPerson.lastUpdated)}.</p>
+              ${researcherMode ? `<p>${selectedPerson.comparisons} completed comparison${selectedPerson.comparisons === 1 ? '' : 's'} across ${selectedPerson.routePairs} route pair${selectedPerson.routePairs === 1 ? '' : 's'}. Updated ${formatUpdated(selectedPerson.lastUpdated)}.</p>` : ''}
             </header>
+            ${researcherMode ? `
             <section class="calm-team-metrics calm-participant-metrics" aria-label="${escapeHtml(selectedParticipantLabel)} summary">
               <div><strong>${selectedPerson.comparisons}</strong><span>Comparisons</span></div>
               <div><strong>${selectedPerson.routePairs}</strong><span>Route pairs</span></div>
               <div><strong>${selectedPerson.sessions}</strong><span>Sessions</span></div>
-            </section>
+            </section>` : `
+            <section class="calm-participant-route-count" aria-label="${selectedPerson.comparisons} routes compared">
+              <strong class="marker-lime marker-static">${selectedPerson.comparisons}</strong>
+              <span>route${selectedPerson.comparisons === 1 ? '' : 's'} compared</span>
+            </section>`}
             <div class="calm-team-analysis calm-participant-analysis">
               <section aria-labelledby="participant-choice-title">
                 <h2 id="participant-choice-title">Route choices</h2>
@@ -1478,6 +1527,7 @@
         renderFastGoogleResults();
         return;
       }
+      if (!researcherMode && calmResultsView === 'routes') calmResultsView = 'participants';
       const answers = calmResultsAnswers();
       const summary = AriCalmResults.aggregateAnswers(answers);
       const agreement = AriCalmResults.analyzeAgreement(answers);
@@ -1496,10 +1546,10 @@
       // so park it back in its home section before innerHTML wipes the panel.
       parkRouteProfiles();
       communityResultsContent.innerHTML = `
-        <header class="calm-results-dashboard-header">
+        <header class="calm-results-dashboard-header${researcherMode ? '' : ' calm-results-dashboard-header--participant'}">
           <h1>Team results</h1>
           <div class="calm-results-dashboard-summary">
-            <p class="calm-results-dashboard-summary__lead"><strong>${summary.participants} team member${summary.participants === 1 ? '' : 's'} familiar with Zürich</strong> evaluated <strong>${summary.routePairs} origin–destination pair${summary.routePairs === 1 ? '' : 's'}</strong> in a blind side-by-side comparison, completing <strong>${summary.total} route comparison${summary.total === 1 ? '' : 's'}</strong>.</p>
+            <p class="calm-results-dashboard-summary__lead"><strong class="marker-lime marker-static">${summary.participants} team member${summary.participants === 1 ? '' : 's'} familiar with Zürich</strong> evaluated <strong>${summary.routePairs} origin–destination pair${summary.routePairs === 1 ? '' : 's'}</strong> in a blind side-by-side comparison, completing <strong class="marker-lime marker-static">${summary.total} route comparison${summary.total === 1 ? '' : 's'}</strong>.</p>
             <p>For each pair, the routes were shown as Route A and Route B, so evaluators did not know which profile generated them. One came from a <strong class="calm-results-profile-label" data-profile="nature">Nature-focused profile</strong>, with more emphasis on greenery, tree canopy, and proximity to water. The other came from a <strong class="calm-results-profile-label" data-profile="quiet">Quiet-focused profile</strong>, with more emphasis on avoiding noise, main roads, and areas with higher accident risk.</p>
             <p>Evaluators judged whether Route A, Route B, both, or neither worked as a Calm route, or whether they were unsure.</p>
             <p>The results help us compare model hypotheses and identify cases to investigate. They reflect structured internal judgments, not the preferences of Zürich pedestrians as a whole.</p>
@@ -1730,12 +1780,10 @@
 
     const MEDAL_SVG = attrs => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${attrs}</svg>`;
     const MILESTONES = [
-      { at: 5,  name: 'Street Scout',           icon: MEDAL_SVG('<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>') },
-      { at: 10, name: 'Trail Seeker',           icon: MEDAL_SVG('<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>') },
-      { at: 15, name: 'Horizon Chaser',         icon: MEDAL_SVG('<polygon points="3 11 22 2 13 21 11 13 3 11"/>') },
-      { at: 20, name: 'World Mapper',           icon: MEDAL_SVG('<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>') },
-      { at: 25, name: 'Star Navigator',         icon: MEDAL_SVG('<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 0 20M12 2a15.3 15.3 0 0 0 0 20"/>') },
-      { at: 30, name: 'Cosmic Explorer',        icon: MEDAL_SVG('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>') }
+      { at: 5,  name: 'Street Scout',      icon: MEDAL_SVG('<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>') },
+      { at: 10, name: 'Trail Seeker',      icon: MEDAL_SVG('<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>') },
+      { at: 15, name: 'World Mapper',      icon: MEDAL_SVG('<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>') },
+      { at: 23, name: 'Cosmic Explorer',   icon: MEDAL_SVG('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>') }
     ];
     const DEMO_INITIAL_ROUNDS = MILESTONES[MILESTONES.length - 1].at;
 
@@ -2309,11 +2357,48 @@
         });
         return;
       }
+      const mapSizeButton = event.target.closest('[data-pp-map-size]');
+      if (mapSizeButton) {
+        const mapWrap = mapSizeButton.closest('.calm-pp-map-wrap');
+        const mapEl = mapWrap?.querySelector('.calm-pp-map');
+        if (!mapWrap || !mapEl) return;
+        const larger = !mapWrap.classList.contains('is-large');
+        mapWrap.classList.toggle('is-large', larger);
+        mapSizeButton.setAttribute('aria-pressed', String(larger));
+        mapSizeButton.setAttribute('aria-label', larger ? 'Show a smaller map' : 'Show a larger map');
+        mapSizeButton.querySelector('span').textContent = larger ? 'Smaller map' : 'Larger map';
+        window.setTimeout(() => {
+          const map = mapEl._rpMap;
+          if (map && typeof map.resize === 'function') map.resize();
+          if (map && typeof map.invalidateSize === 'function') map.invalidateSize();
+          if (typeof mapEl._rpFit === 'function') mapEl._rpFit();
+        }, 220);
+        return;
+      }
       const ppCardHeader = event.target.closest('.calm-pp-card__header');
       if (ppCardHeader) {
         const expanded = ppCardHeader.getAttribute('aria-expanded') === 'true';
         const body = document.getElementById(ppCardHeader.getAttribute('aria-controls'));
         if (body) {
+          if (!expanded) {
+            communityResults.querySelectorAll('.calm-pp-card__header[aria-expanded="true"]').forEach(otherHeader => {
+              if (otherHeader === ppCardHeader) return;
+              const otherBody = document.getElementById(otherHeader.getAttribute('aria-controls'));
+              otherHeader.setAttribute('aria-expanded', 'false');
+              if (!otherBody) return;
+              otherBody.hidden = true;
+              const otherMapEl = otherBody.querySelector('.calm-pp-map');
+              const otherMap = otherMapEl?._rpMap;
+              if (otherMap && typeof otherMap.remove === 'function') {
+                try { otherMap.remove(); } catch (_) {}
+              }
+              if (otherMapEl) {
+                delete otherMapEl._rpMap;
+                delete otherMapEl._rpFit;
+                otherMapEl.innerHTML = '';
+              }
+            });
+          }
           ppCardHeader.setAttribute('aria-expanded', String(!expanded));
           body.hidden = expanded;
           if (!expanded) {
@@ -2322,6 +2407,17 @@
               const idx = parseInt(mapEl.dataset.pairIndex, 10);
               const rps = window.AriCalmBenchmarkMockRoutePairs || [];
               if (rps[idx]) initPairMap(mapEl, rps[idx]);
+            }
+          } else {
+            const mapEl = body.querySelector('.calm-pp-map');
+            const map = mapEl?._rpMap;
+            if (map && typeof map.remove === 'function') {
+              try { map.remove(); } catch (_) {}
+            }
+            if (mapEl) {
+              delete mapEl._rpMap;
+              delete mapEl._rpFit;
+              mapEl.innerHTML = '';
             }
           }
         }
@@ -2396,33 +2492,79 @@
       const expandBtn = event.target.closest('.calm-rp-map-expand');
       if (expandBtn) {
         const idx = parseInt(expandBtn.dataset.pairIndex, 10);
+        const explorerIndex = expandBtn.dataset.explorerIndex === undefined
+          ? -1
+          : parseInt(expandBtn.dataset.explorerIndex, 10);
         const routePairs = window.AriCalmBenchmarkMockRoutePairs || [];
-        if (routePairs[idx]) showRpMapOverlay(routePairs[idx], expandBtn.dataset.pairLabel || '', expandBtn.dataset.pairRoute || '');
+        rpExplorerTrigger = expandBtn;
+        if (Number.isInteger(explorerIndex) && explorerIndex >= 0) showRpExplorerItem(explorerIndex);
+        else if (routePairs[idx]) showRpMapOverlay(routePairs[idx], expandBtn.dataset.pairLabel || '', expandBtn.dataset.pairRoute || '');
         return;
       }
     });
 
     document.getElementById('rp-overlay-close').addEventListener('click', hideRpMapOverlay);
+    document.getElementById('rp-overlay-fit').addEventListener('click', function() {
+      const fit = document.getElementById('rp-overlay-map')._rpFit;
+      if (typeof fit === 'function') fit();
+    });
+    document.getElementById('rp-overlay-prev').addEventListener('click', function() { showRpExplorerItem(rpExplorerIndex - 1); });
+    document.getElementById('rp-overlay-next').addEventListener('click', function() { showRpExplorerItem(rpExplorerIndex + 1); });
 
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        const overlay = document.getElementById('rp-map-overlay');
-        if (overlay && !overlay.hidden) hideRpMapOverlay();
-      }
+      const overlay = document.getElementById('rp-map-overlay');
+      if (!overlay || overlay.hidden) return;
+      if (e.key === 'Escape') hideRpMapOverlay();
+      const mapContainsFocus = document.getElementById('rp-overlay-map').contains(document.activeElement);
+      if (!mapContainsFocus && e.key === 'ArrowLeft' && rpExplorerIndex > 0) showRpExplorerItem(rpExplorerIndex - 1);
+      if (!mapContainsFocus && e.key === 'ArrowRight' && rpExplorerIndex < rpExplorerItems.length - 1) showRpExplorerItem(rpExplorerIndex + 1);
     });
 
-    function showRpMapOverlay(routePair, pairLabel, pairRoute) {
+    function showRpExplorerItem(index) {
+      if (index < 0 || index >= rpExplorerItems.length) return;
+      rpExplorerIndex = index;
+      const item = rpExplorerItems[index];
+      showRpMapOverlay(item.routePair, item.pairLabel, item.routeName, item);
+    }
+
+    function showRpMapOverlay(routePair, pairLabel, pairRoute, explorerItem) {
       const overlay = document.getElementById('rp-map-overlay');
+      const opening = overlay.hidden;
       const labelEl = document.getElementById('rp-overlay-label');
+      const positionEl = document.getElementById('rp-overlay-position');
+      const outcomeEl = document.getElementById('rp-overlay-outcome');
+      const pagingEl = document.getElementById('rp-overlay-paging');
+      const previousButton = document.getElementById('rp-overlay-prev');
+      const nextButton = document.getElementById('rp-overlay-next');
       const mapEl = document.getElementById('rp-overlay-map');
-      labelEl.textContent = pairLabel + (pairRoute ? ' · ' + pairRoute : '');
+      labelEl.textContent = pairRoute ? pairLabel + ' · ' + pairRoute : pairLabel;
+      const exploring = Boolean(explorerItem);
+      positionEl.textContent = exploring ? `${rpExplorerIndex + 1} of ${rpExplorerItems.length}` : '';
+      positionEl.hidden = !exploring;
+      pagingEl.hidden = !exploring;
+      outcomeEl.hidden = !exploring;
+      if (exploring) {
+        outcomeEl.textContent = explorerItem.outcomeLabel;
+        outcomeEl.dataset.outcome = explorerItem.outcome;
+        previousButton.disabled = rpExplorerIndex === 0;
+        nextButton.disabled = rpExplorerIndex === rpExplorerItems.length - 1;
+      }
       const prev = mapEl._rpMap;
       if (prev && typeof prev.remove === 'function') { try { prev.remove(); } catch (_) {} }
       delete mapEl._rpMap;
+      delete mapEl._rpFit;
       mapEl.innerHTML = '';
       overlay.hidden = false;
       document.body.style.overflow = 'hidden';
-      document.getElementById('rp-overlay-close').focus();
+      if (!exploring) rpExplorerIndex = -1;
+      if (opening) {
+        const initialControl = exploring && !nextButton.disabled
+          ? nextButton
+          : exploring && !previousButton.disabled
+            ? previousButton
+            : document.getElementById('rp-overlay-close');
+        initialControl.focus();
+      }
       initPairMap(mapEl, routePair);
     }
 
@@ -2434,7 +2576,11 @@
       const m = mapEl._rpMap;
       if (m && typeof m.remove === 'function') { try { m.remove(); } catch (_) {} }
       delete mapEl._rpMap;
+      delete mapEl._rpFit;
       mapEl.innerHTML = '';
+      rpExplorerIndex = -1;
+      if (rpExplorerTrigger?.isConnected) rpExplorerTrigger.focus();
+      rpExplorerTrigger = null;
     }
 
     document.addEventListener('click', event => {
@@ -2486,8 +2632,17 @@
       const routeA  = rpCssVar('--ari-route-a')  || '#08784D';
       const routeB  = rpCssVar('--ari-route-b')  || '#4A52CC';
       const routeColors  = { fast: orange, calm_nature: routeA, calm_quiet: routeB };
-      const routeWidths  = { fast: 3, calm_nature: 4.5, calm_quiet: 4.5 };
-      const drawOrder    = ['fast', 'calm_quiet', 'calm_nature']; // nature on top
+      const baseDrawOrder = ['fast', 'calm_quiet', 'calm_nature'];
+      const selectedRoutes = new Set(String(mapEl.dataset.selectedRoutes || '').split(',').filter(Boolean));
+      const hasSelectedRoutes = selectedRoutes.size > 0;
+      const drawOrder = [
+        ...baseDrawOrder.filter(key => !selectedRoutes.has(key)),
+        ...baseDrawOrder.filter(key => selectedRoutes.has(key))
+      ];
+      const routeWidth = key => selectedRoutes.has(key)
+        ? 6
+        : hasSelectedRoutes ? (key === 'fast' ? 2.5 : 3.25) : (key === 'fast' ? 3 : 4.5);
+      const routeOpacity = key => selectedRoutes.has(key) ? 1 : hasSelectedRoutes ? 0.5 : 0.9;
 
       const maps = window.AriCalmBenchmarkMaps;
       const useMapLibre = maps && maps.hasMapLibre && maps.hasMapLibre() && window.maplibregl;
@@ -2523,16 +2678,29 @@
               type: 'geojson',
               data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } }
             });
+            if (selectedRoutes.has(key)) {
+              mlMap.addLayer({
+                id: 'rp-' + key + '-casing',
+                type: 'line',
+                source: 'rp-' + key,
+                layout: { 'line-cap': 'round', 'line-join': 'round' },
+                paint: { 'line-color': '#fff', 'line-width': 9, 'line-opacity': 0.82 }
+              });
+            }
             mlMap.addLayer({
               id: 'rp-' + key,
               type: 'line',
               source: 'rp-' + key,
               layout: { 'line-cap': 'round', 'line-join': 'round' },
-              paint: { 'line-color': routeColors[key], 'line-width': routeWidths[key], 'line-opacity': 0.9 }
+              paint: { 'line-color': routeColors[key], 'line-width': routeWidth(key), 'line-opacity': routeOpacity(key) }
             });
           });
           if (minLng !== Infinity) {
-            mlMap.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 24, maxZoom: 16, duration: 0 });
+            mapEl._rpFit = function() {
+              const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+              mlMap.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 40, maxZoom: 16, duration: reduceMotion ? 0 : 300 });
+            };
+            mapEl._rpFit();
           }
           const mapWrap = mapEl.closest('.calm-rp-map-wrap');
           if (mapWrap) {
@@ -2558,12 +2726,21 @@
         drawOrder.forEach(function(key) {
           const route = routePair.routes[key];
           if (!route || !route.geometry || !route.geometry.length) return;
+          if (selectedRoutes.has(key)) {
+            L.polyline(route.geometry, {
+              color: '#fff', weight: 9, opacity: 0.82, interactive: false
+            }).addTo(lMap);
+          }
           layers[key] = L.polyline(route.geometry, {
-            color: routeColors[key], weight: routeWidths[key], opacity: 0.9
+            color: routeColors[key], weight: routeWidth(key), opacity: routeOpacity(key)
           }).addTo(lMap);
         });
         const allPoints = Object.values(layers).flatMap(function(l) { return l.getLatLngs(); });
-        if (allPoints.length) lMap.fitBounds(L.latLngBounds(allPoints), { padding: [16, 16], maxZoom: 16 });
+        if (allPoints.length) {
+          const bounds = L.latLngBounds(allPoints);
+          mapEl._rpFit = function() { lMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 }); };
+          mapEl._rpFit();
+        }
         const mapWrap = mapEl.closest('.calm-rp-map-wrap');
         if (mapWrap) {
           mapWrap.querySelectorAll('.calm-rp-map-toggle').forEach(function(btn) {
@@ -2823,7 +3000,7 @@
     applyChallengeUi();
     checkResumeState();
     const requestedView = urlParams.get('view');
-    if (requestedView === 'route-profiles') calmResultsView = 'routes';
+    if (requestedView === 'route-profiles' && researcherMode) calmResultsView = 'routes';
     const initialView = requestedView === 'team-results' && runtimeConfig.enableTeamResults
       ? 'team-results'
       : requestedView === 'results' ? 'results'

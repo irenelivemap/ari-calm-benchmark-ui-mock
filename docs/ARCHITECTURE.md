@@ -122,7 +122,7 @@ UI fixtures only. They model the route-pair contract and must never become the p
 1. `index.html` opens Calm Route Comparison by default. Explicit Google paths remain available for compatibility and internal development.
 2. It creates a challenge-specific local repository.
 3. Start or Resume calls `AriCalmBenchmark.mount` with the challenge configuration and adapters.
-4. The shell requests a route pair. Curated fixture pairs use a session-derived shuffled order that is stable on resume, and every pair still receives a randomized hidden assignment to Route A/B.
+4. The shell requests a route pair. Curated fixtures shuffle pairs 1–10 as the first group and pairs 11–23 as the second group. Both orders derive from the session and remain stable on resume; every pair still receives a randomized hidden assignment to Route A/B.
 5. A completed comparison is validated and saved locally, then delivered through the optional HTTP transport.
 6. An unfinished state is locally upserted and remotely sent through the same retryable transport.
 7. Result views read the same challenge dataset and aggregate it through `AriCalmResults`.
@@ -136,7 +136,7 @@ Production integration should replace adapters, not rewrite the question UI:
 - `progressSink(progress)`
 - `mapProvider: "google" | "maplibre" | "leaflet"`
 
-Calm Route Comparison uses twelve curated Calm Quiet and Calm Nature fixture rounds in `src/data/mock-route-pairs.js`. Their presentation order is shuffled from the session ID, so participants receive different permutations while refreshes and resumed sessions preserve the same sequence. Fast vs Google Fast uses `AriRoutePairGenerator.createLivemapGoogleRoutePairProvider` (facade `foot_fast` + Google Directions at run time, never persisting Google geometry). The routing API base resolves from `window.ARI_ROUTING_API`, then a stored `?api=` override, then same-origin `/api/v1/routing`.
+Calm Route Comparison uses 23 curated Calm Quiet and Calm Nature fixture rounds in `src/data/mock-route-pairs.js`. Pairs 1–10 are shuffled within the first group; pairs 11–23 are independently shuffled within the second group. Both orders derive from the session ID, so participants receive different permutations while refreshes and resumed sessions preserve the same sequence. Fast vs Google Fast uses `AriRoutePairGenerator.createLivemapGoogleRoutePairProvider` (facade `foot_fast` + Google Directions at run time, never persisting Google geometry). The routing API base resolves from `window.ARI_ROUTING_API`, then a stored `?api=` override, then same-origin `/api/v1/routing`.
 
 Contracts are documented in [`DATA_CONTRACT.md`](DATA_CONTRACT.md), [`ANSWER_SCHEMA.md`](ANSWER_SCHEMA.md), and [`DATA_SAVING.md`](DATA_SAVING.md).
 

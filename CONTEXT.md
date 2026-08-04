@@ -57,7 +57,7 @@ The internal research view over the same answer records. It is accessed directly
 
 ## Medal / Rank
 
-Motivational progress earned every five completed comparisons, through 30. Medals never change answer semantics or data validity.
+Motivational progress earned across the 23-comparison journey, at 5, 10, 15, and 23 completed comparisons. Medals never change answer semantics or data validity.
 
 ## Street View Mode
 

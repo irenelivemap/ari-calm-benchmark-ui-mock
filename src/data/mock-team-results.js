@@ -44,7 +44,18 @@
     [Q, Q, Q, Q, Q, N, N, N, N, N, B, B, P, U, U],
     [N, N, N, N, N, N, N, N, N, N, Q, Q, Q, B, B],
     [Q, Q, Q, Q, Q, Q, Q, Q, N, N, N, N, B, B, P],
-    [P, P, P, P, P, P, P, P, N, N, N, N, N, Q, U]
+    [P, P, P, P, P, P, P, P, N, N, N, N, N, Q, U],
+    [N, N, N, N, N, N, N, N, N, Q, Q, Q, B, B, U],
+    [N, N, N, N, N, N, N, N, Q, Q, Q, Q, Q, B, P],
+    [Q, Q, Q, Q, Q, Q, Q, Q, Q, N, N, N, B, B, U],
+    [N, N, N, N, N, N, N, N, N, N, Q, Q, B, P, U],
+    [B, B, B, B, B, B, B, N, N, N, N, Q, Q, P, U],
+    [N, N, N, N, N, N, N, N, Q, Q, Q, B, B, P, U],
+    [Q, Q, Q, Q, Q, Q, Q, Q, N, N, N, N, B, P, U],
+    [N, N, N, N, N, N, N, N, N, Q, Q, Q, Q, B, B],
+    [N, N, N, N, N, N, N, Q, Q, Q, Q, Q, B, P, U],
+    [P, P, P, P, P, P, N, N, N, N, Q, Q, B, U, U],
+    [N, N, N, N, N, N, N, N, N, N, Q, Q, Q, B, U]
   ];
 
   const POSITIVE_REASONS = {
@@ -53,7 +64,7 @@
       'less_need_to_watch_traffic',
       'easier_to_follow',
       'takes_less_time',
-      'know_route_or_area',
+      'familiar_route_or_area',
       'quieter_or_less_busy_streets',
       'less_need_to_watch_traffic',
       'not_sure'
@@ -63,7 +74,7 @@
       'more_near_water',
       'quieter_or_less_busy_streets',
       'takes_less_time',
-      'know_route_or_area',
+      'familiar_route_or_area',
       'more_trees_or_green_space',
       'more_near_water',
       'not_sure'
@@ -74,7 +85,7 @@
       'easier_to_follow',
       'more_near_water',
       'takes_less_time',
-      'know_route_or_area',
+      'familiar_route_or_area',
       'less_need_to_watch_traffic'
     ]
   };
@@ -82,9 +93,11 @@
   const REJECTION_REASONS = [
     'streets_too_busy_or_noisy',
     'not_enough_trees_or_green_space',
+    'not_enough_route_near_water',
     'too_much_attention_traffic',
     'takes_too_long',
-    'hard_to_follow'
+    'hard_to_follow',
+    'prefer_another_known_route'
   ];
 
   const Q2_NOTES = [
@@ -144,15 +157,20 @@
         const createdAt = new Date(Date.UTC(2026, 6, 28, 8 + participantIndex, orderIndex * 7)).toISOString();
         const positivePool = POSITIVE_REASONS[outcome] || [];
         const seed = participantIndex * 13 + pairIndex * 7;
-        const addsOther = positivePool.length > 0 && seed % 9 === 0;
+        const primaryReason = positivePool.length
+          ? positivePool[(participantIndex + pairIndex) % positivePool.length]
+          : null;
+        const addsOther = primaryReason && primaryReason !== 'not_sure' && seed % 9 === 0;
         const q2Reasons = positivePool.length
-          ? [
-              positivePool[(participantIndex + pairIndex) % positivePool.length],
+          ? primaryReason === 'not_sure'
+            ? ['not_sure']
+            : [
+              primaryReason,
               ...((participantIndex + pairIndex) % 4 === 0
                 ? [positivePool[(participantIndex + pairIndex + 1) % positivePool.length]]
                 : []),
               ...(addsOther ? ['other'] : [])
-            ].filter((reason, index, reasons) => reasons.indexOf(reason) === index)
+            ].filter((reason, index, reasons) => reason !== 'not_sure' && reasons.indexOf(reason) === index)
           : [];
         const q2Note = addsOther
           ? Q2_OTHER_NOTES[seed % Q2_OTHER_NOTES.length]
