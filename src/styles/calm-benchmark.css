@@ -3682,7 +3682,7 @@ html.is-challenge-dialog-open {
   flex: none;
   width: 38px;
   height: 38px;
-  margin-left: 2px;
+  margin-left: auto;
   position: relative;
   border-radius: 50%;
   background: var(--ari-grey-02);
