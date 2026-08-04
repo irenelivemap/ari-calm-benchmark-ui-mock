@@ -13,7 +13,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 - [x] Load the benchmark CSS and browser modules.
 - [x] Provide a root element for `AriCalmBenchmark.mount(...)`.
-- [ ] Pass the participant identity from the host session.
+- [x] Persist a stable same-device participant ID; pass a host identity when cross-device identity is required.
 - [x] Implement `routePairProvider` against the real route source.
 - [ ] Implement `answerSink` against production persistence.
 - [ ] Implement `progressSink` when sessions must resume across devices or browsers.
@@ -30,7 +30,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Deploy the prepared container with the infrastructure team's deployment permissions.
 - [ ] Point `game.livemap.sh` DNS at that deployment.
 - [ ] Provide a browser-restricted Google Maps key for `https://game.livemap.sh/*`.
-- [ ] Connect `ARI_DATA_API_BASE` before collecting public responses.
+- [x] Connect production persistence to the existing Supabase project with insert-only anonymous access.
 
 ## Route Provider
 
@@ -51,6 +51,11 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Reject records whose `test` does not match the endpoint.
 - [ ] Add server-side `receivedAt` while preserving client timestamps.
 - [ ] Expose an authenticated NDJSON or equivalent answer feed for analysis.
+- [ ] If replacing Supabase with the optional data API, set `ARI_DATA_ADMIN_TOKEN` and `ARI_ALLOWED_ORIGINS`.
+- [x] Confirm production refuses to start only when neither Supabase nor the optional data API is configured.
+- [ ] Complete every owner decision in `docs/DATA_GOVERNANCE.md`, especially retention, deletion contact, and whether names are necessary.
+- [ ] Run the read-only Supabase preflight, apply the reviewed migration, and save the postflight results.
+- [ ] Run `npm run smoke:production` after deployment and perform one explicitly authorized test submission.
 
 ## Map Behavior
 

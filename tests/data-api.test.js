@@ -1,13 +1,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { mkdtemp } = require('node:fs/promises');
+const { mkdtemp, rm, writeFile } = require('node:fs/promises');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
 const { createDataApi } = require('../server/data-api.js');
+const { createHttpTransport } = require('../src/data/benchmark-transport.js');
 
-async function startApi() {
+async function startApi(options = {}) {
   const dataDir = await mkdtemp(join(tmpdir(), 'ari-data-api-'));
-  const { server, ready } = createDataApi({ dataDir });
+  const { server, ready } = createDataApi({ dataDir, adminToken: 'test-admin-token', ...options });
   await ready;
   await new Promise(resolve => server.listen(0, resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -50,6 +51,22 @@ function validProgress(overrides = {}) {
   };
 }
 
+function answerRequest(record) {
+  return {
+    method: 'POST',
+    headers: { 'Idempotency-Key': record.captureId },
+    body: JSON.stringify(record)
+  };
+}
+
+const adminHeaders = { Authorization: 'Bearer test-admin-token' };
+
+class MemoryStorage {
+  constructor() { this.values = new Map(); }
+  getItem(key) { return this.values.get(key) ?? null; }
+  setItem(key, value) { this.values.set(key, String(value)); }
+}
+
 function validThreeRouteAnswer(overrides = {}) {
   return validAnswer({
     test: 'calm_route_comparison',
@@ -75,17 +92,19 @@ test('saves an answer once and answers duplicates idempotently', async () => {
   const api = await startApi();
   try {
     const url = `${api.base}/api/v1/benchmarks/calm_vs_fast/answers`;
-    const first = await fetch(url, { method: 'POST', body: JSON.stringify(validAnswer()) });
+    const first = await fetch(url, answerRequest(validAnswer()));
     assert.equal(first.status, 201);
     const firstBody = await first.json();
     assert.equal(firstBody.status, 'saved');
     assert.ok(firstBody.record.receivedAt);
 
-    const second = await fetch(url, { method: 'POST', body: JSON.stringify(validAnswer()) });
+    const second = await fetch(url, answerRequest(validAnswer()));
     assert.equal(second.status, 200);
     assert.equal((await second.json()).status, 'duplicate');
 
-    const feed = await fetch(url);
+    const unauthorizedFeed = await fetch(url);
+    assert.equal(unauthorizedFeed.status, 401);
+    const feed = await fetch(url, { headers: adminHeaders });
     assert.equal(feed.headers.get('content-type'), 'application/x-ndjson; charset=utf-8');
     const lines = (await feed.text()).trim().split('\n');
     assert.equal(lines.length, 1);
@@ -99,10 +118,7 @@ test('keeps legacy three-route Calm answers readable at the current endpoint', a
   const api = await startApi();
   try {
     const url = `${api.base}/api/v1/benchmarks/calm_route_comparison/answers`;
-    const response = await fetch(url, {
-      method: 'POST',
-      body: JSON.stringify(validThreeRouteAnswer())
-    });
+    const response = await fetch(url, answerRequest(validThreeRouteAnswer()));
     assert.equal(response.status, 201);
     assert.equal((await response.json()).record.labelMap.C, 'calm_nature');
   } finally {
@@ -114,16 +130,12 @@ test('rejects answers that break the challenge rules or the endpoint test', asyn
   const api = await startApi();
   try {
     const url = `${api.base}/api/v1/benchmarks/calm_vs_fast/answers`;
-    const invalid = await fetch(url, {
-      method: 'POST',
-      body: JSON.stringify(validAnswer({ q3Issues: [] }))
-    });
+    const invalidRecord = validAnswer({ q3Issues: [] });
+    const invalid = await fetch(url, answerRequest(invalidRecord));
     assert.equal(invalid.status, 400);
     assert.match((await invalid.json()).errors.join(' '), /q3Issue/);
 
-    const wrongTest = await fetch(url, {
-      method: 'POST',
-      body: JSON.stringify(validAnswer({
+    const wrongTestRecord = validAnswer({
         test: 'ari_fast_vs_google',
         source: 'fast-google-benchmark',
         routeAssignment: { routeA: 'livemap_fast', routeB: 'google' },
@@ -133,8 +145,8 @@ test('rejects answers that break the challenge rules or the endpoint test', asyn
         },
         q2Separate: null,
         q3Issues: ['longer_time']
-      }))
-    });
+      });
+    const wrongTest = await fetch(url, answerRequest(wrongTestRecord));
     assert.equal(wrongTest.status, 400);
     assert.match((await wrongTest.json()).errors.join(' '), /does not match/);
   } finally {
@@ -150,11 +162,13 @@ test('upserts and returns session progress', async () => {
     assert.equal(first.status, 200);
     await fetch(url, { method: 'PUT', body: JSON.stringify(validProgress({ roundIndex: 3, completedRounds: 3 })) });
 
-    const read = await fetch(url);
+    const unauthorizedRead = await fetch(url);
+    assert.equal(unauthorizedRead.status, 401);
+    const read = await fetch(url, { headers: adminHeaders });
     assert.equal(read.status, 200);
     assert.equal((await read.json()).record.roundIndex, 3);
 
-    const missing = await fetch(`${api.base}/api/v1/benchmarks/calm_vs_fast/sessions/other/progress`);
+    const missing = await fetch(`${api.base}/api/v1/benchmarks/calm_vs_fast/sessions/other/progress`, { headers: adminHeaders });
     assert.equal(missing.status, 404);
   } finally {
     await api.close();
@@ -178,5 +192,74 @@ test('rejects unknown tests and malformed JSON', async () => {
     assert.match((await malformed.json()).errors.join(' '), /JSON/);
   } finally {
     await api.close();
+  }
+});
+
+test('accepts records from the browser HTTP transport end to end', async () => {
+  const api = await startApi();
+  try {
+    const transport = createHttpTransport({
+      baseUrl: `${api.base}/api/v1/benchmarks`,
+      storage: new MemoryStorage()
+    });
+    assert.deepEqual(await transport.saveAnswer(validAnswer()), { status: 'sent' });
+    assert.deepEqual(await transport.saveProgress(validProgress()), { status: 'sent' });
+    const feed = await fetch(`${api.base}/api/v1/benchmarks/calm_vs_fast/answers`, { headers: adminHeaders });
+    assert.equal((await feed.text()).trim().split('\n').length, 1);
+  } finally {
+    await api.close();
+  }
+});
+
+test('restricts write origins and rate limits abusive clients', async () => {
+  const api = await startApi({ allowedOrigins: ['https://study.example'], rateLimitPerMinute: 1 });
+  try {
+    const url = `${api.base}/api/v1/benchmarks/calm_vs_fast/answers`;
+    const blocked = await fetch(url, answerRequest(validAnswer()));
+    assert.equal(blocked.status, 403);
+
+    const firstRecord = validAnswer();
+    const accepted = await fetch(url, {
+      ...answerRequest(firstRecord),
+      headers: { ...answerRequest(firstRecord).headers, Origin: 'https://study.example' }
+    });
+    assert.equal(accepted.status, 201);
+
+    const secondRecord = validAnswer({ captureId: 'calm-session-1-round-2', roundId: 'calm-session-1-round-2', roundNumber: 2 });
+    const limited = await fetch(url, {
+      ...answerRequest(secondRecord),
+      headers: { ...answerRequest(secondRecord).headers, Origin: 'https://study.example' }
+    });
+    assert.equal(limited.status, 429);
+  } finally {
+    await api.close();
+  }
+});
+
+test('recovers from an incomplete final NDJSON record after an interrupted write', async () => {
+  const dataDir = await mkdtemp(join(tmpdir(), 'ari-data-api-'));
+  await writeFile(
+    join(dataDir, 'calm_route_comparison-answers.ndjson'),
+    '{"captureId":"existing"}\n{"captureId":'
+  );
+  const { server, ready } = createDataApi({ dataDir, adminToken: 'secret' });
+  await ready;
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:${server.address().port}/api/v1/benchmarks/calm_route_comparison/answers`,
+      answerRequest(validThreeRouteAnswer())
+    );
+    assert.equal(response.status, 201);
+    const feed = await fetch(
+      `http://127.0.0.1:${server.address().port}/api/v1/benchmarks/calm_route_comparison/answers`,
+      { headers: { Authorization: 'Bearer secret' } }
+    );
+    const lines = (await feed.text()).trim().split('\n').map(line => JSON.parse(line));
+    assert.deepEqual(lines.map(record => record.captureId), ['existing', 'calm-session-1-round-1']);
+  } finally {
+    await new Promise(resolve => server.close(resolve));
+    await rm(dataDir, { recursive: true, force: true });
   }
 });

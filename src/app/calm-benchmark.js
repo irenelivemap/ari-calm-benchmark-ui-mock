@@ -244,10 +244,13 @@
       if (!pairs.length) {
         return Promise.reject(new Error(`No ${label} loaded. Include route-pair data or provide routePairProvider.`));
       }
+      if (!Number.isInteger(roundIndex) || roundIndex < 0 || roundIndex >= pairs.length) {
+        return Promise.reject(new RangeError(`Round ${roundIndex + 1} is outside the ${pairs.length}-pair corpus.`));
+      }
       const pairOrder = sessionId
         ? createSessionPairOrder(pairs.length, sessionId)
         : Array.from({ length: pairs.length }, (_, index) => index);
-      const pairIndex = pairOrder[roundIndex % pairs.length];
+      const pairIndex = pairOrder[roundIndex];
       const base = pairs[pairIndex];
       return Promise.resolve({
         ...base,
@@ -257,6 +260,16 @@
   }
 
   const mockRoutePairProvider = createMockRoutePairProvider(demoPairs, 'calm mock route pairs');
+
+  function isValidRouteAssignment(assignment, routeTypes) {
+    if (!assignment || typeof assignment !== 'object') return false;
+    const active = ROUTE_SLOTS
+      .map(({ key }) => assignment[key])
+      .filter(Boolean);
+    return active.length === routeTypes.length
+      && new Set(active).size === active.length
+      && routeTypes.every(routeType => active.includes(routeType));
+  }
 
   function consoleAnswerSink(answer) {
     console.info('[ARI calm benchmark answer]', answer);
@@ -426,7 +439,7 @@
                     })}
                   </div>
                   <div class="ari-question-note" data-q2-note hidden>
-                    <textarea name="q2Note" aria-label="Add optional details about your answer" placeholder="Add details (optional)"></textarea>
+                    <textarea name="q2Note" maxlength="500" aria-label="Add optional details about your answer" placeholder="Add details (optional)"></textarea>
                   </div>
                 </fieldset>
                 </section>
@@ -440,7 +453,7 @@
                     ${renderChoiceOptions(benchmark.q3Options, { name: 'q3Issues', type: 'checkbox' })}
                   </div>
                   <div class="ari-question-note" data-q3-note hidden>
-                    <textarea name="q3Note" aria-label="Add optional details about your answer" placeholder="Add details (optional)"></textarea>
+                    <textarea name="q3Note" maxlength="500" aria-label="Add optional details about your answer" placeholder="Add details (optional)"></textarea>
                   </div>
                 </fieldset>
                 </section>
@@ -543,7 +556,10 @@
     const state = {
       sessionId: options.sessionId || createId(benchmark.sessionPrefix),
       sessionStartedAt: options.sessionStartedAt || new Date().toISOString(),
+      participantId: options.participantId || '',
       participantName: options.participantName || '',
+      consentVersion: options.consentVersion || null,
+      consentedAt: options.consentedAt || null,
       roundIndex: initialRoundIndex,
       totalRounds: initialTotalRounds,
       pair: null,
@@ -1878,7 +1894,11 @@
         if (announce) flashSaved();
         return true;
       } catch (error) {
-        console.error('Could not sync benchmark progress.', error);
+        console.error(
+          'Could not sync benchmark progress.',
+          error,
+          Array.isArray(error?.details) ? error.details.join(' | ') : ''
+        );
         showSystemStatus('Couldn’t sync. Your answers are still on this device.', {
           retry: () => autosave({ announce: true })
         });
@@ -1894,6 +1914,14 @@
       els.panelToggle.disabled = visible;
       els.questionCard.classList.toggle('is-goal-checkpoint', visible);
       if (visible) {
+        const finalComplete = !canContinueAfterCurrentRound();
+        const title = els.goalCheckpoint.querySelector('h2');
+        const copy = els.goalCheckpoint.querySelector('span');
+        if (title) title.textContent = `${state.completedRounds} comparisons saved.`;
+        if (copy) copy.textContent = finalComplete
+          ? 'You completed all route pairs. Your answers are saved.'
+          : 'Your answers are saved. You can finish now or keep comparing.';
+        els.continueSession.hidden = finalComplete;
         updatePanelState(false);
         els.form.inert = true;
         if (focus) requestAnimationFrame(() => els.endSession.focus({ preventScroll: true }));
@@ -1940,7 +1968,7 @@
     function readProgress() {
       const savedAt = new Date().toISOString();
       return {
-        v: 1,
+        v: 2,
         type: 'bench-progress',
         test: benchmark.testId,
         source: benchmark.source,
@@ -1948,6 +1976,9 @@
         sessionId: state.sessionId,
         sessionStartedAt: state.sessionStartedAt,
         participantName: state.participantName,
+        participantId: state.participantId,
+        consentVersion: state.consentVersion,
+        consentedAt: state.consentedAt,
         roundIndex: state.roundIndex,
         completedRounds: state.completedRounds,
         goalCheckpointPending: state.goalCheckpointPending,
@@ -1994,7 +2025,7 @@
         : null;
       const q3Variant = getQ3Variant();
       return {
-        v: 1,
+        v: 2,
         type: 'bench-ux',
         test: benchmark.testId,
         source: benchmark.source,
@@ -2006,6 +2037,9 @@
         roundNumber: state.roundIndex + 1,
         pairId: state.pair.pairId,
         participantName: state.participantName,
+        participantId: state.participantId,
+        consentVersion: state.consentVersion,
+        consentedAt: state.consentedAt,
         rater: state.participantName,
         routeAssignment: state.assignment,
         routeAType: state.assignment.routeA,
@@ -2066,6 +2100,8 @@
       els.form.querySelectorAll('input[name="q1Choice"]').forEach(input => {
         input.checked = selectedQ1Choices.has(input.value);
       });
+      const knowsBetter = els.form.querySelector('input[name="q1KnowsBetter"]');
+      if (knowsBetter) knowsBetter.checked = answer.q1KnowsBetter === true;
       els.form.querySelectorAll('input[name="q2Separate"]').forEach(input => {
         input.checked = input.value === (answer.q2Separate || null);
       });
@@ -2093,7 +2129,9 @@
       partialAnswer = null,
       expectedPairId = null
     } = {}) {
-      const requestedAssignment = routeAssignment || randomAssignment(benchmark.routeTypes);
+      const requestedAssignment = isValidRouteAssignment(routeAssignment, benchmark.routeTypes)
+        ? routeAssignment
+        : randomAssignment(benchmark.routeTypes);
       const retry = () => loadRound(index, {
         deferRouteReveal,
         panelCollapsed,
@@ -2261,6 +2299,7 @@
       const earnedMilestone = getEarnedMilestone(state.completedRounds, milestones);
       if (!canContinueAfterCurrentRound()) {
         els.submit.textContent = 'Complete';
+        state.goalCheckpointPending = true;
       } else {
         await playRoundTransition(state.roundIndex + 1, earnedMilestone);
       }
@@ -2477,8 +2516,9 @@
     window.AriCalmBenchmark = {
       mount,
       mockRoutePairProvider,
-      createMockRoutePairProvider,
-      createSessionPairOrder,
+    createMockRoutePairProvider,
+    createSessionPairOrder,
+    isValidRouteAssignment,
       consoleAnswerSink,
       consoleProgressSink,
       getHudDialProgress,

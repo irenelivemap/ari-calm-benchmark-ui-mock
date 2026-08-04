@@ -17,6 +17,11 @@ test('provides a deterministic, varied Calm team-results fixture', () => {
   });
   assert.equal(summary.participants, 15);
   assert.equal(summary.routePairs, 23);
+  assert.equal(Object.values(summary.outcomeCounts).reduce((total, count) => total + count, 0), answers.length);
+  assert.equal(
+    summary.choiceReasonDenom,
+    agreementEligibleCount(answers)
+  );
   assert.ok(summary.outcomeCounts.calm_quiet > 0);
   assert.ok(summary.outcomeCounts.calm_nature > 0);
   assert.ok(summary.outcomeCounts.none_work_well > 0);
@@ -37,3 +42,7 @@ test('provides a deterministic, varied Calm team-results fixture', () => {
   assert.ok(agreement.natureLeadingPairs > agreement.quietLeadingPairs);
   assert.ok(agreement.quietPreferenceInterval.high < 50);
 });
+
+function agreementEligibleCount(answers) {
+  return answers.filter(answer => ['route_a', 'route_b', 'both_work_well'].includes(answer.q1Choice)).length;
+}

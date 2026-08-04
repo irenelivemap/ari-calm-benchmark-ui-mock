@@ -108,6 +108,37 @@ test('rejects submitted answers that do not satisfy conditional questions', () =
   );
 });
 
+test('strictly validates current v2 Calm corpus records', () => {
+  const current = validAnswer({
+    v: 2,
+    participantId: 'participant-123',
+    consentVersion: '2026-08-04',
+    consentedAt: '2026-08-04T10:00:00.000Z',
+    pairId: 'calm-route-comparison-01-round-1',
+    q1KnowsBetter: false,
+    labels: {
+      A: { routeId: 'calm-round-1-calm-quiet', routeType: 'calm_quiet', source: 'saved' },
+      B: { routeId: 'calm-round-1-calm-nature', routeType: 'calm_nature', source: 'saved' }
+    }
+  });
+  assert.equal(validateAnswerRecord(current).valid, true);
+
+  const fabricated = validateAnswerRecord({
+    ...current,
+    roundId: 'calm-session-123-round-999',
+    captureId: 'calm-session-123-round-999',
+    roundNumber: 999,
+    pairId: 'not-a-real-pair'
+  });
+  assert.equal(fabricated.valid, false);
+  assert.match(fabricated.errors.join(' '), /23 current Calm pairs|between 1 and 23/);
+
+  const incomplete = { ...current };
+  delete incomplete.q2Reasons;
+  delete incomplete.q3WorthShowing;
+  assert.equal(validateAnswerRecord(incomplete).valid, false);
+});
+
 test('keeps completed Calm answers from before Q2 reasons readable', () => {
   const historicalAnswer = validAnswer();
   delete historicalAnswer.q2Reasons;

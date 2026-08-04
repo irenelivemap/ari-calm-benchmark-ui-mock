@@ -6,7 +6,7 @@ The benchmark separates completed answers from resumable progress:
 2. An unfinished session upserts one progress record.
 3. Results read the same challenge dataset and never maintain a second answer source.
 
-The browser implements this contract in `src/data/calm-benchmark-data.js` with local storage. When runtime configuration supplies `dataApiBase`, `src/data/benchmark-transport.js` delivers the same validated records to production endpoints and reads the shared NDJSON answer feed for the Calm team-results dashboard. The dashboard merges that feed with local answers by capture ID so an unsent local answer remains visible without creating duplicates.
+The browser implements this contract in `src/data/calm-benchmark-data.js` with local storage. GitHub Pages writes the same validated records to Supabase through `src/data/supabase-transport.js`; row-level security allows anonymous inserts but not reads. A self-hosted deployment can instead supply `dataApiBase` and use `src/data/benchmark-transport.js`. Researcher reads happen in the Supabase dashboard or through an authenticated server-side feed.
 
 ## Challenge Datasets
 
@@ -22,14 +22,14 @@ The `Reset test data` control currently clears both datasets. It exists for the 
 ## Dataset Shape
 
 ```ts
-type BenchmarkDatasetV1 = {
-  v: 1;
+type BenchmarkDatasetV2 = {
+  v: 2;
   type: "calm-benchmark-dataset"; // Historical type retained for compatibility.
   test: "calm_route_comparison" | "ari_fast_vs_google";
   updatedAt: string;
   sessions: Record<string, SessionSummary>;
-  progressBySessionId: Record<string, BenchmarkProgressV1>;
-  answers: BenchmarkAnswerV1[];
+  progressBySessionId: Record<string, BenchmarkProgressV2>;
+  answers: BenchmarkAnswerV2[];
 };
 ```
 
@@ -50,9 +50,11 @@ AriCalmBenchmark.mount(root, {
 });
 ```
 
-In `index.html`, these adapters always call the active challenge's local repository first. Production additionally calls the HTTP transport. Failed requests enter `ari-benchmark-http-outbox-v1` and retry without interrupting the participant.
+In `index.html`, these adapters always call the active challenge's local repository first. Production additionally calls the configured Supabase or HTTP transport. Localhost and `file://` previews never select the production Supabase transport automatically. Failed requests enter the selected transport's local outbox; production keeps the participant on the current comparison and exposes the sync failure until delivery succeeds. A production build with neither transport configured fails closed and cannot start data collection.
 
 Queued answers deduplicate by `captureId`. Queued progress deduplicates by test and session, so only the newest unsent state survives. A newer successful progress write removes any older queued version before the outbox flushes.
+
+Legacy Calm progress created before participant identity and consent metadata is not offered for resume. The participant must begin a new consented session; the application never invents consent metadata for an older session.
 
 ## Production Endpoints
 
@@ -88,6 +90,8 @@ The server should:
 - reject records whose `test` does not match the endpoint
 
 ## Dashboard Feed
+
+The feed and progress-read endpoints require `Authorization: Bearer <ARI_DATA_ADMIN_TOKEN>`. Participant browsers never receive this token. Production writes are restricted to `ARI_ALLOWED_ORIGINS` and rate-limited by the reference API.
 
 The answer feed is newline-delimited JSON, one completed answer per line. Records retain the first benchmark's compatibility vocabulary:
 

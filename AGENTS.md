@@ -8,6 +8,16 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 4. `docs/PRODUCT.md` and `docs/DESIGN.md` before changing behavior or UI.
 5. The relevant data contract in `docs/` before changing stored records.
 
+## Production Persistence — Do Not Reinterpret
+
+- **Supabase project `xyrmytymcipyntdtsksu` is the active production persistence backend for the GitHub Pages deployment.** It is not mock or preview infrastructure.
+- `runtime-config.js` intentionally contains the Supabase project URL and **public anon key**. A Supabase anon key is a browser credential governed by row-level security, not a private service-role secret. Do not remove or blank either value as a security cleanup.
+- `supabase-setup.sql` is the canonical database policy/schema setup. Anonymous participants may insert answers and progress; anonymous reads remain blocked. Researchers read through the authenticated Supabase dashboard.
+- `src/data/supabase-transport.js` is the primary GitHub Pages production transport. `src/data/benchmark-transport.js` and `server/data-api.js` are an optional self-hosted alternative, not a prerequisite for the current deployment.
+- Localhost and `file://` previews must not write to production Supabase. Supabase is selected automatically only when runtime production mode is active.
+- Production must fail closed only when **neither** Supabase nor the optional HTTP data API is configured.
+- Before changing persistence, inspect `runtime-config.js`, `supabase-setup.sql`, and `docs/DATA_SAVING.md`. Do not infer backend status from `dataApiBase` alone.
+
 ## Working Rules
 
 - Preserve blinding. Testers see `Route A` and `Route B`; provider identities stay in the hidden assignment.
@@ -16,14 +26,14 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 - Treat `src/data/mock-*.js` as fixtures only. Production data must enter through `routePairProvider`.
 - `src/api/route-pair-generator.js` owns random route-pair generation against the routing facade. Keep its fixture fallback working; GitHub Pages has no backend.
 - `src/app/runtime.js` owns base-path and challenge URL behavior. Preserve both clean `/routing/*` paths and legacy `?game=` preview links.
-- `src/data/benchmark-transport.js` owns production HTTP delivery and its local outbox. Never allow older queued progress to overwrite newer progress.
-- `server/data-api.js` owns server-side persistence. It must validate with `src/data/calm-benchmark-data.js`, stay append-only for answers, and never accept a record whose `test` does not match the endpoint.
+- `src/data/supabase-transport.js` owns primary GitHub Pages production delivery and its local outbox. Never allow older queued progress to overwrite newer progress.
+- `src/data/benchmark-transport.js` and `server/data-api.js` own the optional self-hosted persistence path. The server must validate with `src/data/calm-benchmark-data.js`, stay append-only for answers, and never accept a record whose `test` does not match the endpoint.
 - Never commit a Google Maps API key. Local Google Maps setup is described in `README.md`.
 - Do not reset or rewrite a tester's browser data during visual QA. Use `fresh.html` for a non-destructive new-player preview.
 - Keep the current static/no-build architecture unless the project owner explicitly approves a migration.
 - After editing `index.html`, CSS, or browser JavaScript, update the corresponding asset query string in `index.html` when browser caching could hide the change.
 - Do not modify the external `livemap-routing/runtime/demo.html` from this repository.
-- Keep production environment values in `deploy/Caddyfile` runtime configuration. Never hardcode a real Google key or backend credential.
+- Keep self-hosted production environment values in `deploy/Caddyfile` runtime configuration. Never hardcode a Google key, Supabase service-role key, or other private backend credential. The existing browser-safe Supabase anon key in `runtime-config.js` is intentional.
 
 ## Required Checks
 

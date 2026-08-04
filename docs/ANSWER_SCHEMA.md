@@ -71,8 +71,8 @@ type Q3Issue =
   | "more_stairs"
   | "more_turns";
 
-type BenchmarkAnswerV1 = {
-  v: 1;
+type BenchmarkAnswerV2 = {
+  v: 2;
   type: "bench-ux";
   test: "calm_route_comparison" | "ari_fast_vs_google";
   source: "calm-route-comparison" | "fast-google-benchmark";
@@ -85,7 +85,10 @@ type BenchmarkAnswerV1 = {
   roundNumber: number;        // One-based.
   pairId: string;
   participantName: string;
+  participantId: string;       // Stable for the same normalized name on one device.
   rater: string;              // Compatibility alias of participantName.
+  consentVersion: string;
+  consentedAt: string;         // ISO timestamp.
 
   routeAssignment: {
     routeA: RouteType;
@@ -193,25 +196,30 @@ When Calm Q2 is required, at least one `q2Reasons` value must be selected. `not_
 Unfinished sessions use the same answer shape as a partial record:
 
 ```ts
-type BenchmarkProgressV1 = {
-  v: 1;
+type BenchmarkProgressV2 = {
+  v: 2;
   type: "bench-progress";
-  test: BenchmarkAnswerV1["test"];
-  source: BenchmarkAnswerV1["source"];
+  test: BenchmarkAnswerV2["test"];
+  source: BenchmarkAnswerV2["source"];
   benchmarkRunId: string;
   sessionId: string;
   participantName: string;
+  participantId: string;
+  consentVersion: string;
+  consentedAt: string;
   sessionStartedAt: string;
   roundIndex: number;          // Zero-based current round.
   completedRounds: number;
   goalCheckpointPending: boolean; // True until the 10-comparison choice is resolved.
   pairId: string | null;
-  routeAssignment: BenchmarkAnswerV1["routeAssignment"] | null;
+  routeAssignment: BenchmarkAnswerV2["routeAssignment"] | null;
   questionStep: "q1" | "q2" | "q3";
-  partialAnswer: Partial<BenchmarkAnswerV1> | null;
+  partialAnswer: Partial<BenchmarkAnswerV2> | null;
   savedAt: string;
 };
 ```
+
+Version 1 remains readable for historical analysis. Version 2 is strict: current Calm records must reference one of the 23 corpus pairs, use a round from 1–23, carry matching route IDs and capture IDs, include participant and consent metadata, and satisfy every current conditional question.
 
 ## Idempotency
 

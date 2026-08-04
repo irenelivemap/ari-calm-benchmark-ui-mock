@@ -17,8 +17,10 @@ The infrastructure team only needs to:
 | --- | --- | --- |
 | `ROUTING_UPSTREAM` | Recommended | Server-side routing facade origin. Defaults to the current TBT deployment. Prefer its internal service address in production. |
 | `ARI_GOOGLE_MAPS_KEY` | For Street View and Fast vs Google | Browser-restricted Maps JavaScript key. Restrict it to `https://game.livemap.sh/*`. |
-| `ARI_DATA_API_BASE` | Before public launch | Same-origin benchmark persistence base, normally `/api/v1/benchmarks`. |
+| `ARI_DATA_API_BASE` | Optional | Same-origin alternative to the existing Supabase persistence, normally `/api/v1/benchmarks`. |
 | `DATA_UPSTREAM` | With the data API | Internal origin that implements the benchmark persistence contract. |
+| `ARI_DATA_ADMIN_TOKEN` | Yes, on the data API | Long random bearer token used only by authorized research exports. Never expose it to participant browsers. |
+| `ARI_ALLOWED_ORIGINS` | Yes, on the data API | Comma-separated participant origins, for example `https://game.livemap.sh`. |
 | `APP_ROOT` | No | Static file root. The container already sets the expected `/srv/ari-route-arcade` default. |
 
 The Google key is delivered to the browser by design. Its protection is the HTTP-referrer and API restriction in Google Cloud, not secrecy inside the container.
@@ -45,7 +47,7 @@ PUT  /api/v1/benchmarks/{testId}/sessions/{sessionId}/progress
 
 Failed writes stay in a local outbox and retry on the next save, page load, or `online` event. The server must enforce answer idempotency using the `Idempotency-Key` header.
 
-Do not launch the public LinkedIn campaign while `ARI_DATA_API_BASE` is empty: comparisons would remain only in each participant's browser.
+GitHub Pages uses the existing Supabase configuration. For deployments that remove it, do not launch while `ARI_DATA_API_BASE` is empty: production fails closed when neither persistence transport is available.
 
 ## Data API Service
 
@@ -62,6 +64,5 @@ persistent volume mounted at `/data`. Then set on the main container:
 The proxy route in the main Caddyfile is already in place and stays dormant
 until `ARI_DATA_API_BASE` is set. Records land in `/data` as
 `{testId}-answers.ndjson` (append-only) and `{testId}-progress.json` — back up
-that volume. The endpoint is unauthenticated by design for the research phase;
-it accepts only records that pass full challenge validation. The routing team
+that volume. Writes are origin-restricted and rate-limited; answer and progress reads require the admin bearer token. It accepts only records that pass full challenge validation. The routing team
 can later port the contract into the Java service without any frontend change.

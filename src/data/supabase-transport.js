@@ -56,8 +56,10 @@
       };
     }
 
-    async function upsert(table, row, prefer) {
-      const response = await fetchImpl(`${base}/rest/v1/${table}`, {
+    async function upsert(table, row, prefer, conflictColumn) {
+      const url = new URL(`${base}/rest/v1/${table}`);
+      url.searchParams.set('on_conflict', conflictColumn);
+      const response = await fetchImpl(url.toString(), {
         method: 'POST',
         headers: { ...authHeaders(), 'Prefer': prefer },
         body: JSON.stringify(row),
@@ -82,16 +84,17 @@
           payload: item.record
         };
         // Ignore duplicates — same captureId means same answer, no update needed
-        return upsert('benchmark_answers', row, 'resolution=ignore-duplicates,return=minimal');
+        return upsert('benchmark_answers', row, 'resolution=ignore-duplicates,return=minimal', 'capture_id');
       }
       if (item.kind === 'progress') {
         const row = {
           session_id: item.record.sessionId,
           test: item.record.test,
-          payload: item.record
+          payload: item.record,
+          updated_at: item.record.savedAt || new Date().toISOString()
         };
         // Replace — always keep the latest progress for a session
-        return upsert('benchmark_progress', row, 'resolution=merge-duplicates,return=minimal');
+        return upsert('benchmark_progress', row, 'resolution=merge-duplicates,return=minimal', 'session_id');
       }
       throw new Error(`Unknown kind: ${item.kind}`);
     }

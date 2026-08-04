@@ -2,8 +2,11 @@
   const ROUTE_KEYS = ['routeA', 'routeB', 'routeC'];
   const routeOverlap = window.AriRouteOverlap;
 
-  function activeRouteKeys(assignment) {
-    return ROUTE_KEYS.filter(routeKey => assignment?.[routeKey]);
+  function activeRouteKeys(assignment, pair = null) {
+    return ROUTE_KEYS.filter(routeKey => {
+      const routeType = assignment?.[routeKey];
+      return routeType && (!pair || pair.routes?.[routeType]?.geometry);
+    });
   }
 
   function routeSuffix(routeKey) {
@@ -292,8 +295,8 @@
       ]));
     }
 
-    function maplibreRouteLayers(assignment) {
-      const routeKeys = activeRouteKeys(assignment);
+    function maplibreRouteLayers(assignment, pair) {
+      const routeKeys = activeRouteKeys(assignment, pair);
       return [
         ...routeKeys.map(route => ({
           id: `ari-route-${routeSuffix(route)}-case`,
@@ -373,7 +376,7 @@
           }, routeKey);
         });
       }
-      const routeKeys = activeRouteKeys(assignment);
+      const routeKeys = activeRouteKeys(assignment, pair);
       ROUTE_KEYS.filter(routeKey => !routeKeys.includes(routeKey)).forEach(routeKey => {
         ['case', 'line', 'hit'].forEach(kind => {
           const layerId = `ari-route-${routeSuffix(routeKey)}-${kind}`;
@@ -411,7 +414,7 @@
       });
 
       state.maplibreVisuals = Object.fromEntries(routeKeys.map(routeKey => [routeKey, []]));
-      maplibreRouteLayers(assignment).forEach(layer => {
+      maplibreRouteLayers(assignment, pair).forEach(layer => {
         const color = layer.color || routeColor(layer.route);
         if (!map.getLayer(layer.id)) {
           map.addLayer({
@@ -454,7 +457,7 @@
     function maplibreRouteBounds() {
       if (!state.pair || !state.assignment) return null;
       const bounds = new maplibregl.LngLatBounds();
-      activeRouteKeys(state.assignment).map(routeKey => state.assignment[routeKey]).forEach(routeType => {
+      activeRouteKeys(state.assignment, state.pair).map(routeKey => state.assignment[routeKey]).forEach(routeType => {
         normalizeLatLngs(state.pair.routes[routeType].geometry).forEach(point => {
           bounds.extend([point[1], point[0]]);
         });
@@ -575,7 +578,7 @@
       state.googleOverlays.forEach(overlay => overlay.setMap(null));
       state.googleOverlays = [];
       state.googleHitAreas = [];
-      const routeKeys = activeRouteKeys(assignment);
+      const routeKeys = activeRouteKeys(assignment, pair);
       const routeGeometriesByKey = Object.fromEntries(routeKeys.map(routeKey => [
         routeKey,
         normalizeLatLngs(pair.routes[assignment[routeKey]].geometry)
@@ -681,7 +684,7 @@
         iconAnchor: [endMarker.anchorX, endMarker.anchorY]
       });
 
-      const routeKeys = activeRouteKeys(assignment);
+      const routeKeys = activeRouteKeys(assignment, pair);
       const routeGeometries = Object.fromEntries(routeKeys.map(routeKey => [
         routeKey,
         normalizeLatLngs(pair.routes[assignment[routeKey]].geometry)
@@ -835,13 +838,15 @@
 
     function getRepresentativeRoutePoint(routeKey) {
       if (!state.pair || !state.assignment?.[routeKey]) return null;
-      const geometry = normalizeLatLngs(state.pair.routes[state.assignment[routeKey]].geometry);
+      const route = state.pair.routes?.[state.assignment[routeKey]];
+      if (!route?.geometry) return null;
+      const geometry = normalizeLatLngs(route.geometry);
       const point = geometry[Math.floor(geometry.length / 2)];
       return point ? { lat: point[0], lng: point[1], routeKey } : null;
     }
 
     function routeEmphasisConfig() {
-      const routeKeys = activeRouteKeys(state.assignment);
+      const routeKeys = activeRouteKeys(state.assignment, state.pair);
       const selected = new Set(state.selectedRouteKeys.filter(key => routeKeys.includes(key)));
       const focused = routeKeys.includes(state.focusedRouteKey) ? state.focusedRouteKey : null;
       return Object.fromEntries(routeKeys.map(key => {
@@ -919,7 +924,7 @@
     }
 
     function setSelectedRoutes(routeKeys = []) {
-      const activeKeys = activeRouteKeys(state.assignment);
+      const activeKeys = activeRouteKeys(state.assignment, state.pair);
       state.selectedRouteKeys = [...new Set(routeKeys)].filter(key => activeKeys.includes(key));
       applyRouteEmphasis();
     }

@@ -43,7 +43,7 @@
 	redir / /routing/ 308
 	redir /routing /routing/ 308
 
-	@challenge_trailing path_regexp challenge_trailing ^/routing/(fast-vs-google|fast-vs-calm)/$
+@challenge_trailing path_regexp challenge_trailing ^/routing/(fast-vs-google|fast-vs-calm|calm-route-comparison)/$
 	redir @challenge_trailing /routing/{re.challenge_trailing.1} 308
 
 	handle_path /routing/* {

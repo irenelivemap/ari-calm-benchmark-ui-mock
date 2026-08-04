@@ -6,6 +6,7 @@
   const OUTCOMES = [
     'calm_quiet',
     'calm_nature',
+    'both_work_well',
     'none_work_well',
     'hard_to_judge'
   ];
@@ -163,11 +164,12 @@
       pairId: answer.pairId || 'Unknown pair',
       analysisPairId: canonicalPairId(answer.pairId),
       roundNumber: Number.isFinite(Number(answer.roundNumber)) ? Number(answer.roundNumber) : null,
-      date: answer.clientTs || answer.createdAt || '',
+      date: answer.receivedAt || answer.clientTs || answer.createdAt || '',
       outcome: outcomes.length === 1 ? outcomes[0] : 'multiple_routes',
       outcomes,
       exactOutcome: exactOutcome(answer),
       q2: answer.q2Separate || null,
+      q1KnowsBetter: answer.q1KnowsBetter === true,
       q2Reasons: Array.isArray(answer.q2Reasons) ? [...answer.q2Reasons] : [],
       q2Note: answer.q2Note || answer.q2Other || '',
       q2Other: answer.q2Other || '',
@@ -410,6 +412,7 @@
     const reasonCounts = emptyCounts(REASONS);
     const choiceReasonCounts = emptyCounts(CHOICE_REASONS);
     let choiceReasonDenom = 0;
+    let knowsBetterRouteCount = 0;
     const participantIds = new Set();
     const routePairs = new Set();
     const positionBias = {
@@ -419,17 +422,16 @@
     };
 
     rows.forEach(row => {
-      row.outcomes.forEach(outcome => {
-        if (Object.hasOwn(outcomeCounts, outcome)) outcomeCounts[outcome] += 1;
-      });
+      if (Object.hasOwn(outcomeCounts, row.exactOutcome)) outcomeCounts[row.exactOutcome] += 1;
       if (row.q2 && Object.hasOwn(q2Counts, row.q2)) q2Counts[row.q2] += 1;
+      if (row.q1KnowsBetter) knowsBetterRouteCount += 1;
       if (row.q3WorthShowing && Object.hasOwn(q3WorthShowingCounts, row.q3WorthShowing)) {
         q3WorthShowingCounts[row.q3WorthShowing] += 1;
       }
       row.reasons.forEach(reason => {
         if (Object.hasOwn(reasonCounts, reason)) reasonCounts[reason] += 1;
       });
-      if (row.exactOutcome === 'calm_nature' || row.exactOutcome === 'calm_quiet') {
+      if (['calm_nature', 'calm_quiet', 'both_work_well'].includes(row.exactOutcome)) {
         choiceReasonDenom += 1;
         row.q2Reasons.forEach(reason => {
           if (Object.hasOwn(choiceReasonCounts, reason)) choiceReasonCounts[reason] += 1;
@@ -464,6 +466,7 @@
       reasonCounts,
       choiceReasonCounts,
       choiceReasonDenom,
+      knowsBetterRouteCount,
       positionBias,
       leadingRoute,
       leadingRoutes,

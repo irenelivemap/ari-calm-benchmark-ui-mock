@@ -47,6 +47,10 @@ The append-only, idempotent record produced by a completed comparison. `captureI
 
 The upserted record for an unfinished session. It includes the current pair, hidden assignment, question step, and partial answer.
 
+## Production Persistence
+
+The GitHub Pages deployment writes to Supabase project `xyrmytymcipyntdtsksu` using its public anon key. Row-level security permits anonymous inserts and blocks anonymous reads. This is the active production backend, not a preview fixture. The file-backed HTTP data API is an optional alternative for a future self-hosted deployment.
+
 ## Community Results
 
 Participant-facing aggregate results. They are released in completed batches so active testers do not see unstable percentages after every answer.

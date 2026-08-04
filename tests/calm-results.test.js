@@ -69,6 +69,7 @@ test('aggregates public and team metrics from the same rows', () => {
   assert.deepEqual(result.outcomeCounts, {
     calm_quiet: 1,
     calm_nature: 1,
+    both_work_well: 0,
     none_work_well: 0,
     hard_to_judge: 1
   });
@@ -106,7 +107,7 @@ test('aggregates whether selected Calm routes are worth showing beyond Fast', ()
   assert.deepEqual(result.q3WorthShowingCounts, { a_lot: 1, somewhat: 0, a_little: 0, not_at_all: 1, not_sure: 1 });
 });
 
-test('counts both routes when both work well', () => {
+test('preserves both work well as one mutually exclusive outcome', () => {
   const result = Results.aggregateAnswers([
     answer({
       q1Choice: 'both_work_well',
@@ -116,8 +117,9 @@ test('counts both routes when both work well', () => {
   ]);
 
   assert.equal(result.total, 1);
-  assert.equal(result.outcomeCounts.calm_quiet, 1);
-  assert.equal(result.outcomeCounts.calm_nature, 1);
+  assert.equal(result.outcomeCounts.calm_quiet, 0);
+  assert.equal(result.outcomeCounts.calm_nature, 0);
+  assert.equal(result.outcomeCounts.both_work_well, 1);
   assert.deepEqual(result.positionBias, {
     selectedAsA: 1,
     selectedAsB: 1,

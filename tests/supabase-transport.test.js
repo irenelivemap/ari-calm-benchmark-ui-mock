@@ -32,7 +32,7 @@ test('posts answer to benchmark_answers with ignore-duplicates', async () => {
     fetchImpl: async (url, init) => { calls.push({ url, init }); return { ok: true, status: 201 }; }
   });
   assert.deepEqual(await transport.saveAnswer(answer), { status: 'sent' });
-  assert.equal(calls[0].url, 'https://test.supabase.co/rest/v1/benchmark_answers');
+  assert.equal(calls[0].url, 'https://test.supabase.co/rest/v1/benchmark_answers?on_conflict=capture_id');
   assert.equal(calls[0].init.method, 'POST');
   assert.ok(calls[0].init.headers['Prefer'].includes('ignore-duplicates'));
   const body = JSON.parse(calls[0].init.body);
@@ -50,7 +50,7 @@ test('posts progress to benchmark_progress with merge-duplicates', async () => {
     fetchImpl: async (url, init) => { calls.push({ url, init }); return { ok: true, status: 200 }; }
   });
   await transport.saveProgress(progress);
-  assert.equal(calls[0].url, 'https://test.supabase.co/rest/v1/benchmark_progress');
+  assert.equal(calls[0].url, 'https://test.supabase.co/rest/v1/benchmark_progress?on_conflict=session_id');
   assert.ok(calls[0].init.headers['Prefer'].includes('merge-duplicates'));
   const body = JSON.parse(calls[0].init.body);
   assert.equal(body.session_id, 'session-1');

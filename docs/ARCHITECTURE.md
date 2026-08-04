@@ -20,13 +20,13 @@ src/app/calm-benchmark.js
         |      with mock fixtures as offline fallback
         |
         +--> answerSink / progressSink
-               local repository + optional HTTP transport/outbox
+               local repository + Supabase or HTTP transport/outbox
 
 src/data/calm-benchmark-data.js
   validation + idempotent local repository + NDJSON export
 
 src/data/benchmark-transport.js
-  production HTTP delivery + retryable local outbox
+  production Supabase/HTTP delivery + retryable local outbox
 
 src/app/runtime.js
   environment configuration + clean/legacy URL resolution
@@ -103,7 +103,7 @@ Owns record normalization, validation, migration, idempotency, local persistence
 
 ### `src/data/benchmark-transport.js`
 
-Owns optional production delivery. Answers use `POST` plus `Idempotency-Key`; progress uses an idempotent `PUT`. Failed requests enter a local outbox. Answers deduplicate by capture ID and progress deduplicates by test/session so only the newest queued state survives.
+Owns the optional self-hosted HTTP delivery path. Answers use `POST` plus `Idempotency-Key`; progress uses an idempotent `PUT`. GitHub Pages instead uses the Supabase transport with equivalent capture/session conflict keys. Failed requests enter a local outbox and block forward progress until synchronized. Production fails closed when neither transport is configured.
 
 ### `src/app/runtime.js`
 
@@ -123,7 +123,7 @@ UI fixtures only. They model the route-pair contract and must never become the p
 2. It creates a challenge-specific local repository.
 3. Start or Resume calls `AriCalmBenchmark.mount` with the challenge configuration and adapters.
 4. The shell requests a route pair. Curated fixtures shuffle pairs 1–10 as the first group and pairs 11–23 as the second group. Both orders derive from the session and remain stable on resume; every pair still receives a randomized hidden assignment to Route A/B.
-5. A completed comparison is validated and saved locally, then delivered through the optional HTTP transport.
+5. A completed comparison is validated and saved locally, then delivered through the configured Supabase or HTTP transport.
 6. An unfinished state is locally upserted and remotely sent through the same retryable transport.
 7. Result views read the same challenge dataset and aggregate it through `AriCalmResults`.
 
@@ -149,4 +149,4 @@ Contracts are documented in [`DATA_CONTRACT.md`](DATA_CONTRACT.md), [`ANSWER_SCH
 - Each challenge has a separate test ID and local storage key.
 - The static/no-build shape is intentional for rapid sharing through GitHub Pages.
 - Google Maps keys are runtime configuration and must never be committed.
-- Production is not launch-ready while `ARI_DATA_API_BASE` is empty; public answers would remain browser-local.
+- Production fails closed only when neither the configured Supabase connection nor `ARI_DATA_API_BASE` is available; the UI never collects browser-only production answers.

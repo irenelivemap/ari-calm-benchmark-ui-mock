@@ -1571,6 +1571,32 @@ html.is-challenge-dialog-open {
   font-size: 0.78em;
 }
 
+.calm-start-form .calm-consent {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.76em;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-transform: none;
+}
+
+.calm-consent input {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: var(--ari-lime);
+}
+
+.calm-start-form .calm-privacy-note {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.7em;
+  line-height: 1.45;
+}
+
 .calm-resume-right {
   grid-area: form;
   display: flex;

@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node scripts/dev-live.mjs",
     "start:live": "node scripts/dev-live.mjs",
+    "audit:data": "node scripts/audit-benchmark-data.mjs",
+    "smoke:production": "node scripts/production-smoke.mjs",
     "test": "node --test tests/*.test.js",
     "check": "npm test"
   },

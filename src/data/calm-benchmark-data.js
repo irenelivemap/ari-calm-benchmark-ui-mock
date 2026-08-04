@@ -3,7 +3,7 @@
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.AriCalmBenchmarkData = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
-  const SCHEMA_VERSION = 1;
+  const SCHEMA_VERSION = 2;
   const DATASET_TYPE = 'calm-benchmark-dataset';
   const ANSWER_TYPE = 'bench-ux';
   const PROGRESS_TYPE = 'bench-progress';
@@ -89,6 +89,10 @@
     return new Date().toISOString();
   }
 
+  function asString(value, fallback = '') {
+    return typeof value === 'string' ? value : value == null ? fallback : String(value);
+  }
+
   function isIsoDate(value) {
     return typeof value === 'string' && value.length > 0 && Number.isFinite(Date.parse(value));
   }
@@ -134,38 +138,38 @@
         || input.labelMap?.[descriptor.slot]
         || null
     ]));
-    const sessionId = input.sessionId || input.benchmarkRunId || '';
-    const roundId = input.roundId || input.captureId || '';
+    const sessionId = asString(input.sessionId || input.benchmarkRunId);
+    const roundId = asString(input.roundId || input.captureId);
     const createdAt = input.createdAt || input.clientTs || isoNow();
 
     return {
       ...clone(input),
-      v: SCHEMA_VERSION,
+      v: Number.isInteger(input.v) ? input.v : 1,
       type: ANSWER_TYPE,
       test: input.test || TEST_ID,
       source: input.source || 'calm-benchmark',
-      captureId: input.captureId || roundId,
-      benchmarkRunId: input.benchmarkRunId || sessionId,
+      captureId: asString(input.captureId || roundId),
+      benchmarkRunId: asString(input.benchmarkRunId || sessionId),
       sessionId,
       roundId,
       roundNumber: Number.isInteger(input.roundNumber) ? input.roundNumber : null,
-      participantName: input.participantName || input.rater || '',
-      rater: input.rater || input.participantName || '',
-      pairId: input.pairId || '',
+      participantName: asString(input.participantName || input.rater),
+      rater: asString(input.rater || input.participantName),
+      pairId: asString(input.pairId),
       q1Choice,
       choice: q1Choice,
       q1Choices,
       q2Separate: input.q2Separate || null,
       ...(q2Reasons ? { q2Reasons } : {}),
-      q2Note: input.q2Note || input.q2Other || '',
+      q2Note: asString(input.q2Note || input.q2Other),
       ...(Object.prototype.hasOwnProperty.call(input, 'q2Other') ? { q2Other: input.q2Other || '' } : {}),
       ...(Object.prototype.hasOwnProperty.call(input, 'q3WorthShowing')
         ? { q3WorthShowing: input.q3WorthShowing || null }
         : {}),
       q3Issues,
       reasons: [...q3Issues],
-      q3Note: input.q3Note || input.note || '',
-      note: input.note || input.q3Note || '',
+      q3Note: asString(input.q3Note || input.note),
+      note: asString(input.note || input.q3Note),
       routeAssignment: Object.fromEntries(
         ROUTE_SLOTS
           .filter(({ slot }) => routeTypes[slot])
@@ -197,17 +201,17 @@
   }
 
   function normalizeProgressRecord(input) {
-    const sessionId = input.sessionId || input.benchmarkRunId || '';
+    const sessionId = asString(input.sessionId || input.benchmarkRunId);
     const savedAt = input.savedAt || input.updatedAt || isoNow();
     return {
       ...clone(input),
-      v: SCHEMA_VERSION,
+      v: Number.isInteger(input.v) ? input.v : 1,
       type: PROGRESS_TYPE,
       test: input.test || TEST_ID,
       source: input.source || 'calm-benchmark',
       benchmarkRunId: input.benchmarkRunId || sessionId,
       sessionId,
-      participantName: input.participantName || '',
+      participantName: asString(input.participantName),
       sessionStartedAt: input.sessionStartedAt || input.startedAt || savedAt,
       roundIndex: Number.isInteger(input.roundIndex) ? input.roundIndex : 0,
       completedRounds: Number.isInteger(input.completedRounds) ? input.completedRounds : 0,
@@ -244,17 +248,58 @@
     const q2Reasons = Array.isArray(record.q2Reasons) ? record.q2Reasons : [];
     const errors = [];
     const warnings = [];
+    const strictCurrentCalm = Number(input?.v) >= 2
+      && record.test === CALM_ROUTE_COMPARISON_TEST_ID
+      && record.source === 'calm-route-comparison';
 
     if (!record.sessionId) errors.push('sessionId is required.');
     if (!record.roundId) errors.push('roundId is required.');
     if (!record.captureId) errors.push('captureId is required.');
     if (!record.pairId) errors.push('pairId is required.');
     if (!record.participantName.trim()) errors.push('participantName is required.');
+    if (record.participantName.length > 80) errors.push('participantName must be 80 characters or fewer.');
+    ['sessionId', 'roundId', 'captureId', 'pairId'].forEach(field => {
+      if (String(record[field] || '').length > 200) errors.push(`${field} must be 200 characters or fewer.`);
+    });
+    if (record.q2Note.length > 500) errors.push('q2Note must be 500 characters or fewer.');
+    if (record.q3Note.length > 500) errors.push('q3Note must be 500 characters or fewer.');
+    if (strictCurrentCalm && (typeof record.participantId !== 'string' || !record.participantId || record.participantId.length > 200)) {
+      errors.push('participantId is required and must be 200 characters or fewer for current Calm records.');
+    }
+    if (strictCurrentCalm && (!record.consentVersion || !isIsoDate(record.consentedAt))) {
+      errors.push('Current Calm records require a consent version and timestamp.');
+    }
     if (!isIsoDate(record.createdAt)) errors.push('createdAt must be an ISO timestamp.');
     if (record.roundNumber != null && (!Number.isInteger(record.roundNumber) || record.roundNumber < 1)) {
       errors.push('roundNumber must be a positive integer.');
     }
     validateRouteAssignment(record, errors);
+
+    if (strictCurrentCalm) {
+      const pairMatch = record.pairId.match(/^calm-route-comparison-(\d{2})-round-(\d+)$/);
+      if (!pairMatch) {
+        errors.push('pairId must identify one of the 23 current Calm pairs and its presentation round.');
+      } else {
+        const pairNumber = Number(pairMatch[1]);
+        const presentationRound = Number(pairMatch[2]);
+        if (pairNumber < 1 || pairNumber > 23) errors.push('Calm pair number must be between 1 and 23.');
+        if (presentationRound !== record.roundNumber) errors.push('pairId presentation round must match roundNumber.');
+        const expectedRoundId = `${record.sessionId}-round-${record.roundNumber}`;
+        if (record.roundId !== expectedRoundId || record.captureId !== expectedRoundId) {
+          errors.push('roundId and captureId must match the session and roundNumber.');
+        }
+        ['A', 'B'].forEach(slot => {
+          const routeType = record.labelMap?.[slot];
+          const expectedRouteId = `calm-round-${pairNumber}-${routeType === 'calm_quiet' ? 'calm-quiet' : routeType === 'calm_nature' ? 'calm-nature' : ''}`;
+          if (record.labels?.[slot]?.routeType !== routeType) errors.push(`labels.${slot}.routeType must match labelMap.${slot}.`);
+          if (!expectedRouteId.endsWith('-') && record.labels?.[slot]?.routeId !== expectedRouteId) {
+            errors.push(`labels.${slot}.routeId does not belong to the selected Calm pair.`);
+          }
+        });
+      }
+      if (record.roundNumber == null || record.roundNumber > 23) errors.push('roundNumber must be between 1 and 23.');
+      if (typeof record.q1KnowsBetter !== 'boolean') errors.push('q1KnowsBetter must be a boolean.');
+    }
 
     if (record.q1Choice == null && allowPartial && record.q1Choices.length === 0) {
       // A newly started round is valid progress even before Q1 is answered.
@@ -338,9 +383,9 @@
           : ['route_a', 'route_b', 'neither'].includes(record.q1Choice);
       if (needsLegacyQ2 && !record.q2Separate) errors.push('q2Separate is required for this Q1 answer.');
       if (!needsLegacyQ2 && record.q2Separate) errors.push('q2Separate must be empty for this Q1 answer.');
-      if (needsCalmQ2 && hasQ2ReasonsField && !q2Reasons.length) errors.push('At least one q2Reason is required for this Q1 answer.');
+      if (needsCalmQ2 && (strictCurrentCalm || hasQ2ReasonsField) && !q2Reasons.length) errors.push('At least one q2Reason is required for this Q1 answer.');
       if (!needsCalmQ2 && q2Reasons.length) errors.push('q2Reasons must be empty for this Q1 answer.');
-      if (isCalmRouteComparison && hasQ3WorthField) {
+      if (isCalmRouteComparison && (strictCurrentCalm || hasQ3WorthField)) {
         if (needsCalmWorthQ3 && !record.q3WorthShowing) {
           errors.push('q3WorthShowing is required for this Q1 answer.');
         }
@@ -380,15 +425,33 @@
 
     if (!record.sessionId) errors.push('sessionId is required.');
     if (!record.participantName.trim()) errors.push('participantName is required.');
+    if (record.participantName.length > 80) errors.push('participantName must be 80 characters or fewer.');
+    if (record.sessionId.length > 200) errors.push('sessionId must be 200 characters or fewer.');
+    const strictCurrentCalm = Number(input?.v) >= 2
+      && record.test === CALM_ROUTE_COMPARISON_TEST_ID
+      && record.source === 'calm-route-comparison';
+    if (strictCurrentCalm && (typeof record.participantId !== 'string' || !record.participantId || record.participantId.length > 200)) {
+      errors.push('participantId is required and must be 200 characters or fewer for current Calm progress.');
+    }
+    if (strictCurrentCalm && (!record.consentVersion || !isIsoDate(record.consentedAt))) {
+      errors.push('Current Calm progress requires a consent version and timestamp.');
+    }
     if (!Number.isInteger(record.roundIndex) || record.roundIndex < 0) errors.push('roundIndex must be zero or greater.');
     if (!Number.isInteger(record.completedRounds) || record.completedRounds < 0) errors.push('completedRounds must be zero or greater.');
     if (typeof record.goalCheckpointPending !== 'boolean') errors.push('goalCheckpointPending must be a boolean.');
     if (!QUESTION_STEPS.has(record.questionStep)) errors.push('questionStep is invalid.');
     if (!isIsoDate(record.savedAt)) errors.push('savedAt must be an ISO timestamp.');
     if (record.routeAssignment) validateRouteAssignment(record, errors);
+    if (strictCurrentCalm) {
+      if (record.roundIndex > 22) errors.push('roundIndex cannot exceed the final Calm pair.');
+      if (record.completedRounds > 23) errors.push('completedRounds cannot exceed 23.');
+      if (![record.roundIndex, record.roundIndex + 1].includes(record.completedRounds)) {
+        errors.push('completedRounds must match the active round position.');
+      }
+    }
 
     if (record.partialAnswer) {
-      const partial = validateAnswerRecord(record.partialAnswer, { allowPartial: true });
+      const partial = validateAnswerRecord(input.partialAnswer || record.partialAnswer, { allowPartial: true });
       errors.push(...partial.errors.map(error => `partialAnswer: ${error}`));
       warnings.push(...partial.warnings.map(warning => `partialAnswer: ${warning}`));
       if (record.partialAnswer.sessionId !== record.sessionId) errors.push('partialAnswer sessionId must match progress sessionId.');

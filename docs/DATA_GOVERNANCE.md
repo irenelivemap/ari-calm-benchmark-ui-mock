@@ -1,0 +1,45 @@
+# Data Governance Before Launch
+
+This checklist separates implemented technical controls from decisions the evaluation team must own. Do not describe the study as launch-ready until the decision fields below are completed.
+
+## Data collected
+
+- Participant-provided name or team-issued code.
+- Generated same-device participant ID and per-run session ID.
+- Route choices, reasons, optional comments, pair assignment, and timestamps.
+- No account password, email address, precise participant location, or device fingerprint is intentionally collected.
+
+## Implemented controls
+
+- Explicit consent is required before starting.
+- Optional comments warn participants not to include personal information.
+- Participant writes use the public Supabase anon role.
+- Supabase row-level security blocks anonymous reads.
+- Capture IDs make completed-answer writes idempotent.
+- Current Calm records are validated against the 23-pair corpus before delivery.
+- Research exports can be checked with `npm run audit:data -- <file>`.
+
+## Decisions required from the evaluation owner
+
+| Decision | Owner value required before launch |
+| --- | --- |
+| Purpose and lawful basis | _To be completed_ |
+| Whether names are necessary or participant codes are sufficient | _To be completed_ |
+| Retention period | _To be completed_ |
+| Contact for access, correction, and deletion requests | _To be completed_ |
+| Authorized Supabase dashboard members | _To be completed_ |
+| Backup / point-in-time recovery policy | _To be completed_ |
+| Export storage location and access list | _To be completed_ |
+
+## Current production blocker discovered 2026-08-04
+
+The read-only production smoke test returned participant answer data to the anon role. Before launch, apply `supabase/migrations/20260804_launch_hardening.sql` and confirm `npm run smoke:production` reports zero anonymous rows exposed for both tables. Do not recruit participants until this check passes.
+
+## Raw-data rules
+
+- Treat `benchmark_answers` as append-only source data.
+- Do not correct analysis problems by editing raw participant answers.
+- Record exclusions and transformations in analysis code or a derived dataset.
+- Date and identify every export used for analysis.
+- Store the schema version with every record and retain legacy records unchanged.
+- Test restoration, not only backup creation.

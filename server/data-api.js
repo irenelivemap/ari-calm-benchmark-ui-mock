@@ -18,8 +18,9 @@
  *   GET  /healthz
  */
 const http = require('node:http');
-const { mkdir, readFile, appendFile, writeFile } = require('node:fs/promises');
+const { mkdir, readFile, writeFile, rename, open } = require('node:fs/promises');
 const { join } = require('node:path');
+const { timingSafeEqual } = require('node:crypto');
 const {
   validateAnswerRecord,
   validateProgressRecord
@@ -29,11 +30,12 @@ const BASE_PATH = '/api/v1/benchmarks';
 const KNOWN_TESTS = new Set(['calm_route_comparison', 'calm_vs_fast', 'ari_fast_vs_google']);
 const MAX_BODY_BYTES = 1024 * 1024;
 
-function createDataApi({ dataDir }) {
+function createDataApi({ dataDir, adminToken = '', allowedOrigins = [], rateLimitPerMinute = 600 }) {
   /** In-memory answer index per test: captureId -> stored record. */
   const answersByTest = new Map();
   /** Serialize all writes so concurrent requests cannot interleave files. */
   let writeChain = Promise.resolve();
+  const requestWindows = new Map();
 
   const answersFile = test => join(dataDir, `${test}-answers.ndjson`);
   const progressFile = test => join(dataDir, `${test}-progress.json`);
@@ -44,14 +46,59 @@ function createDataApi({ dataDir }) {
     return next;
   }
 
+  function authorized(request) {
+    if (!adminToken) return false;
+    const supplied = String(request.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const expectedBuffer = Buffer.from(adminToken);
+    const suppliedBuffer = Buffer.from(supplied);
+    return expectedBuffer.length === suppliedBuffer.length
+      && timingSafeEqual(expectedBuffer, suppliedBuffer);
+  }
+
+  function originAllowed(request) {
+    if (!allowedOrigins.length) return true;
+    return allowedOrigins.includes(String(request.headers.origin || ''));
+  }
+
+  function withinRateLimit(request) {
+    const now = Date.now();
+    const key = request.socket.remoteAddress || 'unknown';
+    const current = requestWindows.get(key);
+    if (!current || now - current.startedAt >= 60_000) {
+      requestWindows.set(key, { startedAt: now, count: 1 });
+      return true;
+    }
+    current.count += 1;
+    return current.count <= rateLimitPerMinute;
+  }
+
+  async function appendDurably(path, value) {
+    const handle = await open(path, 'a');
+    try {
+      await handle.write(value);
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+  }
+
   async function loadAnswers(test) {
     if (answersByTest.has(test)) return answersByTest.get(test);
     const index = new Map();
     try {
-      const lines = (await readFile(answersFile(test), 'utf8')).split('\n');
-      for (const line of lines) {
+      const contents = await readFile(answersFile(test), 'utf8');
+      const lines = contents.split('\n');
+      for (const [lineIndex, line] of lines.entries()) {
         if (!line.trim()) continue;
-        const record = JSON.parse(line);
+        let record;
+        try {
+          record = JSON.parse(line);
+        } catch (error) {
+          const isFinalPartialLine = lineIndex === lines.length - 1 && !contents.endsWith('\n');
+          if (!isFinalPartialLine) throw error;
+          console.warn(`[data-api] Ignoring incomplete final record in ${answersFile(test)}.`);
+          continue;
+        }
         if (record.captureId) index.set(record.captureId, record);
       }
     } catch (error) {
@@ -84,7 +131,7 @@ function createDataApi({ dataDir }) {
       const existing = index.get(result.record.captureId);
       if (existing) return { status: 200, body: { status: 'duplicate', record: existing } };
       const record = { ...result.record, receivedAt: new Date().toISOString() };
-      await appendFile(answersFile(test), `${JSON.stringify(record)}\n`);
+      await appendDurably(answersFile(test), `${JSON.stringify(record)}\n`);
       index.set(record.captureId, record);
       return { status: 201, body: { status: 'saved', record } };
     });
@@ -103,7 +150,10 @@ function createDataApi({ dataDir }) {
       const record = { ...result.record, receivedAt: new Date().toISOString() };
       const map = await readProgressMap(test);
       map[sessionId] = record;
-      await writeFile(progressFile(test), JSON.stringify(map, null, 2));
+      const target = progressFile(test);
+      const temporary = `${target}.tmp`;
+      await writeFile(temporary, JSON.stringify(map, null, 2));
+      await rename(temporary, target);
       return { status: 200, body: { status: 'saved', record } };
     });
   }
@@ -115,12 +165,9 @@ function createDataApi({ dataDir }) {
   }
 
   async function answersFeed(test) {
-    try {
-      return await readFile(answersFile(test), 'utf8');
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error;
-      return '';
-    }
+    const records = await loadAnswers(test);
+    return Array.from(records.values(), record => JSON.stringify(record)).join('\n')
+      + (records.size ? '\n' : '');
   }
 
   function readBody(request) {
@@ -142,7 +189,11 @@ function createDataApi({ dataDir }) {
   }
 
   function sendJson(response, status, body) {
-    response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+    response.writeHead(status, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff'
+    });
     response.end(JSON.stringify(body));
   }
 
@@ -158,11 +209,24 @@ function createDataApi({ dataDir }) {
     }
 
     try {
+      const isWrite = request.method === 'POST' || request.method === 'PUT';
+      if (isWrite && !originAllowed(request)) {
+        return sendJson(response, 403, { status: 'forbidden' });
+      }
+      if (isWrite && !withinRateLimit(request)) {
+        response.setHeader('Retry-After', '60');
+        return sendJson(response, 429, { status: 'rate_limited' });
+      }
       if (answersMatch && request.method === 'POST') {
-        const { status, body } = await saveAnswer(test, JSON.parse(await readBody(request)));
+        const input = JSON.parse(await readBody(request));
+        if (request.headers['idempotency-key'] !== input.captureId) {
+          return sendJson(response, 400, { status: 'invalid', errors: ['Idempotency-Key must match captureId.'] });
+        }
+        const { status, body } = await saveAnswer(test, input);
         return sendJson(response, status, body);
       }
       if (answersMatch && request.method === 'GET') {
+        if (!authorized(request)) return sendJson(response, 401, { status: 'unauthorized' });
         response.writeHead(200, { 'Content-Type': 'application/x-ndjson; charset=utf-8' });
         return response.end(await answersFeed(test));
       }
@@ -173,6 +237,7 @@ function createDataApi({ dataDir }) {
           return sendJson(response, status, body);
         }
         if (request.method === 'GET') {
+          if (!authorized(request)) return sendJson(response, 401, { status: 'unauthorized' });
           const { status, body } = await getProgress(test, sessionId);
           return sendJson(response, status, body);
         }
@@ -198,7 +263,13 @@ module.exports = { createDataApi, BASE_PATH, KNOWN_TESTS };
 if (require.main === module) {
   const dataDir = process.env.DATA_DIR || join(__dirname, '..', 'benchmark-data');
   const port = Number(process.env.PORT || 8090);
-  const { server, ready } = createDataApi({ dataDir });
+  const adminToken = process.env.ARI_DATA_ADMIN_TOKEN || '';
+  const allowedOrigins = String(process.env.ARI_ALLOWED_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean);
+  if (!adminToken || !allowedOrigins.length) {
+    console.error('ARI_DATA_ADMIN_TOKEN and ARI_ALLOWED_ORIGINS are required.');
+    process.exit(1);
+  }
+  const { server, ready } = createDataApi({ dataDir, adminToken, allowedOrigins });
   ready.then(() => {
     server.listen(port, () => {
       console.log(`Benchmark data API on http://127.0.0.1:${port}${BASE_PATH}`);

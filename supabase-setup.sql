@@ -1,4 +1,6 @@
--- ARI Calm Benchmark — Supabase setup
+-- ARI Calm Benchmark — Supabase production persistence setup.
+-- ACTIVE PROJECT: xyrmytymcipyntdtsksu (GitHub Pages production backend).
+-- The browser uses the public anon key. Never place a service_role key in this repo.
 -- Run this once in your Supabase project's SQL editor.
 -- Dashboard → SQL Editor → New query → paste → Run
 
@@ -13,7 +15,13 @@ create table if not exists benchmark_answers (
   payload        jsonb       not null,
   created_at     timestamptz not null default now(),
 
-  constraint benchmark_answers_capture_id_key unique (capture_id)
+  constraint benchmark_answers_capture_id_key unique (capture_id),
+  constraint benchmark_answers_payload_matches check (
+    jsonb_typeof(payload) = 'object'
+    and payload->>'captureId' = capture_id
+    and payload->>'sessionId' = session_id
+    and payload->>'test' = test
+  )
 );
 
 create index if not exists benchmark_answers_test_created
@@ -27,13 +35,23 @@ create table if not exists benchmark_progress (
   payload    jsonb       not null,
   updated_at timestamptz not null default now(),
 
-  constraint benchmark_progress_session_id_key unique (session_id)
+  constraint benchmark_progress_session_id_key unique (session_id),
+  constraint benchmark_progress_payload_matches check (
+    jsonb_typeof(payload) = 'object'
+    and payload->>'sessionId' = session_id
+    and payload->>'test' = test
+  )
 );
 
 -- Row-level security: anon key can write (from the app) but not read.
 -- Your team reads via the Supabase dashboard or with the service_role key.
 alter table benchmark_answers  enable row level security;
 alter table benchmark_progress enable row level security;
+
+-- Browser participants only need INSERT on answers and INSERT/UPDATE on progress.
+-- Revoke table privileges explicitly as a second layer beneath RLS policies.
+revoke select, update, delete on benchmark_answers from anon, authenticated;
+revoke select, delete on benchmark_progress from anon, authenticated;
 
 create policy "anon insert answers"
   on benchmark_answers for insert to anon with check (true);
@@ -44,7 +62,5 @@ create policy "anon upsert progress"
 create policy "anon update progress"
   on benchmark_progress for update to anon using (true);
 
--- To read answers as a teammate (Supabase dashboard uses service_role, so
--- this is only needed if you query via the anon key directly):
--- create policy "anon read answers"
---   on benchmark_answers for select to anon using (true);
+-- Researchers read through the authenticated Supabase dashboard/service role.
+-- Never create an anon SELECT policy for participant data.
