@@ -24,6 +24,14 @@
       : `progress:${record.test}:${record.sessionId}`;
   }
 
+  /** Persisted-type names registered in the API's persist registry (ADR 0022).
+   *  The server dedupes answers on captureId (ignore on conflict) and progress
+   *  on sessionId (replace on conflict), so the client just POSTs records. */
+  const DEFAULT_PERSISTED_TYPES = {
+    answer: 'ari-route-benchmark-answer',
+    progress: 'ari-route-benchmark-progress'
+  };
+
   function createHttpTransport(options = {}) {
     const baseUrl = String(options.baseUrl || '').replace(/\/$/, '');
     if (!baseUrl) throw new TypeError('A benchmark data API base URL is required.');
@@ -31,21 +39,17 @@
     if (typeof fetchImpl !== 'function') throw new TypeError('A fetch implementation is required.');
     const storage = options.storage || globalThis.localStorage;
     const queueKey = options.queueKey || DEFAULT_QUEUE_KEY;
+    const persistedTypes = { ...DEFAULT_PERSISTED_TYPES, ...(options.persistedTypes || {}) };
     let flushing = null;
 
-    function endpoint(kind, record) {
-      const test = encodeURIComponent(record.test);
-      if (kind === 'answer') return `${baseUrl}/${test}/answers`;
-      return `${baseUrl}/${test}/sessions/${encodeURIComponent(record.sessionId)}/progress`;
+    function endpoint(kind) {
+      return `${baseUrl}/persist/${encodeURIComponent(persistedTypes[kind])}`;
     }
 
     async function deliver(item) {
-      const response = await fetchImpl(endpoint(item.kind, item.record), {
-        method: item.kind === 'answer' ? 'POST' : 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(item.kind === 'answer' ? { 'Idempotency-Key': item.record.captureId } : {})
-        },
+      const response = await fetchImpl(endpoint(item.kind), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item.record),
         keepalive: true
       });
@@ -107,21 +111,11 @@
       }
     }
 
-    async function listAnswers(test) {
-      const response = await fetchImpl(endpoint('answer', { test }), {
-        method: 'GET',
-        headers: { Accept: 'application/x-ndjson' }
-      });
-      if (!response.ok) throw new Error(`Benchmark API returned ${response.status}.`);
-      const body = await response.text();
-      if (!body.trim()) return [];
-      return body
-        .split('\n')
-        .filter(line => line.trim())
-        .reduce((acc, line) => {
-          try { acc.push(JSON.parse(line)); } catch (_) {}
-          return acc;
-        }, []);
+    async function listAnswers() {
+      // The persist API is deliberately write-only (privacy) — an
+      // authenticated admin read/export endpoint is a planned follow-up to
+      // ADR 0022. Until it lands, team results come from local storage.
+      throw new Error('The benchmark persistence API is write-only; reading answers is not available yet.');
     }
 
     return {
@@ -133,5 +127,5 @@
     };
   }
 
-  return { DEFAULT_QUEUE_KEY, createHttpTransport };
+  return { DEFAULT_QUEUE_KEY, DEFAULT_PERSISTED_TYPES, createHttpTransport };
 });

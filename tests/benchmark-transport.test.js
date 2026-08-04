@@ -19,10 +19,10 @@ const progress = {
   savedAt: '2026-07-15T10:00:00.000Z'
 };
 
-test('sends answers with an idempotency key', async () => {
+test('posts answers to the answer persisted type', async () => {
   const calls = [];
   const transport = createHttpTransport({
-    baseUrl: '/api/v1/benchmarks',
+    baseUrl: '/api/v1',
     storage: new MemoryStorage(),
     fetchImpl: async (url, init) => {
       calls.push({ url, init });
@@ -30,15 +30,15 @@ test('sends answers with an idempotency key', async () => {
     }
   });
   assert.deepEqual(await transport.saveAnswer(answer), { status: 'sent' });
-  assert.equal(calls[0].url, '/api/v1/benchmarks/ari_fast_vs_google/answers');
+  assert.equal(calls[0].url, '/api/v1/persist/ari-route-benchmark-answer');
   assert.equal(calls[0].init.method, 'POST');
-  assert.equal(calls[0].init.headers['Idempotency-Key'], 'capture-1');
+  assert.deepEqual(JSON.parse(calls[0].init.body), answer);
 });
 
-test('upserts progress at the session endpoint', async () => {
+test('posts progress to the progress persisted type', async () => {
   const calls = [];
   const transport = createHttpTransport({
-    baseUrl: '/api/v1/benchmarks',
+    baseUrl: '/api/v1',
     storage: new MemoryStorage(),
     fetchImpl: async (url, init) => {
       calls.push({ url, init });
@@ -46,35 +46,32 @@ test('upserts progress at the session endpoint', async () => {
     }
   });
   await transport.saveProgress(progress);
-  assert.equal(calls[0].url, '/api/v1/benchmarks/ari_fast_vs_google/sessions/session-1/progress');
-  assert.equal(calls[0].init.method, 'PUT');
+  assert.equal(calls[0].url, '/api/v1/persist/ari-route-benchmark-progress');
+  assert.equal(calls[0].init.method, 'POST');
 });
 
-test('reads the shared NDJSON answer feed', async () => {
+test('supports overriding the persisted type names', async () => {
   const calls = [];
   const transport = createHttpTransport({
-    baseUrl: '/api/v1/benchmarks',
+    baseUrl: '/api/v1',
     storage: new MemoryStorage(),
+    persistedTypes: { answer: 'custom-answer' },
     fetchImpl: async (url, init) => {
       calls.push({ url, init });
-      return {
-        ok: true,
-        status: 200,
-        text: async () => [
-          JSON.stringify({ captureId: 'capture-1', participantName: 'Irene' }),
-          JSON.stringify({ captureId: 'capture-2', participantName: 'Alex' }),
-          ''
-        ].join('\n')
-      };
+      return { ok: true, status: 201 };
     }
   });
+  await transport.saveAnswer(answer);
+  assert.equal(calls[0].url, '/api/v1/persist/custom-answer');
+});
 
-  assert.deepEqual(await transport.listAnswers('calm_route_comparison'), [
-    { captureId: 'capture-1', participantName: 'Irene' },
-    { captureId: 'capture-2', participantName: 'Alex' }
-  ]);
-  assert.equal(calls[0].url, '/api/v1/benchmarks/calm_route_comparison/answers');
-  assert.equal(calls[0].init.method, 'GET');
+test('rejects reads because the persist API is write-only', async () => {
+  const transport = createHttpTransport({
+    baseUrl: '/api/v1',
+    storage: new MemoryStorage(),
+    fetchImpl: async () => { throw new Error('must not be called'); }
+  });
+  await assert.rejects(() => transport.listAnswers('calm_route_comparison'), /write-only/);
 });
 
 test('queues failed records and flushes them later', async () => {
