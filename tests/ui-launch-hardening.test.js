@@ -19,6 +19,8 @@ test('exposes accessible page landmarks and launch form feedback', () => {
 
 test('keeps participant records explorable and easy to interpret', () => {
   assert.match(html, /mock-route-diagnostics\.js/);
+  assert.match(html, /diagMap\.get\(row\.analysisPairId\)/);
+  assert.doesNotMatch(html, /Your sessions/);
   assert.match(html, /class="calm-pp-question">Which route would you choose for a calmer walk\?/);
   assert.match(html, /Do you know another Calm route that would work better\?/);
   assert.doesNotMatch(html, /Known alternative/);

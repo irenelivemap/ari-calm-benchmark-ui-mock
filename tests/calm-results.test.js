@@ -181,7 +181,7 @@ test('analyzes viability, exclusive preference, pair agreement, and participant 
   assert.equal(result.couldNotJudgePercent, 13);
   assert.equal(result.clearAgreementThreshold, 0.7);
   assert.equal(result.participants.length, 4);
-  assert.equal(result.participants.find(item => item.participantId === 'p1').anyWorksPercent, 100);
+  assert.equal(result.participants.find(item => item.participantId === 'name:one').anyWorksPercent, 100);
 });
 
 test('calculates 70% agreement from substantive responses and reports uncertainty separately', () => {
@@ -265,7 +265,7 @@ test('summarizes named participants for the participant dashboard', () => {
 
   assert.deepEqual(summaries, [
     {
-      participantId: 'session-2',
+      participantId: 'name:alex',
       participant: 'Alex',
       comparisons: 1,
       sessions: 1,
@@ -273,7 +273,7 @@ test('summarizes named participants for the participant dashboard', () => {
       lastUpdated: '2026-07-13T09:00:00.000Z'
     },
     {
-      participantId: 'session-1',
+      participantId: 'name:irene',
       participant: 'Irene',
       comparisons: 2,
       sessions: 1,
@@ -284,18 +284,29 @@ test('summarizes named participants for the participant dashboard', () => {
   assert.equal(Results.normalizeRow(answer({ roundNumber: 7 })).roundNumber, 7);
 });
 
-test('keeps participants with the same display name separate', () => {
-  const duplicateNames = [
+test('merges legacy sessions for the same named team member', () => {
+  const repeatedSessions = [
     answer({ captureId: 'capture-1', sessionId: 'session-alex-1', participantName: 'Alex' }),
     answer({ captureId: 'capture-2', sessionId: 'session-alex-2', participantName: 'Alex' })
+  ];
+  const summaries = Results.summarizeParticipants(repeatedSessions);
+
+  assert.equal(summaries.length, 1);
+  assert.equal(summaries[0].participantId, 'name:alex');
+  assert.equal(summaries[0].comparisons, 2);
+  assert.equal(summaries[0].sessions, 2);
+  assert.equal(Results.aggregateAnswers(repeatedSessions).participants, 1);
+});
+
+test('keeps explicit participant identities separate when names match', () => {
+  const duplicateNames = [
+    answer({ captureId: 'capture-1', participantId: 'participant-alex-1', sessionId: 'session-alex-1', participantName: 'Alex' }),
+    answer({ captureId: 'capture-2', participantId: 'participant-alex-2', sessionId: 'session-alex-2', participantName: 'Alex' })
   ];
   const summaries = Results.summarizeParticipants(duplicateNames);
 
   assert.equal(summaries.length, 2);
-  assert.deepEqual(summaries.map(summary => summary.participantId), [
-    'session-alex-1',
-    'session-alex-2'
-  ]);
+  assert.deepEqual(summaries.map(summary => summary.participantId), ['participant-alex-1', 'participant-alex-2']);
   assert.equal(Results.aggregateAnswers(duplicateNames).participants, 2);
 });
 

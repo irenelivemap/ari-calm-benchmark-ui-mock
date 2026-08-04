@@ -321,7 +321,7 @@
   <script src="./src/data/supabase-transport.js?v=20260804-write-rpc-1"></script>
   <script src="./src/data/mock-route-diagnostics.js?v=20260804-route-pairs-23-2"></script>
   <script src="./src/data/mock-team-results.js?v=20260805-question-answer-1"></script>
-  <script src="./src/results/calm-results.js?v=20260731-calm-agreement-results-1"></script>
+  <script src="./src/results/calm-results.js?v=20260805-participant-identity-1"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
   <script src="./src/maps/route-overlap.js?v=20260729-street-view-any-point-1"></script>
   <script src="./src/maps/map-adapter.js?v=20260804-resume-guard-1"></script>
@@ -1335,24 +1335,24 @@
       });
 
       rpExplorerItems = rows.map((row, rowIndex) => {
-        const match = diagMap.get(row.pairId);
+        const match = diagMap.get(row.analysisPairId);
         if (!match?.routePair) return null;
-        const pairNum = String(row.pairId || '').replace(/^.*-(\d+)$/, '$1');
+        const pairNum = String(row.analysisPairId || '').replace(/^.*-(\d+)$/, '$1');
         return {
           rowIndex,
           routePair: match.routePair,
-          pairLabel: pairNum && pairNum !== row.pairId ? `Pair ${pairNum.padStart(2, '0')}` : row.pairId || '—',
+          pairLabel: pairNum && pairNum !== row.analysisPairId ? `Pair ${pairNum.padStart(2, '0')}` : row.analysisPairId || '—',
           routeName: match.diag ? `${match.diag.origin_label || 'Start'} → ${match.diag.destination_label || 'End'}` : '',
           outcome: row.exactOutcome,
           outcomeLabel: AriCalmResults.OUTCOME_LABELS[row.exactOutcome] || 'Unknown'
         };
       }).filter(Boolean);
       return rows.map((row, i) => {
-        const pairNum = String(row.pairId || '').replace(/^.*-(\d+)$/, '$1');
-        const pairLabel = pairNum && pairNum !== row.pairId ? `Pair ${pairNum.padStart(2, '0')}` : row.pairId || '—';
+        const pairNum = String(row.analysisPairId || '').replace(/^.*-(\d+)$/, '$1');
+        const pairLabel = pairNum && pairNum !== row.analysisPairId ? `Pair ${pairNum.padStart(2, '0')}` : row.analysisPairId || '—';
         const comparisonNumber = Number.isFinite(Number(row.roundNumber)) ? Number(row.roundNumber) : i + 1;
         const cardLabel = researcherMode ? pairLabel : `#${comparisonNumber}`;
-        const { diag, routePair, pairIndex } = diagMap.get(row.pairId) || {};
+        const { diag, routePair, pairIndex } = diagMap.get(row.analysisPairId) || {};
         const routeName = diag ? `${diag.origin_label || 'Start'} → ${diag.destination_label || 'End'}` : '';
         const outcomeLabel = AriCalmResults.OUTCOME_LABELS[row.exactOutcome] || 'Unknown';
         const rejectedBoth = row.exactOutcome === 'none_work_well';
@@ -1459,7 +1459,7 @@
       const localAnswers = dataRepository.getSnapshot().answers || [];
       return new Set(
         localAnswers
-          .map(answer => answer.participantId || answer.sessionId || answer.benchmarkRunId)
+          .map(answer => AriCalmResults.participantIdentity(answer))
           .filter(Boolean)
       );
     }
@@ -1467,7 +1467,10 @@
     function renderCalmParticipants(answers, participantSummaries, currentParticipantId) {
       if (!researcherMode) {
         const mine = myParticipantIds();
-        participantSummaries = participantSummaries.filter(item => mine.has(item.participantId));
+        const currentParticipant = participantSummaries.find(item => item.participantId === currentParticipantId);
+        participantSummaries = currentParticipant
+          ? [currentParticipant]
+          : participantSummaries.filter(item => mine.has(item.participantId));
       }
       const orderedParticipants = [...participantSummaries].sort((a, b) => {
         if (a.participantId === currentParticipantId) return -1;
@@ -1543,7 +1546,7 @@
           ${showParticipantList ? `
           <aside class="calm-participant-list" aria-labelledby="calm-participant-list-title">
             <div class="calm-participant-list__head">
-              <h2 id="calm-participant-list-title">${researcherMode ? 'Participants' : 'Your sessions'}</h2>
+              <h2 id="calm-participant-list-title">${researcherMode ? 'Participants' : 'My results'}</h2>
               <span>${orderedParticipants.length}</span>
             </div>
             <div class="calm-participant-list__items">${participantButtons}</div>
@@ -1597,7 +1600,7 @@
       const latest = dataRepository.getLatestProgress();
       const currentParticipantId = sampleResultsEnabled
         ? AriMockTeamResults.CURRENT_PARTICIPANT_ID
-        : latest?.sessionId || latest?.benchmarkRunId || '';
+        : latest ? AriCalmResults.participantIdentity(latest) : '';
       const activeContent = calmResultsView === 'participants'
         ? renderCalmParticipants(answers, participantSummaries, currentParticipantId)
         : calmResultsView === 'routes'

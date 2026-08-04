@@ -147,6 +147,21 @@
     return calmPair ? calmPair[1] : value;
   }
 
+  function participantIdentity(answer = {}) {
+    const explicitId = String(answer.participantId || '').trim();
+    if (explicitId) return explicitId;
+    const displayName = String(answer.participantName || answer.rater || '').trim();
+    if (displayName) {
+      return `name:${displayName.replace(/\s+/g, ' ').toLocaleLowerCase('en')}`;
+    }
+    return String(
+      answer.sessionId
+      || answer.benchmarkRunId
+      || answer.captureId
+      || 'anonymous'
+    );
+  }
+
   function normalizeRow(answer) {
     const reasons = Array.isArray(answer.q3Issues)
       ? answer.q3Issues
@@ -156,10 +171,7 @@
     return {
       id: answer.captureId || answer.roundId || '',
       participant,
-      participantId: answer.participantId
-        || answer.sessionId
-        || answer.benchmarkRunId
-        || `name:${participant}`,
+      participantId: participantIdentity(answer),
       sessionId: answer.sessionId || answer.benchmarkRunId || '',
       pairId: answer.pairId || 'Unknown pair',
       analysisPairId: canonicalPairId(answer.pairId),
@@ -491,7 +503,7 @@
       const summary = participants.get(row.participantId);
       summary.comparisons += 1;
       if (row.sessionId) summary.sessionIds.add(row.sessionId);
-      if (row.pairId && row.pairId !== 'Unknown pair') summary.routePairs.add(row.pairId);
+      if (row.analysisPairId && row.analysisPairId !== 'Unknown pair') summary.routePairs.add(row.analysisPairId);
       if (Number.isFinite(Date.parse(row.date))
         && (!summary.lastUpdated || Date.parse(row.date) > Date.parse(summary.lastUpdated))) {
         summary.lastUpdated = row.date;
@@ -558,6 +570,7 @@
     selectedRouteType,
     exactOutcome,
     canonicalPairId,
+    participantIdentity,
     normalizeRow,
     filterAnswers,
     aggregateAnswers,
