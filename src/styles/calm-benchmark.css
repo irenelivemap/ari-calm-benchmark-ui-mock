@@ -8886,6 +8886,15 @@ html.is-challenge-dialog-open {
   margin: 0 auto;
 }
 
+/* Embedded in the results panel the wrap already constrains width. */
+.calm-results-routes-host .calm-route-profiles__inner {
+  width: 100%;
+}
+
+.calm-results-routes-host .calm-rp-header {
+  padding-top: 8px;
+}
+
 /* Header */
 .calm-rp-header {
   padding: 32px 0 0;
