@@ -6076,8 +6076,8 @@ html.is-challenge-dialog-open {
    connected, fully clickable control. Navigation stays compact below it. */
 .ari-map__tools .ari-street-toggle {
   display: grid;
-  width: 148px;
-  grid-template-columns: 104px var(--ari-map-control-size, 44px);
+  width: 174px;
+  grid-template-columns: 130px var(--ari-map-control-size, 44px);
   overflow: hidden;
   border: 1px solid rgba(16, 21, 17, 0.12);
   border-radius: 14px;
