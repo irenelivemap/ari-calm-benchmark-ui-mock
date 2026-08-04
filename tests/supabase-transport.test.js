@@ -23,7 +23,7 @@ const progress = {
   roundIndex: 2
 };
 
-test('posts answer to benchmark_answers with ignore-duplicates', async () => {
+test('posts answers through the write-only RPC', async () => {
   const calls = [];
   const transport = createSupabaseTransport({
     url: 'https://test.supabase.co',
@@ -32,16 +32,13 @@ test('posts answer to benchmark_answers with ignore-duplicates', async () => {
     fetchImpl: async (url, init) => { calls.push({ url, init }); return { ok: true, status: 201 }; }
   });
   assert.deepEqual(await transport.saveAnswer(answer), { status: 'sent' });
-  assert.equal(calls[0].url, 'https://test.supabase.co/rest/v1/benchmark_answers?on_conflict=capture_id');
+  assert.equal(calls[0].url, 'https://test.supabase.co/rest/v1/rpc/submit_benchmark_answer');
   assert.equal(calls[0].init.method, 'POST');
-  assert.ok(calls[0].init.headers['Prefer'].includes('ignore-duplicates'));
   const body = JSON.parse(calls[0].init.body);
-  assert.equal(body.capture_id, 'session-1-round-1');
-  assert.equal(body.session_id, 'session-1');
-  assert.deepEqual(body.payload, answer);
+  assert.deepEqual(body.p_record, answer);
 });
 
-test('posts progress to benchmark_progress with merge-duplicates', async () => {
+test('posts progress through the write-only RPC', async () => {
   const calls = [];
   const transport = createSupabaseTransport({
     url: 'https://test.supabase.co',
@@ -50,11 +47,9 @@ test('posts progress to benchmark_progress with merge-duplicates', async () => {
     fetchImpl: async (url, init) => { calls.push({ url, init }); return { ok: true, status: 200 }; }
   });
   await transport.saveProgress(progress);
-  assert.equal(calls[0].url, 'https://test.supabase.co/rest/v1/benchmark_progress?on_conflict=session_id');
-  assert.ok(calls[0].init.headers['Prefer'].includes('merge-duplicates'));
+  assert.equal(calls[0].url, 'https://test.supabase.co/rest/v1/rpc/save_benchmark_progress');
   const body = JSON.parse(calls[0].init.body);
-  assert.equal(body.session_id, 'session-1');
-  assert.deepEqual(body.payload, progress);
+  assert.deepEqual(body.p_record, progress);
 });
 
 test('sets apikey and Authorization headers', async () => {
@@ -86,25 +81,6 @@ test('queues failed answers and flushes them on retry', async () => {
   const result = await transport.flush();
   assert.equal(result.delivered, 1);
   assert.equal(transport.getPendingCount(), 0);
-});
-
-test('reads answers filtered by test from benchmark_answers', async () => {
-  const transport = createSupabaseTransport({
-    url: 'https://test.supabase.co',
-    anonKey: 'anon-key',
-    storage: new MemoryStorage(),
-    fetchImpl: async (url) => {
-      assert.ok(url.includes('test=eq.calm_route_comparison'));
-      assert.ok(url.includes('select=payload'));
-      return {
-        ok: true,
-        status: 200,
-        json: async () => [{ payload: answer }]
-      };
-    }
-  });
-  const results = await transport.listAnswers('calm_route_comparison');
-  assert.deepEqual(results, [answer]);
 });
 
 test('throws if URL or anonKey is missing', () => {

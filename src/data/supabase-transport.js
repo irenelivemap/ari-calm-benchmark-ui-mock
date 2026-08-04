@@ -33,9 +33,9 @@
    *   storage   — Web Storage instance (defaults to localStorage)
    *   fetchImpl — fetch implementation (defaults to globalThis.fetch)
    *
-   * Tables expected in Supabase (see supabase-setup.sql):
-   *   benchmark_answers  — dedupe on capture_id (ignore on conflict)
-   *   benchmark_progress — dedupe on session_id (replace on conflict)
+   * Write-only RPCs expected in Supabase (see supabase/migrations):
+   *   submit_benchmark_answer — append/idempotency by captureId
+   *   save_benchmark_progress — latest checkpoint by sessionId
    */
   function createSupabaseTransport(options = {}) {
     const base = String(options.url || '').replace(/\/$/, '');
@@ -56,45 +56,26 @@
       };
     }
 
-    async function upsert(table, row, prefer, conflictColumn) {
-      const url = new URL(`${base}/rest/v1/${table}`);
-      url.searchParams.set('on_conflict', conflictColumn);
-      const response = await fetchImpl(url.toString(), {
+    async function invoke(functionName, record) {
+      const response = await fetchImpl(`${base}/rest/v1/rpc/${functionName}`, {
         method: 'POST',
-        headers: { ...authHeaders(), 'Prefer': prefer },
-        body: JSON.stringify(row),
+        headers: authHeaders(),
+        body: JSON.stringify({ p_record: record }),
         keepalive: true
       });
-      // 201 created, 200 upserted — both are success
       if (!response.ok) {
         const body = await response.text().catch(() => '');
-        throw new Error(`Supabase ${table} returned ${response.status}: ${body}`);
+        throw new Error(`Supabase ${functionName} returned ${response.status}: ${body}`);
       }
       return response;
     }
 
     async function deliver(item) {
       if (item.kind === 'answer') {
-        const row = {
-          capture_id: item.record.captureId,
-          session_id: item.record.sessionId,
-          test: item.record.test,
-          participant_name: item.record.participantName || null,
-          pair_id: item.record.pairId || null,
-          payload: item.record
-        };
-        // Ignore duplicates — same captureId means same answer, no update needed
-        return upsert('benchmark_answers', row, 'resolution=ignore-duplicates,return=minimal', 'capture_id');
+        return invoke('submit_benchmark_answer', item.record);
       }
       if (item.kind === 'progress') {
-        const row = {
-          session_id: item.record.sessionId,
-          test: item.record.test,
-          payload: item.record,
-          updated_at: item.record.savedAt || new Date().toISOString()
-        };
-        // Replace — always keep the latest progress for a session
-        return upsert('benchmark_progress', row, 'resolution=merge-duplicates,return=minimal', 'session_id');
+        return invoke('save_benchmark_progress', item.record);
       }
       throw new Error(`Unknown kind: ${item.kind}`);
     }
@@ -149,24 +130,9 @@
       }
     }
 
-    async function listAnswers(test) {
-      const url = new URL(`${base}/rest/v1/benchmark_answers`);
-      url.searchParams.set('test', `eq.${test}`);
-      url.searchParams.set('select', 'payload');
-      url.searchParams.set('order', 'created_at.asc');
-      const response = await fetchImpl(url.toString(), {
-        method: 'GET',
-        headers: { ...authHeaders(), 'Accept': 'application/json' }
-      });
-      if (!response.ok) throw new Error(`Supabase list returned ${response.status}.`);
-      const rows = await response.json();
-      return Array.isArray(rows) ? rows.map(r => r.payload) : [];
-    }
-
     return {
       saveAnswer: record => save('answer', record),
       saveProgress: record => save('progress', record),
-      listAnswers,
       flush,
       getPendingCount: () => readQueue(storage, queueKey).length
     };

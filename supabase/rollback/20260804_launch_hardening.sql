@@ -5,6 +5,8 @@
 
 begin;
 
+drop function if exists public.submit_benchmark_answer(jsonb);
+drop function if exists public.save_benchmark_progress(jsonb);
 drop view if exists public.benchmark_answers_analysis;
 drop index if exists public.benchmark_answers_session_round;
 drop index if exists public.benchmark_progress_test_updated;

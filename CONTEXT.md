@@ -49,7 +49,7 @@ The upserted record for an unfinished session. It includes the current pair, hid
 
 ## Production Persistence
 
-The GitHub Pages deployment writes to Supabase project `xyrmytymcipyntdtsksu` using its public anon key. Row-level security permits anonymous inserts and blocks anonymous reads. This is the active production backend, not a preview fixture. The file-backed HTTP data API is an optional alternative for a future self-hosted deployment.
+The GitHub Pages deployment writes to Supabase project `xyrmytymcipyntdtsksu` using its public anon key and two write-only RPC functions. Direct anon table access and anonymous reads are blocked. This is the active production backend, not a preview fixture. The file-backed HTTP data API is an optional alternative for a future self-hosted deployment.
 
 ## Community Results
 

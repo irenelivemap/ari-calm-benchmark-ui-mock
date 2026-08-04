@@ -13,7 +13,7 @@ This checklist separates implemented technical controls from decisions the evalu
 
 - Explicit consent is required before starting.
 - Optional comments warn participants not to include personal information.
-- Participant writes use the public Supabase anon role.
+- Participant writes use the public Supabase anon role through two write-only RPC functions.
 - Supabase row-level security blocks anonymous reads.
 - Capture IDs make completed-answer writes idempotent.
 - Current Calm records are validated against the 23-pair corpus before delivery.
@@ -33,7 +33,7 @@ This checklist separates implemented technical controls from decisions the evalu
 
 ## Current production blocker discovered 2026-08-04
 
-The read-only production smoke test returned participant answer data to the anon role. Before launch, apply `supabase/migrations/20260804_launch_hardening.sql` and confirm `npm run smoke:production` reports zero anonymous rows exposed for both tables. Do not recruit participants until this check passes.
+The 2026-08-04 audit initially found participant answer data exposed to the anon role. The launch-hardening migration removed that access, and `npm run smoke:production` now verifies zero anonymous rows exposed. The follow-up write-only RPC migration preserves participant delivery without reopening table reads.
 
 ## Raw-data rules
 

@@ -30,7 +30,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Deploy the prepared container with the infrastructure team's deployment permissions.
 - [ ] Point `game.livemap.sh` DNS at that deployment.
 - [ ] Provide a browser-restricted Google Maps key for `https://game.livemap.sh/*`.
-- [x] Connect production persistence to the existing Supabase project with insert-only anonymous access.
+- [x] Connect production persistence to the existing Supabase project through write-only anonymous RPCs.
 
 ## Route Provider
 

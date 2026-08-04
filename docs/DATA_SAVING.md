@@ -6,7 +6,7 @@ The benchmark separates completed answers from resumable progress:
 2. An unfinished session upserts one progress record.
 3. Results read the same challenge dataset and never maintain a second answer source.
 
-The browser implements this contract in `src/data/calm-benchmark-data.js` with local storage. GitHub Pages writes the same validated records to Supabase through `src/data/supabase-transport.js`; row-level security allows anonymous inserts but not reads. A self-hosted deployment can instead supply `dataApiBase` and use `src/data/benchmark-transport.js`. Researcher reads happen in the Supabase dashboard or through an authenticated server-side feed.
+The browser implements this contract in `src/data/calm-benchmark-data.js` with local storage. GitHub Pages sends the same validated records through the write-only Supabase RPCs used by `src/data/supabase-transport.js`; direct anon table access and reads are blocked. A self-hosted deployment can instead supply `dataApiBase` and use `src/data/benchmark-transport.js`. Researcher reads happen in the Supabase dashboard or through an authenticated server-side feed.
 
 ## Challenge Datasets
 

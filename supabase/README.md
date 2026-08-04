@@ -11,10 +11,11 @@ Do not rerun `supabase-setup.sql` to update an existing database. `CREATE TABLE 
 3. Resolve every non-zero issue count documented as a blocker.
 4. Export or snapshot the two benchmark tables.
 5. Run `migrations/20260804_launch_hardening.sql`.
-6. Run `postflight.sql` and save its output with the launch record.
-7. If the migration must be reverted, run `rollback/20260804_launch_hardening.sql`.
+6. Run `migrations/20260804_write_only_rpc.sql`.
+7. Run `postflight.sql` and save its output with the launch record.
+8. If the migration must be reverted, run `rollback/20260804_launch_hardening.sql`.
 
-The migration does not delete or rewrite participant records. It adds consistency constraints, supporting indexes, and a researcher-facing analysis view. The rollback removes only those additions.
+The migration does not delete or rewrite participant records. It adds consistency constraints, supporting indexes, and a researcher-facing analysis view. `migrations/20260804_write_only_rpc.sql` then installs the write-only browser functions and revokes direct anon table access. The rollback removes these additions.
 
 The 2026-08-04 read-only production smoke test detected anonymous answer reads. The migration therefore also revokes anonymous SELECT privileges and removes anon/PUBLIC SELECT policies. That security correction is intentionally not restored by the rollback.
 

@@ -103,7 +103,7 @@ Owns record normalization, validation, migration, idempotency, local persistence
 
 ### `src/data/benchmark-transport.js`
 
-Owns the optional self-hosted HTTP delivery path. Answers use `POST` plus `Idempotency-Key`; progress uses an idempotent `PUT`. GitHub Pages instead uses the Supabase transport with equivalent capture/session conflict keys. Failed requests enter a local outbox and block forward progress until synchronized. Production fails closed when neither transport is configured.
+Owns the optional self-hosted HTTP delivery path. Answers use `POST` plus `Idempotency-Key`; progress uses an idempotent `PUT`. GitHub Pages instead calls two Supabase write-only RPCs with equivalent capture/session conflict handling. Direct anon table access is disabled. Failed requests enter a local outbox and block forward progress until synchronized. Production fails closed when neither transport is configured.
 
 ### `src/app/runtime.js`
 

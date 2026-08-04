@@ -43,24 +43,16 @@ create table if not exists benchmark_progress (
   )
 );
 
--- Row-level security: anon key can write (from the app) but not read.
--- Your team reads via the Supabase dashboard or with the service_role key.
+-- Row-level security stays enabled, and direct browser table access is revoked.
+-- Run both files in supabase/migrations/ after this setup to install the
+-- validated constraints, analysis view, and write-only RPC functions.
 alter table benchmark_answers  enable row level security;
 alter table benchmark_progress enable row level security;
 
 -- Browser participants only need INSERT on answers and INSERT/UPDATE on progress.
 -- Revoke table privileges explicitly as a second layer beneath RLS policies.
-revoke select, update, delete on benchmark_answers from anon, authenticated;
-revoke select, delete on benchmark_progress from anon, authenticated;
-
-create policy "anon insert answers"
-  on benchmark_answers for insert to anon with check (true);
-
-create policy "anon upsert progress"
-  on benchmark_progress for insert to anon with check (true);
-
-create policy "anon update progress"
-  on benchmark_progress for update to anon using (true);
+revoke all on benchmark_answers from anon, authenticated;
+revoke all on benchmark_progress from anon, authenticated;
 
 -- Researchers read through the authenticated Supabase dashboard/service role.
 -- Never create an anon SELECT policy for participant data.

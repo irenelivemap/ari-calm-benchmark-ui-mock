@@ -101,7 +101,7 @@ Replace the mock `routePairProvider`; do not edit the fixtures into a production
 
 ### Connect production persistence
 
-GitHub Pages is connected to the existing Supabase project through the public anon key in `runtime-config.js`. Row-level security permits participant inserts but blocks anonymous reads. The app keeps local persistence as a safety layer and queues failed Supabase writes for retry. A self-hosted deployment may instead set `ARI_DATA_API_BASE`; `server/data-api.js` implements that optional transport. Keep both persistence contracts aligned with [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
+GitHub Pages is connected to the existing Supabase project through the public anon key in `runtime-config.js`. Participants execute narrowly scoped write-only RPC functions; direct table access and anonymous reads are blocked. The app keeps local persistence as a safety layer and queues failed Supabase writes for retry. A self-hosted deployment may instead set `ARI_DATA_API_BASE`; `server/data-api.js` implements that optional transport. Keep both persistence contracts aligned with [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
 
 To exercise the full loop locally, start the data API with `ARI_DATA_ADMIN_TOKEN=dev-secret ARI_ALLOWED_ORIGINS=http://127.0.0.1:8765 node server/data-api.js`, then run `ARI_DATA_API_BASE=/api/v1/benchmarks npm start` in another terminal. The dev server proxies `/api/v1/benchmarks/*` to the local data API and injects the base into runtime configuration.
 
