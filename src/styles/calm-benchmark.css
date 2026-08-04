@@ -6079,10 +6079,11 @@ html.is-challenge-dialog-open {
   width: 148px;
   grid-template-columns: 104px var(--ari-map-control-size, 44px);
   overflow: hidden;
-  border: 1px solid rgba(16, 21, 17, 0.18);
+  border: 1.5px solid rgba(16, 21, 17, 0.22);
   border-radius: 14px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 10px 28px rgba(16, 21, 17, 0.18);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
 }
 
 .ari-street-toggle__label {
@@ -6091,9 +6092,9 @@ html.is-challenge-dialog-open {
   align-items: center;
   justify-content: flex-start;
   padding: 0 12px;
-  background: rgba(10, 12, 11, 0.94);
-  color: #fff;
-  font: 700 0.76rem/1 var(--ari-font);
+  background: transparent;
+  color: var(--ari-ink);
+  font: 600 0.76rem/1 var(--ari-font);
   letter-spacing: 0;
   white-space: nowrap;
 }
@@ -6102,9 +6103,9 @@ html.is-challenge-dialog-open {
   display: grid;
   height: 100%;
   place-items: center;
-  border-left: 1px solid rgba(16, 21, 17, 0.14);
-  background: #fff;
-  color: var(--ari-ink);
+  border-left: 1px solid rgba(16, 21, 17, 0.12);
+  background: rgba(16, 21, 17, 0.05);
+  color: var(--ari-muted);
   font: 800 0.72rem/1 var(--ari-font);
   letter-spacing: -0.03em;
   transform: none;
@@ -6115,24 +6116,30 @@ html.is-challenge-dialog-open {
 }
 
 .ari-map__tools .ari-street-toggle:hover {
-  background: #fff;
+  border-color: rgba(16, 21, 17, 0.38);
+  box-shadow: 0 12px 32px rgba(16, 21, 17, 0.24);
+}
+
+.ari-map__tools .ari-street-toggle:hover .ari-street-toggle__glyph {
+  background: rgba(16, 21, 17, 0.09);
+  color: var(--ari-ink);
 }
 
 .ari-map__tools .ari-street-toggle.is-active {
-  border-color: var(--ari-blurple);
-  background: var(--ari-blurple);
-  color: var(--ari-plum);
+  border-color: var(--ari-route-a);
+  background: var(--ari-route-a);
   box-shadow: none;
 }
 
 .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__label {
-  background: var(--ari-blurple);
+  background: transparent;
+  color: #fff;
 }
 
 .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__glyph {
-  border-left-color: rgba(33, 26, 42, 0.18);
-  background: var(--ari-off-white);
-  color: var(--ari-plum);
+  border-left-color: rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .ari-map__navigation {
@@ -8398,9 +8405,19 @@ html.is-challenge-dialog-open {
   }
 
   .ari-map__tools .ari-street-toggle {
-    border-color: rgba(16, 21, 17, 0.24);
-    background: #f6f5ee;
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.96);
     color: var(--ari-ink);
+  }
+
+  .ari-map__tools .ari-street-toggle .ari-street-toggle__label {
+    color: var(--ari-ink);
+  }
+
+  .ari-map__tools .ari-street-toggle .ari-street-toggle__glyph {
+    border-left-color: rgba(16, 21, 17, 0.12);
+    background: rgba(16, 21, 17, 0.05);
+    color: var(--ari-muted);
   }
 
   .ari-map__navigation {
@@ -8423,20 +8440,20 @@ html.is-challenge-dialog-open {
   }
 
   .ari-map__tools .ari-street-toggle.is-active {
-    border-color: var(--ari-blurple);
-    background: var(--ari-blurple);
-    color: var(--ari-plum);
+    border-color: var(--ari-route-a);
+    background: var(--ari-route-a);
     box-shadow: none;
   }
 
   .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__label {
-    background: var(--ari-blurple);
+    background: transparent;
+    color: #fff;
   }
 
   .ari-map__tools .ari-street-toggle.is-active .ari-street-toggle__glyph {
-    border-left-color: rgba(33, 26, 42, 0.18);
-    background: var(--ari-off-white);
-    color: var(--ari-plum);
+    border-left-color: rgba(255, 255, 255, 0.22);
+    background: rgba(0, 0, 0, 0.1);
+    color: rgba(255, 255, 255, 0.9);
   }
 
   .ari-street-viewer {
