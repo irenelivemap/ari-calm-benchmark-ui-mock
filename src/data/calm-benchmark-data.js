@@ -22,7 +22,7 @@
     'none_work_well', 'not_sure', 'multiple_routes'
   ]);
   const Q2_CHOICES = new Set(['yes', 'no', 'not_sure']);
-  const Q3_WORTH_CHOICES = new Set(['yes', 'no', 'not_sure']);
+  const Q3_WORTH_CHOICES = new Set(['a_lot', 'somewhat', 'a_little', 'not_at_all', 'not_sure']);
   const Q2_REASONS = new Set([
     'quieter_or_less_busy_streets',
     'more_trees_or_green_space',

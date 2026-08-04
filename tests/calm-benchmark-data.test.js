@@ -46,7 +46,7 @@ function validAnswer(overrides = {}) {
     q2Separate: null,
     q2Reasons: ['quieter_or_less_busy_streets'],
     q2Note: '',
-    q3WorthShowing: 'yes',
+    q3WorthShowing: 'a_lot',
     q3Issues: [],
     q3Note: '',
     createdAt: '2026-07-13T10:00:00.000Z',
@@ -260,7 +260,7 @@ test('accepts Both work well with Q2 reasons and a value-vs-Fast answer', () => 
     q1Choice: 'both_work_well',
     q1Choices: ['both_work_well'],
     q2Reasons: ['easier_to_follow'],
-    q3WorthShowing: 'yes',
+    q3WorthShowing: 'a_lot',
     q3Issues: []
   }));
 
@@ -272,7 +272,7 @@ test('requires a Q2 reason when both Calm routes work well', () => {
     q1Choice: 'both_work_well',
     q1Choices: ['both_work_well'],
     q2Reasons: [],
-    q3WorthShowing: 'yes',
+    q3WorthShowing: 'a_lot',
     q3Issues: []
   }));
 
@@ -343,7 +343,7 @@ test('Both work poorly never accepts the value-vs-Fast Q3 field', () => {
     q1Choice: 'none_work_well',
     q1Choices: ['none_work_well'],
     q2Reasons: [],
-    q3WorthShowing: 'yes',
+    q3WorthShowing: 'a_lot',
     q3Issues: ['takes_too_long']
   }));
 
