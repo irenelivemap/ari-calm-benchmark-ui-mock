@@ -6114,16 +6114,12 @@ html.is-challenge-dialog-open {
 
 .ari-map__tools .ari-street-toggle:hover {
   background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 24px rgba(16, 21, 17, 0.12);
 }
 
-.ari-map__tools .ari-street-toggle:hover .ari-street-toggle__label,
-.ari-map__tools .ari-street-toggle:hover .ari-street-toggle__glyph {
-  background: rgba(16, 21, 17, 0.06);
-}
-
-.ari-map__tools .ari-street-toggle:active .ari-street-toggle__label,
-.ari-map__tools .ari-street-toggle:active .ari-street-toggle__glyph {
-  background: rgba(16, 21, 17, 0.1);
+.ari-map__tools .ari-street-toggle:active {
+  background: var(--ari-grey-02);
+  box-shadow: none;
 }
 
 .ari-map__tools .ari-street-toggle.is-active {
