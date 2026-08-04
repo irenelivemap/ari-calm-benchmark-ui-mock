@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const sourcePaths = process.argv.slice(2);
-if (sourcePaths.length !== 12) {
-  console.error('Usage: node scripts/build-calm-route-fixtures.mjs <round1.geojson> ... <round12.geojson>');
+if (sourcePaths.length < 1) {
+  console.error('Usage: node scripts/build-calm-route-fixtures.mjs <round1.geojson> [<round2.geojson> ...]');
   process.exit(1);
 }
 
