@@ -20,14 +20,17 @@ test('exposes accessible page landmarks and launch form feedback', () => {
 });
 
 test('keeps Results unavailable until the first comparison is saved', () => {
-  assert.match(html, /data-view="results" disabled aria-label="Results — available after your first comparison"/);
+  assert.match(html, /data-view="results" aria-disabled="true" aria-label="Results" aria-describedby="results-tab-tooltip"/);
   assert.match(html, /class="calm-tab-lock"/);
+  assert.match(html, /id="results-tab-tooltip" role="tooltip">Available after your first comparison\.<\/span>/);
   assert.match(html, /function resultsAreAvailable\(\)/);
-  assert.match(html, /resultsTab\.disabled = !available/);
-  assert.match(html, /Results — available after your first comparison/);
+  assert.match(html, /resultsTab\.removeAttribute\('aria-disabled'\)/);
+  assert.match(html, /resultsTab\.setAttribute\('aria-disabled', 'true'\)/);
   assert.match(html, /if \(view === 'results' && !resultsAreAvailable\(\)\) view = 'testing'/);
   assert.match(html, /answerSink:[\s\S]*?updateResultsAvailability\(\)/);
-  assert.match(css, /\.calm-tabs button:not\(:disabled\) \.calm-tab-lock\s*\{[^}]*display:\s*none;/s);
+  assert.match(css, /\.calm-tabs button\[aria-disabled="true"\]:hover \.calm-tab-tooltip/);
+  assert.match(css, /\.calm-tabs button\[aria-disabled="true"\]:focus-visible \.calm-tab-tooltip/);
+  assert.match(css, /\.calm-tabs button:not\(\[aria-disabled="true"\]\) \.calm-tab-lock\s*\{[^}]*display:\s*none;/s);
 });
 
 test('keeps participant records explorable and easy to interpret', () => {

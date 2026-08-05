@@ -634,6 +634,7 @@ html.is-challenge-dialog-open {
 
 .calm-tabs button {
   appearance: none;
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -649,15 +650,20 @@ html.is-challenge-dialog-open {
   line-height: normal;
 }
 
+.calm-tabs button:focus-visible {
+  outline: 2px solid var(--ari-focus);
+  outline-offset: 3px;
+}
+
 .calm-tabs button[aria-current="page"] {
   background: var(--ari-off-white);
   color: var(--ari-ink);
   box-shadow: none;
 }
 
-.calm-tabs button:disabled {
+.calm-tabs button[aria-disabled="true"] {
   color: var(--ari-faint);
-  cursor: default;
+  cursor: help;
 }
 
 .calm-tab-lock {
@@ -671,8 +677,44 @@ html.is-challenge-dialog-open {
   stroke-linejoin: round;
 }
 
-.calm-tabs button:not(:disabled) .calm-tab-lock {
+.calm-tabs button:not([aria-disabled="true"]) .calm-tab-lock {
   display: none;
+}
+
+.calm-tab-tooltip {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 10px);
+  right: 0;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 36px));
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--ari-plum);
+  color: var(--ari-off-white);
+  font: 600 var(--font-size-micro)/16px var(--ari-font);
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 6px 18px rgba(33, 26, 42, 0.16);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 140ms ease, transform 140ms var(--motion-settle), visibility 140ms;
+}
+
+.calm-tabs button[aria-disabled="true"]:hover .calm-tab-tooltip,
+.calm-tabs button[aria-disabled="true"]:focus-visible .calm-tab-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calm-tab-tooltip {
+    transform: none;
+    transition: none;
+  }
 }
 
 .calm-intro-header-row {

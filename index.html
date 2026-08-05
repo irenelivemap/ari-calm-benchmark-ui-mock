@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260805-results-lock-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260805-results-tooltip-1">
   <style>
     body {
       margin: 0;
@@ -61,12 +61,13 @@
       <div class="calm-intro-header-actions">
         <nav class="calm-tabs" aria-label="Benchmark sections">
           <button type="button" data-view="testing" aria-current="page">Home</button>
-          <button type="button" data-view="results" disabled aria-label="Results — available after your first comparison" title="Available after your first comparison">
+          <button type="button" data-view="results" aria-disabled="true" aria-label="Results" aria-describedby="results-tab-tooltip">
             <span>Results</span>
             <svg class="calm-tab-lock" viewBox="0 0 16 16" aria-hidden="true">
               <rect x="3.5" y="7" width="9" height="6.5" rx="1.5"></rect>
               <path d="M5.5 7V5.25a2.5 2.5 0 0 1 5 0V7"></path>
             </svg>
+            <span class="calm-tab-tooltip" id="results-tab-tooltip" role="tooltip">Available after your first comparison.</span>
           </button>
         </nav>
       </div>
@@ -360,6 +361,7 @@
     const skipLink = document.querySelector('.calm-skip-link');
     const startButton = document.getElementById('start-test');
     const resultsTab = document.querySelector('.calm-tabs [data-view="results"]');
+    const resultsTabTooltip = document.getElementById('results-tab-tooltip');
     const runtimeConfig = AriBenchmarkRuntime.resolveConfig(window);
     document.documentElement.dataset.ariEnvironment = runtimeConfig.production ? 'production' : 'preview';
     if (runtimeConfig.showReset) {
@@ -674,13 +676,15 @@
 
     function updateResultsAvailability() {
       const available = resultsAreAvailable();
-      resultsTab.disabled = !available;
-      resultsTab.setAttribute(
-        'aria-label',
-        available ? 'Results' : 'Results — available after your first comparison'
-      );
-      if (available) resultsTab.removeAttribute('title');
-      else resultsTab.title = 'Available after your first comparison';
+      if (available) {
+        resultsTab.removeAttribute('aria-disabled');
+        resultsTab.removeAttribute('aria-describedby');
+        resultsTabTooltip.hidden = true;
+      } else {
+        resultsTab.setAttribute('aria-disabled', 'true');
+        resultsTab.setAttribute('aria-describedby', resultsTabTooltip.id);
+        resultsTabTooltip.hidden = false;
+      }
     }
 
     updateResultsAvailability();
@@ -2374,7 +2378,7 @@
 
     document.querySelector('.calm-tabs').addEventListener('click', event => {
       const button = event.target.closest('[data-view]');
-      if (!button || button.disabled) return;
+      if (!button || button.getAttribute('aria-disabled') === 'true') return;
       showPage(button.dataset.view);
     });
 
