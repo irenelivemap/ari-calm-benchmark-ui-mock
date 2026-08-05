@@ -19,6 +19,17 @@ test('exposes accessible page landmarks and launch form feedback', () => {
   assert.doesNotMatch(app, /consentVersion|consentedAt|participantConsent/);
 });
 
+test('keeps Results unavailable until the first comparison is saved', () => {
+  assert.match(html, /data-view="results" disabled aria-label="Results — available after your first comparison"/);
+  assert.match(html, /class="calm-tab-lock"/);
+  assert.match(html, /function resultsAreAvailable\(\)/);
+  assert.match(html, /resultsTab\.disabled = !available/);
+  assert.match(html, /Results — available after your first comparison/);
+  assert.match(html, /if \(view === 'results' && !resultsAreAvailable\(\)\) view = 'testing'/);
+  assert.match(html, /answerSink:[\s\S]*?updateResultsAvailability\(\)/);
+  assert.match(css, /\.calm-tabs button:not\(:disabled\) \.calm-tab-lock\s*\{[^}]*display:\s*none;/s);
+});
+
 test('keeps participant records explorable and easy to interpret', () => {
   assert.match(html, /mock-route-diagnostics\.js/);
   assert.match(html, /diagMap\.get\(row\.analysisPairId\)/);
