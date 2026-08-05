@@ -69,7 +69,7 @@ begin
     end if;
 
     if jsonb_typeof(p_record->'routeAssignment') is distinct from 'object'
-      or jsonb_object_length(p_record->'routeAssignment') <> 2
+      or (p_record->'routeAssignment') - 'routeA'::text - 'routeB'::text <> '{}'::jsonb
       or coalesce(p_record->'routeAssignment'->>'routeA', '') not in ('calm_quiet', 'calm_nature')
       or coalesce(p_record->'routeAssignment'->>'routeB', '') not in ('calm_quiet', 'calm_nature')
       or p_record->'routeAssignment'->>'routeA' = p_record->'routeAssignment'->>'routeB'

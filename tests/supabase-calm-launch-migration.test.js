@@ -29,6 +29,8 @@ test('enforces current Calm answer identity, questionnaire, and session limits',
   assert.match(migration, /q3Issues/);
   assert.match(migration, />= 23/);
   assert.match(migration, /routeId' is distinct from \(\s*'calm-round-'/);
+  assert.doesNotMatch(migration, /jsonb_object_length/);
+  assert.match(migration, /routeAssignment'\) - 'routeA'::text - 'routeB'::text/);
 });
 
 test('prevents older progress from overwriting a later Calm checkpoint', () => {
