@@ -1,6 +1,7 @@
 (function () {
   const DEFAULT_TOTAL_ROUNDS = 10;
   const HUD_SEGMENT_COUNT = 5;
+  const MEDAL_UNLOCK_VISIBLE_MS = 3600;
   const ROUTE_SLOTS = [
     { slot: 'A', key: 'routeA', value: 'route_a', className: 'ari-choice--route-a' },
     { slot: 'B', key: 'routeB', value: 'route_b', className: 'ari-choice--route-b' },
@@ -1988,7 +1989,7 @@
         els.cardHeader.classList.remove('is-medal-unlocking');
         copy.setAttribute('aria-hidden', 'true');
         els.hudMedals.setAttribute('aria-label', els.hudMedals.dataset.progressLabel || 'Medal progress');
-      }, 2300);
+      }, MEDAL_UNLOCK_VISIBLE_MS);
     }
 
     function readProgress() {

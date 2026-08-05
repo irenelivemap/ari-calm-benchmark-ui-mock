@@ -66,6 +66,7 @@ test('uses readable secondary text and respects reduced-motion preferences', () 
 test('celebrates comparison ten without inviting the participant to stop', () => {
   assert.match(app, /data-milestone-confetti/);
   assert.match(app, /milestone\.at === 10 && canContinueAfterCurrentRound\(\)/);
+  assert.match(app, /MEDAL_UNLOCK_VISIBLE_MS = 3600/);
   assert.match(app, /All comparisons complete\./);
   assert.match(app, /View results →/);
   assert.doesNotMatch(app, /completedRounds % 10/);

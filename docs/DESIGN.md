@@ -307,7 +307,7 @@ Rules:
 - Resume-card medals are buttons. The front shows the icon and medal name; tapping/clicking flips the medal to show the route count needed to earn it.
 - Celebration stays concentrated in the HUD. At comparison 10, one restrained map-themed confetti burst acknowledges the Trail Seeker milestone while comparison 11 loads underneath it; there is no blocking celebration panel.
 - Reward count only. Never reward speed — no timers or time-based scores, they bias answers.
-- When a medal is earned, the number in the HUD dial turns edge-on and reveals the colored medal icon. `Unlocked` and the medal name reveal beside the dial; after about 2.3 seconds, the message retracts and the dial turns back to the new current route number.
+- When a medal is earned, the number in the HUD dial turns edge-on and reveals the colored medal icon. `Unlocked` and the medal name remain visible for about 3.6 seconds so participants have time to read them; the message then retracts and the dial turns back to the current route number.
 - Medal unlock feedback stays anchored to the existing HUD and never dims the map, moves the camera, blocks interaction, or plays sound. The comparison-10 confetti uses sun yellow, coral, ivory, and silver rather than route colors, plays once when the answer is saved, and is omitted for reduced-motion users. A medal is announced only when its exact comparison threshold is completed.
 
 ## Exit And Progress Rules
