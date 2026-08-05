@@ -687,7 +687,7 @@ html.is-challenge-dialog-open {
   top: calc(100% + 10px);
   right: 0;
   width: max-content;
-  max-width: min(240px, calc(100vw - 36px));
+  max-width: min(190px, calc(100vw - 36px));
   padding: 8px 10px;
   border-radius: 10px;
   background: var(--ari-plum);
