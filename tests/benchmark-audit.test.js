@@ -39,6 +39,15 @@ test('reports duplicate captures, rounds, pairs, and progress ahead of answers',
   assert.equal(report.issueCounts.progress_ahead_of_answers, 1);
 });
 
+test('accepts a historical partial-sync session when progress matches the highest saved round', () => {
+  const report = auditBenchmarkData({
+    answers: [answer(4), answer(5), answer(6), answer(7)],
+    progressBySessionId: { 'session-1': { test: 'calm_route_comparison', sessionId: 'session-1', completedRounds: 7 } }
+  });
+  assert.equal(report.ok, true);
+  assert.equal(report.issueCounts.progress_ahead_of_answers, undefined);
+});
+
 test('unwraps Supabase payload rows and flags malformed current records', () => {
   const report = auditBenchmarkData([{ payload: answer(24, { participantId: '' }) }]);
   assert.equal(report.ok, false);

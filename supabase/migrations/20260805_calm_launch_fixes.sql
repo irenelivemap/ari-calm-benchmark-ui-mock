@@ -79,10 +79,14 @@ begin
 
     if p_record->'labels'->'A'->>'routeType' is distinct from p_record->'routeAssignment'->>'routeA'
       or p_record->'labels'->'B'->>'routeType' is distinct from p_record->'routeAssignment'->>'routeB'
-      or p_record->'labels'->'A'->>'routeId' is distinct from 'calm-round-' || pair_number::text || '-'
+      or p_record->'labels'->'A'->>'routeId' is distinct from (
+        'calm-round-' || pair_number::text || '-'
         || case p_record->'routeAssignment'->>'routeA' when 'calm_quiet' then 'calm-quiet' else 'calm-nature' end
-      or p_record->'labels'->'B'->>'routeId' is distinct from 'calm-round-' || pair_number::text || '-'
+      )
+      or p_record->'labels'->'B'->>'routeId' is distinct from (
+        'calm-round-' || pair_number::text || '-'
         || case p_record->'routeAssignment'->>'routeB' when 'calm_quiet' then 'calm-quiet' else 'calm-nature' end
+      )
     then
       raise exception 'Calm route labels do not match the curated pair' using errcode = '22023';
     end if;
@@ -281,8 +285,6 @@ select
     then (a.payload->>'roundNumber')::integer end as round_number,
   a.payload->>'q1Choice' as q1_choice,
   a.payload->'q1Choices' as q1_choices,
-  case when jsonb_typeof(a.payload->'q1KnowsBetter') = 'boolean'
-    then (a.payload->>'q1KnowsBetter')::boolean end as q1_knows_better,
   a.payload->'q2Reasons' as q2_reasons,
   nullif(a.payload->>'q2Note', '') as q2_note,
   a.payload->>'q3WorthShowing' as q3_worth_showing,
@@ -295,7 +297,9 @@ select
   case when coalesce(a.payload->>'v', '') ~ '^[0-9]+$'
     then (a.payload->>'v')::integer else 1 end as schema_version,
   nullif(a.payload->>'createdAt', '') as client_created_at,
-  a.payload
+  a.payload,
+  case when jsonb_typeof(a.payload->'q1KnowsBetter') = 'boolean'
+    then (a.payload->>'q1KnowsBetter')::boolean end as q1_knows_better
 from public.benchmark_answers a;
 
 revoke all on function public.submit_benchmark_answer(jsonb) from public;

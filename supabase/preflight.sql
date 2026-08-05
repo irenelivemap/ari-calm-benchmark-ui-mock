@@ -76,11 +76,19 @@ select
   count(*) filter (where answer_count = 23 and (min_round <> 1 or max_round <> 23)) as malformed_complete_sessions
 from sessions;
 
--- Progress must never claim more completed rounds than saved answers.
+-- Progress must never claim a position beyond the highest saved answer round.
+-- Comparing with max(roundNumber), rather than row count, keeps historical
+-- partial-sync sessions auditable without treating their checkpoint as corrupt.
 select count(*) as progress_ahead_of_answers
 from public.benchmark_progress p
 left join (
-  select session_id, count(*) as answer_count
+  select
+    session_id,
+    max(case
+      when coalesce(payload->>'roundNumber', '') ~ '^[0-9]+$'
+        then (payload->>'roundNumber')::integer
+      else 0
+    end) as highest_saved_round
   from public.benchmark_answers
   group by session_id
 ) a using (session_id)
@@ -88,7 +96,7 @@ where case
     when coalesce(p.payload->>'completedRounds', '') ~ '^[0-9]+$'
       then (p.payload->>'completedRounds')::integer
     else 0
-  end > coalesce(a.answer_count, 0);
+  end > coalesce(a.highest_saved_round, 0);
 
 select test, coalesce(payload->>'v', 'legacy') as schema_version, count(*)::bigint
 from public.benchmark_answers

@@ -89,11 +89,17 @@
       }
     }
 
-    const answerCounts = new Map(Array.from(sessions, ([sessionId, records]) => [sessionId, records.length]));
+    const answerPositions = new Map(Array.from(sessions, ([sessionId, records]) => {
+      const calmRounds = records
+        .filter(answer => answer.test === CALM_TEST)
+        .map(answer => Number(answer.roundNumber))
+        .filter(Number.isInteger);
+      return [sessionId, calmRounds.length ? Math.max(...calmRounds) : records.length];
+    }));
     progress.forEach((record, index) => {
       const sessionId = String(record?.sessionId || record?.benchmarkRunId || '');
       const completed = Number(record?.completedRounds || 0);
-      if (completed > (answerCounts.get(sessionId) || 0)) {
+      if (completed > (answerPositions.get(sessionId) || 0)) {
         issues.push({ severity: 'error', code: 'progress_ahead_of_answers', location: `progress[${index}]`, sessionId });
       }
       if (record?.test === CALM_TEST && completed > EXPECTED_CALM_ROUNDS) {

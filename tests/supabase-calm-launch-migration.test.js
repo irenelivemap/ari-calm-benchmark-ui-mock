@@ -28,6 +28,7 @@ test('enforces current Calm answer identity, questionnaire, and session limits',
   assert.match(migration, /q3WorthShowing/);
   assert.match(migration, /q3Issues/);
   assert.match(migration, />= 23/);
+  assert.match(migration, /routeId' is distinct from \(\s*'calm-round-'/);
 });
 
 test('prevents older progress from overwriting a later Calm checkpoint', () => {
@@ -38,6 +39,7 @@ test('prevents older progress from overwriting a later Calm checkpoint', () => {
 
 test('keeps the analysis view private and exposes the current flag to researchers', () => {
   assert.match(migration, /as q1_knows_better/);
+  assert.match(migration, /a\.payload,\s*case when jsonb_typeof\(a\.payload->'q1KnowsBetter'\)/);
   assert.match(migration, /revoke all on public\.benchmark_answers_analysis from anon, authenticated/);
   assert.match(migration, /grant select on public\.benchmark_answers_analysis to service_role/);
 });
