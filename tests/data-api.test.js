@@ -175,6 +175,35 @@ test('upserts and returns session progress', async () => {
   }
 });
 
+test('does not let delayed HTTP progress move a session backwards', async () => {
+  const api = await startApi();
+  try {
+    const url = `${api.base}/api/v1/benchmarks/calm_vs_fast/sessions/calm-session-1/progress`;
+    await fetch(url, {
+      method: 'PUT',
+      body: JSON.stringify(validProgress({
+        roundIndex: 3,
+        completedRounds: 3,
+        savedAt: '2026-07-15T10:03:00.000Z'
+      }))
+    });
+    const stale = await fetch(url, {
+      method: 'PUT',
+      body: JSON.stringify(validProgress({
+        roundIndex: 1,
+        completedRounds: 1,
+        savedAt: '2026-07-15T10:04:00.000Z'
+      }))
+    });
+    assert.equal((await stale.json()).status, 'stale');
+
+    const read = await fetch(url, { headers: adminHeaders });
+    assert.equal((await read.json()).record.roundIndex, 3);
+  } finally {
+    await api.close();
+  }
+});
+
 test('rejects unknown tests and malformed JSON', async () => {
   const api = await startApi();
   try {

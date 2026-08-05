@@ -72,8 +72,8 @@ test('supports complete onboarding keyboard navigation', () => {
 
 test('uses readable secondary text and respects reduced-motion preferences', () => {
   assert.match(css, /--ari-faint: rgba\(33, 26, 42, 0\.68\)/);
-  assert.match(css, /\.calm-pp-map\s*\{[^}]*transition:\s*height/s);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.calm-pp-map\s*\{\s*transition:\s*none;/);
+  assert.match(css, /\.calm-step-list span\s*\{[^}]*color:\s*var\(--ari-muted\)/s);
+  assert.doesNotMatch(css, /\.calm-pp-map\s*\{[^}]*transition:\s*height/s);
   assert.match(css, /\.ari-choice-grid label\s*\{[^}]*min-height:\s*44px/s);
   assert.match(css, /\.ari-onboarding__close\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px/s);
 });
@@ -111,13 +111,14 @@ test('loads Google Maps with origin-scoped referrer authorization', () => {
 });
 
 test('recovers from map startup failures instead of leaving a blank screen', () => {
-  assert.match(html, /map-loading\.js[^\n]*maptiler-recovery/);
+  assert.match(html, /map-loading\.js[^\n]*calm-launch-fixes/);
   assert.match(html, /mapTilerKey:\s*runtimeConfig\.mapTilerKey/);
   assert.match(app, /data-map-status[^>]*role="status"[^>]*aria-live="polite"/);
   assert.match(app, /data-action="retry-map"/);
   assert.match(app, /state\.mapAdapter\.retry\(\)/);
   assert.match(mapAdapter, /createMapWithStyleFallback/);
   assert.match(mapAdapter, /state\.provider = 'leaflet'/);
+  assert.match(mapAdapter, /waitForLeafletTiles/);
   assert.match(mapAdapter, /notifyMapStatus\('error'/);
   assert.match(css, /\.ari-map-status\s*\{[^}]*width:\s*min\(340px, calc\(100% - 40px\)\)/s);
   assert.match(css, /\.ari-map-status button\s*\{[^}]*min-height:\s*44px/s);

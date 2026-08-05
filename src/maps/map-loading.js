@@ -66,6 +66,45 @@
     });
   }
 
+  function waitForLeafletTiles(layer, {
+    timeoutMs = DEFAULT_MAP_LOAD_TIMEOUT_MS,
+    maxTileErrors = 3
+  } = {}) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      let tileErrors = 0;
+      const cleanup = () => {
+        clearTimeout(timer);
+        layer.off?.('load', onLoad);
+        layer.off?.('tileerror', onTileError);
+      };
+      const finish = callback => value => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        callback(value);
+      };
+      const succeed = finish(resolve);
+      const fail = finish(reject);
+      const onLoad = () => succeed(layer);
+      const onTileError = () => {
+        tileErrors += 1;
+        if (tileErrors < Math.max(1, Number(maxTileErrors) || 3)) return;
+        const error = new Error('The fallback map tiles could not be loaded.');
+        error.code = 'LEAFLET_TILES_UNAVAILABLE';
+        fail(error);
+      };
+      const timer = setTimeout(() => {
+        const error = new Error('The fallback map took too long to load.');
+        error.code = 'LEAFLET_TILES_TIMEOUT';
+        fail(error);
+      }, Math.max(1, Number(timeoutMs) || DEFAULT_MAP_LOAD_TIMEOUT_MS));
+
+      layer.on?.('load', onLoad);
+      layer.on?.('tileerror', onTileError);
+    });
+  }
+
   async function createMapWithStyleFallback({
     MapClass,
     mapOptions,
@@ -97,6 +136,7 @@
     createMapWithStyleFallback,
     mapStyleCandidates,
     mapTilerStyleUrl,
-    waitForMapLoad
+    waitForMapLoad,
+    waitForLeafletTiles
   };
 });

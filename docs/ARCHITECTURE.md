@@ -2,7 +2,7 @@
 
 ## System Shape
 
-This is a static browser application with no build step and no runtime dependencies installed from npm. `index.html` loads CSS and browser scripts directly, mounts one shared benchmark shell, and injects the selected challenge configuration.
+This is a static browser application with no production runtime dependencies installed from npm. `index.html` loads CSS and browser scripts directly, mounts one shared benchmark shell, and injects the selected challenge configuration. Playwright is a development-only dependency used for Calm launch regression tests.
 
 ```text
 index.html
@@ -130,8 +130,8 @@ UI fixtures only. They model the route-pair contract and must never become the p
 2. It creates a challenge-specific local repository.
 3. Start or Resume calls `AriCalmBenchmark.mount` with the challenge configuration and adapters.
 4. The shell requests a route pair. Curated fixtures shuffle pairs 1–10 as the first group and pairs 11–23 as the second group. Both orders derive from the session and remain stable on resume; every pair still receives a randomized hidden assignment to Route A/B.
-5. A completed comparison is validated and saved locally, then delivered through the configured Supabase or HTTP transport.
-6. An unfinished state is locally upserted and remotely sent through the same retryable transport.
+5. A completed comparison and its following progress checkpoint are validated and written locally in one atomic dataset update, then delivered through the configured Supabase or HTTP transport.
+6. An unfinished state is persisted as soon as a pair loads, locally upserted, and remotely sent through the same retryable transport. Monotonic guards prevent delayed checkpoints from moving a session backward.
 7. Result views read the same challenge dataset and aggregate it through `AriCalmResults`.
 
 ## Extension Points

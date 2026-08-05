@@ -24,6 +24,18 @@ function fakeMap({ styleLoaded = false } = {}) {
   };
 }
 
+function fakeLeafletLayer() {
+  const listeners = new Map();
+  return {
+    on(event, handler) { listeners.set(event, handler); },
+    off(event, handler) {
+      if (listeners.get(event) === handler) listeners.delete(event);
+    },
+    emit(event, payload) { listeners.get(event)?.(payload); },
+    listenerCount() { return listeners.size; }
+  };
+}
+
 test('prefers the configured MapTiler streets style and keeps a public fallback', () => {
   const candidates = MapLoading.mapStyleCandidates({
     mapTilerKey: 'browser-key',
@@ -119,4 +131,22 @@ test('removes a failed MapLibre instance and continues with the next style', asy
   assert.equal(result.map, instances[1]);
   assert.equal(instances[0].removed, true);
   assert.equal(instances[1].removed, false);
+});
+
+test('verifies Leaflet fallback tiles instead of accepting a blank canvas', async () => {
+  const loadedLayer = fakeLeafletLayer();
+  const loaded = MapLoading.waitForLeafletTiles(loadedLayer, { timeoutMs: 100 });
+  loadedLayer.emit('load');
+  await loaded;
+  assert.equal(loadedLayer.listenerCount(), 0);
+
+  const failedLayer = fakeLeafletLayer();
+  const failed = MapLoading.waitForLeafletTiles(failedLayer, {
+    timeoutMs: 100,
+    maxTileErrors: 2
+  });
+  failedLayer.emit('tileerror');
+  failedLayer.emit('tileerror');
+  await assert.rejects(failed, error => error?.code === 'LEAFLET_TILES_UNAVAILABLE');
+  assert.equal(failedLayer.listenerCount(), 0);
 });

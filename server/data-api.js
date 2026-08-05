@@ -28,9 +28,9 @@ const {
 
 const BASE_PATH = '/api/v1/benchmarks';
 const KNOWN_TESTS = new Set(['calm_route_comparison', 'calm_vs_fast', 'ari_fast_vs_google']);
-const MAX_BODY_BYTES = 1024 * 1024;
+const MAX_BODY_BYTES = 64 * 1024;
 
-function createDataApi({ dataDir, adminToken = '', allowedOrigins = [], rateLimitPerMinute = 600 }) {
+function createDataApi({ dataDir, adminToken = '', allowedOrigins = [], rateLimitPerMinute = 120 }) {
   /** In-memory answer index per test: captureId -> stored record. */
   const answersByTest = new Map();
   /** Serialize all writes so concurrent requests cannot interleave files. */
@@ -130,6 +130,22 @@ function createDataApi({ dataDir, adminToken = '', allowedOrigins = [], rateLimi
       const index = await loadAnswers(test);
       const existing = index.get(result.record.captureId);
       if (existing) return { status: 200, body: { status: 'duplicate', record: existing } };
+      if (test === 'calm_route_comparison') {
+        const sessionAnswers = [...index.values()].filter(record => record.sessionId === result.record.sessionId);
+        const duplicateRound = sessionAnswers.find(record => record.roundNumber === result.record.roundNumber);
+        if (duplicateRound) {
+          return {
+            status: 409,
+            body: { status: 'conflict', errors: ['This Calm session already contains that comparison round.'] }
+          };
+        }
+        if (sessionAnswers.length >= 23) {
+          return {
+            status: 429,
+            body: { status: 'rate_limited', errors: ['A Calm session cannot submit more than 23 comparisons.'] }
+          };
+        }
+      }
       const record = { ...result.record, receivedAt: new Date().toISOString() };
       await appendDurably(answersFile(test), `${JSON.stringify(record)}\n`);
       index.set(record.captureId, record);
@@ -149,6 +165,21 @@ function createDataApi({ dataDir, adminToken = '', allowedOrigins = [], rateLimi
     return serialize(async () => {
       const record = { ...result.record, receivedAt: new Date().toISOString() };
       const map = await readProgressMap(test);
+      const existing = map[sessionId];
+      if (existing) {
+        const existingCompleted = Number(existing.completedRounds) || 0;
+        const nextCompleted = Number(record.completedRounds) || 0;
+        const existingRound = Number(existing.roundIndex) || 0;
+        const nextRound = Number(record.roundIndex) || 0;
+        const isStale = nextCompleted < existingCompleted
+          || (nextCompleted === existingCompleted && nextRound < existingRound)
+          || (
+            nextCompleted === existingCompleted
+            && nextRound === existingRound
+            && Date.parse(record.savedAt) < Date.parse(existing.savedAt)
+          );
+        if (isStale) return { status: 200, body: { status: 'stale', record: existing } };
+      }
       map[sessionId] = record;
       const target = progressFile(test);
       const temporary = `${target}.tmp`;

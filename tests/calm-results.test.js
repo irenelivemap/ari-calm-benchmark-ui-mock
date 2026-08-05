@@ -331,7 +331,7 @@ test('merges legacy sessions for the same named team member', () => {
   assert.equal(Results.aggregateAnswers(repeatedSessions).participants, 1);
 });
 
-test('keeps explicit participant identities separate when names match', () => {
+test('keeps different explicit participant codes separate when names match', () => {
   const duplicateNames = [
     answer({ captureId: 'capture-1', participantId: 'participant-alex-1', sessionId: 'session-alex-1', participantName: 'Alex' }),
     answer({ captureId: 'capture-2', participantId: 'participant-alex-2', sessionId: 'session-alex-2', participantName: 'Alex' })

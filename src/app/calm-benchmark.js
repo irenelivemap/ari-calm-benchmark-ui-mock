@@ -2082,6 +2082,31 @@
       };
     }
 
+    function readProgressAfterCompletion(answer, canContinue) {
+      const savedAt = new Date().toISOString();
+      const completedRounds = state.completedRounds + 1;
+      return {
+        v: 2,
+        type: 'bench-progress',
+        test: benchmark.testId,
+        source: benchmark.source,
+        benchmarkRunId: state.sessionId,
+        sessionId: state.sessionId,
+        sessionStartedAt: state.sessionStartedAt,
+        participantName: state.participantName,
+        participantId: state.participantId,
+        roundIndex: canContinue ? state.roundIndex + 1 : state.roundIndex,
+        completedRounds,
+        goalCheckpointPending: !canContinue,
+        pairId: null,
+        routeAssignment: null,
+        questionStep: 'q1',
+        partialAnswer: null,
+        completedCaptureId: answer.captureId,
+        savedAt
+      };
+    }
+
     function getRouteLabel(slot) {
       const descriptor = ROUTE_SLOTS.find(routeSlot => routeSlot.slot === slot);
       const routeType = descriptor ? state.assignment[descriptor.key] : null;
@@ -2281,6 +2306,9 @@
       drawRoutes(state.pair, { hidden: deferRouteReveal });
       updateQuestionFlow();
       setGoalCheckpointVisible(state.goalCheckpointPending);
+      // Persist the loaded pair immediately. A participant can now refresh
+      // before touching Q1 and still resume the same blinded assignment.
+      void autosave();
       if (!state.onboardingComplete) {
         requestAnimationFrame(renderOnboarding);
       } else if (recoveredFromError && !state.goalCheckpointPending) {
@@ -2373,8 +2401,11 @@
       }
 
       els.submit.disabled = true;
+      const answer = readAnswer();
+      const canContinue = canContinueAfterCurrentRound();
+      const completionProgress = readProgressAfterCompletion(answer, canContinue);
       try {
-        await answerSink(readAnswer());
+        await answerSink(answer, completionProgress);
         clearSystemStatus();
       } catch (error) {
         console.error('Could not save calm benchmark answer.', error);
@@ -2386,18 +2417,20 @@
       }
       state.completedRounds += 1;
       const earnedMilestone = getEarnedMilestone(state.completedRounds, milestones);
-      if (!canContinueAfterCurrentRound()) {
+      if (!canContinue) {
         els.submit.textContent = 'Complete';
         state.goalCheckpointPending = true;
       } else {
         await playRoundTransition(state.roundIndex + 1, earnedMilestone);
       }
-      if (earnedMilestone && !canContinueAfterCurrentRound()) showMedalUnlock(earnedMilestone);
+      if (earnedMilestone && !canContinue) showMedalUnlock(earnedMilestone);
       if (state.goalCheckpointPending && state.pair) {
         setGoalCheckpointVisible(true);
         showFinalComparisonConfetti();
       }
-      autosave();
+      // loadRound() persists the next pair. The final checkpoint was already
+      // stored atomically with the answer, so there is no stale current-round
+      // progress write after completion.
     });
 
     els.exit.addEventListener('click', async () => {
@@ -2515,7 +2548,7 @@
       }
       setStreetViewMode(!state.streetViewMode);
     });
-    els.closeStreetView.addEventListener('click', () => closeStreetView());
+    els.closeStreetView.addEventListener('click', () => closeStreetView({ deactivate: true }));
 
     els.streetDivider.addEventListener('pointerdown', event => {
       if (!state.streetViewOpen) return;
@@ -2569,7 +2602,7 @@
     const resizeController = new AbortController();
     window.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
-        if (state.streetViewOpen) closeStreetView();
+        if (state.streetViewOpen) closeStreetView({ deactivate: true });
         else if (state.streetViewMode) setStreetViewMode(false);
         return;
       }

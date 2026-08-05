@@ -44,7 +44,8 @@ create table if not exists benchmark_progress (
 );
 
 -- Row-level security stays enabled, and direct browser table access is revoked.
--- Run both files in supabase/migrations/ after this setup to install the
+-- Run every dated file in supabase/migrations/ in chronological order after
+-- this setup to install the
 -- validated constraints, analysis view, and write-only RPC functions.
 alter table benchmark_answers  enable row level security;
 alter table benchmark_progress enable row level security;

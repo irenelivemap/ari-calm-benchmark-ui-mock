@@ -9,9 +9,13 @@
     "audit:data": "node scripts/audit-benchmark-data.mjs",
     "smoke:production": "node scripts/production-smoke.mjs",
     "test": "node --test tests/*.test.js",
-    "check": "npm test"
+    "test:e2e": "playwright test",
+    "check": "npm test && npm run test:e2e"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1"
   }
 }

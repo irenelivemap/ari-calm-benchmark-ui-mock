@@ -50,11 +50,11 @@ AriCalmBenchmark.mount(root, {
 });
 ```
 
-In `index.html`, these adapters always call the active challenge's local repository first. Production additionally calls the configured Supabase or HTTP transport. Localhost and `file://` previews never select the production Supabase transport automatically. Failed requests enter the selected transport's local outbox; production keeps the participant on the current comparison and exposes the sync failure until delivery succeeds. A production build with neither transport configured fails closed and cannot start data collection.
+In `index.html`, these adapters always call the active challenge's local repository first. A completed answer and the checkpoint after it are committed in one local dataset write, and a newly loaded pair is saved before the participant answers Q1. Production additionally calls the configured Supabase or HTTP transport. Localhost and `file://` previews never select the production Supabase transport automatically. Failed requests enter the selected transport's local outbox; production keeps the participant on the current comparison and exposes the sync failure until delivery succeeds. A production build with neither transport configured fails closed and cannot start data collection.
 
 Queued answers deduplicate by `captureId`. Queued progress deduplicates by test and session, so only the newest unsent state survives. A newer successful progress write removes any older queued version before the outbox flushes.
 
-Legacy Calm progress remains resumable. When an older record has no explicit participant ID, the application derives the same stable, device-local participant ID used for a new session with that normalized name.
+Legacy Calm progress remains resumable. Result aggregation consolidates records using the normalized entered name or participant code. New participant IDs are deterministic across devices; team-issued codes are required to distinguish different people who share a name.
 
 ## Production Endpoints
 

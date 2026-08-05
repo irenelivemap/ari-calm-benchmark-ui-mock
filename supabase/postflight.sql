@@ -10,6 +10,11 @@ where conname in (
 )
 order by conname;
 
+select indexname, indexdef
+from pg_indexes
+where schemaname = 'public'
+  and indexname = 'benchmark_answers_session_round_unique';
+
 select schemaname, viewname, viewowner
 from pg_views
 where schemaname = 'public' and viewname = 'benchmark_answers_analysis';
@@ -44,5 +49,11 @@ select test, schema_version, count(*)::bigint as answer_count
 from public.benchmark_answers_analysis
 group by test, schema_version
 order by test, schema_version;
+
+select column_name, data_type
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'benchmark_answers_analysis'
+  and column_name = 'q1_knows_better';
 
 rollback;

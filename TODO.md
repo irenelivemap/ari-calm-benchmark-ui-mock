@@ -1,128 +1,53 @@
-# To Do
+# Calm Benchmark Launch Checklist
 
-Working list from the live route-pairs and Street View integration (July 2026).
+The participant deployment is the GitHub Pages site:
+`https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/`.
 
-## Launch: shareable LinkedIn link
+Supabase project `xyrmytymcipyntdtsksu` is the active production persistence backend. The optional Node data API and the unconfigured `game.livemap.sh` host are not prerequisites for this launch.
 
-Goal: share `https://game.livemap.sh/routing/` publicly. In dependency order.
+## Required before inviting participants
 
-Blockers — the link does not exist until these are done (owner: infrastructure):
+- [ ] Apply [`supabase/migrations/20260805_calm_launch_fixes.sql`](supabase/migrations/20260805_calm_launch_fixes.sql) and save the [`supabase/postflight.sql`](supabase/postflight.sql) output.
+- [ ] Make one clearly tagged production Calm submission; verify the answer and progress rows in Supabase, export the record, and run `npm run audit:data -- <export>`.
+- [ ] Confirm the Google Maps key is limited to the Maps JavaScript API and the exact participant origin.
+- [ ] Confirm the MapTiler key is limited to the exact participant origin.
+- [ ] Add quota alerts for both browser-key providers.
 
-1. [ ] Build the container from this repo's `Dockerfile`, push it to the
-       registry, and deploy it on the paas. Everything it needs is in
-       `deploy/README.md`.
-2. [ ] Point `game.livemap.sh` DNS at that deployment and terminate HTTPS at
-       the ingress.
-3. [ ] Set the deployment environment: `ROUTING_UPSTREAM` (internal routing
-       service address) and `ARI_GOOGLE_MAPS_KEY`.
-4. [ ] In the Google Cloud console, restrict the Maps key to
-       `https://game.livemap.sh/*` (plus the local origins still in use).
-       It currently answers from any origin.
+## Recorded study choices
 
-Blocker — without this the campaign collects nothing (owner: backend):
+- [x] This is an internal study and the evaluation owner has chosen to collect participant names rather than issue participant codes.
+- [x] Organizational governance follow-up is tracked in [`docs/DATA_GOVERNANCE.md`](docs/DATA_GOVERNANCE.md) but is not treated as a technical deployment task in this repository.
 
-5. [x] Implement the benchmark data API: `server/data-api.js` +
-       `deploy/data-api.Dockerfile` (file-backed reference implementation of
-       [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md), validated with the same
-       rules as the browser).
-       [ ] Deploy it with a persistent `/data` volume and set
-       `ARI_DATA_API_BASE` + `DATA_UPSTREAM` on the main container (owner:
-       infrastructure). Until then every public answer stays in the tester's
-       browser. The routing team can later port it into the Java service
-       without changing the contract.
+## Automated launch gate
 
-Quality gate before posting (owner: Irene, ~1-2 hours on the live URL):
+Run:
 
-6. [ ] The pending real-browser checks below (control order, MapLibre
-       controls, mobile split, Street View flow, live Fast vs Google pass).
-7. [ ] Full pass on a real phone via the deployed URL — LinkedIn traffic is
-       mostly mobile.
-8. [ ] Run the acceptance section of
-       [`docs/INTEGRATION_CHECKLIST.md`](docs/INTEGRATION_CHECKLIST.md)
-       against `https://game.livemap.sh/routing/`.
-9. [ ] Validate the link preview with LinkedIn's Post Inspector (OG tags and
-       the social image are already in place).
+```bash
+npm ci
+npm test
+npm run test:e2e
+npm run smoke:production -- https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/
+npm audit
+```
 
-Decisions for the post itself:
+The GitHub Pages workflow runs the unit suite and the Calm Playwright regression suite before publishing.
 
-10. [ ] Which URL to share: the chooser (`/routing/`) or one challenge
-        directly (`/routing/fast-vs-google`). One decision surface converts
-        better for cold traffic; the chooser shows the family.
-11. [ ] Expectation-setting: community results are per-browser until an
-        aggregated results endpoint exists; the post copy should not promise
-        a live global leaderboard.
-12. [ ] Watch Google Maps quota during the campaign (Directions + Street View
-        + map loads per visitor); set a billing alert in the Cloud console.
+## Verified in the 2026-08-05 QA pass
 
-## Handoff state (2026-07-15)
+- [x] MapTiler renders the production Calm routes.
+- [x] OpenFreeMap and Leaflet are bounded fallbacks; Leaflet tile failures surface a Retry state.
+- [x] Google Street View opens from Calm routes and closes back to ordinary map mode.
+- [x] A newly loaded first comparison survives reload before Q1 is answered.
+- [x] A completed answer and its next progress checkpoint are stored atomically.
+- [x] Delayed progress cannot move a participant backward.
+- [x] Calm results use the current route-choice and rejection-reason taxonomies.
+- [x] Participant results say `Your results`; team framing remains researcher-only.
+- [x] Participant identity consolidates by normalized name across sessions and devices; identical names remain an accepted internal-study limitation.
+- [x] App-owned touch targets, heading structure, and introductory secondary-text contrast were corrected.
+- [x] Desktop and 390px mobile Calm flows are covered by browser regression tests.
 
-Everything below is on `main` and live-tested locally against a running
-`livemap-routing` service unless marked as needing a check:
+## Future infrastructure, not a launch dependency
 
-- Both challenges generate live random Zurich route pairs (`route-pair-generator.js`);
-  fixtures remain the automatic fallback. Local end-to-end setup:
-  build/run the routing service (port 8989), then `npm run start:live`.
-- Street View: works from any map point; split layout (map left, panorama
-  right; stacked on mobile) with a draggable, per-device-persistent divider;
-  seam glides open/shut with an eased camera restore.
-- Map controls: zoom/camera are provider-native everywhere; Fit and the
-  text-only `Street View` pill are adopted into the provider's top-right
-  control container.
-- Production host support is prepared for `game.livemap.sh/routing`: clean
-  challenge paths, environment-backed runtime configuration, a same-origin
-  routing proxy, production-only UI rules, LinkedIn metadata, and an HTTP
-  persistence outbox.
-
-Needs a visual check on a real browser (not yet verified):
-
-- [ ] Google map: control column order — tools box top-right, Google camera
-      D-pad below it. If they collide, reposition via
-      `google.maps.ControlPosition` in `map-adapter.js` `ensure()`.
-- [ ] MapLibre map: native navigation control sits beneath Fit/pill; tools
-      adopt correctly after the async style load (onboarding coachmarks
-      reposition at 1.2s/2.6s to cover this).
-- [ ] Street View split on mobile: divider drag, pill/hint placement, and
-      the question card staying hidden until Back to map.
-
-Production-readiness items that were already tracked stay in
-[`docs/INTEGRATION_CHECKLIST.md`](docs/INTEGRATION_CHECKLIST.md); this list covers
-the newer follow-ups.
-
-## Street View rollout
-
-- [ ] Restrict the shared Google Maps browser key by HTTP referrer in the Google
-      Cloud console. It currently answers from any origin. Required public host:
-      `https://game.livemap.sh/*`; keep only the local/preview origins still used.
-      Owner: whoever manages the Google Cloud project / `LIVEMAP_GOOGLE_MAPS_KEY`.
-- [x] Choose a tester-facing host architecture: prepare the benchmark for
-      `game.livemap.sh/routing`, with runtime-injected configuration and a
-      same-origin routing proxy. See `deploy/README.md`.
-- [ ] Verify the Street View flow in a real browser once the key is configured:
-      panorama opens from a route tap on both routes, exact camera and question
-      state restore on `Back to map`, the mobile full-screen layer, the
-      no-imagery state, and reduced-motion behavior.
-
-## Live route pairs
-
-- [ ] Verify the MapLibre map and random-pair flow in a real browser
-      (`npm run start:live` next to a running routing service). The integration
-      was verified headlessly against the live facade; a visual pass is pending.
-- [x] Avoid a public CORS dependency by proxying routing calls through
-      `game.livemap.sh`; GitHub Pages remains a fixture-backed preview only.
-- [x] Wire the Fast vs Google Fast challenge to live data: `livemap_fast` from
-      the routing facade plus Google routes from the Directions SDK at run time.
-      Google geometry is never persisted — caches keep metrics and snapped
-      endpoints only, and the snap-fairness gate (40 m) redraws unfair matchups.
-- [ ] Browser pass of the live Fast vs Google flow (needs facade + Maps key):
-      pair loads, both routes render on the Google base map, resume re-fetches
-      the Google path, fixture fallback still works without a key.
-
-## Housekeeping
-
-- [ ] Keep the Google key out of git everywhere (repo rule). `?gmap=` links and
-      env injection are the approved delivery paths.
-- [ ] Revisit the sampling region and the 400–3000 m distance gate once real
-      testers give feedback on pair difficulty and walk length.
-- [x] Implement the shared benchmark data API (`server/data-api.js`); connect
-      it in the deployment before public launch — `ARI_DATA_API_BASE` must not
-      remain empty for a LinkedIn campaign.
+- Deploy the optional container at `game.livemap.sh` only if the team wants a custom host or live routing facade.
+- Deploy the optional file-backed data API only if Supabase is intentionally replaced.
+- Keep Fast vs Google work separate from the Calm participant launch checklist.

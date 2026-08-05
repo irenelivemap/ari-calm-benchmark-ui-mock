@@ -40,6 +40,7 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 
 ```bash
 npm test
+npm run test:e2e
 ```
 
 For UI changes, verify both active challenge URLs:

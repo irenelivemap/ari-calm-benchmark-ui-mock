@@ -19,11 +19,12 @@ Testers see only Route A and Route B. The hidden provider assignment is stored w
 
 ## Local Setup
 
-Node.js 18 or newer is required for the server and tests.
+Node.js 20 or newer is required for the server and tests.
 
 ```bash
 git clone https://github.com/irenelivemap/ari-calm-benchmark-ui-mock.git
 cd ari-calm-benchmark-ui-mock
+npm ci
 npm start
 ```
 
@@ -35,13 +36,14 @@ The local server also previews the future public paths:
 - <http://127.0.0.1:8765/routing/fast-vs-google>
 - <http://127.0.0.1:8765/routing/fast-vs-calm>
 
-Run the complete test suite:
+Install the development-only browser-test dependency and run the complete launch gate:
 
 ```bash
-npm test
+npm ci
+npm check
 ```
 
-There is no build step and no package installation is required.
+The participant application still has no build step or npm runtime dependency. Playwright is used only for automated Calm browser tests.
 
 ## Entry Points
 
@@ -73,6 +75,7 @@ src/results/calm-results.js        Pure results aggregation
 src/styles/calm-benchmark.css      Complete visual system
 server/data-api.js                 File-backed benchmark persistence service
 tests/                             Node tests for data and results behavior
+tests-e2e/                         Calm browser regression tests
 docs/                              Product, design, architecture, and data contracts
 deploy/                            Caddy + data API container configuration and handoff
 ```
@@ -101,13 +104,13 @@ Replace the mock `routePairProvider`; do not edit the fixtures into a production
 
 ### Connect production persistence
 
-GitHub Pages is connected to the existing Supabase project through the public anon key in `runtime-config.js`. Participants execute narrowly scoped write-only RPC functions; direct table access and anonymous reads are blocked. The app keeps local persistence as a safety layer and queues failed Supabase writes for retry. A self-hosted deployment may instead set `ARI_DATA_API_BASE`; `server/data-api.js` implements that optional transport. Keep both persistence contracts aligned with [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
+GitHub Pages is connected to the existing Supabase project through the public anon key in `runtime-config.js`. Participants execute narrowly scoped write-only RPC functions; direct table access and anonymous reads are blocked. The app atomically stores each completed answer with its following checkpoint, rejects backward progress, and queues failed Supabase writes for retry. Apply migrations through `20260805_calm_launch_fixes.sql` before launch. A self-hosted deployment may instead set `ARI_DATA_API_BASE`; `server/data-api.js` implements that optional transport. Keep both persistence contracts aligned with [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
 
 To exercise the full loop locally, start the data API with `ARI_DATA_ADMIN_TOKEN=dev-secret ARI_ALLOWED_ORIGINS=http://127.0.0.1:8765 node server/data-api.js`, then run `ARI_DATA_API_BASE=/api/v1/benchmarks npm start` in another terminal. The dev server proxies `/api/v1/benchmarks/*` to the local data API and injects the base into runtime configuration.
 
 ## Production Deployment
 
-The prepared container serves the future public experience at `https://game.livemap.sh/routing/`. It uses clean challenge paths, hides development controls, reads the Google key from runtime configuration, and proxies routing requests same-origin. See [`deploy/README.md`](deploy/README.md) for the minimal infrastructure handoff.
+The active participant deployment is GitHub Pages at `https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/`. The prepared container and `game.livemap.sh` remain optional future infrastructure; see [`deploy/README.md`](deploy/README.md).
 
 The LinkedIn preview image is [`assets/ari-route-arcade-social.png`](assets/ari-route-arcade-social.png). Its editable source is [`tools/social-preview.html`](tools/social-preview.html).
 
@@ -126,7 +129,7 @@ Both active challenges use the same route-pair provider contract, but their curr
 
 ## Map Providers
 
-The production base map is **MapLibre GL** with the same MapTiler `streets-v4` style used by the ARI app. Map startup is bounded: if MapTiler fails or stalls, the adapter tries the public OpenFreeMap style, then falls back to Leaflet when WebGL is unavailable. If no engine can start, the map shows an in-app Retry state instead of an empty canvas.
+The production base map is **MapLibre GL** with the same MapTiler `streets-v4` style used by the ARI app. Map startup is bounded: if MapTiler fails or stalls, the adapter tries the public OpenFreeMap style, then falls back to Leaflet when WebGL is unavailable. Leaflet tile loading is also bounded and monitored. If no engine can load usable tiles, participant and result maps show an in-app Retry state instead of an empty canvas.
 
 A configured Google Maps key does not switch the base map for Fast vs Calm: it loads the Google SDK so the embedded **Street View** inspector works. The one exception is **Fast vs Google Fast** with live data, which renders on a Google base map because Google Directions content must be displayed on a Google map (Maps ToS). Hosts can also request a Google base map explicitly through `mapProvider: "google"` on `AriCalmBenchmark.mount`.
 
@@ -157,6 +160,7 @@ Never commit an API key.
 - Keep orange and green reserved for Route A and Route B.
 - Use `fresh.html` instead of deleting browser data during ordinary visual QA.
 - Update tests and relevant docs when changing question logic or stored records.
+- Prefer unique participant codes when names may repeat; normalized names/codes consolidate the same person across devices and sessions.
 - Never introduce participant-facing question copy without updating `docs/QUESTIONNAIRE.md` and the question-copy drift test.
 - Verify both active challenge URLs after shared UI changes.
 

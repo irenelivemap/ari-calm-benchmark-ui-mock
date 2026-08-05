@@ -189,6 +189,66 @@ test('stores partial progress and returns the latest resumable session', () => {
   assert.equal(repository.verify().valid, true);
 });
 
+test('saves a completed answer and its next checkpoint atomically', () => {
+  const repository = createLocalRepository(new MemoryStorage());
+  repository.saveProgress(validProgress({ questionStep: 'q3' }));
+
+  const result = repository.saveCompletedRound(
+    validAnswer(),
+    validProgress({
+      roundIndex: 1,
+      completedRounds: 1,
+      pairId: null,
+      routeAssignment: null,
+      questionStep: 'q1',
+      partialAnswer: null,
+      savedAt: '2026-07-13T10:03:00.000Z'
+    })
+  );
+
+  assert.equal(result.status, 'saved');
+  assert.equal(repository.getSnapshot().answers.length, 1);
+  assert.equal(repository.getLatestProgress().roundIndex, 1);
+  assert.equal(repository.getLatestProgress().completedRounds, 1);
+  assert.equal(repository.getLatestProgress().partialAnswer, null);
+});
+
+test('does not let a delayed older progress write move a session backwards', () => {
+  const repository = createLocalRepository(new MemoryStorage());
+  repository.saveProgress(validProgress({
+    roundIndex: 1,
+    completedRounds: 1,
+    pairId: null,
+    routeAssignment: null,
+    questionStep: 'q1',
+    partialAnswer: null,
+    savedAt: '2026-07-13T10:03:00.000Z'
+  }));
+
+  const stale = repository.saveProgress(validProgress({
+    roundIndex: 0,
+    completedRounds: 0,
+    savedAt: '2026-07-13T10:04:00.000Z'
+  }));
+
+  assert.equal(stale.status, 'stale');
+  assert.equal(repository.getLatestProgress().roundIndex, 1);
+  assert.equal(repository.getLatestProgress().completedRounds, 1);
+});
+
+test('repairs a legacy answer-progress gap during resume', () => {
+  const storage = new MemoryStorage();
+  const repository = createLocalRepository(storage);
+  repository.saveProgress(validProgress({ questionStep: 'q3' }));
+  repository.saveAnswer(validAnswer());
+
+  const repaired = repository.getLatestProgress();
+  assert.equal(repaired.completedRounds, 1);
+  assert.equal(repaired.roundIndex, 1);
+  assert.equal(repaired.questionStep, 'q1');
+  assert.equal(repaired.partialAnswer, null);
+});
+
 test('migrates the previous localStorage records without duplicating them', () => {
   const legacyAnswer = validAnswer();
   delete legacyAnswer.captureId;

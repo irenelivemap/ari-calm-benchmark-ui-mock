@@ -577,17 +577,114 @@
       return { status: 'saved', record: clone(record) };
     }
 
+    function shouldReplaceProgress(existing, candidate) {
+      if (!existing) return true;
+      if (candidate.completedRounds !== existing.completedRounds) {
+        return candidate.completedRounds > existing.completedRounds;
+      }
+      if (candidate.roundIndex !== existing.roundIndex) {
+        return candidate.roundIndex > existing.roundIndex;
+      }
+      return Date.parse(candidate.savedAt) >= Date.parse(existing.savedAt);
+    }
+
     function saveProgress(input) {
       const record = assertValid(validateProgressRecord(input), 'Progress record');
       const dataset = readDataset();
+      const existing = dataset.progressBySessionId[record.sessionId];
+      if (!shouldReplaceProgress(existing, record)) {
+        return { status: 'stale', record: clone(existing) };
+      }
       dataset.progressBySessionId[record.sessionId] = record;
       updateSessionSummary(dataset, record);
       writeDataset(dataset);
       return { status: 'saved', record: clone(record) };
     }
 
+    /**
+     * Saves a completed answer and the checkpoint that follows it with one
+     * localStorage write. A refresh can therefore observe either the previous
+     * unfinished round or the next checkpoint, never a completed answer paired
+     * with an old progress pointer.
+     */
+    function saveCompletedRound(answerInput, progressInput) {
+      const answer = assertValid(validateAnswerRecord(answerInput), 'Answer record');
+      const progress = assertValid(validateProgressRecord(progressInput), 'Progress record');
+      if (answer.sessionId !== progress.sessionId) {
+        throw new DataValidationError('Completed round failed validation.', [
+          'Answer and progress must belong to the same session.'
+        ]);
+      }
+      if (progress.completedRounds < (answer.roundNumber || 0)) {
+        throw new DataValidationError('Completed round failed validation.', [
+          'Progress must include the completed answer round.'
+        ]);
+      }
+
+      const dataset = readDataset();
+      const existingAnswer = dataset.answers.find(record => record.captureId === answer.captureId);
+      if (!existingAnswer) dataset.answers.push(answer);
+
+      const existingProgress = dataset.progressBySessionId[progress.sessionId];
+      const storedProgress = shouldReplaceProgress(existingProgress, progress)
+        ? progress
+        : existingProgress;
+      dataset.progressBySessionId[progress.sessionId] = storedProgress;
+      updateSessionSummary(dataset, storedProgress);
+      writeDataset(dataset);
+
+      return {
+        status: existingAnswer ? 'duplicate' : 'saved',
+        answer: clone(existingAnswer || answer),
+        progress: clone(storedProgress)
+      };
+    }
+
+    function reconcileCompletedAnswers(dataset) {
+      const latestAnswerBySession = new Map();
+      dataset.answers.forEach(answer => {
+        const roundNumber = Number(answer.roundNumber);
+        if (!answer.sessionId || !Number.isInteger(roundNumber) || roundNumber < 1) return;
+        const current = latestAnswerBySession.get(answer.sessionId);
+        if (!current || roundNumber > current.roundNumber) {
+          latestAnswerBySession.set(answer.sessionId, { answer, roundNumber });
+        }
+      });
+
+      let changed = false;
+      latestAnswerBySession.forEach(({ answer, roundNumber }, sessionId) => {
+        const existing = dataset.progressBySessionId[sessionId];
+        if ((existing?.completedRounds || 0) >= roundNumber) return;
+        const finalCalmRound = answer.test === CALM_ROUTE_COMPARISON_TEST_ID && roundNumber >= 23;
+        const reconciled = normalizeProgressRecord({
+          v: Math.max(2, Number(answer.v) || 1),
+          type: PROGRESS_TYPE,
+          test: answer.test,
+          source: answer.source,
+          benchmarkRunId: sessionId,
+          sessionId,
+          sessionStartedAt: existing?.sessionStartedAt || answer.sessionStartedAt || answer.createdAt,
+          participantName: answer.participantName,
+          participantId: answer.participantId,
+          roundIndex: finalCalmRound ? 22 : roundNumber,
+          completedRounds: roundNumber,
+          goalCheckpointPending: finalCalmRound,
+          pairId: null,
+          routeAssignment: null,
+          questionStep: 'q1',
+          partialAnswer: null,
+          savedAt: isoNow()
+        });
+        dataset.progressBySessionId[sessionId] = reconciled;
+        updateSessionSummary(dataset, reconciled);
+        changed = true;
+      });
+      return changed;
+    }
+
     function getLatestProgress() {
       const dataset = readDataset();
+      if (reconcileCompletedAnswers(dataset)) writeDataset(dataset);
       const records = Object.values(dataset.progressBySessionId);
       records.sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt));
       return records.length ? clone(records[0]) : null;
@@ -650,6 +747,7 @@
       storageKey,
       saveAnswer,
       saveProgress,
+      saveCompletedRound,
       getLatestProgress,
       getSnapshot,
       verify,

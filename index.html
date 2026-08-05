@@ -6,21 +6,21 @@
   <title>ARI Route Benchmark</title>
   <meta name="description" content="Compare routes, reveal better journeys, and help ARI learn what makes a route work.">
   <meta name="theme-color" content="#211a2a">
-  <link rel="canonical" href="https://game.livemap.sh/routing/">
+  <link rel="canonical" href="https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="LiveMap">
-  <meta property="og:title" content="ARI Route Arcade">
-  <meta property="og:description" content="Choose the better route and help build more human journeys.">
-  <meta property="og:url" content="https://game.livemap.sh/routing/">
-  <meta property="og:image" content="https://game.livemap.sh/routing/assets/ari-route-arcade-social.png">
+  <meta property="og:title" content="ARI Calm Route Comparison">
+  <meta property="og:description" content="Compare two walking routes and help us understand what people prefer for a calmer walk.">
+  <meta property="og:url" content="https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/">
+  <meta property="og:image" content="https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/assets/ari-route-arcade-social.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="627">
   <meta property="og:image:alt" content="ARI Route Arcade with two colorful routes converging on a navigation medal">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ARI Route Arcade">
-  <meta name="twitter:description" content="Choose the better route and help build more human journeys.">
-  <meta name="twitter:image" content="https://game.livemap.sh/routing/assets/ari-route-arcade-social.png">
-  <script src="./runtime-config.js?v=20260805-street-view-deploy-2"></script>
+  <meta name="twitter:title" content="ARI Calm Route Comparison">
+  <meta name="twitter:description" content="Compare two walking routes and help us understand what people prefer for a calmer walk.">
+  <meta name="twitter:image" content="https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/assets/ari-route-arcade-social.png">
+  <script src="./runtime-config.js?v=20260805-calm-launch-fixes-1"></script>
   <script>
     (function () {
       const configured = String(window.ARI_RUNTIME_CONFIG?.basePath || '').replace(/^\/+|\/+$/g, '');
@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260805-maptiler-recovery-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260805-calm-launch-fixes-1">
   <style>
     body {
       margin: 0;
@@ -222,9 +222,9 @@
             <div class="calm-medal-shelf calm-hidden" id="medal-shelf" aria-label="Milestones"></div>
           </div>
           <form class="calm-start-form" id="start-form">
-            <label for="participant-name">Participant name</label>
+            <label for="participant-name">Name or participant code</label>
             <div class="calm-start-row">
-              <input id="participant-name" name="participantName" type="text" autocomplete="name" maxlength="80" required aria-describedby="start-form-error" placeholder="Type a name…">
+              <input id="participant-name" name="participantName" type="text" autocomplete="name" maxlength="80" required aria-describedby="start-form-error" placeholder="Type your name or code…">
               <button id="start-test" type="submit" disabled>Start test →</button>
             </div>
             <p class="calm-start-error" id="start-form-error" role="status" aria-live="polite"></p>
@@ -318,17 +318,17 @@
   <script src="./src/app/runtime.js?v=20260729-three-routes-1"></script>
   <script src="./src/data/mock-route-pairs.js?v=20260804-route-pairs-23-1"></script>
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
-  <script src="./src/data/calm-benchmark-data.js?v=20260731-calm-worth-fast-1"></script>
+  <script src="./src/data/calm-benchmark-data.js?v=20260805-calm-launch-fixes-1"></script>
   <script src="./src/data/benchmark-transport.js?v=20260804-persist-endpoint-1"></script>
   <script src="./src/data/supabase-transport.js?v=20260804-write-rpc-1"></script>
   <script src="./src/data/mock-route-diagnostics.js?v=20260804-route-pairs-23-2"></script>
   <script src="./src/data/mock-team-results.js?v=20260805-question-answer-1"></script>
-  <script src="./src/results/calm-results.js?v=20260805-questionnaire-cleanup-1"></script>
+  <script src="./src/results/calm-results.js?v=20260805-calm-launch-fixes-1"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
   <script src="./src/maps/route-overlap.js?v=20260729-street-view-any-point-1"></script>
-  <script src="./src/maps/map-loading.js?v=20260805-maptiler-recovery-1"></script>
-  <script src="./src/maps/map-adapter.js?v=20260805-maptiler-recovery-1"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260805-maptiler-recovery-1"></script>
+  <script src="./src/maps/map-loading.js?v=20260805-calm-launch-fixes-1"></script>
+  <script src="./src/maps/map-adapter.js?v=20260805-calm-launch-fixes-1"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260805-calm-launch-fixes-1"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -691,16 +691,16 @@
     updateResultsAvailability();
 
     function participantIdFor(name) {
-      const key = `${activeChallenge}:${String(name || '').trim().toLocaleLowerCase('en')}`;
-      let identities = {};
-      try { identities = JSON.parse(localStorage.getItem(PARTICIPANT_IDS_STORAGE) || '{}'); } catch (_) {}
-      if (!identities[key]) {
-        identities[key] = window.crypto?.randomUUID
-          ? `participant-${window.crypto.randomUUID()}`
-          : `participant-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-        localStorage.setItem(PARTICIPANT_IDS_STORAGE, JSON.stringify(identities));
+      const normalized = `${activeChallenge}:${String(name || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en')}`;
+      // FNV-1a gives the same research identity on every device without
+      // exposing the entered name in the identifier itself. Team-issued codes
+      // remain the recommended way to distinguish people who share a name.
+      let hash = 2166136261;
+      for (let index = 0; index < normalized.length; index += 1) {
+        hash ^= normalized.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
       }
-      return identities[key];
+      return `participant-${(hash >>> 0).toString(36)}`;
     }
     const hasSavedAnswers = (dataRepository.getSnapshot().answers || []).length > 0;
     if (!researcherMode) {
@@ -1448,7 +1448,7 @@
                   </div>` : ''}
                 </section>` : ''}
                 ${routeTableHtml || diag ? `<section class="calm-pp-route-details">
-                  <h4 class="calm-pp-section-title">Route details${researcherMode ? '' : ` <span class="calm-pp-section-context">· ${escapeHtml(pairLabel)}</span>`}</h4>
+                  <h3 class="calm-pp-section-title">Route details${researcherMode ? '' : ` <span class="calm-pp-section-context">· ${escapeHtml(pairLabel)}</span>`}</h3>
                   ${routePair && Number.isInteger(pairIndex) ? `
                   <div class="calm-rp-map-wrap calm-pp-map-wrap">
                     <div class="calm-rp-map-canvas">
@@ -1534,11 +1534,16 @@
       const outcomeEntries = AriCalmResults.OUTCOMES
         .map(key => [AriCalmResults.OUTCOME_LABELS[key], participantSummary.outcomeCounts[key], key])
         .filter(([, count]) => count > 0);
-      const reasonEntries = AriCalmResults.REASONS
+      const choiceReasonEntries = AriCalmResults.CHOICE_REASONS
+        .map(key => [AriCalmResults.CHOICE_REASON_LABELS[key], participantSummary.choiceReasonCounts[key], key])
+        .filter(([, count]) => count > 0)
+        .sort((a, b) => b[1] - a[1]);
+      const rejectionReasonEntries = AriCalmResults.REASONS
         .map(key => [AriCalmResults.REASON_LABELS[key], participantSummary.reasonCounts[key], key])
         .filter(([, count]) => count > 0)
         .sort((a, b) => b[1] - a[1]);
-      const reasonResponseCount = participantSummary.rows.filter(row => row.reasons.length > 0).length;
+      const choiceReasonResponseCount = participantSummary.rows.filter(row => row.q2Reasons.length > 0).length;
+      const rejectionReasonResponseCount = participantSummary.rows.filter(row => row.reasons.length > 0).length;
       const participantButtons = orderedParticipants.map(item => {
         const isSelected = item.participantId === selectedResultsParticipantId;
         return `
@@ -1581,11 +1586,16 @@
                 <div class="calm-results-chart">${renderBarRows(outcomeEntries, participantSummary.total, 'calm-result-row--outcome')}</div>
               </section>
               <section aria-labelledby="participant-reasons-title">
-                <h2 id="participant-reasons-title">Reasons selected</h2>
-                <div class="calm-results-chart">${reasonEntries.length
-                  ? renderBarRows(reasonEntries, reasonResponseCount)
-                  : '<p class="calm-participant-empty-note">No reasons selected.</p>'}</div>
+                <h2 id="participant-reasons-title">Reasons for choosing routes</h2>
+                <div class="calm-results-chart">${choiceReasonEntries.length
+                  ? renderBarRows(choiceReasonEntries, choiceReasonResponseCount)
+                  : '<p class="calm-participant-empty-note">No route-choice reasons selected.</p>'}</div>
               </section>
+              ${rejectionReasonEntries.length ? `
+              <section aria-labelledby="participant-rejection-reasons-title">
+                <h2 id="participant-rejection-reasons-title">Reasons for choosing neither</h2>
+                <div class="calm-results-chart">${renderBarRows(rejectionReasonEntries, rejectionReasonResponseCount)}</div>
+              </section>` : ''}
             </div>
             <section class="calm-participant-cards" aria-labelledby="participant-records-title">
               <h2 id="participant-records-title" class="calm-pp-cards-title">Evaluation records</h2>
@@ -1620,9 +1630,11 @@
       parkRouteProfiles();
       communityResultsContent.innerHTML = `
         <header class="calm-results-dashboard-header${researcherMode ? '' : ' calm-results-dashboard-header--participant'}">
-          <h1>Team results</h1>
+          <h1>${researcherMode ? 'Team results' : 'Your results'}</h1>
           <div class="calm-results-dashboard-summary">
-            <p class="calm-results-dashboard-summary__lead"><strong class="marker-lime marker-static">${summary.participants} team member${summary.participants === 1 ? '' : 's'}</strong> familiar with Zürich completed <strong class="marker-lime marker-static">${summary.total} route comparison${summary.total === 1 ? '' : 's'}</strong> in a blind, side-by-side format.</p>
+            <p class="calm-results-dashboard-summary__lead">${researcherMode
+              ? `<strong class="marker-lime marker-static">${summary.participants} team member${summary.participants === 1 ? '' : 's'}</strong> familiar with Zürich completed <strong class="marker-lime marker-static">${summary.total} route comparison${summary.total === 1 ? '' : 's'}</strong> in a blind, side-by-side format.`
+              : `You completed <strong class="marker-lime marker-static">${summary.total} route comparison${summary.total === 1 ? '' : 's'}</strong> in a blind, side-by-side format.`}</p>
             <p>For each pair, the routes were shown as Route A and Route B, so evaluators did not know which profile generated them. One came from a <strong class="calm-results-profile-label" data-profile="nature">Nature-focused profile</strong>, with more emphasis on greenery, tree canopy, and proximity to water. The other came from a <strong class="calm-results-profile-label" data-profile="quiet">Quiet-focused profile</strong>, with more emphasis on avoiding noise, main roads, and areas with higher accident risk.</p>
             <p>Evaluators judged whether Route A, Route B, both, or neither worked as a Calm route, or whether they were unsure.</p>
             <p>The results help us compare model hypotheses and identify cases to investigate. They reflect structured internal judgments, not the preferences of Zürich pedestrians as a whole.</p>
@@ -2303,16 +2315,27 @@
             checkResumeState();
             showPage(view);
           },
-          answerSink: async answer => {
-            const result = dataRepository.saveAnswer(answer);
-            const delivery = remoteTransport ? await remoteTransport.saveAnswer(answer) : null;
-            if (runtimeConfig.production && delivery?.status === 'queued') {
-              throw delivery.error || new Error('Answer queued for remote delivery.');
+          answerSink: async (answer, completionProgress) => {
+            const result = completionProgress
+              ? dataRepository.saveCompletedRound(answer, completionProgress)
+              : dataRepository.saveAnswer(answer);
+            const [answerDelivery, progressDelivery] = remoteTransport
+              ? await Promise.all([
+                  remoteTransport.saveAnswer(answer),
+                  completionProgress
+                    ? remoteTransport.saveProgress(completionProgress)
+                    : Promise.resolve(null)
+                ])
+              : [null, null];
+            const queuedDelivery = [answerDelivery, progressDelivery]
+              .find(delivery => delivery?.status === 'queued');
+            if (runtimeConfig.production && queuedDelivery) {
+              throw queuedDelivery.error || new Error('Completed comparison queued for remote delivery.');
             }
             updateResultsAvailability();
             if (!runtimeConfig.production) {
               console.log('Benchmark answer payload:', answer);
-              console.log('Benchmark answer save:', result.status, delivery?.status || 'local-only');
+              console.log('Benchmark answer save:', result.status, answerDelivery?.status || 'local-only');
             }
           },
           progressSink: async progress => {
@@ -2718,6 +2741,21 @@
       return Math.round((shared / setA.size) * 100);
     }
 
+    function showResultsMapError(mapEl, routePair) {
+      mapEl._rpMap = null;
+      mapEl._rpFit = null;
+      mapEl.innerHTML = `
+        <div class="calm-results-map-error" role="alert">
+          <strong>Map unavailable</strong>
+          <span>Check your connection and try again.</span>
+          <button type="button">Try again</button>
+        </div>`;
+      mapEl.querySelector('button')?.addEventListener('click', () => {
+        mapEl.replaceChildren();
+        void initPairMap(mapEl, routePair);
+      }, { once: true });
+    }
+
     async function initPairMap(mapEl, routePair) {
       if (mapEl._rpMap) return;
       mapEl._rpMap = true; // mark as initialising to prevent double-init
@@ -2823,7 +2861,19 @@
         // Leaflet fallback when MapLibre is unavailable
         const lMap = L.map(mapEl, { zoomControl: false, attributionControl: false, zoomSnap: 0.5 });
         mapEl._rpMap = lMap;
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(lMap);
+        const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+        const tilesReady = AriMapLoading?.waitForLeafletTiles
+          ? AriMapLoading.waitForLeafletTiles(tileLayer)
+          : Promise.resolve(tileLayer);
+        tileLayer.addTo(lMap);
+        try {
+          await tilesReady;
+        } catch (error) {
+          console.warn('[ARI results map] Leaflet tiles unavailable.', error);
+          lMap.remove();
+          showResultsMapError(mapEl, routePair);
+          return;
+        }
         const layers = {};
         drawOrder.forEach(function(key) {
           const route = routePair.routes[key];
@@ -2856,7 +2906,7 @@
             });
           });
         }
-      } else mapEl._rpMap = null;
+      } else showResultsMapError(mapEl, routePair);
     }
 
     function rpWeightCell(value) {

@@ -162,7 +162,8 @@
       maplibreInit: null,
       maplibreQueue: null,
       maplibreVisuals: {},
-      maplibreMarkers: []
+      maplibreMarkers: [],
+      leafletTilesReady: null
     };
 
     function notifyMapStatus(status, details = {}) {
@@ -211,12 +212,23 @@
         if (window.L) {
           console.warn(`[ARI map] WebGL map unavailable; using the Leaflet fallback. ${safeMapErrorMessage(error?.cause || error)}`);
           state.provider = 'leaflet';
-          ensure();
-          bindRoutePointClicks();
-          if (state.pair && state.assignment) drawLeafletRoutes(state.pair, state.assignment);
-          state.mapSource = 'leaflet';
-          notifyMapStatus('ready', { source: 'leaflet', degraded: true });
-          return;
+          try {
+            ensure();
+            await state.leafletTilesReady;
+            if (state.destroyed) return;
+            bindRoutePointClicks();
+            if (state.pair && state.assignment) drawLeafletRoutes(state.pair, state.assignment);
+            state.mapSource = 'leaflet';
+            notifyMapStatus('ready', { source: 'leaflet', degraded: true });
+            return;
+          } catch (leafletError) {
+            try { state.map?.remove(); } catch (_) {}
+            state.map = null;
+            state.standardTiles = null;
+            state.leafletTilesReady = null;
+            notifyMapStatus('error', { error: leafletError });
+            throw leafletError;
+          }
         }
         notifyMapStatus('error', { error: new Error('The map could not be loaded.') });
         throw error;
@@ -249,6 +261,7 @@
       state.maplibreQueue = null;
       state.maplibreMarkers = [];
       state.maplibreVisuals = {};
+      state.leafletTilesReady = null;
       notifyMapStatus('loading');
       if (!state.pair || !state.assignment) return Promise.resolve();
       return drawRoutes(state.pair, state.assignment);
@@ -516,6 +529,9 @@
         maxZoom: 20,
         attribution: '&copy; OpenStreetMap &copy; CARTO'
       });
+      state.leafletTilesReady = mapLoading?.waitForLeafletTiles
+        ? mapLoading.waitForLeafletTiles(state.standardTiles, { timeoutMs: state.mapLoadTimeoutMs })
+        : Promise.resolve(state.standardTiles);
       state.map = L.map(state.canvas, {
         zoomControl: false,
         attributionControl: true,

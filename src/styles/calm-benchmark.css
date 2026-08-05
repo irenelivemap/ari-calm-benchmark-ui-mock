@@ -637,6 +637,7 @@ html.is-challenge-dialog-open {
   position: relative;
   display: inline-flex;
   align-items: center;
+  min-height: 44px;
   gap: 6px;
   border: 0;
   border-radius: 999px;
@@ -1192,7 +1193,7 @@ html.is-challenge-dialog-open {
 
 .calm-step-list span {
   display: block;
-  color: var(--ari-grey-04);
+  color: var(--ari-muted);
   font-size: 17px;
   line-height: 22px;
   letter-spacing: -0.024em;
@@ -9735,11 +9736,11 @@ html.is-challenge-dialog-open {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 1.5px solid rgba(255,255,255,0.7);
-  border-radius: 6px;
+  border-radius: 12px;
   background: rgba(255,255,255,0.85);
   color: var(--ari-plum);
   cursor: pointer;
@@ -9753,8 +9754,8 @@ html.is-challenge-dialog-open {
 }
 
 .calm-rp-map-expand svg {
-  width: 13px;
-  height: 13px;
+  width: 18px;
+  height: 18px;
   display: block;
 }
 
@@ -9963,6 +9964,34 @@ html.is-challenge-dialog-open {
   background: var(--ari-grey-02);
 }
 
+.calm-results-map-error {
+  display: grid;
+  min-height: 100%;
+  place-content: center;
+  justify-items: center;
+  gap: 7px;
+  padding: 24px;
+  color: var(--ari-plum);
+  text-align: center;
+}
+
+.calm-results-map-error span {
+  color: var(--ari-muted);
+  font-size: var(--font-size-small);
+}
+
+.calm-results-map-error button {
+  min-height: 44px;
+  margin-top: 5px;
+  border: 1px solid var(--ari-plum);
+  border-radius: var(--ari-radius-btn);
+  padding: 0 16px;
+  background: var(--ari-plum);
+  color: #fff;
+  cursor: pointer;
+  font: 700 var(--font-size-small)/1 var(--ari-font);
+}
+
 /* Pair map inside a My-results evaluation card */
 .calm-pp-map-wrap {
   margin-bottom: 14px;
@@ -9970,7 +9999,6 @@ html.is-challenge-dialog-open {
 
 .calm-pp-map {
   height: 360px;
-  transition: height 200ms cubic-bezier(.2, .8, .2, 1);
 }
 
 .calm-pp-map-wrap.is-large .calm-pp-map {

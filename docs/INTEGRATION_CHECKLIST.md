@@ -13,10 +13,10 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 - [x] Load the benchmark CSS and browser modules.
 - [x] Provide a root element for `AriCalmBenchmark.mount(...)`.
-- [x] Persist a stable same-device participant ID; pass a host identity when cross-device identity is required.
+- [x] Persist a participant identity that is stable across devices for the same normalized name or participant code.
 - [x] Implement `routePairProvider` against the real route source.
-- [ ] Implement `answerSink` against production persistence.
-- [ ] Implement `progressSink` when sessions must resume across devices or browsers.
+- [x] Implement `answerSink` against production Supabase persistence.
+- [x] Implement `progressSink` with atomic local completion and monotonic remote checkpoints.
 - [x] Select or replace the map adapter.
 - [x] Remove the design-phase `Reset test data` control in production mode.
 - [x] Keep the internal team-results route out of participant navigation in production mode.
@@ -34,11 +34,11 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 ## GitHub Pages
 
-- [ ] Create the repository Actions secret `ARI_GOOGLE_MAPS_KEY` with a browser key restricted to the Maps JavaScript API and the website referrer `https://irenelivemap.github.io/*`.
-- [ ] Create the repository Actions secret `ARI_MAPTILER_KEY` with a browser key restricted to `https://irenelivemap.github.io/*` and the final participant origin.
+- [x] Configure the repository Actions secret `ARI_GOOGLE_MAPS_KEY`; verify it remains restricted to the Maps JavaScript API and the participant origin before launch.
+- [x] Configure the repository Actions secret `ARI_MAPTILER_KEY`; verify its origin restriction and quota before launch.
 - [x] Build the participant artifact without writing the Google key into Git history.
-- [ ] Change the Pages publishing source from branch deployment to GitHub Actions.
-- [ ] Run the `Deploy participant site` workflow and confirm `streetViewConfigured: true` with `npm run smoke:production`.
+- [x] Publish GitHub Pages through GitHub Actions.
+- [x] Run the `Deploy participant site` workflow and confirm `streetViewConfigured: true` with `npm run smoke:production`.
 
 ## Route Provider
 
@@ -51,9 +51,9 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 ## Persistence
 
-- [ ] Validate answers and progress with the same rules as `src/data/calm-benchmark-data.js`.
-- [ ] Make answer submission idempotent by `captureId`.
-- [ ] Upsert progress by `sessionId`.
+- [x] Validate browser answers and progress with `src/data/calm-benchmark-data.js`; apply `20260805_calm_launch_fixes.sql` for equivalent current-Calm validation in Supabase.
+- [x] Make answer submission idempotent by `captureId`.
+- [x] Upsert progress by `sessionId` without accepting backward checkpoints.
 - [ ] Preserve the hidden A/B assignment.
 - [ ] Preserve route snapshots and provider metadata.
 - [ ] Reject records whose `test` does not match the endpoint.
@@ -61,13 +61,13 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Expose an authenticated NDJSON or equivalent answer feed for analysis.
 - [ ] If replacing Supabase with the optional data API, set `ARI_DATA_ADMIN_TOKEN` and `ARI_ALLOWED_ORIGINS`.
 - [x] Confirm production refuses to start only when neither Supabase nor the optional data API is configured.
-- [ ] Complete every owner decision in `docs/DATA_GOVERNANCE.md`, especially retention, deletion contact, and whether names are necessary.
+- [x] Record the internal-study decision to collect participant names; remaining organizational follow-up stays in `docs/DATA_GOVERNANCE.md`.
 - [ ] Run the read-only Supabase preflight, apply the reviewed migration, and save the postflight results.
 - [ ] Run `npm run smoke:production` after deployment and perform one explicitly authorized test submission.
 
 ## Map Behavior
 
-- [ ] MapTiler is the primary basemap, with OpenFreeMap and Leaflet fallbacks verified under forced network/WebGL failure.
+- [x] MapTiler is the primary basemap, with bounded OpenFreeMap and Leaflet startup plus tile-failure detection.
 - [ ] A total map startup failure shows the compact in-map Retry state; the participant never sees an unexplained blank canvas.
 
 - [ ] Draw active routes with the existing orange/green Route A/B colors.
@@ -75,21 +75,21 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Fit all active routes within the area not covered by the question panel.
 - [ ] Keep Fit independent from the tester's manual camera state until pressed.
 - [ ] Enable Street View point targeting only while the mode is active; near-route taps keep their route identity, other taps are neutral map points.
-- [ ] Restore the exact map camera and question state after Street View closes.
+- [x] Restore the exact map camera and question state and turn Street View mode off when Street View closes.
 - [ ] Provide an in-app unavailable state instead of opening an external fallback tab.
 
 ## Acceptance Criteria
 
-- [ ] A new participant can start without team context.
-- [ ] A returning participant resumes the same session, pair, assignment, question step, and partial answer.
+- [x] A new participant can start without team context.
+- [x] A returning participant resumes the same session, pair, assignment, question step, and partial answer.
 - [ ] Route A/B assignment is randomized and remains blinded.
 - [ ] The active challenge shows the correct question flow.
-- [ ] Retrying a completed comparison does not create a duplicate answer.
-- [ ] Leaving mid-round saves progress without submitting an incomplete answer.
-- [ ] Community and team results decode choices from the hidden assignment correctly.
+- [x] Retrying or immediately reloading a completed comparison does not create a duplicate answer or stale progress.
+- [x] Leaving mid-round saves progress without submitting an incomplete answer.
+- [x] Personal and team results decode choices and the current Calm reason taxonomies from the hidden assignment correctly.
 - [ ] Both active challenge URLs work on desktop and mobile.
-- [ ] Keyboard focus, contrast, touch targets, and reduced motion meet `DESIGN.md`.
-- [ ] `npm test` passes.
+- [x] App-owned controls use 44px touch targets, corrected secondary-text contrast, semantic headings, and reduced-motion behavior.
+- [x] `npm test` and the Calm Playwright regression suite pass locally.
 - [ ] `https://game.livemap.sh/routing/` loads without a path redirect loop.
 - [ ] Both clean challenge URLs survive a direct page refresh.
 - [ ] A real routing request succeeds through the same-origin public proxy.
