@@ -6300,6 +6300,64 @@ html.is-challenge-dialog-open {
   z-index: 1;
 }
 
+.ari-map-status {
+  position: absolute;
+  z-index: 8;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: min(340px, calc(100% - 40px));
+  padding: 18px 20px 20px;
+  transform: translate(-50%, -50%);
+  gap: 8px;
+  border-radius: 14px;
+  background: rgba(10, 12, 11, 0.92);
+  color: #fff;
+  box-shadow: 0 18px 42px rgba(16, 21, 17, 0.24);
+  backdrop-filter: blur(12px);
+}
+
+.ari-map-status[hidden] {
+  display: none;
+}
+
+.ari-map-status b {
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.ari-map-status span {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.ari-map-status button {
+  min-height: 44px;
+  width: max-content;
+  margin-top: 6px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ari-blurple);
+  color: var(--ari-ink);
+  font: 700 0.84rem/1 var(--ari-font);
+  cursor: pointer;
+}
+
+.ari-map-status button:hover {
+  filter: brightness(1.04);
+}
+
+.ari-map-status button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.ari-map-status.is-loading button {
+  visibility: hidden;
+}
+
 .leaflet-container {
   overflow: hidden;
   background: #D7E5D7;

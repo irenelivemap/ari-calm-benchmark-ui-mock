@@ -184,6 +184,7 @@ Street View:
 - The viewer identifies points on Route A or Route B with the visible route color. Off-route points are rejected before the viewer opens. It never exposes the route source.
 - The map marks the current panorama position with a live marker: identity-colored core, soft pulsing halo (static at low opacity under reduced motion), and a translucent view cone that rotates with the panorama heading. It is the only element on the map that pulses or has a beam, so it can never be confused with the static start/destination dots. It moves as the tester walks and the cone follows where they look.
 - If imagery or the Google API is unavailable, show that state inside the inspector and keep the tester in the benchmark. Never open an external tab as a fallback.
+- If the base map cannot start, try the configured fallback automatically. Only after every map engine fails, show one compact dark in-map status with `Map unavailable`, a short connection explanation, and `Try again`. Never leave the map as an unexplained blank surface or replace the benchmark with a full-page error.
 
 ## Onboarding Rules
 

@@ -32,6 +32,7 @@ jobs:
       - name: Build static participant site
         env:
           ARI_GOOGLE_MAPS_KEY: ${{ secrets.ARI_GOOGLE_MAPS_KEY }}
+          ARI_MAPTILER_KEY: ${{ secrets.ARI_MAPTILER_KEY }}
         run: node scripts/build-pages.mjs --out _site
 
       - name: Configure GitHub Pages

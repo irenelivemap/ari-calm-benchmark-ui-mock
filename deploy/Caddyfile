@@ -34,6 +34,7 @@
 			routingApiBase: "/api/v1/routing",
 			dataApiBase: "{$ARI_DATA_API_BASE:}",
 			googleMapsKey: "{$ARI_GOOGLE_MAPS_KEY:}",
+			mapTilerKey: "{$ARI_MAPTILER_KEY:}",
 			allowQueryConfig: false,
 			showReset: false,
 			enableTeamResults: false

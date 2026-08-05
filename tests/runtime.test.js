@@ -58,12 +58,17 @@ test('builds the public arcade root URL', () => {
 
 test('production runtime defaults hide development surfaces', () => {
   const config = resolveConfig({
-    ARI_RUNTIME_CONFIG: { production: true, basePath: '/routing' }
+    ARI_RUNTIME_CONFIG: {
+      production: true,
+      basePath: '/routing',
+      mapTilerKey: 'map-browser-key'
+    }
   });
   assert.equal(config.production, true);
   assert.equal(config.showReset, false);
   assert.equal(config.enableTeamResults, false);
   assert.equal(config.allowQueryConfig, false);
+  assert.equal(config.mapTilerKey, 'map-browser-key');
 });
 
 test('static runtime accepts a Google key query only in local previews', () => {

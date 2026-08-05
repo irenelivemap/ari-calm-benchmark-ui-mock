@@ -9,7 +9,7 @@ The shared benchmark UI should not depend on where the map comes from. It needs 
 - enabling Street View point targeting only while the mode is active
 - preserving and restoring the exact map camera around Street View inspection
 
-The current implementation lives in `map-adapter.js`. It supports MapLibre GL with the LiveMap style pipeline imported from the `livemap-routing` runtime (falling back to a public OpenFreeMap style), Leaflet for local/private use, and Google Maps when `window.google.maps` is already loaded. Production integration should replace or adapt this module while preserving the interface below.
+The current implementation lives in `map-adapter.js`, with startup/fallback primitives in `map-loading.js`. It supports MapLibre GL with the ARI MapTiler `streets-v4` style, a public OpenFreeMap style fallback, Leaflet when WebGL cannot start, and Google Maps when `window.google.maps` is already loaded. MapLibre attempts have a bounded startup time; unrecoverable failure is reported to the shell so it can show an in-map Retry state. Production integration should replace or adapt these modules while preserving the interface below.
 
 ## Required map actions
 

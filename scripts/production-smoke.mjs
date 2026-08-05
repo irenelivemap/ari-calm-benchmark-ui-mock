@@ -19,6 +19,12 @@ if (!projectMatch || !keyMatch) throw new Error('The deployed Supabase URL or an
 if (projectMatch[2] !== 'xyrmytymcipyntdtsksu') throw new Error(`Unexpected Supabase project ${projectMatch[2]}.`);
 const googleKeyMatch = configText.match(/googleMapsKey:\s*['"]([^'"]+)['"]/);
 if (!googleKeyMatch?.[1]) throw new Error('The deployed Google Maps key is missing; Street View is unavailable.');
+const mapTilerKeyMatch = configText.match(/mapTilerKey:\s*['"]([^'"]+)['"]/);
+if (!mapTilerKeyMatch?.[1]) throw new Error('The deployed MapTiler key is missing; the production basemap is unavailable.');
+
+await fetchOk(`https://api.maptiler.com/maps/streets-v4/style.json?key=${encodeURIComponent(mapTilerKeyMatch[1])}`, {
+  headers: { Referer: siteUrl.origin }
+});
 
 const jwtPayload = JSON.parse(Buffer.from(keyMatch[1].split('.')[1], 'base64url').toString('utf8'));
 if (jwtPayload.role !== 'anon') throw new Error(`Browser key has unexpected role ${jwtPayload.role || 'unknown'}.`);
@@ -51,6 +57,7 @@ console.log(JSON.stringify({
   supabaseProject: projectMatch[2],
   browserKeyRole: jwtPayload.role,
   streetViewConfigured: true,
+  mapTilerConfigured: true,
   anonymousRowsExposed: exposure,
   note: 'Read-only check; participant writes were not exercised.'
 }, null, 2));

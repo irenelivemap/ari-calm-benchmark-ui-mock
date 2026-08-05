@@ -126,9 +126,15 @@ Both active challenges use the same route-pair provider contract, but their curr
 
 ## Map Providers
 
-The base map is **MapLibre GL** with the LiveMap style (`map.paas.livemap.sh` + the LiveMap basemap), imported from the `livemap-routing` runtime. It falls back to a public OpenFreeMap style when the LiveMap endpoints are unreachable, and to Leaflet when MapLibre itself is not loaded.
+The production base map is **MapLibre GL** with the same MapTiler `streets-v4` style used by the ARI app. Map startup is bounded: if MapTiler fails or stalls, the adapter tries the public OpenFreeMap style, then falls back to Leaflet when WebGL is unavailable. If no engine can start, the map shows an in-app Retry state instead of an empty canvas.
 
 A configured Google Maps key does not switch the base map for Fast vs Calm: it loads the Google SDK so the embedded **Street View** inspector works. The one exception is **Fast vs Google Fast** with live data, which renders on a Google base map because Google Directions content must be displayed on a Google map (Maps ToS). Hosts can also request a Google base map explicitly through `mapProvider: "google"` on `AriCalmBenchmark.mount`.
+
+## MapTiler
+
+For private local testing, set `ARI_MAPTILER_KEY` before running `npm start`. Without a key, local previews intentionally use the OpenFreeMap fallback.
+
+The GitHub Pages workflow reads the repository secret `ARI_MAPTILER_KEY`, injects it only into the published artifact, and refuses to deploy without it. Use a browser key restricted to the participant origins, including `https://irenelivemap.github.io/*` and the final production domain. The browser receives this key by design; its protection comes from MapTiler origin restrictions rather than secrecy in generated JavaScript.
 
 ## Google Maps
 
@@ -139,7 +145,7 @@ For private local testing, either:
 - start the local server with `ARI_GOOGLE_MAPS_KEY` in its environment, or
 - open `?gmap=YOUR_KEY` once on `file://`, `localhost`, or `127.0.0.1`; the app moves the key to local storage and removes it from the URL. Production URLs never accept this override.
 
-The GitHub Pages participant site is deployed by `.github/workflows/deploy-pages.yml`. It reads the repository secret `ARI_GOOGLE_MAPS_KEY`, injects it only into the published static artifact, and refuses to deploy without it. The source `runtime-config.js` intentionally keeps `googleMapsKey` empty.
+The GitHub Pages participant site is deployed by `.github/workflows/deploy-pages.yml`. It reads the repository secrets `ARI_GOOGLE_MAPS_KEY` and `ARI_MAPTILER_KEY`, injects them only into the published static artifact, and refuses to deploy without either one. The source `runtime-config.js` intentionally keeps both browser-key fields empty.
 
 In Google Cloud, restrict the browser key to the Maps JavaScript API and the website referrer `https://irenelivemap.github.io/*`. Cross-origin browser requests commonly send only the origin, so do not rely on the repository path as the restriction. The browser receives this key by design; its protection comes from the API and website restrictions rather than secrecy in the generated JavaScript.
 

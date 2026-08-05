@@ -1,6 +1,7 @@
 (function () {
   const ROUTE_KEYS = ['routeA', 'routeB', 'routeC'];
   const routeOverlap = window.AriRouteOverlap;
+  const mapLoading = window.AriMapLoading;
 
   function activeRouteKeys(assignment, pair = null) {
     return ROUTE_KEYS.filter(routeKey => {
@@ -115,40 +116,11 @@
   /** Wedge for the Google symbol marker; the tip sits on the position. */
   const GOOGLE_CONE_PATH = 'M 0 0 L -7.2 -16.5 A 18 18 0 0 1 7.2 -16.5 Z';
 
-  /** LiveMap style pipeline imported from livemap-routing/runtime demo. */
-  const LIVEMAP_STYLE_BASE = 'https://map.paas.livemap.sh/styles';
-  const LIVEMAP_BASEMAP_TILEJSON_URL = 'https://tiles.livemap-dev.com/basemap';
-  const FALLBACK_MAPLIBRE_STYLE_URL = 'https://tiles.openfreemap.org/styles/bright';
   const ZURICH_CENTER = [8.54, 47.377];
 
-  function absolutizeStyleAssetUrl(url, styleUrl) {
-    if (!url || /^[a-z][a-z0-9+.-]*:/i.test(url)) return url;
-    if (url.startsWith('/')) return `${new URL(styleUrl).origin}${url}`;
-    return new URL(url, styleUrl).toString();
-  }
-
-  /**
-   * Load the LiveMap MapLibre style and wire its basemap source, exactly like
-   * the livemap-routing runtime does. Falls back to a public style when the
-   * LiveMap endpoints are unreachable so the benchmark stays usable.
-   */
-  async function loadLivemapMapStyle(variant = 'bright') {
-    const styleUrl = `${LIVEMAP_STYLE_BASE}/${variant === 'dark' ? 'dark' : 'bright'}/style.json`;
-    const response = await fetch(styleUrl);
-    if (!response.ok) {
-      throw new Error(`Could not load map style: ${response.status} ${response.statusText}`);
-    }
-    const style = await response.json();
-    style.sources = {
-      ...style.sources,
-      openmaptiles: {
-        type: 'vector',
-        url: LIVEMAP_BASEMAP_TILEJSON_URL
-      }
-    };
-    style.sprite = absolutizeStyleAssetUrl(style.sprite, styleUrl);
-    style.glyphs = absolutizeStyleAssetUrl(style.glyphs, styleUrl);
-    return style;
+  function safeMapErrorMessage(error) {
+    return String(error?.message || error || 'Unknown map error')
+      .replace(/([?&]key=)[^&\s]+/gi, '$1[redacted]');
   }
 
   function createMapAdapter(options) {
@@ -181,6 +153,11 @@
       streetViewGoogleParts: null,
       streetViewHeading: null,
       mapStyleVariant: options.mapStyleVariant || 'bright',
+      mapTilerKey: options.mapTilerKey || '',
+      mapLoadTimeoutMs: options.mapLoadTimeoutMs || mapLoading?.DEFAULT_MAP_LOAD_TIMEOUT_MS || 8000,
+      requestedProvider: options.provider,
+      onMapStatus: typeof options.onMapStatus === 'function' ? options.onMapStatus : null,
+      mapSource: null,
       destroyed: false,
       maplibreInit: null,
       maplibreQueue: null,
@@ -188,34 +165,62 @@
       maplibreMarkers: []
     };
 
+    function notifyMapStatus(status, details = {}) {
+      state.onMapStatus?.({ status, provider: state.provider, ...details });
+    }
+
     async function createMapLibreMap() {
-      const style = await loadLivemapMapStyle(state.mapStyleVariant).catch(error => {
-        console.warn('[ARI map] LiveMap style unavailable, using fallback style.', error);
-        return FALLBACK_MAPLIBRE_STYLE_URL;
-      });
-      if (state.destroyed) return;
-      const map = new maplibregl.Map({
-        container: state.canvas,
-        style,
-        center: ZURICH_CENTER,
-        zoom: 13,
-        attributionControl: { compact: true }
-      });
-      await new Promise(resolve => (map.loaded() ? resolve() : map.once('load', resolve)));
-      if (state.destroyed) {
-        map.remove();
-        return;
-      }
-      if (state.toolsElement) {
-        map.addControl({
-          onAdd() {
-            state.toolsElement.classList.add('maplibregl-ctrl');
-            return state.toolsElement;
+      if (!mapLoading) throw new Error('AriCalmBenchmarkMaps requires src/maps/map-loading.js.');
+      notifyMapStatus('loading');
+      try {
+        const result = await mapLoading.createMapWithStyleFallback({
+          MapClass: maplibregl.Map,
+          mapOptions: {
+            container: state.canvas,
+            center: ZURICH_CENTER,
+            zoom: 13,
+            attributionControl: { compact: true }
           },
-          onRemove() {}
-        }, 'top-right');
+          candidates: mapLoading.mapStyleCandidates({
+            mapTilerKey: state.mapTilerKey,
+            variant: state.mapStyleVariant
+          }),
+          timeoutMs: state.mapLoadTimeoutMs,
+          onAttemptFailure(candidate, error) {
+            console.warn(`[ARI map] ${candidate.id} startup failed; trying the next map source. ${safeMapErrorMessage(error)}`);
+          }
+        });
+        if (state.destroyed) {
+          result.map.remove();
+          return;
+        }
+        if (state.toolsElement) {
+          result.map.addControl({
+            onAdd() {
+              state.toolsElement.classList.add('maplibregl-ctrl');
+              return state.toolsElement;
+            },
+            onRemove() {}
+          }, 'top-right');
+        }
+        state.map = result.map;
+        state.mapSource = result.source;
+        notifyMapStatus('ready', { source: result.source });
+      } catch (error) {
+        if (state.destroyed) return;
+        if (window.L) {
+          console.warn(`[ARI map] WebGL map unavailable; using the Leaflet fallback. ${safeMapErrorMessage(error?.cause || error)}`);
+          state.provider = 'leaflet';
+          ensure();
+          bindRoutePointClicks();
+          if (state.pair && state.assignment) drawLeafletRoutes(state.pair, state.assignment);
+          state.mapSource = 'leaflet';
+          notifyMapStatus('ready', { source: 'leaflet', degraded: true });
+          return;
+        }
+        notifyMapStatus('error', { error: new Error('The map could not be loaded.') });
+        throw error;
       }
-      state.map = map;
     }
 
     /** Serialize MapLibre work behind the async style/map bootstrap. */
@@ -225,9 +230,28 @@
         state.maplibreQueue = state.maplibreInit;
       }
       state.maplibreQueue = state.maplibreQueue
-        .then(() => (state.map && !state.destroyed ? run(state.map) : undefined))
-        .catch(error => console.warn('[ARI map]', error));
+        .then(() => (state.provider === 'maplibre' && state.map && !state.destroyed ? run(state.map) : undefined))
+        .catch(error => console.warn(`[ARI map] ${safeMapErrorMessage(error)}`));
       return state.maplibreQueue;
+    }
+
+    function retry() {
+      if (state.destroyed || state.requestedProvider !== 'maplibre') return Promise.resolve();
+      try { state.map?.remove(); } catch (_) {}
+      state.toolsElement?.classList.remove('maplibregl-ctrl');
+      state.canvas.replaceChildren();
+      state.provider = 'maplibre';
+      state.map = null;
+      state.mapSource = null;
+      state.routeLayers = null;
+      state.standardTiles = null;
+      state.maplibreInit = null;
+      state.maplibreQueue = null;
+      state.maplibreMarkers = [];
+      state.maplibreVisuals = {};
+      notifyMapStatus('loading');
+      if (!state.pair || !state.assignment) return Promise.resolve();
+      return drawRoutes(state.pair, state.assignment);
     }
 
     function routeColor(routeKey) {
@@ -1162,7 +1186,7 @@
     }
 
     return {
-      provider: state.provider,
+      get provider() { return state.provider; },
       drawRoutes,
       fitRoutes,
       focusRoute,
@@ -1172,6 +1196,7 @@
       hasMap: () => !!state.map,
       notifyResize,
       restoreViewState,
+      retry,
       setSelectedRoutes,
       setStreetViewEnabled,
       setStreetViewPosition,
@@ -1187,7 +1212,6 @@
   window.AriCalmBenchmarkMaps = {
     createMapAdapter,
     hasGoogleMaps,
-    hasMapLibre,
-    loadLivemapMapStyle
+    hasMapLibre
   };
 })();

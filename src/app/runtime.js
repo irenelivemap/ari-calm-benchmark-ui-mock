@@ -86,6 +86,7 @@
       supabaseUrl: String(supplied.supabaseUrl || '').replace(/\/$/, ''),
       supabaseAnonKey: String(supplied.supabaseAnonKey || ''),
       googleMapsKey: String(supplied.googleMapsKey || rootLike.ARI_GOOGLE_MAPS_KEY || ''),
+      mapTilerKey: String(supplied.mapTilerKey || rootLike.ARI_MAPTILER_KEY || ''),
       allowQueryConfig: supplied.allowQueryConfig ?? !production,
       showReset: supplied.showReset ?? !production,
       enableTeamResults: supplied.enableTeamResults ?? !production

@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'src/styles/calm-benchmark.css'), 'utf8');
 const app = fs.readFileSync(path.join(root, 'src/app/calm-benchmark.js'), 'utf8');
+const mapAdapter = fs.readFileSync(path.join(root, 'src/maps/map-adapter.js'), 'utf8');
 
 test('exposes accessible page landmarks and launch form feedback', () => {
   assert.match(html, /viewport-fit=cover/);
@@ -107,4 +108,17 @@ test('shows one save confirmation after a completed comparison', () => {
 
 test('loads Google Maps with origin-scoped referrer authorization', () => {
   assert.match(html, /maps\.googleapis\.com\/maps\/api\/js\?key=.*auth_referrer_policy=origin/);
+});
+
+test('recovers from map startup failures instead of leaving a blank screen', () => {
+  assert.match(html, /map-loading\.js[^\n]*maptiler-recovery/);
+  assert.match(html, /mapTilerKey:\s*runtimeConfig\.mapTilerKey/);
+  assert.match(app, /data-map-status[^>]*role="status"[^>]*aria-live="polite"/);
+  assert.match(app, /data-action="retry-map"/);
+  assert.match(app, /state\.mapAdapter\.retry\(\)/);
+  assert.match(mapAdapter, /createMapWithStyleFallback/);
+  assert.match(mapAdapter, /state\.provider = 'leaflet'/);
+  assert.match(mapAdapter, /notifyMapStatus\('error'/);
+  assert.match(css, /\.ari-map-status\s*\{[^}]*width:\s*min\(340px, calc\(100% - 40px\)\)/s);
+  assert.match(css, /\.ari-map-status button\s*\{[^}]*min-height:\s*44px/s);
 });

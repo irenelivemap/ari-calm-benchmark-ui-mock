@@ -315,6 +315,11 @@
           <section class="ari-map-card" aria-label="Route map">
             <div class="ari-map" data-map>
               <div class="ari-map__canvas" data-map-canvas aria-label="Interactive route comparison map"></div>
+              <div class="ari-map-status" data-map-status role="status" aria-live="polite" hidden>
+                <b data-map-status-title>Map unavailable</b>
+                <span data-map-status-copy>We couldn’t load the map. Check your connection and try again.</span>
+                <button type="button" data-action="retry-map">Try again</button>
+              </div>
               <div class="ari-map__tools" aria-label="Map tools">
                 <button class="ari-icon-btn ari-icon-btn--street ari-street-toggle" data-action="toggle-street-view" type="button" aria-label="Turn on Street View" title="Street View — inspect any map point at street level" aria-controls="${streetViewerId}" aria-pressed="false">
                   <span class="ari-street-toggle__label" aria-hidden="true"><span data-street-toggle-label>Street View</span><span class="ari-street-toggle__hint">Tap any point on the map to explore</span></span>
@@ -590,6 +595,10 @@
       hudMedals: root.querySelector('[data-hud-medals]'),
       roundComplete: root.querySelector('[data-round-complete]'),
       mapCanvas: root.querySelector('[data-map-canvas]'),
+      mapStatus: root.querySelector('[data-map-status]'),
+      mapStatusTitle: root.querySelector('[data-map-status-title]'),
+      mapStatusCopy: root.querySelector('[data-map-status-copy]'),
+      retryMap: root.querySelector('[data-action="retry-map"]'),
       onboarding: root.querySelector('[data-onboarding]'),
       onboardingMaskBase: root.querySelector('[data-onboarding-mask-base]'),
       onboardingScrimFill: root.querySelector('[data-onboarding-scrim-fill]'),
@@ -736,15 +745,47 @@
       }
     }
 
+    function handleMapStatus({ status }) {
+      if (status === 'ready') {
+        els.mapStatus.hidden = true;
+        els.mapStatus.setAttribute('role', 'status');
+        els.mapStatus.classList.remove('is-loading');
+        els.retryMap.disabled = false;
+        if (state.pair) requestAnimationFrame(() => fitRoutes({ animate: false }));
+        return;
+      }
+      if (status === 'loading') {
+        if (!els.mapStatus.hidden) {
+          els.mapStatus.setAttribute('role', 'status');
+          els.mapStatus.classList.add('is-loading');
+          els.mapStatusTitle.textContent = 'Reloading the map…';
+          els.mapStatusCopy.textContent = 'This should only take a moment.';
+          els.retryMap.disabled = true;
+        }
+        return;
+      }
+      if (status === 'error') {
+        els.mapStatus.setAttribute('role', 'alert');
+        els.mapStatus.classList.remove('is-loading');
+        els.mapStatusTitle.textContent = 'Map unavailable';
+        els.mapStatusCopy.textContent = 'We couldn’t load the map. Check your connection and try again.';
+        els.retryMap.disabled = false;
+        els.mapStatus.hidden = false;
+      }
+    }
+
     state.mapAdapter = mapTools.createMapAdapter({
       canvas: els.mapCanvas,
       provider: state.mapProvider,
+      mapTilerKey: options.mapTilerKey || '',
+      mapLoadTimeoutMs: options.mapLoadTimeoutMs,
       routeAColor,
       routeBColor,
       routeCColor,
       maxFitZoom: ROUTE_FIT_MAX_ZOOM,
       toolsElement: els.mapTools,
-      onRoutePointClick: setStreetViewPoint
+      onRoutePointClick: setStreetViewPoint,
+      onMapStatus: handleMapStatus
     });
 
     function getRouteFitPadding() {
@@ -2457,6 +2498,14 @@
     });
 
     els.fitRoutes.addEventListener('click', () => fitRoutes());
+    els.retryMap.addEventListener('click', () => {
+      els.mapStatus.hidden = false;
+      els.mapStatus.classList.add('is-loading');
+      els.mapStatusTitle.textContent = 'Reloading the map…';
+      els.mapStatusCopy.textContent = 'This should only take a moment.';
+      els.retryMap.disabled = true;
+      state.mapAdapter.retry();
+    });
     els.zoomIn.addEventListener('click', () => state.mapAdapter.zoomIn());
     els.zoomOut.addEventListener('click', () => state.mapAdapter.zoomOut());
     els.streetViewToggle.addEventListener('click', () => {

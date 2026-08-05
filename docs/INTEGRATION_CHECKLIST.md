@@ -35,6 +35,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 ## GitHub Pages
 
 - [ ] Create the repository Actions secret `ARI_GOOGLE_MAPS_KEY` with a browser key restricted to the Maps JavaScript API and the website referrer `https://irenelivemap.github.io/*`.
+- [ ] Create the repository Actions secret `ARI_MAPTILER_KEY` with a browser key restricted to `https://irenelivemap.github.io/*` and the final participant origin.
 - [x] Build the participant artifact without writing the Google key into Git history.
 - [ ] Change the Pages publishing source from branch deployment to GitHub Actions.
 - [ ] Run the `Deploy participant site` workflow and confirm `streetViewConfigured: true` with `npm run smoke:production`.
@@ -65,6 +66,9 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Run `npm run smoke:production` after deployment and perform one explicitly authorized test submission.
 
 ## Map Behavior
+
+- [ ] MapTiler is the primary basemap, with OpenFreeMap and Leaflet fallbacks verified under forced network/WebGL failure.
+- [ ] A total map startup failure shows the compact in-map Retry state; the participant never sees an unexplained blank canvas.
 
 - [ ] Draw active routes with the existing orange/green Route A/B colors.
 - [ ] Preserve pan, pinch, scroll, double-click, and zoom behavior.

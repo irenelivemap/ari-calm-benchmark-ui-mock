@@ -12,8 +12,8 @@ index.html
 src/app/calm-benchmark.js
   shared map-first benchmark shell and question state machine
         |
-        +--> src/maps/map-adapter.js
-        |      MapLibre (LiveMap style), Leaflet, or Google Maps adapter
+        +--> src/maps/map-adapter.js + map-loading.js
+        |      MapLibre (MapTiler/OpenFreeMap), Leaflet, or Google Maps adapter
         |
         +--> routePairProvider
         |      src/api/route-pair-generator.js against the routing facade,
@@ -92,9 +92,9 @@ AriCalmBenchmark.createSessionPairOrder(pairCount, sessionId)
 
 `mount` returns `getState`, `fitRoutes`, `loadRound`, and `unmount`.
 
-### `src/maps/map-adapter.js`
+### `src/maps/map-adapter.js` and `src/maps/map-loading.js`
 
-Owns provider-specific map behavior behind one adapter interface. It chooses Google Maps when requested and available, then MapLibre GL with the LiveMap style pipeline imported from the `livemap-routing` runtime (with an OpenFreeMap fallback style), otherwise Leaflet. See [`../src/maps/README.md`](../src/maps/README.md).
+Own provider-specific map behavior behind one adapter interface. `map-loading.js` selects the browser-configured MapTiler `streets-v4` style, bounds each MapLibre startup attempt, and advances to OpenFreeMap after an error or timeout. `map-adapter.js` degrades to Leaflet when WebGL cannot start and reports total failure to the shared shell so it can show an in-map Retry state. Google Maps remains available when requested. See [`../src/maps/README.md`](../src/maps/README.md).
 
 ### `src/api/route-pair-generator.js`
 
@@ -114,7 +114,7 @@ Owns environment defaults, `/routing/` base-path inference, clean challenge slug
 
 ### GitHub Pages deployment
 
-The application remains a static, framework-free site. `.github/workflows/deploy-pages.yml` runs the test suite, copies only the participant-facing static files through `scripts/build-pages.mjs`, and substitutes the repository secret `ARI_GOOGLE_MAPS_KEY` into the artifact's copy of `runtime-config.js`. The tracked source configuration stays key-free. The build fails closed when the secret is absent so a deployment cannot silently publish a participant experience without Street View.
+The application remains a static, framework-free site. `.github/workflows/deploy-pages.yml` runs the test suite, copies only the participant-facing static files through `scripts/build-pages.mjs`, and substitutes the repository secrets `ARI_GOOGLE_MAPS_KEY` and `ARI_MAPTILER_KEY` into the artifact's copy of `runtime-config.js`. The tracked source configuration stays key-free. The build fails closed when either secret is absent so a deployment cannot silently publish without Street View or its production basemap.
 
 ### `src/results/calm-results.js`
 

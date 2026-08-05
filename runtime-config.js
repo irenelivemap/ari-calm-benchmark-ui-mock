@@ -14,6 +14,7 @@
     supabaseUrl: 'https://xyrmytymcipyntdtsksu.supabase.co',
     supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5cm15dHltY2lweW50ZHRza3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4NDkyNTAsImV4cCI6MjEwMTQyNTI1MH0.eSYOBBKeLWF6lKA51sUcvK5xYjEaXb3yaZk1Mv1euSo',
     googleMapsKey: '',
+    mapTilerKey: '',
     allowQueryConfig: !productionDefault,
     showReset: false,
     enableTeamResults: false

@@ -17,13 +17,14 @@ The infrastructure team only needs to:
 | --- | --- | --- |
 | `ROUTING_UPSTREAM` | Recommended | Server-side routing facade origin. Defaults to the current TBT deployment. Prefer its internal service address in production. |
 | `ARI_GOOGLE_MAPS_KEY` | For Street View and Fast vs Google | Browser-restricted Maps JavaScript key. Restrict it to `https://game.livemap.sh/*`. |
+| `ARI_MAPTILER_KEY` | Yes | Browser-restricted MapTiler key for the production basemap. Restrict it to the participant origins. |
 | `ARI_DATA_API_BASE` | Optional | Same-origin alternative to the existing Supabase persistence, normally `/api/v1/benchmarks`. |
 | `DATA_UPSTREAM` | With the data API | Internal origin that implements the benchmark persistence contract. |
 | `ARI_DATA_ADMIN_TOKEN` | Yes, on the data API | Long random bearer token used only by authorized research exports. Never expose it to participant browsers. |
 | `ARI_ALLOWED_ORIGINS` | Yes, on the data API | Comma-separated participant origins, for example `https://game.livemap.sh`. |
 | `APP_ROOT` | No | Static file root. The container already sets the expected `/srv/ari-route-arcade` default. |
 
-The Google key is delivered to the browser by design. Its protection is the HTTP-referrer and API restriction in Google Cloud, not secrecy inside the container.
+The Google and MapTiler browser keys are delivered to the browser by design. Their protection is the provider-side origin/API restriction, not secrecy inside the container.
 
 ## Public Paths
 

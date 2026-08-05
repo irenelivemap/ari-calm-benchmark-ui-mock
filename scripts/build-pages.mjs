@@ -43,6 +43,11 @@ if (!googleMapsKey) {
   console.error('ARI_GOOGLE_MAPS_KEY is required to build the participant site with Street View.');
   process.exit(1);
 }
+const mapTilerKey = String(process.env.ARI_MAPTILER_KEY || '').trim();
+if (!mapTilerKey) {
+  console.error('ARI_MAPTILER_KEY is required to build the participant site with the production basemap.');
+  process.exit(1);
+}
 
 const output = outputPath(process.argv.slice(2));
 await prepareOutput(output);
@@ -53,14 +58,20 @@ for (const entry of PUBLIC_ENTRIES) {
 
 const deployedConfigPath = join(output, 'runtime-config.js');
 const deployedConfig = await readFile(deployedConfigPath, 'utf8');
-const placeholder = "googleMapsKey: '',";
-if (!deployedConfig.includes(placeholder)) {
+const googlePlaceholder = "googleMapsKey: '',";
+const mapTilerPlaceholder = "mapTilerKey: '',";
+if (!deployedConfig.includes(googlePlaceholder)) {
   throw new Error('runtime-config.js no longer contains the expected Google Maps placeholder.');
+}
+if (!deployedConfig.includes(mapTilerPlaceholder)) {
+  throw new Error('runtime-config.js no longer contains the expected MapTiler placeholder.');
 }
 await writeFile(
   deployedConfigPath,
-  deployedConfig.replace(placeholder, `googleMapsKey: ${JSON.stringify(googleMapsKey)},`)
+  deployedConfig
+    .replace(googlePlaceholder, `googleMapsKey: ${JSON.stringify(googleMapsKey)},`)
+    .replace(mapTilerPlaceholder, `mapTilerKey: ${JSON.stringify(mapTilerKey)},`)
 );
 await writeFile(join(output, '.nojekyll'), '');
 
-console.log(`Built static Pages artifact at ${relative(ROOT, output) || '.'}; Street View is configured.`);
+console.log(`Built static Pages artifact at ${relative(ROOT, output) || '.'}; Street View and MapTiler are configured.`);

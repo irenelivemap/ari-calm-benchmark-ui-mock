@@ -29,7 +29,7 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 - `src/app/runtime.js` owns base-path and challenge URL behavior. Preserve both clean `/routing/*` paths and legacy `?game=` preview links.
 - `src/data/supabase-transport.js` owns primary GitHub Pages production delivery and its local outbox. Never allow older queued progress to overwrite newer progress.
 - `src/data/benchmark-transport.js` and `server/data-api.js` own the optional self-hosted persistence path. The server must validate with `src/data/calm-benchmark-data.js`, stay append-only for answers, and never accept a record whose `test` does not match the endpoint.
-- Never commit a Google Maps API key. Local Google Maps setup is described in `README.md`.
+- Never commit a Google Maps or MapTiler API key. Local browser-key setup is described in `README.md`.
 - Do not reset or rewrite a tester's browser data during visual QA. Use `fresh.html` for a non-destructive new-player preview.
 - Keep the current static/no-build architecture unless the project owner explicitly approves a migration.
 - After editing `index.html`, CSS, or browser JavaScript, update the corresponding asset query string in `index.html` when browser caching could hide the change.
