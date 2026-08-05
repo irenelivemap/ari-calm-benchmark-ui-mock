@@ -85,7 +85,7 @@ For a detailed module map and data flow, read [`docs/ARCHITECTURE.md`](docs/ARCH
 
 ### Change challenge copy or questions
 
-Edit `CHALLENGE_CONFIGS` in `index.html`. Challenge-specific test IDs, route types, question options, follow-up rules, and result labels belong there.
+Start with the canonical current copy in `docs/QUESTIONNAIRE.md`, then update `CHALLENGE_CONFIGS` in `index.html`, any conditional route-label rendering in `src/app/calm-benchmark.js`, participant-result copy in `src/results/calm-results.js`, and the question-copy regression tests together. Challenge-specific test IDs, route types, options, follow-up rules, and result labels belong in `CHALLENGE_CONFIGS`.
 
 ### Change shared benchmark behavior
 
@@ -113,7 +113,7 @@ The LinkedIn preview image is [`assets/ari-route-arcade-social.png`](assets/ari-
 
 ## Live Route Pairs
 
-Both active challenges generate random route pairs the way the `livemap-routing` bench does: a random origin and destination is drawn inside the central-Zurich sampling polygon (400 m to 3000 m apart).
+Both active challenges use the same route-pair provider contract, but their current route sources differ:
 
 - **Calm Route Comparison** currently uses 23 curated Calm Quiet and Calm Nature fixture pairs in `src/data/mock-route-pairs.js`. Each session receives pairs 1–10 in a shuffled order, followed by pairs 11–23 in a second shuffled order; the session ID keeps both groups stable across refresh and resume.
 - **Fast vs Google Fast** requests `foot_fast` from the facade and the Google walking route from the Directions SDK at run time, so it needs both a reachable facade and a configured Google Maps key. Matchups where the two engines snap the endpoints more than 40 m apart are redrawn (fairness gate). Google geometry is never persisted: cached rounds store only our route, metrics, and Google's snapped endpoints, and the Google path is re-fetched live on resume.
@@ -147,6 +147,7 @@ Never commit an API key.
 - Keep orange and green reserved for Route A and Route B.
 - Use `fresh.html` instead of deleting browser data during ordinary visual QA.
 - Update tests and relevant docs when changing question logic or stored records.
+- Never introduce participant-facing question copy without updating `docs/QUESTIONNAIRE.md` and the question-copy drift test.
 - Verify both active challenge URLs after shared UI changes.
 
 New contributors should read [`CONTEXT.md`](CONTEXT.md). Coding agents should also read [`AGENTS.md`](AGENTS.md). Open follow-ups are tracked in [`TODO.md`](TODO.md).

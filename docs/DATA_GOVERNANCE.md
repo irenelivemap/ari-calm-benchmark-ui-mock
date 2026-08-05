@@ -11,8 +11,7 @@ This checklist separates implemented technical controls from decisions the evalu
 
 ## Implemented controls
 
-- Explicit consent is required before starting.
-- Optional comments warn participants not to include personal information.
+- The start form collects only the participant name or team-issued code before testing begins.
 - Participant writes use the public Supabase anon role through two write-only RPC functions.
 - Supabase row-level security blocks anonymous reads.
 - Capture IDs make completed-answer writes idempotent.

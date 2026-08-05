@@ -51,6 +51,39 @@ test('preserves the selected-route reasons for the results layer', () => {
   assert.equal(row.q2Note, 'More shade');
 });
 
+test('uses the current conditional Calm questions in participant results', () => {
+  assert.deepEqual(Results.participantQuestionCopy(answer({ q1Choice: 'route_a' })), {
+    q1: 'Which route would you choose for a calmer walk?',
+    q1Flag: 'I know a better Calm route',
+    q2: 'What made you choose Route A?',
+    q3: 'Compared with only seeing Fast, how much does adding Route A improve things for you?'
+  });
+  assert.deepEqual(Results.participantQuestionCopy(answer({ q1Choice: 'route_b' })), {
+    q1: 'Which route would you choose for a calmer walk?',
+    q1Flag: 'I know a better Calm route',
+    q2: 'What made you choose Route B?',
+    q3: 'Compared with only seeing Fast, how much does adding Route B improve things for you?'
+  });
+  assert.deepEqual(Results.participantQuestionCopy(answer({ q1Choice: 'both_work_well' })), {
+    q1: 'Which route would you choose for a calmer walk?',
+    q1Flag: 'I know a better Calm route',
+    q2: 'What made both routes work well?',
+    q3: 'Compared with only seeing Fast, how much does also having any of these calmer routes improve things for you?'
+  });
+  assert.deepEqual(Results.participantQuestionCopy(answer({ q1Choice: 'none_work_well' })), {
+    q1: 'Which route would you choose for a calmer walk?',
+    q1Flag: 'I know a better Calm route',
+    q2: null,
+    q3: 'What made you choose neither route?'
+  });
+  assert.deepEqual(Results.participantQuestionCopy(answer({ q1Choice: 'hard_to_judge' })), {
+    q1: 'Which route would you choose for a calmer walk?',
+    q1Flag: 'I know a better Calm route',
+    q2: null,
+    q3: null
+  });
+});
+
 test('keeps legacy Q2 Other details readable', () => {
   const row = Results.normalizeRow(answer({ q2Note: '', q2Other: 'A legacy detail' }));
   assert.equal(row.q2Note, 'A legacy detail');

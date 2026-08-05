@@ -266,9 +266,6 @@
     if (strictCurrentCalm && (typeof record.participantId !== 'string' || !record.participantId || record.participantId.length > 200)) {
       errors.push('participantId is required and must be 200 characters or fewer for current Calm records.');
     }
-    if (strictCurrentCalm && (!record.consentVersion || !isIsoDate(record.consentedAt))) {
-      errors.push('Current Calm records require a consent version and timestamp.');
-    }
     if (!isIsoDate(record.createdAt)) errors.push('createdAt must be an ISO timestamp.');
     if (record.roundNumber != null && (!Number.isInteger(record.roundNumber) || record.roundNumber < 1)) {
       errors.push('roundNumber must be a positive integer.');
@@ -432,9 +429,6 @@
       && record.source === 'calm-route-comparison';
     if (strictCurrentCalm && (typeof record.participantId !== 'string' || !record.participantId || record.participantId.length > 200)) {
       errors.push('participantId is required and must be 200 characters or fewer for current Calm progress.');
-    }
-    if (strictCurrentCalm && (!record.consentVersion || !isIsoDate(record.consentedAt))) {
-      errors.push('Current Calm progress requires a consent version and timestamp.');
     }
     if (!Number.isInteger(record.roundIndex) || record.roundIndex < 0) errors.push('roundIndex must be zero or greater.');
     if (!Number.isInteger(record.completedRounds) || record.completedRounds < 0) errors.push('completedRounds must be zero or greater.');

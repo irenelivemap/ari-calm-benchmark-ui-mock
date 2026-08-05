@@ -95,6 +95,39 @@
     other: 'Other'
   };
 
+  const PARTICIPANT_QUESTION_COPY = Object.freeze({
+    q1: 'Which route would you choose for a calmer walk?',
+    q1Flag: 'I know a better Calm route',
+    route_a: Object.freeze({
+      q2: 'What made you choose Route A?',
+      q3: 'Compared with only seeing Fast, how much does adding Route A improve things for you?'
+    }),
+    route_b: Object.freeze({
+      q2: 'What made you choose Route B?',
+      q3: 'Compared with only seeing Fast, how much does adding Route B improve things for you?'
+    }),
+    both_work_well: Object.freeze({
+      q2: 'What made both routes work well?',
+      q3: 'Compared with only seeing Fast, how much does also having any of these calmer routes improve things for you?'
+    }),
+    none_work_well: Object.freeze({
+      q2: null,
+      q3: 'What made you choose neither route?'
+    }),
+    hard_to_judge: Object.freeze({ q2: null, q3: null })
+  });
+
+  function participantQuestionCopy(answer) {
+    const choice = answer?.q1Choice || answer?.choice || null;
+    const conditional = PARTICIPANT_QUESTION_COPY[choice] || { q2: null, q3: null };
+    return {
+      q1: PARTICIPANT_QUESTION_COPY.q1,
+      q1Flag: PARTICIPANT_QUESTION_COPY.q1Flag,
+      q2: conditional.q2,
+      q3: conditional.q3
+    };
+  }
+
   function q1Selections(answer) {
     const choices = Array.isArray(answer.q1Choices) && answer.q1Choices.length
       ? [...answer.q1Choices]
@@ -565,6 +598,7 @@
     CHOICE_REASON_LABELS,
     OUTCOME_LABELS,
     REASON_LABELS,
+    participantQuestionCopy,
     q1Selections,
     selectedRouteTypes,
     selectedRouteType,

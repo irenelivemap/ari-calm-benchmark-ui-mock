@@ -65,9 +65,6 @@
         issues.push({ severity: 'error', code: 'invalid_calm_pair_id', location, value: answer.pairId });
       }
       if (!answer.participantId) issues.push({ severity: 'error', code: 'missing_participant_id', location });
-      if (!answer.consentVersion || !Number.isFinite(Date.parse(answer.consentedAt))) {
-        issues.push({ severity: 'error', code: 'missing_consent', location });
-      }
     });
 
     for (const [sessionId, records] of sessions) {
@@ -125,4 +122,3 @@
 
   return { EXPECTED_CALM_ROUNDS, auditBenchmarkData };
 });
-

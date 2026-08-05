@@ -87,6 +87,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 ### Calm Route Comparison
 
+- [x] Participant-facing wording and follow-up rules match [`QUESTIONNAIRE.md`](QUESTIONNAIRE.md).
 - [x] Assignable route keys are `calm_quiet` and `calm_nature`; every fixture also supplies a non-randomized `fast` reference route.
 - [x] Route A/B and Both work well selections show the Calm preference-reasons Q2; the remaining neutral choices skip it.
 - [x] Q1 offers Route A, Route B, Both work well, Both work poorly, and I'm not sure.

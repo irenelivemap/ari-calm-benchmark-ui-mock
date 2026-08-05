@@ -32,7 +32,7 @@ src/app/runtime.js
   environment configuration + clean/legacy URL resolution
 
 src/results/calm-results.js
-  shared pure aggregation for community and team result views
+  shared pure aggregation and participant-result question mapping
 ```
 
 Historical `calm-*` filenames are retained to avoid breaking shared links and integrations. They now support every configured challenge.
@@ -66,7 +66,7 @@ Owns page-level composition and challenge selection:
 - community and team results rendering
 - Google Maps script loading
 
-Do not move challenge-specific question options into the shared shell. Keeping them in `CHALLENGE_CONFIGS` makes differences visible in one place.
+Do not move challenge-specific question options into the shared shell. Keeping runtime options in `CHALLENGE_CONFIGS` makes challenge differences visible. Exact current wording is catalogued in `docs/QUESTIONNAIRE.md`; participant-result mappings in `src/results/calm-results.js` are covered by question-copy drift tests.
 
 ### `src/app/calm-benchmark.js`
 

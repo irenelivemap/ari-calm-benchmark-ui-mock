@@ -1,6 +1,6 @@
 # ARI Route Benchmark Design System
 
-This document captures the design rules shared by the ARI route benchmark family. Use it before creating, reviewing, or changing interface elements in this repo. Challenge-specific copy and question logic live in `CHALLENGE_CONFIGS` in `index.html`; the visual and interaction system is shared.
+This document captures the design rules shared by the ARI route benchmark family. Use it before creating, reviewing, or changing interface elements in this repo. [`QUESTIONNAIRE.md`](QUESTIONNAIRE.md) is the canonical product reference for current participant-facing copy; runtime options and follow-up rules live in `CHALLENGE_CONFIGS` in `index.html`. The visual and interaction system is shared.
 
 ## Product Intent
 
@@ -104,7 +104,7 @@ Intro page:
 - The stage has exactly one ivory Play or Resume command. It is intentionally distinct from the dark challenge keys.
 - Selection is communicated by the cursor and active frame only. Do not add `Select a challenge`, `Selected challenge`, or `Selected` labels, and do not repeat the selected challenge inside the CRT.
 - `fresh.html` is the non-destructive QA entry point. It previews a new player without deleting locally saved sessions.
-- During the current single-tester design phase, `Reset test data` appears only in the intro header, immediately to the right of the challenge menu. It clears local answers, progress, participant state, medals, and challenge selection in one step, then returns to the true first screen. It preserves the map API configuration and must be removed before production testing.
+- Development previews may enable `Reset test data` through runtime configuration. It clears local answers, progress, participant state, medals, and challenge selection, then returns to the true first screen while preserving map API configuration. Production removes this control from the DOM.
 - Switching challenges must preserve existing progress. Results and comparison views always belong to the currently selected challenge.
 - Header, intro text, cards, and start card must share the same content width.
 - On mobile, the session card appears before the start card.
@@ -254,8 +254,8 @@ Implemented pattern:
 - `Next question` is clearer than `Submit answer` when the user is moving through follow-up questions.
 - `Back` for Q2/Q3 should be near the question flow, not in the global HUD.
 - Q1 should not show optional free text.
-- When a challenge enables route metrics, each Route A/B answer row carries decision-relevant values in the row's route color. Fast vs Google shows rounded distance only because its provider duration models are not comparable. Calm Route Comparison shows rounded estimated walking time (`26 min`) and a compact delta from Fast mode for the same round (`+2 min`). Comparison 1 shows the full timing explanation; later comparisons replace it with an `About time estimates` disclosure that reveals the same copy on demand. Neutral answer rows never show metrics.
-- After Route A, Route B, or Both work well is chosen and explained, Calm Q3 asks whether the selected Calm route option(s) are useful enough to be shown as well as Fast. The map draws Fast in orange alongside only the selected Calm route(s), and a compact flat strip lists each visible route's rounded time before the Yes / No / I'm not sure choices.
+- When a challenge enables route metrics, each Route A/B answer row carries decision-relevant values in the row's route color. Fast vs Google shows rounded distance only because its provider duration models are not comparable. Calm Route Comparison shows rounded estimated walking time (`26 min`) and a compact delta from Fast mode for the same round (`+2 min`). Comparison 1 shows the full timing and route-selection guidance as two short paragraphs; later comparisons replace it with an `About these choices` disclosure that reveals the same copy on demand. Neutral answer rows never show metrics.
+- After Route A, Route B, or Both work well is chosen and explained, Calm Q3 asks how much the selected Calm route option(s) improve things compared with only seeing Fast. The map draws Fast in orange alongside only the selected Calm route(s), and a compact flat strip lists each visible route's rounded time before the `A lot`, `Somewhat`, `A little`, `Not at all`, and `I'm not sure` choices.
 - Both work poorly never receives the value-vs-Fast Q3. Its only follow-up is the dedicated rejection-reasons checklist, after which the round ends.
 - Calm Route Comparison uses a single-choice Q1: Route A, Route B, `Both work well`, `Both work poorly`, or `I'm not sure`. Route A, Route B, and `Both work well` receive both the preference-reasons Q2 and the value-vs-Fast Q3. Q2 accepts multiple reasons, treats `I'm not sure` as exclusive, and reveals an optional detail field after any reason is selected. Choosing `Both work poorly` asks `What made you choose neither route?`, clarifies that reasons may apply to one or both routes, and offers its own multi-select rejection reasons with the same optional-detail behavior.
 - While Q1 is active, every selected route remains at full opacity and its normal width; only unselected routes recede to half opacity. Hover or keyboard focus may temporarily thicken one route, but must never dim another selected route. Neutral choices restore equal route visibility, and advancing to a follow-up resets all routes to equal visibility for inspection.
@@ -271,6 +271,8 @@ Implemented pattern:
 Primary question:
 
 `Which route would you choose for a calmer walk?`
+
+The complete current question and option catalogue lives in [`QUESTIONNAIRE.md`](QUESTIONNAIRE.md). Do not preserve superseded participant-facing wording in design examples; historical compatibility belongs only to the answer schema and migration logic.
 
 ## Intro Start Card States
 
@@ -332,19 +334,21 @@ Rules:
 ## Results Rules
 
 - Calm Route Comparison results are available from the beginning through the persistent `Results` navigation item. At zero responses, show the dashboard's empty state rather than a comparison-count lock.
+- The team-results introduction uses the display role for `Team results`, the body role for its lead sentence, and the detail role for explanatory paragraphs. Prose is constrained to `72ch`; paragraphs use a `12px` rhythm with `20px` between the lead and the first explanation.
 - Calm results use two primary views: `Overview` for team-wide evidence and `Participants` for named individual records.
 - `Overview` answers the first research question in a strict reading order: team tester and comparison totals first; then the percentage where Calm Nature worked as an option (`Calm Nature + Both work well`); then the complete Q1 outcome distribution for Calm Quiet, Calm Nature, both, neither, and uncertainty; then the overall Quiet-versus-Nature preference and its uncertainty. Pair-level agreement and the participant heatmap remain supporting evidence below this summary. Overall repeated judgments use participant-clustered 95% intervals, while individual route pairs use Wilson 95% intervals.
 - The Quiet-versus-Nature overview includes only comparisons where one route was selected. It shows the aggregate preference split, whether its participant-clustered interval rules out an even split, how many route pairs each approach led, ties, and the median within-pair majority. A small numerical lead must not be described as a clear winner when its interval includes 50%.
 - The Overview participant-by-pair heatmap keeps route pairs as columns and participants as rows. Its row summaries describe viability, single-route preference, and decisiveness without ranking participants or treating variation across different routes as error.
 - Calm Quiet and Calm Nature use decoded route identities in Results. Because A/B presentation is randomized, the participant-facing A/B route colors must not be reused as if they permanently represented Quiet or Nature. Results use Ari blurple for Calm Quiet and Ari green for Calm Nature; shared, rejected, and uncertain outcomes recede into the neutral Ari greys.
 - Preview data includes 15 deterministic illustrative testers across all 23 embedded route pairs so clear agreement, mixed judgment, rejection, and uncertainty states remain inspectable without entering production data.
-- `Participants` lists every contributor by name. The participant attached to the current local session appears first with a restrained `You` badge. Selecting a name shows only that person's counts, decoded choices, reasons, optional written details, and round-by-round records.
+- `Participants` lists every contributor by name. The participant attached to the current local session appears first, without an additional identity badge. Selecting a name shows only that person's counts, decoded choices, reasons, optional written details, and round-by-round records.
 - Participant-facing `My results` shows one consolidated history for the current person and never introduces a session selector. Researcher mode may still expose session counts as provenance inside a participant record.
 - Names and optional written details are explicitly described as visible to the evaluation team at the point of entry.
 - Participant identity uses a generated participant ID that remains stable for the same normalized name on the same device. Session IDs remain separate and never count as team-member identities. Legacy records without an explicit participant ID are consolidated by normalized participant name across sessions; current records with explicit IDs remain distinct even when names match. Cross-device identity still requires an identity supplied by the production host.
 - Individual records are descriptive, not evaluative: never rank people or label a choice as correct, aligned, or misaligned with the team.
-- Individual records repeat each relevant question beside its recorded answer. A better-route flag is presented as the answer `Yes` to its original question rather than as a second, repetitive label.
-- Expanded record answers follow the shared type and spacing tokens: muted `font-fine` questions, ink `font-small` answers and notes, an `8px` question-to-answer gap, `24px` between answer groups, and `20px` desktop content insets (`16px` on mobile). Reason chips stay low-emphasis on `grey-02`; route colors are reserved for decoded route outcomes.
+- Individual records repeat each relevant follow-up question beside its recorded answer. The optional better-route checkbox remains part of the Q1 answer and appears only when selected as `✓ I know a better Calm route`; it is never rewritten as a separate yes/no question.
+- Evaluation-record headers keep the decoded Q1 outcome chip visible in both collapsed and expanded states so the summary and controls do not jump. The expanded detail does not repeat the Q1 question and outcome; it begins with any selected better-route flag, then shows only follow-up answers, the map, and route details.
+- Expanded record answers use a stable question-and-answer grid on wider screens: muted `font-fine` questions in the left column and the related chips, answer, and note grouped in the right column. The grid stacks question above answer below `700px`. The optional better-route flag sits above the grid as quiet context rather than competing with the answer hierarchy. Reason chips stay low-emphasis on `grey-02`; route colors are reserved for decoded route outcomes.
 - In an individual record's route table, selected Calm routes replace the route dot with a same-color checkmark. Unselected rows keep their route-identity dots, and `aria-current` remains the non-visual selection signal.
 - Each expanded individual record shows the evaluated route-pair map and comparison table. Records expand independently so participants can keep several routes open while reviewing their choices.
 - Production answers are written to Supabase. Authorized researchers inspect or export the shared dataset through the Supabase dashboard; participant browsers cannot read it.

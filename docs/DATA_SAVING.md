@@ -17,7 +17,7 @@ Challenges do not share progress or answers.
 | Calm Route Comparison | `calm_route_comparison` | `ari-calm-route-comparison-dataset-v1` |
 | Fast vs Google Fast | `ari_fast_vs_google` | `ari-fast-google-benchmark-dataset-v1` |
 
-The `Reset test data` control currently clears both datasets. It exists for the single-tester design phase and must be removed before production research.
+The `Reset test data` control is a local-development aid enabled only when runtime configuration sets `showReset: true`. Production removes it from the DOM and never exposes it to participants.
 
 ## Dataset Shape
 
@@ -54,7 +54,7 @@ In `index.html`, these adapters always call the active challenge's local reposit
 
 Queued answers deduplicate by `captureId`. Queued progress deduplicates by test and session, so only the newest unsent state survives. A newer successful progress write removes any older queued version before the outbox flushes.
 
-Legacy Calm progress created before participant identity and consent metadata is not offered for resume. The participant must begin a new consented session; the application never invents consent metadata for an older session.
+Legacy Calm progress remains resumable. When an older record has no explicit participant ID, the application derives the same stable, device-local participant ID used for a new session with that normalized name.
 
 ## Production Endpoints
 

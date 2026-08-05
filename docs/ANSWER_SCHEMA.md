@@ -87,8 +87,6 @@ type BenchmarkAnswerV2 = {
   participantName: string;
   participantId: string;       // Stable for the same normalized name on one device.
   rater: string;              // Compatibility alias of participantName.
-  consentVersion: string;
-  consentedAt: string;         // ISO timestamp.
 
   routeAssignment: {
     routeA: RouteType;
@@ -116,10 +114,10 @@ type BenchmarkAnswerV2 = {
   choice: Q1Choice;            // Compatibility alias of q1Choice.
   q1Choices: Q1Choice[];       // Canonical Q1 selections; may contain multiple Calm routes.
   q2Separate: "yes" | "no" | "not_sure" | null; // Legacy non-current challenge field.
-  q2Reasons: Q2Reason[];       // Why the participant selected Route A or Route B.
+  q2Reasons: Q2Reason[];       // Why Route A, Route B, or both worked well.
   q2Note: string;              // Optional supporting detail after any Q2 reason is selected.
   q2Other?: string;            // Legacy detail field from the first Calm Q2 implementation.
-  q3WorthShowing?: "yes" | "no" | "not_sure" | null;
+  q3WorthShowing?: "a_lot" | "somewhat" | "a_little" | "not_at_all" | "not_sure" | null;
                                   // Current Calm value-vs-Fast answer. Omitted by historical records.
   q3Issues: Q3Issue[];
   reasons: Q3Issue[];          // Compatibility alias of q3Issues.
@@ -144,6 +142,8 @@ type RouteSnapshot = {
 The duplicate names (`benchmarkRunId` / `sessionId`, `choice` / `q1Choice`, `reasons` / `q3Issues`) preserve compatibility with the first ARI benchmark dashboard while keeping the current question flow explicit. For current Calm records, `q1Choice` and the single entry in `q1Choices` match. Historical three-route and multi-select records remain readable.
 
 ## Challenge Rules
+
+The exact participant-facing wording and conditional flow are catalogued in [`QUESTIONNAIRE.md`](QUESTIONNAIRE.md). This document defines how those answers are stored and validated.
 
 ### Calm Route Comparison
 
@@ -205,8 +205,6 @@ type BenchmarkProgressV2 = {
   sessionId: string;
   participantName: string;
   participantId: string;
-  consentVersion: string;
-  consentedAt: string;
   sessionStartedAt: string;
   roundIndex: number;          // Zero-based current round.
   completedRounds: number;
@@ -219,7 +217,7 @@ type BenchmarkProgressV2 = {
 };
 ```
 
-Version 1 remains readable for historical analysis. Version 2 is strict: current Calm records must reference one of the 23 corpus pairs, use a round from 1–23, carry matching route IDs and capture IDs, include participant and consent metadata, and satisfy every current conditional question.
+Version 1 remains readable for historical analysis. Version 2 is strict: current Calm records must reference one of the 23 corpus pairs, use a round from 1–23, carry matching route IDs, capture IDs, and participant metadata, and satisfy every current conditional question.
 
 ## Idempotency
 

@@ -112,8 +112,6 @@ test('strictly validates current v2 Calm corpus records', () => {
   const current = validAnswer({
     v: 2,
     participantId: 'participant-123',
-    consentVersion: '2026-08-04',
-    consentedAt: '2026-08-04T10:00:00.000Z',
     pairId: 'calm-route-comparison-01-round-1',
     q1KnowsBetter: false,
     labels: {

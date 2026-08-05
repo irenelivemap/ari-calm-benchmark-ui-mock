@@ -42,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260805-results-restore-3">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260805-consent-ui-removal-1">
   <style>
     body {
       margin: 0;
@@ -132,7 +132,7 @@
     <div class="calm-intro-wrap">
       <section class="calm-hero" aria-labelledby="calm-hero-title">
         <h1 id="calm-hero-title">
-          <span id="benchmark-hero-question">Which route feels calmer for this walk?</span>
+          <span id="benchmark-hero-question">Which route would you choose for a calmer walk?</span>
           <span class="calm-route-slot" aria-hidden="true">
             <span class="calm-route-token calm-route-token--a">Route A</span>
             <span class="calm-route-token calm-route-token--b">Route B</span>
@@ -220,12 +220,7 @@
               <input id="participant-name" name="participantName" type="text" autocomplete="name" maxlength="80" required aria-describedby="start-form-error" placeholder="Type a name…">
               <button id="start-test" type="submit" disabled>Start test →</button>
             </div>
-            <label class="calm-consent">
-              <input id="participant-consent" type="checkbox" required>
-              <span>I agree to share my name, route choices, and optional comments with the ARI evaluation team for route research.</span>
-            </label>
             <p class="calm-start-error" id="start-form-error" role="status" aria-live="polite"></p>
-            <p class="calm-privacy-note">Your answers remain linked to this research session. Avoid including personal information in optional comments. Ask the evaluation team about access, retention, correction, or deletion.</p>
           </form>
           <div class="calm-resume-right calm-hidden" id="resume-right">
             <div class="calm-start-row">
@@ -321,11 +316,11 @@
   <script src="./src/data/supabase-transport.js?v=20260804-write-rpc-1"></script>
   <script src="./src/data/mock-route-diagnostics.js?v=20260804-route-pairs-23-2"></script>
   <script src="./src/data/mock-team-results.js?v=20260805-question-answer-1"></script>
-  <script src="./src/results/calm-results.js?v=20260805-participant-identity-1"></script>
+  <script src="./src/results/calm-results.js?v=20260805-questionnaire-cleanup-1"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
   <script src="./src/maps/route-overlap.js?v=20260729-street-view-any-point-1"></script>
   <script src="./src/maps/map-adapter.js?v=20260804-resume-guard-1"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260804-launch-ui-1"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260805-consent-ui-removal-1"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -357,7 +352,6 @@
     };
     const participantInput = document.getElementById('participant-name');
     const skipLink = document.querySelector('.calm-skip-link');
-    const participantConsent = document.getElementById('participant-consent');
     const startButton = document.getElementById('start-test');
     const runtimeConfig = AriBenchmarkRuntime.resolveConfig(window);
     document.documentElement.dataset.ariEnvironment = runtimeConfig.production ? 'production' : 'preview';
@@ -414,7 +408,7 @@
           routeTypes: ['livemap_fast', 'google'],
           questions: {
             q1: 'Which route would you prefer in this situation?',
-            q2: 'Would both routes work well as Fast options?',
+            q2: '',
             q3: 'What made the other route worse?'
           },
           context: null,
@@ -447,7 +441,7 @@
                 { value: 'misses_shortcut', label: 'Miss a useful shortcut' },
                 { value: 'too_complex', label: 'Are hard to follow' },
                 { value: 'crossing_friction', label: 'Have difficult street crossings' },
-                { value: 'too_busy_or_crowded', label: 'Goes through crowded areas' },
+                { value: 'too_busy_or_crowded', label: 'Go through crowded areas' },
                 { value: 'misses_nicer_route', label: 'Miss a more pleasant route' },
                 { value: 'may_not_be_walkable', label: 'Part of the routes may not be walkable' },
                 { value: 'other', label: 'Other' },
@@ -494,8 +488,8 @@
           routeTypes: ['calm_quiet', 'calm_nature'],
           questions: {
             q1: 'Which route would you choose for a calmer walk?',
-            q2: 'What made you choose this route?',
-            q3: 'What made the other route less suitable?'
+            q2: 'What made both routes work well?',
+            q3: ''
           },
           context: null,
           q1Options: [
@@ -519,15 +513,7 @@
             { value: 'other', label: 'Other' },
             { value: 'not_sure', label: "I'm not sure", exclusive: true }
           ],
-          q3Options: [
-            { value: 'not_enough_greenery_water', label: 'Not enough greenery or water' },
-            { value: 'too_busy_or_crowded', label: 'Too busy or crowded' },
-            { value: 'lacks_nice_streets_surroundings', label: 'Lacks nice streets or surroundings' },
-            { value: 'extra_time_distance_not_worth_it', label: 'Extra time or distance not worth it' },
-            { value: 'too_similar', label: 'Too similar to the selected route' },
-            { value: 'too_complex', label: 'Too complex to follow' },
-            { value: 'other', label: 'Other' }
-          ],
+          q3Options: [],
           q3Variants: {
             route_a: {
               kind: 'worth_fast',
@@ -606,7 +592,10 @@
           uncertainChoices: ['hard_to_judge'],
           showRouteMetrics: true,
           routeMetricMode: 'duration-vs-fast',
-          routeMetricsHelp: 'Times are estimates. The “+” time shows how much longer each route takes than Fast mode for the same start and destination.'
+          routeMetricsHelp: [
+            'Times are estimates. A “+” time shows how much longer that route takes than Fast for the same start and destination.',
+            'If both routes work well but you prefer one, choose Route A or Route B. Choose “Both work well” only when you have no preference.'
+          ]
         },
         routePairProvider: AriCalmBenchmark.mockRoutePairProvider
       }
@@ -711,10 +700,8 @@
     if (!collectionReady) {
       startButton.disabled = true;
       participantInput.disabled = true;
-      participantConsent.disabled = true;
       document.getElementById('resume-test').disabled = true;
-      const privacyNote = document.querySelector('.calm-privacy-note');
-      if (privacyNote) privacyNote.textContent = 'Data collection is not connected yet. This study cannot accept responses.';
+      document.getElementById('start-form-error').textContent = 'Data collection is not connected yet. This study cannot accept responses.';
     }
     const remoteTeamResults = {
       status: remoteTransport ? 'idle' : 'local',
@@ -759,7 +746,7 @@
         ? 'Pick the route you would take for a calm walk.'
         : 'Pick the one you would actually take.';
       document.getElementById('benchmark-explain-copy').textContent = activeChallenge === 'calm'
-        ? 'Tell us what made the other route less suitable.'
+        ? 'Tell us what informed your choice and how useful it is alongside Fast.'
         : 'Tell us why you chose it.';
       const definition = document.querySelector('.calm-disclosure');
       const hasDefinition = Boolean(activeConfig.definitionQuestion && activeConfig.definitionAnswer);
@@ -1361,9 +1348,9 @@
             ? (AriCalmResults.REASON_LABELS[key] || key)
             : (AriCalmResults.CHOICE_REASON_LABELS[key] || key))
           .filter(Boolean);
-        const reasonsQuestion = rejectedBoth
-          ? 'What made you choose neither route?'
-          : 'What made you choose this route?';
+        const questionCopy = AriCalmResults.participantQuestionCopy(row.raw);
+        const reasonsQuestion = rejectedBoth ? questionCopy.q3 : questionCopy.q2;
+        const reasonsNote = rejectedBoth ? row.note : row.q2Note;
         const worthMap = { a_lot: 'A lot', somewhat: 'Somewhat', a_little: 'A little', not_at_all: 'Not at all', not_sure: "I'm not sure" };
         const worthLabel = row.q3WorthShowing ? (worthMap[row.q3WorthShowing] || row.q3WorthShowing) : null;
         const selectedRouteTypes = row.exactOutcome === 'both_work_well'
@@ -1412,31 +1399,23 @@
             </button>
             <div id="${bodyId}" class="calm-pp-card__body" hidden>
               <div class="calm-pp-card__inner">
-                <section class="calm-pp-answers">
-                  <div class="calm-pp-answer">
-                    <p class="calm-pp-question">Which route would you choose for a calmer walk?</p>
-                    <p class="calm-pp-response"><strong>${escapeHtml(outcomeLabel)}</strong></p>
-                  </div>
-                  ${reasons.length || row.q2Note ? `<div class="calm-pp-answer">
-                    <p class="calm-pp-question">${reasonsQuestion}</p>
-                    ${reasons.length ? `<ul class="calm-pp-reasons-list">${reasons.map(reason => `<li>${escapeHtml(reason)}</li>`).join('')}</ul>` : ''}
-                    ${row.q2Note ? `<blockquote class="calm-pp-note-text">“${escapeHtml(row.q2Note)}”</blockquote>` : ''}
+                ${row.q1KnowsBetter || (reasonsQuestion && (reasons.length || reasonsNote)) || (!rejectedBoth && questionCopy.q3 && (worthLabel || row.note)) ? `<section class="calm-pp-answers">
+                  ${row.q1KnowsBetter ? `<p class="calm-pp-selected-flag"><span aria-hidden="true"></span>${escapeHtml(questionCopy.q1Flag)}</p>` : ''}
+                  ${reasonsQuestion && (reasons.length || reasonsNote) ? `<div class="calm-pp-answer">
+                    <p class="calm-pp-question">${escapeHtml(reasonsQuestion)}</p>
+                    <div class="calm-pp-answer__content">
+                      ${reasons.length ? `<ul class="calm-pp-reasons-list">${reasons.map(reason => `<li>${escapeHtml(reason)}</li>`).join('')}</ul>` : ''}
+                      ${reasonsNote ? `<blockquote class="calm-pp-note-text">“${escapeHtml(reasonsNote)}”</blockquote>` : ''}
+                    </div>
                   </div>` : ''}
-                  ${row.q1KnowsBetter ? `<div class="calm-pp-answer">
-                    <p class="calm-pp-question">Do you know another Calm route that would work better?</p>
-                    <p class="calm-pp-response"><strong>Yes</strong></p>
+                  ${!rejectedBoth && questionCopy.q3 && (worthLabel || row.note) ? `<div class="calm-pp-answer">
+                    <p class="calm-pp-question">${escapeHtml(questionCopy.q3)}</p>
+                    <div class="calm-pp-answer__content">
+                      ${worthLabel ? `<p class="calm-pp-response"><strong>${escapeHtml(worthLabel)}</strong></p>` : ''}
+                      ${row.note ? `<blockquote class="calm-pp-note-text">“${escapeHtml(row.note)}”</blockquote>` : ''}
+                    </div>
                   </div>` : ''}
-                  ${worthLabel ? `<div class="calm-pp-answer">
-                    <p class="calm-pp-question">${row.exactOutcome === 'both_work_well'
-                      ? 'Compared with only seeing Fast, how much would adding either calmer route improve things for you?'
-                      : 'Compared with only seeing Fast, how much would adding your chosen calmer route improve things for you?'}</p>
-                    <p class="calm-pp-response"><strong>${escapeHtml(worthLabel)}</strong></p>
-                    ${row.note ? `<blockquote class="calm-pp-note-text">“${escapeHtml(row.note)}”</blockquote>` : ''}
-                  </div>` : row.note ? `<div class="calm-pp-answer">
-                    <p class="calm-pp-question">Anything else you wanted to add?</p>
-                    <blockquote class="calm-pp-note-text">“${escapeHtml(row.note)}”</blockquote>
-                  </div>` : ''}
-                </section>
+                </section>` : ''}
                 ${routeTableHtml || diag ? `<section class="calm-pp-route-details">
                   <h4 class="calm-pp-section-title">Route details${researcherMode ? '' : ` <span class="calm-pp-section-context">· ${escapeHtml(pairLabel)}</span>`}</h4>
                   ${routePair && Number.isInteger(pairIndex) ? `
@@ -1529,13 +1508,11 @@
         .filter(([, count]) => count > 0)
         .sort((a, b) => b[1] - a[1]);
       const reasonResponseCount = participantSummary.rows.filter(row => row.reasons.length > 0).length;
-      const isCurrentParticipant = selectedResultsParticipantId === currentParticipantId;
       const participantButtons = orderedParticipants.map(item => {
         const isSelected = item.participantId === selectedResultsParticipantId;
-        const isYou = item.participantId === currentParticipantId;
         return `
           <button type="button" data-results-participant="${escapeHtml(item.participantId)}" aria-pressed="${isSelected}">
-            <span><strong>${escapeHtml(participantLabels.get(item.participantId))}</strong>${isYou ? '<em>You</em>' : ''}</span>
+            <span><strong>${escapeHtml(participantLabels.get(item.participantId))}</strong></span>
             <small>${item.comparisons} comparison${item.comparisons === 1 ? '' : 's'} · ${item.routePairs} route pair${item.routePairs === 1 ? '' : 's'}</small>
           </button>`;
       }).join('');
@@ -1554,7 +1531,7 @@
           <section class="calm-participant-detail" aria-labelledby="calm-participant-detail-title">
             <header class="calm-participant-detail__header">
               ${researcherMode ? '<p class="calm-results-eyebrow">Participant record</p>' : ''}
-              <h2 id="calm-participant-detail-title">${escapeHtml(selectedParticipantLabel)}${isCurrentParticipant ? '<span>You</span>' : ''}</h2>
+              <h2 id="calm-participant-detail-title">${escapeHtml(selectedParticipantLabel)}</h2>
               ${researcherMode ? `<p>${selectedPerson.comparisons} completed comparison${selectedPerson.comparisons === 1 ? '' : 's'} across ${selectedPerson.routePairs} route pair${selectedPerson.routePairs === 1 ? '' : 's'}. Updated ${formatUpdated(selectedPerson.lastUpdated)}.</p>` : ''}
             </header>
             ${researcherMode ? `
@@ -1614,7 +1591,7 @@
         <header class="calm-results-dashboard-header${researcherMode ? '' : ' calm-results-dashboard-header--participant'}">
           <h1>Team results</h1>
           <div class="calm-results-dashboard-summary">
-            <p class="calm-results-dashboard-summary__lead"><strong class="marker-lime marker-static">${summary.participants} team member${summary.participants === 1 ? '' : 's'} familiar with Zürich</strong> evaluated <strong>${summary.routePairs} origin–destination pair${summary.routePairs === 1 ? '' : 's'}</strong> in a blind side-by-side comparison, completing <strong class="marker-lime marker-static">${summary.total} route comparison${summary.total === 1 ? '' : 's'}</strong>.</p>
+            <p class="calm-results-dashboard-summary__lead"><strong class="marker-lime marker-static">${summary.participants} team member${summary.participants === 1 ? '' : 's'}</strong> familiar with Zürich completed <strong class="marker-lime marker-static">${summary.total} route comparison${summary.total === 1 ? '' : 's'}</strong> in a blind, side-by-side format.</p>
             <p>For each pair, the routes were shown as Route A and Route B, so evaluators did not know which profile generated them. One came from a <strong class="calm-results-profile-label" data-profile="nature">Nature-focused profile</strong>, with more emphasis on greenery, tree canopy, and proximity to water. The other came from a <strong class="calm-results-profile-label" data-profile="quiet">Quiet-focused profile</strong>, with more emphasis on avoiding noise, main roads, and areas with higher accident risk.</p>
             <p>Evaluators judged whether Route A, Route B, both, or neither worked as a Calm route, or whether they were unsure.</p>
             <p>The results help us compare model hypotheses and identify cases to investigate. They reflect structured internal judgments, not the preferences of Zürich pedestrians as a whole.</p>
@@ -2060,13 +2037,7 @@
         try { progress = dataRepository.getLatestProgress(); } catch (error) { console.error(error); }
       }
 
-      const hasCurrentCalmConsent = activeChallenge !== 'calm' || !!(
-        progress?.participantId
-        && progress?.consentVersion
-        && Number.isFinite(Date.parse(progress?.consentedAt))
-      );
       const hasProgress = !!(progress && progress.sessionId && progress.savedAt
-        && hasCurrentCalmConsent
         && (activeChallenge !== 'calm' || (progress.completedRounds || 0) < DEMO_INITIAL_ROUNDS));
 
       const card = document.querySelector('.calm-start-card');
@@ -2277,8 +2248,6 @@
         benchmarkInstance = AriCalmBenchmark.mount(benchmarkRoot, {
           participantName,
           participantId: extraOptions.participantId || participantIdFor(participantName),
-          consentVersion: extraOptions.consentVersion || '2026-08-04',
-          consentedAt: extraOptions.consentedAt || new Date().toISOString(),
           totalRounds: Math.max(DEMO_INITIAL_ROUNDS, (extraOptions.initialRoundIndex || 0) + 1),
           allowExtraRounds: activeChallenge !== 'calm',
           milestones: MILESTONES.map(({ at, name, icon }, index) => ({ at, name, icon, tier: index + 1 })),
@@ -2336,11 +2305,9 @@
     function clearStartFormError() {
       startFormError.textContent = '';
       participantInput.removeAttribute('aria-invalid');
-      participantConsent.removeAttribute('aria-invalid');
     }
 
     participantInput.addEventListener('input', clearStartFormError);
-    participantConsent.addEventListener('change', clearStartFormError);
 
     document.querySelector('.calm-start-form').addEventListener('submit', event => {
       event.preventDefault();
@@ -2356,12 +2323,6 @@
         participantInput.focus();
         return;
       }
-      if (!participantConsent.checked) {
-        participantConsent.setAttribute('aria-invalid', 'true');
-        startFormError.textContent = 'Confirm that you agree to share your evaluation responses.';
-        participantConsent.focus();
-        return;
-      }
       startBenchmark(participantName);
     });
 
@@ -2371,8 +2332,6 @@
         sessionId: savedProgress.sessionId,
         sessionStartedAt: savedProgress.sessionStartedAt,
         participantId: savedProgress.participantId || participantIdFor(savedProgress.participantName),
-        consentVersion: savedProgress.consentVersion,
-        consentedAt: savedProgress.consentedAt,
         initialRoundIndex: savedProgress.roundIndex,
         initialCompletedRounds: savedProgress.completedRounds || 0,
         initialGoalCheckpointPending: savedProgress.goalCheckpointPending === true,

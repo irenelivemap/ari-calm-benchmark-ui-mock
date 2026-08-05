@@ -47,53 +47,26 @@
   }
   const ROUTE_FIT_MAX_ZOOM = 19;
   const DEFAULT_QUESTION_COPY = {
-    q1: 'Which route would you choose for this calm walk?',
-    q2: 'Is it worth showing both routes as separate options, one Fast and one Calm?',
-    q3: 'What made the route option(s) less suitable for a calmer walk?'
+    q1: '',
+    q2: '',
+    q3: ''
   };
 
   const DEFAULT_BENCHMARK_CONFIG = {
-    testId: 'calm_vs_fast',
-    source: 'calm-benchmark',
-    sessionPrefix: 'calm-session',
-    ariaLabel: 'ARI calm route benchmark',
-    routeTypes: ['fast', 'calm'],
+    testId: '',
+    source: '',
+    sessionPrefix: 'benchmark-session',
+    ariaLabel: 'Route comparison benchmark',
+    routeTypes: [],
     questions: DEFAULT_QUESTION_COPY,
-    context: {
-      label: 'What do we mean by calm?',
-      copy: 'A quieter route for when you want to slow down. More greenery, paths near water, and quieter streets.'
-    },
-    q1Options: [
-      { value: 'route_a', label: 'Route A', className: 'ari-choice--route-a' },
-      { value: 'route_b', label: 'Route B', className: 'ari-choice--route-b' },
-      { value: 'either', label: 'Both work well' },
-      { value: 'neither', label: 'Neither works' },
-      { value: 'hard_to_judge', label: 'Hard to judge' }
-    ],
+    context: null,
+    q1Options: [],
     q1Multiple: false,
     q2Multiple: false,
-    q2Options: [
-      { value: 'yes', label: 'Yes' },
-      { value: 'no', label: 'No' },
-      { value: 'not_sure', label: 'Not sure' }
-    ],
-    q3Options: [
-      { value: 'not_enough_greenery_water', label: 'Not enough greenery or water' },
-      { value: 'too_busy_or_crowded', label: 'Too busy or crowded' },
-      { value: 'lacks_nice_streets_surroundings', label: 'Lacks nice streets or surroundings' },
-      { value: 'extra_time_distance_not_worth_it', label: 'Extra time/distance not worth it' },
-      { value: 'too_similar', label: 'Too similar to the other route' },
-      { value: 'too_complex', label: 'Too complex to follow' },
-      { value: 'other', label: 'Other' }
-    ],
-    followUps: {
-      route_a: ['q2', 'q3'],
-      route_b: ['q2', 'q3'],
-      either: ['q2'],
-      neither: ['q3'],
-      hard_to_judge: []
-    },
-    uncertainChoices: ['hard_to_judge'],
+    q2Options: [],
+    q3Options: [],
+    followUps: {},
+    uncertainChoices: [],
     showRouteMetrics: false,
     routeMetricMode: 'distance'
   };
@@ -116,16 +89,14 @@
 
   function normalizeBenchmarkConfig(config = {}) {
     config = config || {};
-    return {
+    const normalized = {
       ...DEFAULT_BENCHMARK_CONFIG,
       ...config,
       questions: { ...DEFAULT_QUESTION_COPY, ...(config.questions || {}) },
       context: config.context === null
         ? null
         : { ...DEFAULT_BENCHMARK_CONFIG.context, ...(config.context || {}) },
-      routeTypes: Array.isArray(config.routeTypes) && [2, 3].includes(config.routeTypes.length)
-        ? [...config.routeTypes]
-        : [...DEFAULT_BENCHMARK_CONFIG.routeTypes],
+      routeTypes: Array.isArray(config.routeTypes) ? [...config.routeTypes] : [],
       q1Options: Array.isArray(config.q1Options) ? config.q1Options : DEFAULT_BENCHMARK_CONFIG.q1Options,
       q1Multiple: config.q1Multiple === true,
       q2Multiple: config.q2Multiple === true,
@@ -137,6 +108,16 @@
         ? config.uncertainChoices
         : DEFAULT_BENCHMARK_CONFIG.uncertainChoices
     };
+    if (!normalized.testId || !normalized.source) {
+      throw new Error('Benchmark testId and source are required.');
+    }
+    if (![2, 3].includes(normalized.routeTypes.length)) {
+      throw new Error('Benchmark routeTypes must contain two or three route types.');
+    }
+    if (!normalized.questions.q1 || !normalized.q1Options.length) {
+      throw new Error('Benchmark Q1 copy and options are required.');
+    }
+    return normalized;
   }
 
   function renderChoiceOptions(options, { name, type = 'radio', withRouteMetrics = false, withIcons = true }) {
@@ -323,6 +304,9 @@
       <div class="ari-context-copy" id="${contextId}" data-context-copy hidden>
         <p>${escapeHtml(benchmark.context.copy)}</p>
       </div>` : '';
+    const routeMetricsHelpItems = (Array.isArray(benchmark.routeMetricsHelp)
+      ? benchmark.routeMetricsHelp
+      : [benchmark.routeMetricsHelp]).filter(Boolean);
     root.innerHTML = `
       <section class="ari-benchmark" aria-label="${escapeHtml(benchmark.ariaLabel)}">
         <main class="ari-benchmark__grid">
@@ -403,16 +387,16 @@
                     ${contextToggleMarkup}
                   </legend>
                   ${contextCopyMarkup}
-                  ${benchmark.routeMetricsHelp ? `
+                  ${routeMetricsHelpItems.length ? `
                     <div class="ari-route-metrics-explainer" data-route-metrics-explainer>
                       <button class="ari-route-metrics-toggle" data-action="toggle-route-metrics-help" type="button" aria-expanded="false" aria-controls="ari-q1-metrics-help" hidden>
                         <svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7.25"></circle><path d="M9 8v4"></path><circle cx="9" cy="5.25" r=".75" fill="currentColor" stroke="none"></circle></svg>
-                        <span data-route-metrics-toggle-label>About time estimates</span>
+                        <span data-route-metrics-toggle-label>About these choices</span>
                       </button>
-                      <p class="ari-route-metrics-help" id="ari-q1-metrics-help" data-route-metrics-help>${escapeHtml(benchmark.routeMetricsHelp)}</p>
+                      <div class="ari-route-metrics-help" id="ari-q1-metrics-help" data-route-metrics-help>${routeMetricsHelpItems.map(item => `<p>${escapeHtml(item)}</p>`).join('')}</div>
                     </div>` : ''}
                   ${benchmark.q1Multiple ? '<p class="ari-question-hint" id="ari-q1-hint">Select all that apply.</p>' : ''}
-                  <div class="ari-choice-grid ari-choice-grid--two${benchmark.q1Multiple ? ' ari-choice-grid--multiple' : ''}"${benchmark.q1Multiple || benchmark.routeMetricsHelp ? ` aria-describedby="${[benchmark.q1Multiple ? 'ari-q1-hint' : '', benchmark.routeMetricsHelp ? 'ari-q1-metrics-help' : ''].filter(Boolean).join(' ')}"` : ''}>
+                  <div class="ari-choice-grid ari-choice-grid--two${benchmark.q1Multiple ? ' ari-choice-grid--multiple' : ''}"${benchmark.q1Multiple || routeMetricsHelpItems.length ? ` aria-describedby="${[benchmark.q1Multiple ? 'ari-q1-hint' : '', routeMetricsHelpItems.length ? 'ari-q1-metrics-help' : ''].filter(Boolean).join(' ')}"` : ''}>
                     ${renderChoiceOptions(benchmark.q1Options, {
                       name: 'q1Choice',
                       type: benchmark.q1Multiple ? 'checkbox' : 'radio',
@@ -558,8 +542,6 @@
       sessionStartedAt: options.sessionStartedAt || new Date().toISOString(),
       participantId: options.participantId || '',
       participantName: options.participantName || '',
-      consentVersion: options.consentVersion || null,
-      consentedAt: options.consentedAt || null,
       roundIndex: initialRoundIndex,
       totalRounds: initialTotalRounds,
       pair: null,
@@ -1577,16 +1559,6 @@
       if (benchmark.routeTypes.length === 2 && q1Choice === 'route_b') {
         return 'What made <span class="ari-route-question-tag ari-route-question-tag--a">Route A</span> worse?';
       }
-      if (benchmark.routeTypes.length === 3) {
-        const selectedRoutes = new Set(getQ1Choices().filter(choice => choice.startsWith('route_')));
-        const unselected = ROUTE_SLOTS
-          .slice(0, benchmark.routeTypes.length)
-          .filter(slot => !selectedRoutes.has(slot.value));
-        if (selectedRoutes.size === 2 && unselected.length === 1) {
-          const route = unselected[0];
-          return `What made <span class="ari-route-question-tag ari-route-question-tag--${route.slot.toLowerCase()}">Route ${route.slot}</span> less suitable?`;
-        }
-      }
       return escapeHtml(fallback);
     }
 
@@ -1703,8 +1675,8 @@
       els.routeMetricsToggle.hidden = firstComparison;
       els.routeMetricsToggle.setAttribute('aria-expanded', String(showExplanation));
       els.routeMetricsToggleLabel.textContent = showExplanation
-        ? 'Hide time explanation'
-        : 'About time estimates';
+        ? 'Hide guidance'
+        : 'About these choices';
       els.routeMetricsHelp.hidden = !showExplanation;
       const descriptionIds = [
         benchmark.q1Multiple ? 'ari-q1-hint' : '',
@@ -1977,8 +1949,6 @@
         sessionStartedAt: state.sessionStartedAt,
         participantName: state.participantName,
         participantId: state.participantId,
-        consentVersion: state.consentVersion,
-        consentedAt: state.consentedAt,
         roundIndex: state.roundIndex,
         completedRounds: state.completedRounds,
         goalCheckpointPending: state.goalCheckpointPending,
@@ -2038,8 +2008,6 @@
         pairId: state.pair.pairId,
         participantName: state.participantName,
         participantId: state.participantId,
-        consentVersion: state.consentVersion,
-        consentedAt: state.consentedAt,
         rater: state.participantName,
         routeAssignment: state.assignment,
         routeAType: state.assignment.routeA,

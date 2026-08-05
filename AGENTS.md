@@ -6,7 +6,8 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 2. `CONTEXT.md` for domain vocabulary.
 3. `docs/ARCHITECTURE.md` for module ownership and runtime flow.
 4. `docs/PRODUCT.md` and `docs/DESIGN.md` before changing behavior or UI.
-5. The relevant data contract in `docs/` before changing stored records.
+5. `docs/QUESTIONNAIRE.md` before changing questions, answers, or result copy.
+6. The relevant data contract in `docs/` before changing stored records.
 
 ## Production Persistence — Do Not Reinterpret
 
@@ -21,7 +22,7 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 ## Working Rules
 
 - Preserve blinding. Testers see `Route A` and `Route B`; provider identities stay in the hidden assignment.
-- Keep challenge-specific copy and question logic in `CHALLENGE_CONFIGS` in `index.html`.
+- Treat `docs/QUESTIONNAIRE.md` as the canonical current copy. Keep runtime options and follow-up logic in `CHALLENGE_CONFIGS` in `index.html`, and keep participant-result rendering aligned through its drift tests.
 - Keep shared active-benchmark behavior in `src/app/calm-benchmark.js`. The historical filename is retained for compatibility and powers every challenge.
 - Treat `src/data/mock-*.js` as fixtures only. Production data must enter through `routePairProvider`.
 - `src/api/route-pair-generator.js` owns random route-pair generation against the routing facade. Keep its fixture fallback working; GitHub Pages has no backend.

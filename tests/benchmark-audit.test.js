@@ -13,8 +13,6 @@ function answer(round, overrides = {}) {
     pairId: `calm-route-comparison-${pair}-round-${round}`,
     roundNumber: round,
     participantId: 'participant-1',
-    consentVersion: '2026-08-04',
-    consentedAt: '2026-08-04T10:00:00.000Z',
     ...overrides
   };
 }
@@ -42,10 +40,8 @@ test('reports duplicate captures, rounds, pairs, and progress ahead of answers',
 });
 
 test('unwraps Supabase payload rows and flags malformed current records', () => {
-  const report = auditBenchmarkData([{ payload: answer(24, { participantId: '', consentedAt: '' }) }]);
+  const report = auditBenchmarkData([{ payload: answer(24, { participantId: '' }) }]);
   assert.equal(report.ok, false);
   assert.equal(report.issueCounts.invalid_calm_round, 1);
   assert.equal(report.issueCounts.missing_participant_id, 1);
-  assert.equal(report.issueCounts.missing_consent, 1);
 });
-

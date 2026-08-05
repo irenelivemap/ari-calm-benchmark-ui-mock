@@ -40,8 +40,6 @@ select * from issues order by issue;
 -- Current v2 Calm records should satisfy all of these conditions.
 select
   count(*) filter (where nullif(payload->>'participantId', '') is null) as missing_participant_id,
-  count(*) filter (where nullif(payload->>'consentVersion', '') is null) as missing_consent_version,
-  count(*) filter (where nullif(payload->>'consentedAt', '') is null) as missing_consent_timestamp,
   count(*) filter (where coalesce(payload->>'pairId', '') !~ '^calm-route-comparison-[0-9]{2}-round-[0-9]+$') as invalid_pair_id,
   count(*) filter (where case
     when coalesce(payload->>'roundNumber', '') ~ '^[0-9]+$'

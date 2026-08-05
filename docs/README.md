@@ -5,12 +5,13 @@ Start with the document that matches the change you are making.
 | Document | Purpose |
 | --- | --- |
 | [`PRODUCT.md`](PRODUCT.md) | Product purpose, users, success criteria, and scope. |
+| [`QUESTIONNAIRE.md`](QUESTIONNAIRE.md) | Canonical current question copy, options, and conditional follow-up flow. |
 | [`DESIGN.md`](DESIGN.md) | Visual, interaction, responsive, accessibility, and motion rules. |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Runtime flow, module ownership, entry points, and extension points. |
 | [`DATA_CONTRACT.md`](DATA_CONTRACT.md) | Route-pair input accepted by the benchmark shell. |
 | [`ANSWER_SCHEMA.md`](ANSWER_SCHEMA.md) | Completed answer and progress record shapes. |
 | [`DATA_SAVING.md`](DATA_SAVING.md) | Local persistence, idempotency, verification, and production transport. |
-| [`DATA_GOVERNANCE.md`](DATA_GOVERNANCE.md) | Consent, access, retention, backup, and raw-data launch decisions. |
+| [`DATA_GOVERNANCE.md`](DATA_GOVERNANCE.md) | Data scope, lawful basis, access, retention, backup, and raw-data launch decisions. |
 | [`INTEGRATION_CHECKLIST.md`](INTEGRATION_CHECKLIST.md) | Steps for connecting real routes and backend endpoints. |
 | [`../deploy/README.md`](../deploy/README.md) | Public host, container, runtime environment, and minimal infrastructure handoff. |
 
