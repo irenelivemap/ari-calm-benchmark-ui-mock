@@ -39,7 +39,7 @@ The map is the primary decision surface. Questions, progress, medals, and result
 - **Low friction**: no unnecessary clicks, repeated explanations, or forced detours before the next comparison.
 - **Resumable**: leaving and returning must preserve the same session, pair, assignment, question step, and partial answer.
 - **Motivating, not coercive**: medals and community results encourage more comparisons without changing answer semantics.
-- **A clear stopping point**: after 10 saved comparisons, participants explicitly choose to end the session or keep comparing.
+- **Momentum through milestones**: comparison 10 celebrates progress without interrupting the route flow; the persistent exit remains available, and the true completion state appears after all 23 comparisons.
 - **One data foundation**: internal and external participants produce equivalent records.
 - **Adapter-driven integration**: real routes, maps, and persistence replace explicit interfaces rather than rewriting the UI.
 

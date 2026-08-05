@@ -305,10 +305,10 @@ Rules:
 - The next medal's seal fills from the bottom with its own tier metal in proportion to stage progress — the reward materializing is the countdown, and it is never written as text. The fill uses the tier's metallic ramp (never a flat color; the medal-palette rule against route-color values applies to the fill too) at slightly translucent strength, while the icon and rim stay near-white for legibility. The full earned treatment — full-strength metal, tier icon color, glow — snaps in only at completion, so earning reads as the coin setting. Exact numbers live on the medal's flip face and in its screen-reader label (`next goal, 5 of 10 routes`).
 - Earned medal color is an achievement state, not a route identity. Do not reuse the exact Route A green or Route B purple values in the medal palette.
 - Resume-card medals are buttons. The front shows the icon and medal name; tapping/clicking flips the medal to show the route count needed to earn it.
-- Celebration happens in words (serif italic rank in the title), not in effects. No neon, no pulsing glow.
+- Celebration stays concentrated in the HUD. At comparison 10, one restrained map-themed confetti burst acknowledges the Trail Seeker milestone while comparison 11 loads underneath it; there is no blocking celebration panel.
 - Reward count only. Never reward speed — no timers or time-based scores, they bias answers.
 - When a medal is earned, the number in the HUD dial turns edge-on and reveals the colored medal icon. `Unlocked` and the medal name reveal beside the dial; after about 2.3 seconds, the message retracts and the dial turns back to the new current route number.
-- Medal unlock feedback stays inside the existing HUD, never dims the map, moves the camera, blocks interaction, plays sound, or uses confetti. Reduced-motion mode changes state without rotation, and a medal is announced only when its exact comparison threshold is completed.
+- Medal unlock feedback stays anchored to the existing HUD and never dims the map, moves the camera, blocks interaction, or plays sound. The comparison-10 confetti uses sun yellow, coral, ivory, and silver rather than route colors, plays once when the answer is saved, and is omitted for reduced-motion users. A medal is announced only when its exact comparison threshold is completed.
 
 ## Exit And Progress Rules
 
@@ -320,7 +320,7 @@ Rules:
 - Completed submitted rounds remain submitted.
 - Resuming returns the tester to the exact saved position, including a partially answered round (`questionStep` + `partialAnswer` in the progress payload).
 - Route loading, answer delivery, and progress sync expose participant-facing loading/error states with Retry. Inputs remain intact, and a failed remote sync explains that the answer is still stored on the device.
-- After 10 completed comparisons, a persisted checkpoint offers `End session` or `Keep comparing`. Ending opens Results; continuing starts comparison 11 without adding quantity pressure to the questions.
+- After 10 completed comparisons, comparison 11 loads automatically while the HUD celebrates Trail Seeker. The existing exit control remains available without being promoted during the milestone. Only the final comparison replaces the question flow with `View results →`.
 
 ## Round Transition Rules
 

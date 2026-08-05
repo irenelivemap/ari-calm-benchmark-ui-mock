@@ -309,6 +309,7 @@
       : [benchmark.routeMetricsHelp]).filter(Boolean);
     root.innerHTML = `
       <section class="ari-benchmark" aria-label="${escapeHtml(benchmark.ariaLabel)}">
+        <div class="ari-milestone-confetti" data-milestone-confetti aria-hidden="true"></div>
         <main class="ari-benchmark__grid">
           <section class="ari-map-card" aria-label="Route map">
             <div class="ari-map" data-map>
@@ -449,12 +450,10 @@
               </div>
             </form>
             <section class="ari-goal-checkpoint" data-goal-checkpoint role="dialog" aria-labelledby="ari-goal-checkpoint-title" hidden>
-              <p>Goal complete</p>
-              <h2 id="ari-goal-checkpoint-title">10 comparisons saved.</h2>
-              <span>Your answers are saved. You can finish now or keep comparing.</span>
+              <h2 id="ari-goal-checkpoint-title">All comparisons complete.</h2>
+              <span>Your answers are saved and your results are ready.</span>
               <div class="ari-goal-checkpoint__actions">
-                <button class="ari-btn ari-btn--primary" data-action="end-session" type="button">End session</button>
-                <button class="ari-btn ari-btn--secondary" data-action="continue-session" type="button">Keep comparing</button>
+                <button class="ari-btn ari-btn--primary" data-action="end-session" type="button">View results →</button>
               </div>
             </section>
           </aside>
@@ -648,12 +647,13 @@
       streetStatusCopy: root.querySelector('[data-street-status-copy]'),
       streetRoute: root.querySelector('[data-street-route]'),
       closeStreetView: root.querySelector('[data-action="close-street-view"]'),
+      milestoneConfetti: root.querySelector('[data-milestone-confetti]'),
       goalCheckpoint: root.querySelector('[data-goal-checkpoint]'),
-      endSession: root.querySelector('[data-action="end-session"]'),
-      continueSession: root.querySelector('[data-action="continue-session"]')
+      endSession: root.querySelector('[data-action="end-session"]')
     };
 
     let medalUnlockTimer = null;
+    let milestoneConfettiTimer = null;
     let roundTransitionTimer = null;
     let streetViewCloseTimer = null;
     let streetViewPositionListener = null;
@@ -1900,21 +1900,14 @@
     }
 
     function setGoalCheckpointVisible(visible, { focus = true } = {}) {
-      state.goalCheckpointPending = !!visible;
-      els.goalCheckpoint.hidden = !visible;
-      els.panelQuestion.parentElement.hidden = visible;
-      els.form.hidden = visible;
-      els.panelToggle.disabled = visible;
-      els.questionCard.classList.toggle('is-goal-checkpoint', visible);
-      if (visible) {
-        const finalComplete = !canContinueAfterCurrentRound();
-        const title = els.goalCheckpoint.querySelector('h2');
-        const copy = els.goalCheckpoint.querySelector('span');
-        if (title) title.textContent = `${state.completedRounds} comparisons saved.`;
-        if (copy) copy.textContent = finalComplete
-          ? 'You completed all route pairs. Your answers are saved.'
-          : 'Your answers are saved. You can finish now or keep comparing.';
-        els.continueSession.hidden = finalComplete;
+      const showCompletion = !!visible && !canContinueAfterCurrentRound();
+      state.goalCheckpointPending = showCompletion;
+      els.goalCheckpoint.hidden = !showCompletion;
+      els.panelQuestion.parentElement.hidden = showCompletion;
+      els.form.hidden = showCompletion;
+      els.panelToggle.disabled = showCompletion;
+      els.questionCard.classList.toggle('is-goal-checkpoint', showCompletion);
+      if (showCompletion) {
         updatePanelState(false);
         els.form.inert = true;
         if (focus) requestAnimationFrame(() => els.endSession.focus({ preventScroll: true }));
@@ -1930,6 +1923,45 @@
       els.saveFlash.classList.remove('is-flashing');
       void els.saveFlash.offsetWidth;
       els.saveFlash.classList.add('is-flashing');
+    }
+
+    function showTenComparisonConfetti() {
+      if (!els.milestoneConfetti || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      window.clearTimeout(milestoneConfettiTimer);
+      const origin = els.hudMedals.getBoundingClientRect();
+      const colors = ['#F6F261', '#FF7C60', '#FFFDF2', '#B7C6CE'];
+      const fragment = document.createDocumentFragment();
+      const particleCount = 24;
+
+      for (let index = 0; index < particleCount; index += 1) {
+        const angle = (index / particleCount) * Math.PI * 2;
+        const distance = 48 + (index % 6) * 9;
+        const burstX = Math.round(Math.cos(angle) * distance);
+        const burstY = Math.round(Math.sin(angle) * distance - 26);
+        const piece = document.createElement('span');
+        piece.className = 'ari-milestone-confetti__piece';
+        piece.style.setProperty('--burst-x', `${burstX}px`);
+        piece.style.setProperty('--burst-y', `${burstY}px`);
+        piece.style.setProperty('--fall-x', `${Math.round(burstX * 1.22)}px`);
+        piece.style.setProperty('--fall-y', `${92 + (index % 5) * 14}px`);
+        const spin = 180 + (index % 7) * 58;
+        piece.style.setProperty('--spin-mid', `${Math.round(spin * 0.58)}deg`);
+        piece.style.setProperty('--spin', `${spin}deg`);
+        piece.style.setProperty('--delay', `${(index % 4) * 18}ms`);
+        piece.style.setProperty('--piece-color', colors[index % colors.length]);
+        fragment.appendChild(piece);
+      }
+
+      els.milestoneConfetti.style.setProperty('--confetti-origin-x', `${origin.left + origin.width / 2}px`);
+      els.milestoneConfetti.style.setProperty('--confetti-origin-y', `${origin.top + origin.height / 2}px`);
+      els.milestoneConfetti.replaceChildren(fragment);
+      els.milestoneConfetti.classList.remove('is-active');
+      void els.milestoneConfetti.offsetWidth;
+      els.milestoneConfetti.classList.add('is-active');
+      milestoneConfettiTimer = window.setTimeout(() => {
+        els.milestoneConfetti.classList.remove('is-active');
+        els.milestoneConfetti.replaceChildren();
+      }, 1600);
     }
 
     function showMedalUnlock(milestone) {
@@ -1950,6 +1982,7 @@
       void els.hudMedals.offsetWidth;
       els.hudMedals.classList.add('is-unlocking');
       els.cardHeader.classList.add('is-medal-unlocking');
+      if (milestone.at === 10 && canContinueAfterCurrentRound()) showTenComparisonConfetti();
       medalUnlockTimer = window.setTimeout(() => {
         els.hudMedals.classList.remove('is-unlocking');
         els.cardHeader.classList.remove('is-medal-unlocking');
@@ -2284,7 +2317,6 @@
         return;
       }
       state.completedRounds += 1;
-      if (state.completedRounds > 0 && state.completedRounds % 10 === 0) state.goalCheckpointPending = true;
       const earnedMilestone = getEarnedMilestone(state.completedRounds, milestones);
       if (!canContinueAfterCurrentRound()) {
         els.submit.textContent = 'Complete';
@@ -2340,12 +2372,6 @@
       setGoalCheckpointVisible(false, { focus: false });
       await autosave({ announce: true });
       if (onExit) onExit({ view: 'results' });
-    });
-    els.continueSession.addEventListener('click', async () => {
-      setGoalCheckpointVisible(false, { focus: false });
-      await autosave({ announce: true });
-      const firstChoice = els.form.querySelector('input[name="q1Choice"]');
-      firstChoice?.focus({ preventScroll: true });
     });
 
     els.panelToggle.addEventListener('click', (e) => {
@@ -2498,6 +2524,7 @@
 
     function unmount() {
       window.clearTimeout(medalUnlockTimer);
+      window.clearTimeout(milestoneConfettiTimer);
       window.clearTimeout(roundTransitionTimer);
       window.clearTimeout(streetViewCloseTimer);
       cancelSplitTween();

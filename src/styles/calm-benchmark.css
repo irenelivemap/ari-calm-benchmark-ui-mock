@@ -2007,6 +2007,45 @@ html.is-challenge-dialog-open {
   min-width: 0;
 }
 
+.ari-milestone-confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ari-milestone-confetti__piece {
+  position: absolute;
+  top: var(--confetti-origin-y);
+  left: var(--confetti-origin-x);
+  width: 7px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--piece-color);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.3);
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+.ari-milestone-confetti__piece:nth-child(3n) {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.ari-milestone-confetti__piece:nth-child(4n) {
+  width: 9px;
+  height: 9px;
+  border-radius: 1px;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.ari-milestone-confetti.is-active .ari-milestone-confetti__piece {
+  animation: ari-milestone-confetti-burst 1350ms var(--motion-settle) var(--delay) both;
+}
+
 .ari-round-complete {
   display: inline-flex;
   width: 0;
@@ -2223,11 +2262,39 @@ html.is-challenge-dialog-open {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ari-milestone-confetti {
+    display: none;
+  }
+
   .ari-round-complete,
   .ari-hud-unlock-copy,
   .ari-hud-dial__flip,
   .ari-hud-dial__segment::before {
     transition: none;
+  }
+}
+
+@keyframes ari-milestone-confetti-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0) scale(0.3);
+  }
+  8% {
+    opacity: 1;
+  }
+  44% {
+    opacity: 1;
+    transform:
+      translate(calc(-50% + var(--burst-x)), calc(-50% + var(--burst-y)))
+      rotate(var(--spin-mid))
+      scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform:
+      translate(calc(-50% + var(--fall-x)), calc(-50% + var(--fall-y)))
+      rotate(var(--spin))
+      scale(0.82);
   }
 }
 
@@ -7961,15 +8028,6 @@ html.is-challenge-dialog-open {
 .ari-question-stack[hidden],
 .ari-panel-summary[hidden] {
   display: none;
-}
-
-.ari-goal-checkpoint > p {
-  margin: 0 0 8px;
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
 }
 
 .ari-goal-checkpoint h2 {

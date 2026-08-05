@@ -63,6 +63,17 @@ test('uses readable secondary text and respects reduced-motion preferences', () 
   assert.match(css, /\.ari-onboarding__close\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px/s);
 });
 
+test('celebrates comparison ten without inviting the participant to stop', () => {
+  assert.match(app, /data-milestone-confetti/);
+  assert.match(app, /milestone\.at === 10 && canContinueAfterCurrentRound\(\)/);
+  assert.match(app, /All comparisons complete\./);
+  assert.match(app, /View results →/);
+  assert.doesNotMatch(app, /completedRounds % 10/);
+  assert.doesNotMatch(app, /End session|Keep comparing|finish now or keep comparing/);
+  assert.match(css, /@keyframes ari-milestone-confetti-burst/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.ari-milestone-confetti\s*\{\s*display:\s*none;/);
+});
+
 test('loads Google Maps with origin-scoped referrer authorization', () => {
   assert.match(html, /maps\.googleapis\.com\/maps\/api\/js\?key=.*auth_referrer_policy=origin/);
 });
