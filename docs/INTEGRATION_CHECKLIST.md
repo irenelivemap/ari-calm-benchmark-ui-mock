@@ -32,6 +32,13 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Provide a browser-restricted Google Maps key for `https://game.livemap.sh/*`.
 - [x] Connect production persistence to the existing Supabase project through write-only anonymous RPCs.
 
+## GitHub Pages
+
+- [ ] Create the repository Actions secret `ARI_GOOGLE_MAPS_KEY` with a browser key restricted to the Maps JavaScript API and the website referrer `https://irenelivemap.github.io/*`.
+- [x] Build the participant artifact without writing the Google key into Git history.
+- [ ] Change the Pages publishing source from branch deployment to GitHub Actions.
+- [ ] Run the `Deploy participant site` workflow and confirm `streetViewConfigured: true` with `npm run smoke:production`.
+
 ## Route Provider
 
 - [ ] Return the route keys required by the active challenge.

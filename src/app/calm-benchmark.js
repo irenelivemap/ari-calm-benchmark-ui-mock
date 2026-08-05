@@ -489,7 +489,10 @@
           <div class="ari-onboarding__intro" data-onboarding-panel="0">
             <div class="ari-onboarding__panel-header">
               <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"></path></svg></button>
-              <p class="ari-onboarding__step-count" aria-label="Step 1 of 3">1 / 3</p>
+              <button class="ari-onboarding__step-back" data-action="previous-onboarding" type="button" aria-label="Previous onboarding step, step 1 of 3">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 4.5-5.5 5.5 5.5 5.5"></path></svg>
+                <span aria-hidden="true">1 / 3</span>
+              </button>
             </div>
             <b>Compare the routes</b>
             <span>For each trip, you'll see two routes with the same start (S) and destination (D).</span>
@@ -499,7 +502,10 @@
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="street" data-onboarding-panel="1" hidden aria-hidden="true">
             <div class="ari-onboarding__panel-header">
               <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"></path></svg></button>
-              <p class="ari-onboarding__step-count" aria-label="Step 2 of 3">2 / 3</p>
+              <button class="ari-onboarding__step-back" data-action="previous-onboarding" type="button" aria-label="Previous onboarding step, step 2 of 3">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 4.5-5.5 5.5 5.5 5.5"></path></svg>
+                <span aria-hidden="true">2 / 3</span>
+              </button>
             </div>
             <b>Explore the map</b>
             <span>Pan, zoom, or turn on Street View and tap any point on the map to look around before choosing.</span>
@@ -509,7 +515,10 @@
           <div class="ari-onboarding__coachmark" data-onboarding-coachmark="answer" data-onboarding-panel="2" hidden aria-hidden="true">
             <div class="ari-onboarding__panel-header">
               <button class="ari-onboarding__close" data-action="skip-onboarding" type="button" aria-label="Skip intro"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"></path></svg></button>
-              <p class="ari-onboarding__step-count" aria-label="Step 3 of 3">3 / 3</p>
+              <button class="ari-onboarding__step-back" data-action="previous-onboarding" type="button" aria-label="Previous onboarding step, step 3 of 3">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 4.5-5.5 5.5 5.5 5.5"></path></svg>
+                <span aria-hidden="true">3 / 3</span>
+              </button>
             </div>
             <b>Choose when ready</b>
             <span>Open this panel and pick the route or routes you prefer.</span>
@@ -979,24 +988,36 @@
       setTimeout(positionOnboarding, 2600);
     }
 
-    function advanceOnboarding() {
-      const TOTAL_STEPS = 3;
-      state.onboardingStep += 1;
-      if (state.onboardingStep >= TOTAL_STEPS) {
-        finishOnboarding();
-        return;
-      }
-      els.onboarding.dataset.step = String(state.onboardingStep);
+    function showOnboardingStep(step, { focusAction = 'next-onboarding' } = {}) {
+      state.onboardingStep = step;
+      els.onboarding.dataset.step = String(step);
       els.onboardingPanels.forEach(panel => {
-        const active = Number(panel.dataset.onboardingPanel) === state.onboardingStep;
+        const active = Number(panel.dataset.onboardingPanel) === step;
         panel.hidden = !active;
         panel.setAttribute('aria-hidden', String(!active));
       });
       requestAnimationFrame(() => {
         positionOnboarding();
-        getActiveOnboardingPanel()?.querySelector('[data-action="next-onboarding"]')?.focus({ preventScroll: true });
+        const activePanel = getActiveOnboardingPanel();
+        const focusTarget = activePanel?.querySelector(`[data-action="${focusAction}"]`)
+          || activePanel?.querySelector('[data-action="next-onboarding"]');
+        focusTarget?.focus({ preventScroll: true });
       });
       setTimeout(positionOnboarding, 240);
+    }
+
+    function advanceOnboarding() {
+      const nextStep = state.onboardingStep + 1;
+      if (nextStep >= 3) {
+        finishOnboarding();
+        return;
+      }
+      showOnboardingStep(nextStep);
+    }
+
+    function returnToPreviousOnboardingStep() {
+      if (state.onboardingStep <= -1) return;
+      showOnboardingStep(state.onboardingStep - 1, { focusAction: 'previous-onboarding' });
     }
 
     function finishOnboarding() {
@@ -2285,6 +2306,7 @@
 
     els.onboarding.addEventListener('click', event => {
       if (event.target.closest('[data-action="next-onboarding"]')) advanceOnboarding();
+      else if (event.target.closest('[data-action="previous-onboarding"]')) returnToPreviousOnboardingStep();
       else if (event.target.closest('[data-action="skip-onboarding"]')) finishOnboarding();
     });
     els.onboarding.addEventListener('keydown', event => {

@@ -134,6 +134,8 @@ Benchmark screen:
 - The question panel starts collapsed while onboarding coachmarks identify the map controls.
 - Pressing `Start comparison →` closes onboarding and expands the question panel.
 - After onboarding, the tester can collapse or expand the panel without changing the map camera.
+- The onboarding exit cross stays on the left, matching the benchmark exit convention. Numbered steps combine a quiet previous-step chevron with the existing step count on the right; the opening briefing has no back control.
+- On `Compare the routes`, the scrim recedes enough for both route colors to remain clearly visible. Returning to a previous step restores that step's coachmark and visual emphasis without changing the map camera or answer state.
 
 ## Map Control Rules
 

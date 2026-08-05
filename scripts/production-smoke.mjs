@@ -17,6 +17,8 @@ const projectMatch = configText.match(/supabaseUrl:\s*['"](https:\/\/([a-z0-9]+)
 const keyMatch = configText.match(/supabaseAnonKey:\s*['"]([^'"]+)['"]/);
 if (!projectMatch || !keyMatch) throw new Error('The deployed Supabase URL or anon key is missing.');
 if (projectMatch[2] !== 'xyrmytymcipyntdtsksu') throw new Error(`Unexpected Supabase project ${projectMatch[2]}.`);
+const googleKeyMatch = configText.match(/googleMapsKey:\s*['"]([^'"]+)['"]/);
+if (!googleKeyMatch?.[1]) throw new Error('The deployed Google Maps key is missing; Street View is unavailable.');
 
 const jwtPayload = JSON.parse(Buffer.from(keyMatch[1].split('.')[1], 'base64url').toString('utf8'));
 if (jwtPayload.role !== 'anon') throw new Error(`Browser key has unexpected role ${jwtPayload.role || 'unknown'}.`);
@@ -48,6 +50,7 @@ console.log(JSON.stringify({
   runtimeConfig: configUrl.href,
   supabaseProject: projectMatch[2],
   browserKeyRole: jwtPayload.role,
+  streetViewConfigured: true,
   anonymousRowsExposed: exposure,
   note: 'Read-only check; participant writes were not exercised.'
 }, null, 2));

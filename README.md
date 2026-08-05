@@ -136,8 +136,12 @@ The Google SDK is loaded only when a key is available, and is used for Street Vi
 
 For private local testing, either:
 
-- set `window.ARI_GOOGLE_MAPS_KEY` before the benchmark starts, or
-- open `?gmap=YOUR_KEY` once; the app moves the key to local storage and removes it from the URL.
+- start the local server with `ARI_GOOGLE_MAPS_KEY` in its environment, or
+- open `?gmap=YOUR_KEY` once on `file://`, `localhost`, or `127.0.0.1`; the app moves the key to local storage and removes it from the URL. Production URLs never accept this override.
+
+The GitHub Pages participant site is deployed by `.github/workflows/deploy-pages.yml`. It reads the repository secret `ARI_GOOGLE_MAPS_KEY`, injects it only into the published static artifact, and refuses to deploy without it. The source `runtime-config.js` intentionally keeps `googleMapsKey` empty.
+
+In Google Cloud, restrict the browser key to the Maps JavaScript API and the website referrer `https://irenelivemap.github.io/*`. Cross-origin browser requests commonly send only the origin, so do not rely on the repository path as the restriction. The browser receives this key by design; its protection comes from the API and website restrictions rather than secrecy in the generated JavaScript.
 
 Never commit an API key.
 

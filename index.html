@@ -20,7 +20,7 @@
   <meta name="twitter:title" content="ARI Route Arcade">
   <meta name="twitter:description" content="Choose the better route and help build more human journeys.">
   <meta name="twitter:image" content="https://game.livemap.sh/routing/assets/ari-route-arcade-social.png">
-  <script src="./runtime-config.js?v=20260804-supabase-production-1"></script>
+  <script src="./runtime-config.js?v=20260805-street-view-deploy-1"></script>
   <script>
     (function () {
       const configured = String(window.ARI_RUNTIME_CONFIG?.basePath || '').replace(/^\/+|\/+$/g, '');
@@ -1816,7 +1816,7 @@
           delete window[callbackName];
           resolve(true);
         };
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&callback=${callbackName}`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&callback=${callbackName}&auth_referrer_policy=origin`;
         script.async = true;
         script.defer = true;
         script.onerror = () => {

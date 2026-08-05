@@ -48,6 +48,11 @@ test('supports complete onboarding keyboard navigation', () => {
   assert.match(app, /event\.key === 'Escape'/);
   assert.match(app, /querySelectorAll\('button:not\(\[hidden\]\):not\(\[disabled\]\)'\)/);
   assert.match(app, /event\.shiftKey/);
+  assert.match(app, /data-action="previous-onboarding"/);
+  assert.match(app, /showOnboardingStep\(state\.onboardingStep - 1/);
+  assert.match(css, /\.ari-onboarding__step-back\s*\{[^}]*min-height:\s*44px;/s);
+  assert.match(css, /\.ari-onboarding\[data-step="0"\] \.ari-onboarding__scrim > rect\s*\{[^}]*fill:\s*rgba\(8, 9, 9, 0\.16\);/s);
+  assert.match(css, /@keyframes ari-onboarding-intro-enter[\s\S]*?transform:\s*translateX\(-50%\);/);
 });
 
 test('uses readable secondary text and respects reduced-motion preferences', () => {
@@ -56,4 +61,8 @@ test('uses readable secondary text and respects reduced-motion preferences', () 
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.calm-pp-map\s*\{\s*transition:\s*none;/);
   assert.match(css, /\.ari-choice-grid label\s*\{[^}]*min-height:\s*44px/s);
   assert.match(css, /\.ari-onboarding__close\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px/s);
+});
+
+test('loads Google Maps with origin-scoped referrer authorization', () => {
+  assert.match(html, /maps\.googleapis\.com\/maps\/api\/js\?key=.*auth_referrer_policy=origin/);
 });

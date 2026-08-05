@@ -1,5 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
+const vm = require('node:vm');
 const {
   inferBasePath,
   resolveChallenge,
@@ -7,6 +10,15 @@ const {
   rootUrl,
   resolveConfig
 } = require('../src/app/runtime.js');
+
+function loadStaticRuntimeConfig(location) {
+  const context = { location };
+  vm.runInNewContext(
+    readFileSync(join(__dirname, '..', 'runtime-config.js'), 'utf8'),
+    context
+  );
+  return context.ARI_RUNTIME_CONFIG;
+}
 
 test('infers the public routing base without affecting preview paths', () => {
   assert.equal(inferBasePath('/routing/fast-vs-google'), '/routing');
@@ -52,4 +64,17 @@ test('production runtime defaults hide development surfaces', () => {
   assert.equal(config.showReset, false);
   assert.equal(config.enableTeamResults, false);
   assert.equal(config.allowQueryConfig, false);
+});
+
+test('static runtime accepts a Google key query only in local previews', () => {
+  const local = loadStaticRuntimeConfig({ protocol: 'file:', hostname: '' });
+  assert.equal(local.production, false);
+  assert.equal(local.allowQueryConfig, true);
+
+  const production = loadStaticRuntimeConfig({
+    protocol: 'https:',
+    hostname: 'irenelivemap.github.io'
+  });
+  assert.equal(production.production, true);
+  assert.equal(production.allowQueryConfig, false);
 });

@@ -31,6 +31,9 @@ src/data/benchmark-transport.js
 src/app/runtime.js
   environment configuration + clean/legacy URL resolution
 
+scripts/build-pages.mjs
+  deployment-only static packaging + Google Maps browser-key injection
+
 src/results/calm-results.js
   shared pure aggregation and participant-result question mapping
 ```
@@ -108,6 +111,10 @@ Owns the optional self-hosted HTTP delivery path. Answers use `POST` plus `Idemp
 ### `src/app/runtime.js`
 
 Owns environment defaults, `/routing/` base-path inference, clean challenge slugs, and compatibility with the existing `?game=` links. Production settings arrive through `runtime-config.js`, which the Caddy deployment renders from environment values.
+
+### GitHub Pages deployment
+
+The application remains a static, framework-free site. `.github/workflows/deploy-pages.yml` runs the test suite, copies only the participant-facing static files through `scripts/build-pages.mjs`, and substitutes the repository secret `ARI_GOOGLE_MAPS_KEY` into the artifact's copy of `runtime-config.js`. The tracked source configuration stays key-free. The build fails closed when the secret is absent so a deployment cannot silently publish a participant experience without Street View.
 
 ### `src/results/calm-results.js`
 
