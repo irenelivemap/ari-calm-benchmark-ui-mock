@@ -7,11 +7,14 @@ Supabase project `xyrmytymcipyntdtsksu` is the active production persistence bac
 
 ## Required before inviting participants
 
-- [ ] Apply [`supabase/migrations/20260805_calm_launch_fixes.sql`](supabase/migrations/20260805_calm_launch_fixes.sql) and save the [`supabase/postflight.sql`](supabase/postflight.sql) output.
-- [ ] Make one clearly tagged production Calm submission; verify the answer and progress rows in Supabase, export the record, and run `npm run audit:data -- <export>`.
+- [x] Apply [`supabase/migrations/20260805_calm_launch_fixes.sql`](supabase/migrations/20260805_calm_launch_fixes.sql) and verify the [`supabase/postflight.sql`](supabase/postflight.sql) invariants.
+- [x] Make one clearly tagged production Calm submission; verify the answer, progress, and researcher-view projection in Supabase; then remove only the tagged QA rows.
+- [x] Create a private, RLS-enabled `launch_backup` snapshot of both production tables before applying the migration (the Free Supabase plan has no scheduled backups).
 - [ ] Confirm the Google Maps key is limited to the Maps JavaScript API and the exact participant origin.
 - [ ] Confirm the MapTiler key is limited to the exact participant origin.
 - [ ] Add quota alerts for both browser-key providers.
+
+The live provider probe on 2026-08-05 confirmed that both keys work from the participant site, but a request carrying a foreign referrer was not rejected. Origin/API restrictions and quota alerts therefore remain provider-console tasks for the owners of the shared keys.
 
 ## Recorded study choices
 
