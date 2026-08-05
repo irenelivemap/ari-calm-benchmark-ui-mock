@@ -2106,6 +2106,10 @@ html.is-challenge-dialog-open {
   animation: ari-milestone-confetti-burst 1350ms var(--motion-settle) var(--delay) both;
 }
 
+.ari-milestone-confetti.is-final .ari-milestone-confetti__piece {
+  animation: ari-final-confetti-fall var(--duration) cubic-bezier(0.2, 0.72, 0.28, 1) var(--delay) both;
+}
+
 .ari-round-complete {
   display: inline-flex;
   width: 0;
@@ -2355,6 +2359,26 @@ html.is-challenge-dialog-open {
       translate(calc(-50% + var(--fall-x)), calc(-50% + var(--fall-y)))
       rotate(var(--spin))
       scale(0.82);
+  }
+}
+
+@keyframes ari-final-confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0) scale(0.72);
+  }
+  7% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform:
+      translate(calc(-50% + var(--final-drift-x)), var(--final-fall-y))
+      rotate(var(--spin))
+      scale(0.92);
   }
 }
 

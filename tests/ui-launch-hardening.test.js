@@ -89,6 +89,16 @@ test('celebrates comparison ten without inviting the participant to stop', () =>
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.ari-milestone-confetti\s*\{\s*display:\s*none;/);
 });
 
+test('celebrates the final comparison across the full viewport', () => {
+  assert.match(app, /function showFinalComparisonConfetti\(\)/);
+  assert.match(app, /const particleCount = window\.innerWidth < 700 \? 58 : 92/);
+  assert.match(app, /setGoalCheckpointVisible\(true\);\s*showFinalComparisonConfetti\(\);/);
+  assert.match(app, /classList\.add\('is-final'\)/);
+  assert.match(css, /\.ari-milestone-confetti\.is-final \.ari-milestone-confetti__piece/);
+  assert.match(css, /@keyframes ari-final-confetti-fall/);
+  assert.match(css, /pointer-events:\s*none/);
+});
+
 test('loads Google Maps with origin-scoped referrer authorization', () => {
   assert.match(html, /maps\.googleapis\.com\/maps\/api\/js\?key=.*auth_referrer_policy=origin/);
 });

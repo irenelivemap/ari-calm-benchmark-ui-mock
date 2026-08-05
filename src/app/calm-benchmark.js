@@ -1956,13 +1956,48 @@
       els.milestoneConfetti.style.setProperty('--confetti-origin-x', `${origin.left + origin.width / 2}px`);
       els.milestoneConfetti.style.setProperty('--confetti-origin-y', `${origin.top + origin.height / 2}px`);
       els.milestoneConfetti.replaceChildren(fragment);
-      els.milestoneConfetti.classList.remove('is-active');
+      els.milestoneConfetti.classList.remove('is-active', 'is-final');
       void els.milestoneConfetti.offsetWidth;
       els.milestoneConfetti.classList.add('is-active');
       milestoneConfettiTimer = window.setTimeout(() => {
         els.milestoneConfetti.classList.remove('is-active');
         els.milestoneConfetti.replaceChildren();
       }, 1600);
+    }
+
+    function showFinalComparisonConfetti() {
+      if (!els.milestoneConfetti || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      window.clearTimeout(milestoneConfettiTimer);
+      const colors = ['#F6F261', '#FF7C60', '#FFFDF2', '#B7C6CE'];
+      const fragment = document.createDocumentFragment();
+      const particleCount = window.innerWidth < 700 ? 58 : 92;
+
+      for (let index = 0; index < particleCount; index += 1) {
+        const piece = document.createElement('span');
+        const x = 2 + ((index * 47) % 97);
+        const startY = -18 - (index % 7) * 18;
+        const driftX = ((index % 9) - 4) * 18;
+        const spin = 420 + (index % 8) * 105;
+        piece.className = 'ari-milestone-confetti__piece';
+        piece.style.setProperty('--confetti-origin-x', `${x}vw`);
+        piece.style.setProperty('--confetti-origin-y', `${startY}px`);
+        piece.style.setProperty('--final-drift-x', `${driftX}px`);
+        piece.style.setProperty('--final-fall-y', `calc(100vh + ${90 + (index % 6) * 22}px)`);
+        piece.style.setProperty('--spin', `${index % 2 ? spin : -spin}deg`);
+        piece.style.setProperty('--delay', `${(index % 12) * 38}ms`);
+        piece.style.setProperty('--duration', `${2350 + (index % 8) * 95}ms`);
+        piece.style.setProperty('--piece-color', colors[index % colors.length]);
+        fragment.appendChild(piece);
+      }
+
+      els.milestoneConfetti.replaceChildren(fragment);
+      els.milestoneConfetti.classList.remove('is-active', 'is-final');
+      void els.milestoneConfetti.offsetWidth;
+      els.milestoneConfetti.classList.add('is-final');
+      milestoneConfettiTimer = window.setTimeout(() => {
+        els.milestoneConfetti.classList.remove('is-final');
+        els.milestoneConfetti.replaceChildren();
+      }, 3600);
     }
 
     function showMedalUnlock(milestone) {
@@ -2328,6 +2363,7 @@
       if (earnedMilestone && !canContinueAfterCurrentRound()) showMedalUnlock(earnedMilestone);
       if (state.goalCheckpointPending && state.pair) {
         setGoalCheckpointVisible(true);
+        showFinalComparisonConfetti();
       }
       autosave({ announce: true });
     });
