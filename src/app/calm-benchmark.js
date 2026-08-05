@@ -2175,7 +2175,7 @@
         q3Issues,
         reasons: [...q3Issues],
         q3Note: form.get('q3Note') || '',
-        note: '',
+        note: form.get('q3Note') || '',
         metricsShown: !!benchmark.showRouteMetrics,
         fastRouteShown: state.questionStep === 'q3' && q3Variant.kind === 'worth_fast',
         fastRoute,

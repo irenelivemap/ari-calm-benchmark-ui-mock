@@ -106,6 +106,10 @@ test('shows one save confirmation after a completed comparison', () => {
   assert.doesNotMatch(css, /ari-save-flash/);
 });
 
+test('preserves Q3 details in both the current field and the legacy note alias', () => {
+  assert.match(app, /q3Note: form\.get\('q3Note'\) \|\| '',\s*note: form\.get\('q3Note'\) \|\| '',/);
+});
+
 test('loads Google Maps with origin-scoped referrer authorization', () => {
   assert.match(html, /maps\.googleapis\.com\/maps\/api\/js\?key=.*auth_referrer_policy=origin/);
 });
