@@ -5,9 +5,17 @@ const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const freshHtml = fs.readFileSync(path.join(root, 'fresh.html'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'src/styles/calm-benchmark.css'), 'utf8');
 const app = fs.readFileSync(path.join(root, 'src/app/calm-benchmark.js'), 'utf8');
 const mapAdapter = fs.readFileSync(path.join(root, 'src/maps/map-adapter.js'), 'utf8');
+
+test('opens the fresh preview through index.html on file and hosted URLs', () => {
+  assert.match(freshHtml, /url=\.\/index\.html\?fresh=1/);
+  assert.match(freshHtml, /window\.location\.replace\(`\.\/index\.html\?fresh=1/);
+  assert.match(freshHtml, /href="\.\/index\.html\?fresh=1"/);
+  assert.doesNotMatch(freshHtml, /(?:url=|replace\(`|href=")\.\/\?fresh=1/);
+});
 
 test('exposes accessible page landmarks and launch form feedback', () => {
   assert.match(html, /viewport-fit=cover/);

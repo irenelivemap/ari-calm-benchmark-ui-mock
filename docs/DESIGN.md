@@ -281,7 +281,7 @@ The complete current question and option catalogue lives in [`QUESTIONNAIRE.md`]
 
 The dark start card on the intro page has two states that must read as the same surface:
 
-- State 0 (no saved progress): kicker `Start testing`, title `Enter the route lab.`, name form on the right.
+- State 0 (no saved progress): kicker `Start testing`, title `Ready to compare routes?`, name form on the right.
 - Resume (saved progress): kicker `Welcome back, [name]`, title is always the count (`4 routes compared.`). The rank is never written in the title — the lit medal in the shelf is the rank statement, because the shelf is the journey display. The right cluster is `Resume →` with a one-line countdown caption beneath it.
 
 Rules:

@@ -1308,6 +1308,17 @@ html.is-challenge-dialog-open {
   transition: box-shadow 520ms ease;
 }
 
+/* The fresh card has two peer content groups: the prompt and the name form.
+   Top-align both grid cells at the same 64px post-notch title inset used by the
+   overview cards (52px shell inset + 12px body inset). The form keeps its own
+   8px label offset, while the resume card retains its shelf-led alignment. */
+@media (min-width: 901px) {
+  .calm-start-card:not(.is-resumed) {
+    align-items: start;
+    padding-top: 64px;
+  }
+}
+
 .calm-start-card::before {
   content: "";
   position: absolute;
