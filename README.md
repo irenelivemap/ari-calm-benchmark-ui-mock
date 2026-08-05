@@ -104,7 +104,7 @@ Replace the mock `routePairProvider`; do not edit the fixtures into a production
 
 ### Connect production persistence
 
-GitHub Pages is connected to the existing Supabase project through the public anon key in `runtime-config.js`. Participants execute narrowly scoped write-only RPC functions; direct table access and anonymous reads are blocked. The app atomically stores each completed answer with its following checkpoint, rejects backward progress, and queues failed Supabase writes for retry. Apply migrations through `20260805_calm_launch_fixes.sql` before launch. A self-hosted deployment may instead set `ARI_DATA_API_BASE`; `server/data-api.js` implements that optional transport. Keep both persistence contracts aligned with [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
+GitHub Pages is connected to the existing Supabase project through the public anon key in `runtime-config.js`. Participants execute narrowly scoped write-only RPC functions; direct table access and anonymous reads are blocked. The app atomically stores each completed answer with its following checkpoint, rejects backward progress, and queues failed Supabase writes for retry. Apply migrations through `20260805_route_corpus_v2.sql` before collecting `calm-curated-v2` answers. A self-hosted deployment may instead set `ARI_DATA_API_BASE`; `server/data-api.js` implements that optional transport. Keep both persistence contracts aligned with [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
 
 To exercise the full loop locally, start the data API with `ARI_DATA_ADMIN_TOKEN=dev-secret ARI_ALLOWED_ORIGINS=http://127.0.0.1:8765 node server/data-api.js`, then run `ARI_DATA_API_BASE=/api/v1/benchmarks npm start` in another terminal. The dev server proxies `/api/v1/benchmarks/*` to the local data API and injects the base into runtime configuration.
 
@@ -118,7 +118,7 @@ The LinkedIn preview image is [`assets/ari-route-arcade-social.png`](assets/ari-
 
 Both active challenges use the same route-pair provider contract, but their current route sources differ:
 
-- **Calm Route Comparison** currently uses 23 curated Calm Quiet and Calm Nature fixture pairs in `src/data/mock-route-pairs.js`. Each session receives pairs 1–10 in a shuffled order, followed by pairs 11–23 in a second shuffled order; the session ID keeps both groups stable across refresh and resume.
+- **Calm Route Comparison** uses the versioned `calm-curated-v2` corpus of 23 curated Calm Quiet, Calm Nature, and Fast routes in `src/data/mock-route-pairs.js`. Each session receives pairs 1–10 in a shuffled order, followed by pairs 11–23 in a second shuffled order; the session ID keeps both groups stable across refresh and resume. Regenerate the route and diagnostics artifacts together with `node scripts/build-calm-route-corpus.mjs /path/to/paired-exports`.
 - **Fast vs Google Fast** requests `foot_fast` from the facade and the Google walking route from the Directions SDK at run time, so it needs both a reachable facade and a configured Google Maps key. Matchups where the two engines snap the endpoints more than 40 m apart are redrawn (fairness gate). Google geometry is never persisted: cached rounds store only our route, metrics, and Google's snapped endpoints, and the Google path is re-fetched live on resume.
 
 - Default endpoint: `POST /api/v1/routing/route` on the same origin.

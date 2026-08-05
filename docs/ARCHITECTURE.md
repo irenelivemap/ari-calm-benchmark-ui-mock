@@ -129,7 +129,7 @@ UI fixtures only. They model the route-pair contract and must never become the p
 1. `index.html` opens Calm Route Comparison by default. Explicit Google paths remain available for compatibility and internal development.
 2. It creates a challenge-specific local repository.
 3. Start or Resume calls `AriCalmBenchmark.mount` with the challenge configuration and adapters.
-4. The shell requests a route pair. Curated fixtures shuffle pairs 1–10 as the first group and pairs 11–23 as the second group. Both orders derive from the session and remain stable on resume; every pair still receives a randomized hidden assignment to Route A/B.
+4. The shell verifies that the Calm route and diagnostics artifacts carry the same corpus version and SHA-256 fingerprint, then requests a route pair. Curated fixtures shuffle pairs 1–10 as the first group and pairs 11–23 as the second group. Both orders derive from the session and remain stable on resume; every pair still receives a randomized hidden assignment to Route A/B.
 5. A completed comparison and its following progress checkpoint are validated and written locally in one atomic dataset update, then delivered through the configured Supabase or HTTP transport.
 6. An unfinished state is persisted as soon as a pair loads, locally upserted, and remotely sent through the same retryable transport. Monotonic guards prevent delayed checkpoints from moving a session backward.
 7. Result views read the same challenge dataset and aggregate it through `AriCalmResults`.
@@ -143,7 +143,7 @@ Production integration should replace adapters, not rewrite the question UI:
 - `progressSink(progress)`
 - `mapProvider: "google" | "maplibre" | "leaflet"`
 
-Calm Route Comparison uses 23 curated Calm Quiet and Calm Nature fixture rounds in `src/data/mock-route-pairs.js`. Pairs 1–10 are shuffled within the first group; pairs 11–23 are independently shuffled within the second group. Both orders derive from the session ID, so participants receive different permutations while refreshes and resumed sessions preserve the same sequence. Fast vs Google Fast uses `AriRoutePairGenerator.createLivemapGoogleRoutePairProvider` (facade `foot_fast` + Google Directions at run time, never persisting Google geometry). The routing API base resolves from `window.ARI_ROUTING_API`, then a stored `?api=` override, then same-origin `/api/v1/routing`.
+Calm Route Comparison uses the versioned `calm-curated-v2` corpus of 23 Calm Quiet, Calm Nature, and Fast routes in `src/data/mock-route-pairs.js`. `scripts/calm-route-corpus-manifest.mjs` owns the source-round mapping and `scripts/build-calm-route-corpus.mjs` validates and regenerates route geometry and diagnostics together. Pairs 1–10 are shuffled within the first group; pairs 11–23 are independently shuffled within the second group. Both orders derive from the session ID, so participants receive different permutations while refreshes and resumed sessions preserve the same sequence. Fast vs Google Fast uses `AriRoutePairGenerator.createLivemapGoogleRoutePairProvider` (facade `foot_fast` + Google Directions at run time, never persisting Google geometry). The routing API base resolves from `window.ARI_ROUTING_API`, then a stored `?api=` override, then same-origin `/api/v1/routing`.
 
 Contracts are documented in [`DATA_CONTRACT.md`](DATA_CONTRACT.md), [`ANSWER_SCHEMA.md`](ANSWER_SCHEMA.md), and [`DATA_SAVING.md`](DATA_SAVING.md).
 
@@ -154,6 +154,7 @@ Contracts are documented in [`DATA_CONTRACT.md`](DATA_CONTRACT.md), [`ANSWER_SCH
 - Answer records are append-only and idempotent by `captureId`.
 - Progress records are upserted by `sessionId`.
 - Each challenge has a separate test ID and local storage key.
+- Versioned Calm answers and progress carry `corpusVersion` and `corpusFingerprint`; Results excludes records from any other corpus.
 - The static/no-build shape is intentional for rapid sharing through GitHub Pages.
 - Google Maps keys are runtime configuration and must never be committed.
 - Production fails closed only when neither the configured Supabase connection nor `ARI_DATA_API_BASE` is available; the UI never collects browser-only production answers.

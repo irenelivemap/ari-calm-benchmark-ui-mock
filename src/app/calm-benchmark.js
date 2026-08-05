@@ -56,6 +56,8 @@
   const DEFAULT_BENCHMARK_CONFIG = {
     testId: '',
     source: '',
+    corpusVersion: null,
+    corpusFingerprint: null,
     sessionPrefix: 'benchmark-session',
     ariaLabel: 'Route comparison benchmark',
     routeTypes: [],
@@ -2062,10 +2064,12 @@
     function readProgress() {
       const savedAt = new Date().toISOString();
       return {
-        v: 2,
+        v: benchmark.corpusVersion ? 3 : 2,
         type: 'bench-progress',
         test: benchmark.testId,
         source: benchmark.source,
+        ...(benchmark.corpusVersion ? { corpusVersion: benchmark.corpusVersion } : {}),
+        ...(benchmark.corpusFingerprint ? { corpusFingerprint: benchmark.corpusFingerprint } : {}),
         benchmarkRunId: state.sessionId,
         sessionId: state.sessionId,
         sessionStartedAt: state.sessionStartedAt,
@@ -2086,10 +2090,12 @@
       const savedAt = new Date().toISOString();
       const completedRounds = state.completedRounds + 1;
       return {
-        v: 2,
+        v: benchmark.corpusVersion ? 3 : 2,
         type: 'bench-progress',
         test: benchmark.testId,
         source: benchmark.source,
+        ...(benchmark.corpusVersion ? { corpusVersion: benchmark.corpusVersion } : {}),
+        ...(benchmark.corpusFingerprint ? { corpusFingerprint: benchmark.corpusFingerprint } : {}),
         benchmarkRunId: state.sessionId,
         sessionId: state.sessionId,
         sessionStartedAt: state.sessionStartedAt,
@@ -2142,10 +2148,12 @@
         : null;
       const q3Variant = getQ3Variant();
       return {
-        v: 2,
+        v: benchmark.corpusVersion ? 3 : 2,
         type: 'bench-ux',
         test: benchmark.testId,
         source: benchmark.source,
+        ...(benchmark.corpusVersion ? { corpusVersion: benchmark.corpusVersion } : {}),
+        ...(benchmark.corpusFingerprint ? { corpusFingerprint: benchmark.corpusFingerprint } : {}),
         captureId: roundId,
         benchmarkRunId: state.sessionId,
         sessionId: state.sessionId,
@@ -2290,6 +2298,12 @@
         // pair the tester can no longer see, so restart this round on the new
         // pair instead of failing the whole benchmark.
         console.warn(`Saved pair ${expectedPairId} does not match loaded pair ${state.pair.pairId}; starting this round fresh.`);
+        questionStep = 'q1';
+        partialAnswer = null;
+      }
+      if (partialAnswer && benchmark.corpusFingerprint
+        && partialAnswer.corpusFingerprint !== benchmark.corpusFingerprint) {
+        console.warn('Saved answer belongs to a different route corpus; starting this round fresh.');
         questionStep = 'q1';
         partialAnswer = null;
       }

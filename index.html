@@ -316,19 +316,19 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" integrity="sha256-vpYzxNhw4m+zfxz+XFp3GBZnEUAD6hYgeseFDY2ordE=" crossorigin=""></script>
   <script src="./src/app/runtime.js?v=20260729-three-routes-1"></script>
-  <script src="./src/data/mock-route-pairs.js?v=20260804-route-pairs-23-1"></script>
+  <script src="./src/data/mock-route-pairs.js?v=20260805-calm-corpus-v2-1"></script>
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
-  <script src="./src/data/calm-benchmark-data.js?v=20260805-calm-launch-fixes-1"></script>
+  <script src="./src/data/calm-benchmark-data.js?v=20260805-calm-corpus-v2-1"></script>
   <script src="./src/data/benchmark-transport.js?v=20260804-persist-endpoint-1"></script>
   <script src="./src/data/supabase-transport.js?v=20260804-write-rpc-1"></script>
-  <script src="./src/data/mock-route-diagnostics.js?v=20260804-route-pairs-23-2"></script>
+  <script src="./src/data/mock-route-diagnostics.js?v=20260805-calm-corpus-v2-1"></script>
   <script src="./src/data/mock-team-results.js?v=20260805-question-answer-1"></script>
-  <script src="./src/results/calm-results.js?v=20260805-calm-launch-fixes-1"></script>
+  <script src="./src/results/calm-results.js?v=20260805-calm-corpus-v2-1"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
   <script src="./src/maps/route-overlap.js?v=20260729-street-view-any-point-1"></script>
   <script src="./src/maps/map-loading.js?v=20260805-calm-launch-fixes-1"></script>
   <script src="./src/maps/map-adapter.js?v=20260805-calm-launch-fixes-1"></script>
-  <script src="./src/app/calm-benchmark.js?v=20260805-calm-launch-fixes-2"></script>
+  <script src="./src/app/calm-benchmark.js?v=20260805-calm-corpus-v2-1"></script>
   <script>
     const intro = document.getElementById('calm-intro');
     const introHeader = document.querySelector('.calm-intro-header');
@@ -398,6 +398,18 @@
         || localStorage.getItem(ROUTING_API_STORAGE)
         || runtimeConfig.routingApiBase
         || AriRoutePairGenerator.DEFAULT_API_BASE;
+    const calmRouteCorpus = window.AriCalmBenchmarkMockRoutePairs || [];
+    const calmRouteDiagnostics = window.AriCalmBenchmarkDiagnostics || {};
+    const CALM_ROUTE_CORPUS_VERSION = calmRouteCorpus.corpusVersion || '';
+    const CALM_ROUTE_CORPUS_FINGERPRINT = calmRouteCorpus.corpusFingerprint || '';
+    const calmRouteCorpusReady = calmRouteCorpus.length === 23
+      && CALM_ROUTE_CORPUS_VERSION === 'calm-curated-v2'
+      && /^[a-f0-9]{64}$/.test(CALM_ROUTE_CORPUS_FINGERPRINT)
+      && calmRouteDiagnostics.corpusVersion === CALM_ROUTE_CORPUS_VERSION
+      && calmRouteDiagnostics.corpusFingerprint === CALM_ROUTE_CORPUS_FINGERPRINT
+      && Array.isArray(calmRouteDiagnostics.pairs)
+      && calmRouteDiagnostics.pairs.length === calmRouteCorpus.length
+      && calmRouteDiagnostics.pairs.every((diagnostic, index) => diagnostic.pairId === calmRouteCorpus[index].pairId);
     const CHALLENGE_CONFIGS = {
       google: {
         key: 'google',
@@ -488,12 +500,14 @@
         definitionQuestion: null,
         definitionAnswer: null,
         testId: 'calm_route_comparison',
-        storageKey: 'ari-calm-route-comparison-dataset-v1',
+        storageKey: `ari-calm-route-comparison-dataset-${CALM_ROUTE_CORPUS_VERSION || 'unavailable'}`,
         resultsAvailableFromStart: true,
         benchmark: {
           testId: 'calm_route_comparison',
           source: 'calm-route-comparison',
-          sessionPrefix: 'calm-route-session',
+          corpusVersion: CALM_ROUTE_CORPUS_VERSION,
+          corpusFingerprint: CALM_ROUTE_CORPUS_FINGERPRINT,
+          sessionPrefix: `calm-route-session-${CALM_ROUTE_CORPUS_VERSION || 'unavailable'}`,
           ariaLabel: 'Blinded calm route comparison',
           routeTypes: ['calm_quiet', 'calm_nature'],
           questions: {
@@ -657,8 +671,7 @@
       calm: AriCalmBenchmarkData.createLocalRepository(localStorage, {
         storageKey: CHALLENGE_CONFIGS.calm.storageKey,
         testId: CHALLENGE_CONFIGS.calm.testId,
-        legacyAnswersKey: 'ari-calm-route-comparison-answers',
-        legacyProgressKey: 'ari-calm-route-comparison-progress'
+        migrateLegacy: false
       }),
       google: AriCalmBenchmarkData.createLocalRepository(localStorage, {
         storageKey: CHALLENGE_CONFIGS.google.storageKey,
@@ -718,21 +731,30 @@
     const remoteTransport = runtimeConfig.dataApiBase
       ? AriBenchmarkTransport.createHttpTransport({
             baseUrl: runtimeConfig.dataApiBase,
-            storage: localStorage
+            storage: localStorage,
+            queueKey: activeChallenge === 'calm'
+              ? `ari-benchmark-http-outbox-${CALM_ROUTE_CORPUS_VERSION}`
+              : 'ari-benchmark-http-outbox-v1'
           })
       : runtimeConfig.production && runtimeConfig.supabaseUrl && runtimeConfig.supabaseAnonKey
         ? AriSupabaseTransport.createSupabaseTransport({
             url: runtimeConfig.supabaseUrl,
             anonKey: runtimeConfig.supabaseAnonKey,
-            storage: localStorage
+            storage: localStorage,
+            queueKey: activeChallenge === 'calm'
+              ? `ari-benchmark-supabase-outbox-${CALM_ROUTE_CORPUS_VERSION}`
+              : 'ari-benchmark-supabase-outbox-v1'
           })
         : null;
-    const collectionReady = !runtimeConfig.production || !!remoteTransport;
+    const collectionReady = (activeChallenge !== 'calm' || calmRouteCorpusReady)
+      && (!runtimeConfig.production || !!remoteTransport);
     if (!collectionReady) {
       startButton.disabled = true;
       participantInput.disabled = true;
       document.getElementById('resume-test').disabled = true;
-      document.getElementById('start-form-error').textContent = 'Data collection is not connected yet. This study cannot accept responses.';
+      document.getElementById('start-form-error').textContent = activeChallenge === 'calm' && !calmRouteCorpusReady
+        ? 'The current route set could not be verified. This study cannot accept responses.'
+        : 'Data collection is not connected yet. This study cannot accept responses.';
     }
     const remoteTeamResults = {
       status: remoteTransport ? 'idle' : 'local',
@@ -918,7 +940,10 @@
     function calmResultsAnswers() {
       if (sampleResultsEnabled) return AriMockTeamResults.createCalmTeamAnswers();
       const localAnswers = dataRepository.getSnapshot().answers || [];
-      return AriCalmResults.mergeAnswers(remoteTeamResults.answers, localAnswers);
+      return AriCalmResults.mergeAnswers(remoteTeamResults.answers, localAnswers).filter(answer =>
+        answer.corpusVersion === CALM_ROUTE_CORPUS_VERSION
+        && answer.corpusFingerprint === CALM_ROUTE_CORPUS_FINGERPRINT
+      );
     }
 
     async function loadRemoteTeamResults() {

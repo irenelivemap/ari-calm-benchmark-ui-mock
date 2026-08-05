@@ -13,12 +13,15 @@ Do not rerun `supabase-setup.sql` to update an existing database. `CREATE TABLE 
 5. Run `migrations/20260804_launch_hardening.sql`.
 6. Run `migrations/20260804_write_only_rpc.sql`.
 7. Run `migrations/20260805_calm_launch_fixes.sql`.
-8. Run `postflight.sql` and save its output with the launch record.
-9. If the original launch-hardening migration must be reverted, run `rollback/20260804_launch_hardening.sql`. Do not use that rollback after collecting live participant data without reviewing its effect on the later migrations.
+8. Run `migrations/20260805_route_corpus_v2.sql`.
+9. Run `postflight.sql` and save its output with the launch record.
+10. If the original launch-hardening migration must be reverted, run `rollback/20260804_launch_hardening.sql`. Do not use that rollback after collecting live participant data without reviewing its effect on the later migrations.
 
-The migrations do not delete or rewrite participant records. The 2026-08-04 files add baseline consistency constraints, supporting indexes, a researcher-facing analysis view, and write-only browser functions. `migrations/20260805_calm_launch_fixes.sql` adds current 23-pair Calm questionnaire validation, one-answer-per-session-round enforcement, monotonic progress updates, and the current `q1_knows_better` analysis field.
+The migrations do not delete or rewrite participant records. The 2026-08-04 files add baseline consistency constraints, supporting indexes, a researcher-facing analysis view, and write-only browser functions. `migrations/20260805_calm_launch_fixes.sql` adds current 23-pair Calm questionnaire validation, one-answer-per-session-round enforcement, monotonic progress updates, and the current `q1_knows_better` analysis field. `migrations/20260805_route_corpus_v2.sql` binds new v3 records to the exact `calm-curated-v2` fingerprint and exposes that identity in the private analysis view.
 
 The 2026-08-04 read-only production smoke test detected anonymous answer reads. The migration therefore also revokes anonymous SELECT privileges and removes anon/PUBLIC SELECT policies. That security correction is intentionally not restored by the rollback.
+
+`postflight.sql` is read-only. Its final result sets group saved answers and progress by schema version and route-corpus fingerprint, making any legacy/current mix visible without deleting historical research data.
 
 ## Required human decisions
 

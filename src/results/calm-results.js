@@ -206,6 +206,8 @@
       participant,
       participantId: participantIdentity(answer),
       sessionId: answer.sessionId || answer.benchmarkRunId || '',
+      corpusVersion: answer.corpusVersion || null,
+      corpusFingerprint: answer.corpusFingerprint || null,
       pairId: answer.pairId || 'Unknown pair',
       analysisPairId: canonicalPairId(answer.pairId),
       roundNumber: Number.isFinite(Number(answer.roundNumber)) ? Number(answer.roundNumber) : null,

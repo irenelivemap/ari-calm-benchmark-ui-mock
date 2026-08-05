@@ -10,6 +10,8 @@
   const TEST_ID = 'calm_route_comparison';
   const DEFAULT_STORAGE_KEY = 'ari-calm-benchmark-dataset-v1';
   const CALM_ROUTE_COMPARISON_TEST_ID = 'calm_route_comparison';
+  const EXPECTED_CALM_CORPUS_VERSION = 'calm-curated-v2';
+  const EXPECTED_CALM_CORPUS_FINGERPRINT = '20c716cbb91a4fb09f6eb86c686afeab5dd099378886b6bd1cc548adeb366715';
   const ROUTE_SLOTS = [
     { slot: 'A', key: 'routeA', typeKey: 'routeAType', idKey: 'routeARouteId' },
     { slot: 'B', key: 'routeB', typeKey: 'routeBType', idKey: 'routeBRouteId' },
@@ -241,6 +243,27 @@
     }
   }
 
+  function validateCorpusIdentity(record, errors, { required = false } = {}) {
+    const version = record.corpusVersion;
+    const fingerprint = record.corpusFingerprint;
+    if (required && (typeof version !== 'string' || !version.trim())) {
+      errors.push('corpusVersion is required for versioned Calm records.');
+    } else if (version != null && (typeof version !== 'string' || !version.trim() || version.length > 100)) {
+      errors.push('corpusVersion must be a non-empty string of 100 characters or fewer.');
+    }
+    if (required && (typeof fingerprint !== 'string' || !/^[a-f0-9]{64}$/.test(fingerprint))) {
+      errors.push('corpusFingerprint is required and must be a lowercase SHA-256 value for versioned Calm records.');
+    } else if (fingerprint != null && (typeof fingerprint !== 'string' || !/^[a-f0-9]{64}$/.test(fingerprint))) {
+      errors.push('corpusFingerprint must be a lowercase SHA-256 value.');
+    }
+    if (required && (
+      version !== EXPECTED_CALM_CORPUS_VERSION
+      || fingerprint !== EXPECTED_CALM_CORPUS_FINGERPRINT
+    )) {
+      errors.push('Versioned Calm records must match the active route corpus.');
+    }
+  }
+
   function validateAnswerRecord(input, { allowPartial = false } = {}) {
     const record = normalizeAnswerRecord(input);
     const hasQ2ReasonsField = Object.prototype.hasOwnProperty.call(input || {}, 'q2Reasons');
@@ -251,6 +274,8 @@
     const strictCurrentCalm = Number(input?.v) >= 2
       && record.test === CALM_ROUTE_COMPARISON_TEST_ID
       && record.source === 'calm-route-comparison';
+    const versionedCurrentCalm = strictCurrentCalm && Number(input?.v) >= 3;
+    validateCorpusIdentity(record, errors, { required: versionedCurrentCalm });
 
     if (!record.sessionId) errors.push('sessionId is required.');
     if (!record.roundId) errors.push('roundId is required.');
@@ -427,6 +452,8 @@
     const strictCurrentCalm = Number(input?.v) >= 2
       && record.test === CALM_ROUTE_COMPARISON_TEST_ID
       && record.source === 'calm-route-comparison';
+    const versionedCurrentCalm = strictCurrentCalm && Number(input?.v) >= 3;
+    validateCorpusIdentity(record, errors, { required: versionedCurrentCalm });
     if (strictCurrentCalm && (typeof record.participantId !== 'string' || !record.participantId || record.participantId.length > 200)) {
       errors.push('participantId is required and must be 200 characters or fewer for current Calm progress.');
     }
@@ -450,6 +477,8 @@
       warnings.push(...partial.warnings.map(warning => `partialAnswer: ${warning}`));
       if (record.partialAnswer.sessionId !== record.sessionId) errors.push('partialAnswer sessionId must match progress sessionId.');
       if (record.pairId && record.partialAnswer.pairId !== record.pairId) errors.push('partialAnswer pairId must match progress pairId.');
+      if (record.partialAnswer.corpusVersion !== record.corpusVersion) errors.push('partialAnswer corpusVersion must match progress corpusVersion.');
+      if (record.partialAnswer.corpusFingerprint !== record.corpusFingerprint) errors.push('partialAnswer corpusFingerprint must match progress corpusFingerprint.');
     }
 
     return { valid: errors.length === 0, errors, warnings, record };
@@ -519,6 +548,7 @@
 
     const storageKey = options.storageKey || DEFAULT_STORAGE_KEY;
     const testId = options.testId || TEST_ID;
+    const shouldMigrateLegacy = options.migrateLegacy !== false;
     const legacyAnswersKey = options.legacyAnswersKey || 'ari-calm-benchmark-answers';
     const legacyProgressKey = options.legacyProgressKey || 'ari-calm-benchmark-progress';
 
@@ -528,6 +558,7 @@
     }
 
     function migrateLegacy(dataset) {
+      if (!shouldMigrateLegacy) return false;
       let changed = false;
       const legacyAnswers = readJson(storage, legacyAnswersKey, []);
       if (Array.isArray(legacyAnswers)) {
@@ -673,6 +704,8 @@
           routeAssignment: null,
           questionStep: 'q1',
           partialAnswer: null,
+          corpusVersion: answer.corpusVersion,
+          corpusFingerprint: answer.corpusFingerprint,
           savedAt: isoNow()
         });
         dataset.progressBySessionId[sessionId] = reconciled;
@@ -733,11 +766,15 @@
     function clear() {
       if (typeof storage.removeItem === 'function') {
         storage.removeItem(storageKey);
-        storage.removeItem(legacyAnswersKey);
-        storage.removeItem(legacyProgressKey);
+        if (shouldMigrateLegacy) {
+          storage.removeItem(legacyAnswersKey);
+          storage.removeItem(legacyProgressKey);
+        }
       } else {
-        storage.setItem(legacyAnswersKey, '[]');
-        storage.setItem(legacyProgressKey, 'null');
+        if (shouldMigrateLegacy) {
+          storage.setItem(legacyAnswersKey, '[]');
+          storage.setItem(legacyProgressKey, 'null');
+        }
       }
       writeDataset(emptyDataset(testId));
       return { status: 'cleared' };
@@ -760,6 +797,8 @@
     SCHEMA_VERSION,
     TEST_ID,
     CALM_ROUTE_COMPARISON_TEST_ID,
+    EXPECTED_CALM_CORPUS_VERSION,
+    EXPECTED_CALM_CORPUS_FINGERPRINT,
     DEFAULT_STORAGE_KEY,
     DataValidationError,
     normalizeAnswerRecord,

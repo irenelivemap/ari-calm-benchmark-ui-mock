@@ -137,6 +137,12 @@ type RouteSnapshot = {
   source: string | null;
   metadata: Record<string, unknown> | null;
 };
+
+type BenchmarkAnswerV3 = Omit<BenchmarkAnswerV2, "v"> & {
+  v: 3;
+  corpusVersion: "calm-curated-v2";
+  corpusFingerprint: string; // Lowercase SHA-256 of the ordered route and diagnostics sources.
+};
 ```
 
 The duplicate names (`benchmarkRunId` / `sessionId`, `choice` / `q1Choice`, `reasons` / `q3Issues`) preserve compatibility with the first ARI benchmark dashboard while keeping the current question flow explicit. For current Calm records, `q1Choice` and the single entry in `q1Choices` match. Historical three-route and multi-select records remain readable.
@@ -215,9 +221,16 @@ type BenchmarkProgressV2 = {
   partialAnswer: Partial<BenchmarkAnswerV2> | null;
   savedAt: string;
 };
+
+type BenchmarkProgressV3 = Omit<BenchmarkProgressV2, "v" | "partialAnswer"> & {
+  v: 3;
+  corpusVersion: BenchmarkAnswerV3["corpusVersion"];
+  corpusFingerprint: BenchmarkAnswerV3["corpusFingerprint"];
+  partialAnswer: Partial<BenchmarkAnswerV3> | null;
+};
 ```
 
-Version 1 remains readable for historical analysis. Version 2 is strict: current Calm records must reference one of the 23 corpus pairs, use a round from 1–23, carry matching route IDs, capture IDs, and participant metadata, and satisfy every current conditional question.
+Version 1 remains readable for historical analysis. Version 2 is strict: current Calm records must reference one of the 23 corpus pairs, use a round from 1–23, carry matching route IDs, capture IDs, and participant metadata, and satisfy every current conditional question. Version 3 adds the exact route-corpus identity. The participant app produces v3 Calm records for `calm-curated-v2`; v1/v2 records are not combined with that corpus in Results.
 
 ## Idempotency
 

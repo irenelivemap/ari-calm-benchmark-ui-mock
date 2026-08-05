@@ -14,7 +14,7 @@ Challenges do not share progress or answers.
 
 | Challenge | Test ID | Local storage key |
 | --- | --- | --- |
-| Calm Route Comparison | `calm_route_comparison` | `ari-calm-route-comparison-dataset-v1` |
+| Calm Route Comparison | `calm_route_comparison` | `ari-calm-route-comparison-dataset-calm-curated-v2` |
 | Fast vs Google Fast | `ari_fast_vs_google` | `ari-fast-google-benchmark-dataset-v1` |
 
 The `Reset test data` control is a local-development aid enabled only when runtime configuration sets `showReset: true`. Production removes it from the DOM and never exposes it to participants.
@@ -54,7 +54,7 @@ In `index.html`, these adapters always call the active challenge's local reposit
 
 Queued answers deduplicate by `captureId`. Queued progress deduplicates by test and session, so only the newest unsent state survives. A newer successful progress write removes any older queued version before the outbox flushes.
 
-Legacy Calm progress remains resumable. Result aggregation consolidates records using the normalized entered name or participant code. New participant IDs are deterministic across devices; team-issued codes are required to distinguish different people who share a name.
+Legacy Calm records remain readable for historical analysis, but the participant app does not import legacy answers or progress into `calm-curated-v2`. Versioned answers and progress carry `corpusVersion` and `corpusFingerprint`; the local dataset and transport outbox also use a corpus-specific namespace. Result aggregation consolidates only records from the active corpus, using the normalized entered name or participant code. New participant IDs are deterministic across devices; team-issued codes are required to distinguish different people who share a name.
 
 ## Production Endpoints
 

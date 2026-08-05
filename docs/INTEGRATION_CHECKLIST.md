@@ -53,7 +53,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 ## Persistence
 
-- [x] Validate browser answers and progress with `src/data/calm-benchmark-data.js`; apply `20260805_calm_launch_fixes.sql` for equivalent current-Calm validation in Supabase.
+- [x] Validate browser answers and progress with `src/data/calm-benchmark-data.js`; apply `20260805_calm_launch_fixes.sql` and `20260805_route_corpus_v2.sql` for equivalent current-Calm and corpus validation in Supabase.
 - [x] Make answer submission idempotent by `captureId`.
 - [x] Upsert progress by `sessionId` without accepting backward checkpoints.
 - [x] Preserve the hidden A/B assignment.
@@ -102,6 +102,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 
 - [x] Participant-facing wording and follow-up rules match [`QUESTIONNAIRE.md`](QUESTIONNAIRE.md).
 - [x] Assignable route keys are `calm_quiet` and `calm_nature`; every fixture also supplies a non-randomized `fast` reference route.
+- [x] Route geometry and diagnostics are generated together from the ordered `calm-curated-v2` manifest, and answers/progress carry its exact fingerprint.
 - [x] Route A/B and Both work well selections show the Calm preference-reasons Q2; the remaining neutral choices skip it.
 - [x] Q1 offers Route A, Route B, Both work well, Both work poorly, and I'm not sure.
 - [x] Route A, Route B, and Both work well require the value-vs-Fast Q3 and redraw the relevant Calm route(s) with Fast and all visible times.

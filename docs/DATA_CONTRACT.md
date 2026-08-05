@@ -60,7 +60,9 @@ async function routePairProvider({ sessionId, roundIndex }) {
 
 `pairId` and every route ID must be stable. Retrying a round should return the same logical pair unless the backend explicitly invalidates it.
 
-`src/api/route-pair-generator.js` implements the two-route live contract used by Fast vs Google. Calm Route Comparison uses 23 curated Calm Quiet / Calm Nature rounds in `src/data/mock-route-pairs.js`, converted from GeoJSON `[longitude, latitude]` coordinates to this contract's `[latitude, longitude]` tuples. Pairs 1–10 are shuffled first; pairs 11–23 are shuffled independently and follow them. Round 24 is rejected rather than wrapping to a repeated pair.
+`src/api/route-pair-generator.js` implements the two-route live contract used by Fast vs Google. Calm Route Comparison uses the `calm-curated-v2` corpus of 23 curated Calm Quiet / Calm Nature rounds in `src/data/mock-route-pairs.js`, converted from GeoJSON `[longitude, latitude]` coordinates to this contract's `[latitude, longitude]` tuples. The paired route and diagnostics exports are validated and generated together with `scripts/build-calm-route-corpus.mjs`. Pairs 1–10 are shuffled first; pairs 11–23 are shuffled independently and follow them. Round 24 is rejected rather than wrapping to a repeated pair.
+
+The generated array carries `corpusVersion`, `corpusFingerprint`, and the ordered source-round mapping. Versioned sessions and answers copy the version and fingerprint so the Results layer never resolves an answer against a different geometry release.
 
 ## Example: Fast vs Google Fast
 

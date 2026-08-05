@@ -23,6 +23,10 @@ Planned challenge:
 
 The origin, destination, and two provider-specific route geometries shown in one round. A route pair has a stable `pairId` and two stable route IDs.
 
+## Route Corpus
+
+The complete ordered set of curated route pairs used by one study release. The current Calm corpus is `calm-curated-v2`; its SHA-256 fingerprint binds participant sessions, saved answers, diagnostics, and Results maps to the exact same 23 route exports.
+
 ## Visible Slot
 
 `Route A` or `Route B`, the only route identity shown to a tester. A visible slot is not a provider.

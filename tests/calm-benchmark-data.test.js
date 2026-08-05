@@ -4,8 +4,12 @@ const assert = require('node:assert/strict');
 const {
   DataValidationError,
   createLocalRepository,
-  validateAnswerRecord
+  validateAnswerRecord,
+  validateProgressRecord
 } = require('../src/data/calm-benchmark-data.js');
+
+const CORPUS_VERSION = 'calm-curated-v2';
+const CORPUS_FINGERPRINT = '20c716cbb91a4fb09f6eb86c686afeab5dd099378886b6bd1cc548adeb366715';
 
 class MemoryStorage {
   constructor(initial = {}) {
@@ -137,6 +141,60 @@ test('strictly validates current v2 Calm corpus records', () => {
   assert.equal(validateAnswerRecord(incomplete).valid, false);
 });
 
+test('requires an exact corpus identity for current v3 Calm answers and progress', () => {
+  const current = validAnswer({
+    v: 3,
+    participantId: 'participant-123',
+    corpusVersion: CORPUS_VERSION,
+    corpusFingerprint: CORPUS_FINGERPRINT,
+    pairId: 'calm-route-comparison-01-round-1',
+    q1KnowsBetter: false,
+    labels: {
+      A: { routeId: 'calm-round-1-calm-quiet', routeType: 'calm_quiet', source: 'saved' },
+      B: { routeId: 'calm-round-1-calm-nature', routeType: 'calm_nature', source: 'saved' }
+    }
+  });
+  assert.equal(validateAnswerRecord(current).valid, true);
+
+  const missingIdentity = { ...current };
+  delete missingIdentity.corpusVersion;
+  delete missingIdentity.corpusFingerprint;
+  const missingResult = validateAnswerRecord(missingIdentity);
+  assert.equal(missingResult.valid, false);
+  assert.match(missingResult.errors.join(' '), /corpusVersion/);
+  assert.match(missingResult.errors.join(' '), /corpusFingerprint/);
+
+  const wrongIdentity = validateAnswerRecord({
+    ...current,
+    corpusVersion: 'calm-curated-other',
+    corpusFingerprint: '0'.repeat(64)
+  });
+  assert.equal(wrongIdentity.valid, false);
+  assert.match(wrongIdentity.errors.join(' '), /active route corpus/);
+
+  const progress = validProgress({
+    v: 3,
+    test: 'calm_route_comparison',
+    source: 'calm-route-comparison',
+    participantId: 'participant-123',
+    corpusVersion: CORPUS_VERSION,
+    corpusFingerprint: CORPUS_FINGERPRINT,
+    pairId: 'calm-route-comparison-01-round-1',
+    routeAssignment: { routeA: 'calm_quiet', routeB: 'calm_nature' },
+    questionStep: 'q1',
+    partialAnswer: current
+  });
+  assert.equal(validateProgressRecord(progress).valid, true);
+
+  const mismatchedProgress = {
+    ...progress,
+    corpusFingerprint: '0'.repeat(64)
+  };
+  const progressResult = validateProgressRecord(mismatchedProgress);
+  assert.equal(progressResult.valid, false);
+  assert.match(progressResult.errors.join(' '), /partialAnswer corpusFingerprint/);
+});
+
 test('keeps completed Calm answers from before Q2 reasons readable', () => {
   const historicalAnswer = validAnswer();
   delete historicalAnswer.q2Reasons;
@@ -263,6 +321,54 @@ test('migrates the previous localStorage records without duplicating them', () =
   assert.equal(repository.getSnapshot().answers.length, 1);
   assert.equal(repository.getLatestProgress().sessionId, 'calm-session-123');
   assert.equal(repository.getSnapshot().answers.length, 1);
+});
+
+test('can isolate a new route corpus from legacy localStorage records', () => {
+  const storage = new MemoryStorage({
+    'ari-calm-benchmark-answers': JSON.stringify([validAnswer()]),
+    'ari-calm-benchmark-progress': JSON.stringify(validProgress())
+  });
+  const repository = createLocalRepository(storage, {
+    storageKey: 'ari-calm-route-comparison-dataset-calm-curated-v2',
+    migrateLegacy: false
+  });
+
+  assert.equal(repository.getSnapshot().answers.length, 0);
+  assert.equal(repository.getLatestProgress(), null);
+  assert.notEqual(storage.getItem('ari-calm-benchmark-answers'), null);
+
+  repository.clear();
+  assert.notEqual(storage.getItem('ari-calm-benchmark-answers'), null);
+});
+
+test('preserves v3 corpus identity when repairing an answer-progress gap', () => {
+  const answer = validAnswer({
+    v: 3,
+    participantId: 'participant-123',
+    corpusVersion: CORPUS_VERSION,
+    corpusFingerprint: CORPUS_FINGERPRINT,
+    pairId: 'calm-route-comparison-01-round-1',
+    q1KnowsBetter: false,
+    labels: {
+      A: { routeId: 'calm-round-1-calm-quiet', routeType: 'calm_quiet', source: 'saved' },
+      B: { routeId: 'calm-round-1-calm-nature', routeType: 'calm_nature', source: 'saved' }
+    }
+  });
+  const storageKey = 'ari-calm-route-comparison-dataset-calm-curated-v2';
+  const repository = createLocalRepository(new MemoryStorage({
+    [storageKey]: JSON.stringify({
+      v: 2,
+      type: 'calm-benchmark-dataset',
+      test: 'calm_route_comparison',
+      answers: [answer]
+    })
+  }), { storageKey, migrateLegacy: false });
+
+  const repaired = repository.getLatestProgress();
+  assert.equal(repaired.v, 3);
+  assert.equal(repaired.corpusVersion, CORPUS_VERSION);
+  assert.equal(repaired.corpusFingerprint, CORPUS_FINGERPRINT);
+  assert.equal(repository.verify().valid, true);
 });
 
 test('exports dashboard-ready newline-delimited JSON', () => {

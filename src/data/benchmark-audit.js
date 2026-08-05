@@ -5,6 +5,8 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   const CALM_TEST = 'calm_route_comparison';
   const EXPECTED_CALM_ROUNDS = 23;
+  const EXPECTED_CALM_CORPUS_VERSION = 'calm-curated-v2';
+  const EXPECTED_CALM_CORPUS_FINGERPRINT = '20c716cbb91a4fb09f6eb86c686afeab5dd099378886b6bd1cc548adeb366715';
 
   function unwrapAnswer(value) {
     return value && typeof value === 'object' && value.payload && typeof value.payload === 'object'
@@ -65,6 +67,12 @@
         issues.push({ severity: 'error', code: 'invalid_calm_pair_id', location, value: answer.pairId });
       }
       if (!answer.participantId) issues.push({ severity: 'error', code: 'missing_participant_id', location });
+      if (Number(answer.v || 1) >= 3 && (
+        answer.corpusVersion !== EXPECTED_CALM_CORPUS_VERSION
+        || answer.corpusFingerprint !== EXPECTED_CALM_CORPUS_FINGERPRINT
+      )) {
+        issues.push({ severity: 'error', code: 'invalid_calm_corpus', location, value: answer.corpusVersion });
+      }
     });
 
     for (const [sessionId, records] of sessions) {
@@ -105,6 +113,12 @@
       if (record?.test === CALM_TEST && completed > EXPECTED_CALM_ROUNDS) {
         issues.push({ severity: 'error', code: 'progress_over_23', location: `progress[${index}]`, sessionId });
       }
+      if (record?.test === CALM_TEST && Number(record.v || 1) >= 3 && (
+        record.corpusVersion !== EXPECTED_CALM_CORPUS_VERSION
+        || record.corpusFingerprint !== EXPECTED_CALM_CORPUS_FINGERPRINT
+      )) {
+        issues.push({ severity: 'error', code: 'invalid_calm_progress_corpus', location: `progress[${index}]`, sessionId });
+      }
     });
 
     const issueCounts = Object.fromEntries(
@@ -126,5 +140,10 @@
     };
   }
 
-  return { EXPECTED_CALM_ROUNDS, auditBenchmarkData };
+  return {
+    EXPECTED_CALM_ROUNDS,
+    EXPECTED_CALM_CORPUS_VERSION,
+    EXPECTED_CALM_CORPUS_FINGERPRINT,
+    auditBenchmarkData
+  };
 });

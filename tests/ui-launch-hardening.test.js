@@ -110,6 +110,19 @@ test('preserves Q3 details in both the current field and the legacy note alias',
   assert.match(app, /q3Note: form\.get\('q3Note'\) \|\| '',\s*note: form\.get\('q3Note'\) \|\| '',/);
 });
 
+test('binds Calm sessions, answers, results, and queued writes to one verified route corpus', () => {
+  assert.match(html, /CALM_ROUTE_CORPUS_VERSION = calmRouteCorpus\.corpusVersion/);
+  assert.match(html, /CALM_ROUTE_CORPUS_FINGERPRINT = calmRouteCorpus\.corpusFingerprint/);
+  assert.match(html, /calmRouteDiagnostics\.corpusFingerprint === CALM_ROUTE_CORPUS_FINGERPRINT/);
+  assert.match(html, /storageKey: `ari-calm-route-comparison-dataset-\$\{CALM_ROUTE_CORPUS_VERSION/);
+  assert.match(html, /storageKey: CHALLENGE_CONFIGS\.calm\.storageKey,[\s\S]*?migrateLegacy: false/);
+  assert.match(html, /ari-benchmark-supabase-outbox-\$\{CALM_ROUTE_CORPUS_VERSION\}/);
+  assert.match(html, /answer\.corpusVersion === CALM_ROUTE_CORPUS_VERSION/);
+  assert.match(app, /v: benchmark\.corpusVersion \? 3 : 2/);
+  assert.match(app, /corpusFingerprint: benchmark\.corpusFingerprint/);
+  assert.match(app, /Saved answer belongs to a different route corpus/);
+});
+
 test('loads Google Maps with origin-scoped referrer authorization', () => {
   assert.match(html, /maps\.googleapis\.com\/maps\/api\/js\?key=.*auth_referrer_policy=origin/);
 });

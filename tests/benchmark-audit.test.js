@@ -1,6 +1,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { auditBenchmarkData, EXPECTED_CALM_ROUNDS } = require('../src/data/benchmark-audit.js');
+const {
+  auditBenchmarkData,
+  EXPECTED_CALM_ROUNDS,
+  EXPECTED_CALM_CORPUS_VERSION,
+  EXPECTED_CALM_CORPUS_FINGERPRINT
+} = require('../src/data/benchmark-audit.js');
 
 function answer(round, overrides = {}) {
   const pair = String(round).padStart(2, '0');
@@ -53,4 +58,36 @@ test('unwraps Supabase payload rows and flags malformed current records', () => 
   assert.equal(report.ok, false);
   assert.equal(report.issueCounts.invalid_calm_round, 1);
   assert.equal(report.issueCounts.missing_participant_id, 1);
+});
+
+test('flags a versioned Calm answer or checkpoint from the wrong route corpus', () => {
+  const report = auditBenchmarkData({
+    answers: [answer(1, {
+      v: 3,
+      corpusVersion: 'wrong-corpus',
+      corpusFingerprint: '0'.repeat(64)
+    })],
+    progressBySessionId: {
+      'session-1': {
+        v: 3,
+        test: 'calm_route_comparison',
+        sessionId: 'session-1',
+        completedRounds: 1,
+        corpusVersion: EXPECTED_CALM_CORPUS_VERSION,
+        corpusFingerprint: '0'.repeat(64)
+      }
+    }
+  });
+  assert.equal(report.ok, false);
+  assert.equal(report.issueCounts.invalid_calm_corpus, 1);
+  assert.equal(report.issueCounts.invalid_calm_progress_corpus, 1);
+
+  const valid = auditBenchmarkData({
+    answers: [answer(1, {
+      v: 3,
+      corpusVersion: EXPECTED_CALM_CORPUS_VERSION,
+      corpusFingerprint: EXPECTED_CALM_CORPUS_FINGERPRINT
+    })]
+  });
+  assert.equal(valid.ok, true);
 });

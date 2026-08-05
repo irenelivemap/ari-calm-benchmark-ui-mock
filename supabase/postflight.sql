@@ -6,7 +6,9 @@ select conrelid::regclass as table_name, conname, convalidated
 from pg_constraint
 where conname in (
   'benchmark_answers_payload_matches_v2',
-  'benchmark_progress_payload_matches_v2'
+  'benchmark_progress_payload_matches_v2',
+  'benchmark_answers_calm_corpus_v3',
+  'benchmark_progress_calm_corpus_v3'
 )
 order by conname;
 
@@ -45,15 +47,31 @@ where schemaname = 'public'
   and cmd = 'SELECT'
   and (roles && array['anon'::name, 'public'::name]);
 
-select test, schema_version, count(*)::bigint as answer_count
+select
+  test,
+  schema_version,
+  coalesce(corpus_version, 'legacy-or-unversioned') as corpus_version,
+  coalesce(corpus_fingerprint, 'legacy-or-unversioned') as corpus_fingerprint,
+  count(*)::bigint as answer_count
 from public.benchmark_answers_analysis
-group by test, schema_version
-order by test, schema_version;
+group by test, schema_version, corpus_version, corpus_fingerprint
+order by test, schema_version, corpus_version;
+
+select
+  test,
+  coalesce(payload->>'v', '1') as schema_version,
+  coalesce(payload->>'corpusVersion', 'legacy-or-unversioned') as corpus_version,
+  coalesce(payload->>'corpusFingerprint', 'legacy-or-unversioned') as corpus_fingerprint,
+  count(*)::bigint as progress_count
+from public.benchmark_progress
+group by test, payload->>'v', payload->>'corpusVersion', payload->>'corpusFingerprint'
+order by test, schema_version, corpus_version;
 
 select column_name, data_type
 from information_schema.columns
 where table_schema = 'public'
   and table_name = 'benchmark_answers_analysis'
-  and column_name = 'q1_knows_better';
+  and column_name in ('q1_knows_better', 'corpus_version', 'corpus_fingerprint')
+order by ordinal_position;
 
 rollback;
