@@ -315,7 +315,7 @@ Rules:
 - Saving is a property of the system, not a user action. Progress autosaves on every answer change, step advance, and round submission.
 - Exit is one click with no confirmation dialog: it saves current progress and leaves. There is no "leave without saving" path.
 - The exit button label is `Exit test — progress is saved` (aria-label and title) so hover/AT users learn the behavior before clicking.
-- A `Saved ✓` status flickers next to the round chip after each submitted round. It is status, not a control — `pointer-events: none`, never styled like a button.
+- A submitted round shows one save confirmation only: the checked `Saved` label beside the dial during the existing round transition. Do not add a second flashing save status.
 - The resume card on the intro page is the post-exit reassurance: landing on it shows nothing was lost.
 - Completed submitted rounds remain submitted.
 - Resuming returns the tester to the exact saved position, including a partially answered round (`questionStep` + `partialAnswer` in the progress payload).
@@ -325,9 +325,9 @@ Rules:
 ## Round Transition Rules
 
 - Finishing a round must feel different from advancing to another question.
-- After `Finish round`, the question panel keeps its expanded footprint while the old question fades out. `Complete` appears beside the dial and the old route pair fades from the map.
+- After `Finish round`, the question panel keeps its expanded footprint while the old question fades out. `Saved` appears beside the dial and the old route pair fades from the map.
 - The newly earned dial segment flashes hot coral, briefly enlarges, and settles to completed ivory. Existing illuminated segments dim slightly during the flare so the progress change is unmistakable.
-- Hold the coral activation and `Complete` message long enough to register as one beat, approximately `0.9s`, before returning to the normal question state.
+- Hold the coral activation and `Saved` message long enough to register as one beat, approximately `0.9s`, before returning to the normal question state.
 - Coral is a temporary activation state only. It must not remain in the dial or replace the Route A green identity.
 - The next route pair fades in and the new Q1 fades into the same expanded panel. Finishing a round must never collapse the question panel or change its height.
 - At medal thresholds, the standard round transition resolves first and flows directly into the medal unlock reveal.

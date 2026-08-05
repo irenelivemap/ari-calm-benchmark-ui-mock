@@ -8035,19 +8035,6 @@ html.is-challenge-dialog-open {
   background: transparent;
 }
 
-.ari-save-flash {
-  display: inline-flex;
-  margin-left: auto;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-}
-
 .ari-system-status {
   display: flex;
   align-items: center;
@@ -8144,17 +8131,6 @@ html.is-challenge-dialog-open {
 
 .ari-panel-handle {
   margin-left: auto;
-}
-
-@keyframes ari-save-flash {
-  0% { opacity: 0; }
-  12% { opacity: 1; }
-  72% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-.ari-save-flash.is-flashing {
-  animation: ari-save-flash 1.8s ease forwards;
 }
 
 .ari-panel-handle {

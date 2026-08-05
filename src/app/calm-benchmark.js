@@ -367,8 +367,7 @@
               <button class="ari-hud-exit" data-action="exit" type="button" aria-label="Exit test — progress is saved" title="Exit — progress is saved"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"></path></svg></button>
               <span class="ari-hud-sep" aria-hidden="true"></span>
               <div class="ari-hud-medals" data-hud-medals aria-label="Medal progress"></div>
-              <span class="ari-round-complete" data-round-complete aria-live="polite" aria-hidden="true"><span aria-hidden="true">&#10003;</span>Complete</span>
-              <span class="ari-save-flash" data-save-flash aria-live="polite">Saved &#10003;</span>
+              <span class="ari-round-complete" data-round-complete aria-live="polite" aria-hidden="true"><span aria-hidden="true">&#10003;</span>Saved</span>
               <button class="ari-panel-handle" data-action="toggle-panel" type="button" aria-expanded="true" aria-label="Minimize question panel" title="Minimize question panel"></button>
             </div>
             <div class="ari-panel-summary" data-panel-summary>
@@ -599,7 +598,6 @@
       onboardingCoachmarks: Array.from(root.querySelectorAll('[data-onboarding-coachmark]')),
       onboardingPanels: Array.from(root.querySelectorAll('[data-onboarding-panel]')),
       onboardingSkip: root.querySelector('.ari-onboarding__close'),
-      saveFlash: root.querySelector('[data-save-flash]'),
       systemStatus: root.querySelector('[data-system-status]'),
       systemStatusCopy: root.querySelector('[data-system-status-copy]'),
       retrySystem: root.querySelector('[data-action="retry-system"]'),
@@ -1881,11 +1879,10 @@
       }
     }
 
-    async function autosave({ announce = false } = {}) {
+    async function autosave() {
       try {
         await Promise.resolve(progressSink(readProgress()));
         if (els.systemStatus.classList.contains('is-error')) clearSystemStatus();
-        if (announce) flashSaved();
         return true;
       } catch (error) {
         console.error(
@@ -1894,7 +1891,7 @@
           Array.isArray(error?.details) ? error.details.join(' | ') : ''
         );
         showSystemStatus('Couldn’t sync. Your answers are still on this device.', {
-          retry: () => autosave({ announce: true })
+          retry: () => autosave()
         });
         return false;
       }
@@ -1918,12 +1915,6 @@
         els.form.inert = state.panelCollapsed || state.loadingRound;
         updateQuestionFlow();
       }
-    }
-
-    function flashSaved() {
-      els.saveFlash.classList.remove('is-flashing');
-      void els.saveFlash.offsetWidth;
-      els.saveFlash.classList.add('is-flashing');
     }
 
     function showTenComparisonConfetti() {
@@ -2365,7 +2356,7 @@
         setGoalCheckpointVisible(true);
         showFinalComparisonConfetti();
       }
-      autosave({ announce: true });
+      autosave();
     });
 
     els.exit.addEventListener('click', async () => {
@@ -2407,7 +2398,7 @@
     });
     els.endSession.addEventListener('click', async () => {
       setGoalCheckpointVisible(false, { focus: false });
-      await autosave({ announce: true });
+      await autosave();
       if (onExit) onExit({ view: 'results' });
     });
 

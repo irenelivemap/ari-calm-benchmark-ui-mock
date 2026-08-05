@@ -99,6 +99,12 @@ test('celebrates the final comparison across the full viewport', () => {
   assert.match(css, /pointer-events:\s*none/);
 });
 
+test('shows one save confirmation after a completed comparison', () => {
+  assert.match(app, /data-round-complete[^>]*>[\s\S]*?Saved<\/span>/);
+  assert.doesNotMatch(app, /data-save-flash|ari-save-flash|flashSaved/);
+  assert.doesNotMatch(css, /ari-save-flash/);
+});
+
 test('loads Google Maps with origin-scoped referrer authorization', () => {
   assert.match(html, /maps\.googleapis\.com\/maps\/api\/js\?key=.*auth_referrer_policy=origin/);
 });
