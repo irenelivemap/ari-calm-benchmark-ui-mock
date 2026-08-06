@@ -28,6 +28,50 @@ async function expectUsableMap(page, container = page.locator('#calm-benchmark-r
   ), { timeout: 15_000 }).toBeGreaterThan(0);
 }
 
+test('the fresh Calm start card shows the shared medal shelf at zero progress', async ({ page }) => {
+  await page.goto('/?game=calm&fresh=1');
+
+  const shelf = page.locator('#medal-shelf');
+  const medals = shelf.locator('.calm-medal');
+  await expect(shelf).toBeVisible();
+  await expect(medals).toHaveCount(4);
+  await expect(medals.filter({ has: page.locator('[aria-hidden="true"]') })).toHaveCount(4);
+  await expect(medals.first()).toHaveClass(/is-next/);
+  await expect(medals.first()).toHaveAttribute('aria-label', 'Street Scout medal, next goal, 0 of 5 routes');
+  await expect(page.locator('#start-form')).toBeVisible();
+  await expect(page.locator('#resume-right')).toBeHidden();
+
+  const desktopAlignment = await page.evaluate(() => {
+    const form = document.querySelector('#start-form').getBoundingClientRect();
+    const shelfBox = document.querySelector('#medal-shelf').getBoundingClientRect();
+    const input = document.querySelector('#participant-name').getBoundingClientRect();
+    const button = document.querySelector('#start-form button[type="submit"]').getBoundingClientRect();
+    const firstMedalLabel = document.querySelector('#medal-shelf .calm-medal__label').getBoundingClientRect();
+    return {
+      groupBaseline: Math.abs(form.bottom - shelfBox.bottom),
+      inputToMedalBaseline: Math.abs(input.bottom - firstMedalLabel.bottom),
+      buttonToMedalBaseline: Math.abs(button.bottom - firstMedalLabel.bottom)
+    };
+  });
+  expect(desktopAlignment.groupBaseline).toBeLessThanOrEqual(1);
+  expect(desktopAlignment.inputToMedalBaseline).toBeLessThanOrEqual(9);
+  expect(desktopAlignment.buttonToMedalBaseline).toBeLessThanOrEqual(9);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileLayout = await page.evaluate(() => {
+    const heading = document.querySelector('#start-h2').getBoundingClientRect();
+    const shelfBox = document.querySelector('#medal-shelf').getBoundingClientRect();
+    const form = document.querySelector('#start-form').getBoundingClientRect();
+    return {
+      overflow: document.documentElement.scrollWidth - window.innerWidth,
+      gapAboveMedals: shelfBox.top - heading.bottom,
+      gapBelowMedals: form.top - shelfBox.bottom
+    };
+  });
+  expect(mobileLayout.overflow).toBeLessThanOrEqual(1);
+  expect(Math.abs(mobileLayout.gapAboveMedals - mobileLayout.gapBelowMedals)).toBeLessThanOrEqual(1);
+});
+
 test('a newly loaded Calm round can resume before Q1 is answered', async ({ page }) => {
   await beginCalmComparison(page);
   await expectUsableMap(page);

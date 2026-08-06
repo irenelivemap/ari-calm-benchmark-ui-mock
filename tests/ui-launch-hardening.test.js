@@ -28,7 +28,12 @@ test('exposes accessible page landmarks and launch form feedback', () => {
   assert.doesNotMatch(html, /participant-consent|calm-consent|calm-privacy-note|I agree to share my name/);
   assert.doesNotMatch(app, /consentVersion|consentedAt|participantConsent/);
   assert.match(html, /<div>About 10 minutes<\/div>/);
+  assert.match(html, /Start with 10 <span>comparisons\.<\/span>/);
+  assert.match(html, /More time\? Complete all 23 to earn every medal and climb the leaderboard\./);
+  assert.doesNotMatch(html, /Every extra comparison helps\./);
+  assert.doesNotMatch(html, /Check your progress anytime in Results\./);
   assert.doesNotMatch(html, /About 6 to 8 min/);
+  assert.doesNotMatch(html, /<h2>23 <span>comparisons\.<\/span><\/h2>/);
 });
 
 test('keeps Results unavailable until the first comparison is saved', () => {
@@ -243,6 +248,16 @@ test('celebrates comparison ten without inviting the participant to stop', () =>
   assert.doesNotMatch(app, /End session|Keep comparing|finish now or keep comparing/);
   assert.match(css, /@keyframes ari-milestone-confetti-burst/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.ari-milestone-confetti\s*\{\s*display:\s*none;/);
+});
+
+test('shows the same four-medal progress shelf before the first comparison', () => {
+  assert.match(html, /function renderMedalShelf\(shelf, count\)/);
+  assert.match(html, /const showMedalShelf = activeChallenge === 'calm';/);
+  assert.match(html, /if \(showMedalShelf\) renderMedalShelf\(shelf, count\);/);
+  assert.doesNotMatch(html, /shelf\.classList\.toggle\('calm-hidden', !hasProgress\)/);
+  assert.match(css, /\.calm-start-card\s*\{[\s\S]*?grid-template-areas:\s*"title form"\s*"medals form";/);
+  assert.match(css, /@media \(min-width: 901px\)[\s\S]*?\.calm-start-card:not\(\.is-resumed\) \.calm-start-form\s*\{[^}]*align-self:\s*end;/);
+  assert.match(css, /@media \(max-width: 700px\)[\s\S]*?\.calm-start-card\s*\{[\s\S]*?grid-template-areas:\s*"title"\s*"medals"\s*"form";/);
 });
 
 test('celebrates the final comparison across the full viewport', () => {

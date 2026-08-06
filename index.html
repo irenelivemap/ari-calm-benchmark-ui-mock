@@ -199,11 +199,11 @@
           <div id="session-card-body" class="calm-card-body">
             <div class="calm-card-body-inner">
               <div class="calm-card-main">
-                <h2>23 <span>comparisons.</span></h2>
+                <h2>Start with 10 <span>comparisons.</span></h2>
                 <div class="calm-session-content">
                   <div class="calm-session-points">
                     <div>About 10 minutes</div>
-                    <div>Done? Check the Results tab at the top.</div>
+                    <div>More time? Complete all 23 to earn every medal and climb the leaderboard.</div>
                   </div>
                 </div>
               </div>
@@ -2308,6 +2308,54 @@
       updateChallengeRouteCircuit({ animate });
     }
 
+    function renderMedalShelf(shelf, count) {
+      shelf.innerHTML = '';
+      const next = MILESTONES.find(milestone => count < milestone.at) || null;
+      const nextIndex = next ? MILESTONES.findIndex(milestone => milestone.at === next.at) : -1;
+      const PRESENCE_BY_DISTANCE = [0.85, 0.62, 0.52, 0.44, 0.38];
+
+      MILESTONES.forEach((milestone, index) => {
+        const earned = count >= milestone.at;
+        const isNext = index === nextIndex;
+        const medal = document.createElement('button');
+        medal.type = 'button';
+        medal.className = 'calm-medal' + (earned ? ' is-earned' : isNext ? ' is-next' : '');
+        medal.dataset.medalTier = String(index + 1);
+        if (!earned && nextIndex >= 0) {
+          const distance = Math.min(PRESENCE_BY_DISTANCE.length - 1, Math.max(0, index - nextIndex));
+          medal.style.setProperty('--medal-presence', String(PRESENCE_BY_DISTANCE[distance]));
+        }
+        if (isNext) {
+          // The seal fills with light from the bottom: the fill is the countdown.
+          const stageStart = index > 0 ? MILESTONES[index - 1].at : 0;
+          const fill = Math.round(Math.max(0, Math.min(1, (count - stageStart) / (milestone.at - stageStart))) * 100);
+          medal.style.setProperty('--stage-fill', `${fill}%`);
+        }
+        medal.setAttribute('aria-pressed', 'false');
+        medal.setAttribute('aria-label', isNext
+          ? `${milestone.name} medal, next goal, ${count} of ${milestone.at} routes`
+          : `${milestone.name} medal, ${earned ? 'earned' : 'locked'}, ${milestone.at} routes`);
+        const medalNameParts = milestone.name.split(' ');
+        medal.innerHTML =
+          `<span class="calm-medal__flip">` +
+            `<span class="calm-medal__face calm-medal__face--front">` +
+              `<span class="calm-medal__seal" aria-hidden="true">${milestone.icon}</span>` +
+              `<span class="calm-medal__label">${medalNameParts.map(part => `<span>${part}</span>`).join('')}</span>` +
+            `</span>` +
+            `<span class="calm-medal__face calm-medal__face--back" aria-hidden="true">` +
+              `<span class="calm-medal__seal calm-medal__seal--number"><b>${milestone.at}</b></span>` +
+              `<span class="calm-medal__label">routes</span>` +
+            `</span>` +
+          `</span>`;
+        medal.addEventListener('click', () => {
+          const flipped = !medal.classList.contains('is-flipped');
+          medal.classList.toggle('is-flipped', flipped);
+          medal.setAttribute('aria-pressed', String(flipped));
+        });
+        shelf.appendChild(medal);
+      });
+    }
+
     function checkResumeState() {
       let progress = null;
       if (!freshPreviewMode) {
@@ -2338,7 +2386,10 @@
 
       document.getElementById('start-form').classList.toggle('calm-hidden', !!hasProgress);
       document.getElementById('resume-right').classList.toggle('calm-hidden', !hasProgress);
-      shelf.classList.toggle('calm-hidden', !hasProgress);
+      const showMedalShelf = activeChallenge === 'calm';
+      shelf.classList.toggle('calm-hidden', !showMedalShelf);
+      if (showMedalShelf) renderMedalShelf(shelf, count);
+      else shelf.innerHTML = '';
       card.classList.toggle('is-resumed', !!hasProgress);
       infoGrid.classList.toggle('has-progress', !!hasProgress);
 
@@ -2353,50 +2404,6 @@
           : 'Welcome back';
         document.getElementById('start-h2').innerHTML =
           `${count} <span>route${count === 1 ? '' : 's'} compared.</span>`;
-
-        shelf.innerHTML = '';
-        const nextIndex = next ? MILESTONES.findIndex(milestone => milestone.at === next.at) : -1;
-        const PRESENCE_BY_DISTANCE = [0.85, 0.62, 0.52, 0.44, 0.38];
-        MILESTONES.forEach((m, index) => {
-          const earned = count >= m.at;
-          const isNext = index === nextIndex;
-          const medal = document.createElement('button');
-          medal.type = 'button';
-          medal.className = 'calm-medal' + (earned ? ' is-earned' : isNext ? ' is-next' : '');
-          medal.dataset.medalTier = String(index + 1);
-          if (!earned && nextIndex >= 0) {
-            const distance = Math.min(PRESENCE_BY_DISTANCE.length - 1, Math.max(0, index - nextIndex));
-            medal.style.setProperty('--medal-presence', String(PRESENCE_BY_DISTANCE[distance]));
-          }
-          if (isNext) {
-            // The seal fills with light from the bottom: the fill is the countdown.
-            const stageStart = index > 0 ? MILESTONES[index - 1].at : 0;
-            const fill = Math.round(Math.max(0, Math.min(1, (count - stageStart) / (m.at - stageStart))) * 100);
-            medal.style.setProperty('--stage-fill', `${fill}%`);
-          }
-          medal.setAttribute('aria-pressed', 'false');
-          medal.setAttribute('aria-label', isNext
-            ? `${m.name} medal, next goal, ${count} of ${m.at} routes`
-            : `${m.name} medal, ${earned ? 'earned' : 'locked'}, ${m.at} routes`);
-          const medalNameParts = m.name.split(' ');
-          medal.innerHTML =
-            `<span class="calm-medal__flip">` +
-              `<span class="calm-medal__face calm-medal__face--front">` +
-                `<span class="calm-medal__seal" aria-hidden="true">${m.icon}</span>` +
-                `<span class="calm-medal__label">${medalNameParts.map(part => `<span>${part}</span>`).join('')}</span>` +
-              `</span>` +
-              `<span class="calm-medal__face calm-medal__face--back" aria-hidden="true">` +
-                `<span class="calm-medal__seal calm-medal__seal--number"><b>${m.at}</b></span>` +
-                `<span class="calm-medal__label">routes</span>` +
-              `</span>` +
-            `</span>`;
-          medal.addEventListener('click', () => {
-            const flipped = !medal.classList.contains('is-flipped');
-            medal.classList.toggle('is-flipped', flipped);
-            medal.setAttribute('aria-pressed', String(flipped));
-          });
-          shelf.appendChild(medal);
-        });
       } else {
         updateChallengePreview(0);
         document.getElementById('challenge-action').textContent = 'Play →';

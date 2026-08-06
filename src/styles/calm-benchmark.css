@@ -1310,7 +1310,9 @@ html.is-challenge-dialog-open {
   min-height: 160px;
   grid-column: 1 / -1;
   grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr);
-  grid-template-areas: "title form";
+  grid-template-areas:
+    "title form"
+    "medals form";
   gap: 16px 24px;
   align-items: start;
   overflow: hidden;
@@ -1323,14 +1325,19 @@ html.is-challenge-dialog-open {
   transition: box-shadow 520ms ease;
 }
 
-/* The fresh card has two peer content groups: the prompt and the name form.
-   Top-align both grid cells at the same 64px post-notch title inset used by the
-   overview cards (52px shell inset + 12px body inset). The form keeps its own
-   8px label offset, while the resume card retains its shelf-led alignment. */
+/* The fresh card has two peer content groups: prompt + medals on the left and
+   the name form on the right. The left stack begins at the same 64px post-notch
+   inset as the overview cards; the intact form sits on the medal shelf's lower
+   baseline so the action row and medal names share one visual foundation. The
+   resume card retains its shelf-led alignment. */
 @media (min-width: 901px) {
   .calm-start-card:not(.is-resumed) {
     align-items: start;
     padding-top: 64px;
+  }
+
+  .calm-start-card:not(.is-resumed) .calm-start-form {
+    align-self: end;
   }
 }
 
@@ -5629,7 +5636,7 @@ html.is-challenge-dialog-open {
   .calm-start-card,
   .calm-start-card:not(.is-resumed) {
     grid-template-columns: 1fr;
-    grid-template-areas: "label" "title" "form";
+    grid-template-areas: "label" "title" "medals" "form";
   }
 
   .calm-start-card.is-resumed {
@@ -6419,6 +6426,7 @@ html.is-challenge-dialog-open {
     grid-template-columns: 1fr;
     grid-template-areas:
       "title"
+      "medals"
       "form";
   }
 
