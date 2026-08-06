@@ -2466,6 +2466,11 @@ html.is-challenge-dialog-open {
   border-bottom: 0;
 }
 
+.calm-results-dashboard-header--participant .calm-results-dashboard-summary__details {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
 .calm-results-dashboard-header h1 {
   margin: 0;
   color: var(--ari-ink);
