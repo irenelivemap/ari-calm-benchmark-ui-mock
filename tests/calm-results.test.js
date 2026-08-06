@@ -372,6 +372,63 @@ test('keeps different explicit participant codes separate when names match', () 
   assert.equal(Results.aggregateAnswers(duplicateNames).participants, 2);
 });
 
+test('ranks route explorers by unique route progress with shared ranks and four medals', () => {
+  const ranked = Results.rankRouteExplorers([
+    { participantId: 'irene', participant: 'Irene', routePairs: 23 },
+    { participantId: 'alex', participant: 'Alex', routesCompared: 18 },
+    { participantId: 'maya', participant: 'Maya', routes_compared: 12 },
+    { participantId: 'jonas', participant: 'Jonas', comparisons: 7 },
+    { participantId: 'sam', participant: 'Sam', comparisons: 7 },
+    { participantId: 'new', participant: 'New player', comparisons: 2 }
+  ]);
+
+  assert.deepEqual(ranked.map(item => ({
+    rank: item.rank,
+    participant: item.participant,
+    routes: item.routesCompared,
+    medals: item.earnedMedals,
+    medal: item.medalName
+  })), [
+    { rank: 1, participant: 'Irene', routes: 23, medals: 4, medal: 'Cosmic Explorer' },
+    { rank: 2, participant: 'Alex', routes: 18, medals: 3, medal: 'World Mapper' },
+    { rank: 3, participant: 'Maya', routes: 12, medals: 2, medal: 'Trail Seeker' },
+    { rank: 4, participant: 'Jonas', routes: 7, medals: 1, medal: 'Street Scout' },
+    { rank: 4, participant: 'Sam', routes: 7, medals: 1, medal: 'Street Scout' },
+    { rank: 6, participant: 'New player', routes: 2, medals: 0, medal: 'First medal at 5' }
+  ]);
+});
+
+test('deduplicates route explorer identities and caps progress at the current corpus size', () => {
+  const ranked = Results.rankRouteExplorers([
+    { participant_id: 'irene', participant_name: 'Irene', routes_compared: 9 },
+    { participantId: 'irene', participant: 'Irene', routesCompared: 12 },
+    { participantId: 'alex', participant: 'Alex', routesCompared: 99 }
+  ]);
+
+  assert.equal(ranked.length, 2);
+  assert.equal(ranked[0].participant, 'Alex');
+  assert.equal(ranked[0].routesCompared, 23);
+  assert.equal(ranked[1].routesCompared, 12);
+});
+
+test('orders completed route explorers by first completion while retaining shared ranks below 23', () => {
+  const ranked = Results.rankRouteExplorers([
+    { participantId: 'late', participant: 'Late finisher', routesCompared: 23, completionOrder: 3 },
+    { participantId: 'first', participant: 'First finisher', routesCompared: 23, completion_order: 1 },
+    { participantId: 'second', participant: 'Second finisher', routesCompared: 23, completedAt: '2026-08-06T10:00:00.000Z', completionOrder: 2 },
+    { participantId: 'tie-b', participant: 'Tie B', routesCompared: 18 },
+    { participantId: 'tie-a', participant: 'Tie A', routesCompared: 18 }
+  ]);
+
+  assert.deepEqual(ranked.map(item => [item.rank, item.participant]), [
+    [1, 'First finisher'],
+    [2, 'Second finisher'],
+    [3, 'Late finisher'],
+    [4, 'Tie A'],
+    [4, 'Tie B']
+  ]);
+});
+
 test('does not manufacture a leading route for ties or neutral-only answers', () => {
   const tied = Results.aggregateAnswers([
     answer({ captureId: 'capture-1', q1Choice: 'route_a' }),

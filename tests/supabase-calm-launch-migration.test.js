@@ -16,6 +16,14 @@ const questionnaireMigration = fs.readFileSync(
   path.join(root, 'supabase/migrations/20260806_questionnaire_extensions.sql'),
   'utf8'
 );
+const routeExplorersMigration = fs.readFileSync(
+  path.join(root, 'supabase/migrations/20260806_route_explorers.sql'),
+  'utf8'
+);
+const routeExplorerCompletionOrderMigration = fs.readFileSync(
+  path.join(root, 'supabase/migrations/20260806_route_explorer_completion_order.sql'),
+  'utf8'
+);
 const runbook = fs.readFileSync(path.join(root, 'supabase/README.md'), 'utf8');
 const postflight = fs.readFileSync(path.join(root, 'supabase/postflight.sql'), 'utf8');
 
@@ -26,11 +34,42 @@ test('documents the Calm launch migration in chronological production order', ()
   const calmFixes = safeOrder.indexOf('20260805_calm_launch_fixes.sql');
   const corpusV2 = safeOrder.indexOf('20260805_route_corpus_v2.sql');
   const questionnaire = safeOrder.indexOf('20260806_questionnaire_extensions.sql');
+  const routeExplorers = safeOrder.indexOf('20260806_route_explorers.sql');
+  const completionOrder = safeOrder.indexOf('20260806_route_explorer_completion_order.sql');
   assert.ok(hardening >= 0);
   assert.ok(writeOnly > hardening);
   assert.ok(calmFixes > writeOnly);
   assert.ok(corpusV2 > calmFixes);
   assert.ok(questionnaire > corpusV2);
+  assert.ok(routeExplorers > questionnaire);
+  assert.ok(completionOrder > routeExplorers);
+});
+
+test('orders full-corpus Route Explorers by their first 23-route completion without exposing timestamps', () => {
+  assert.match(routeExplorerCompletionOrderMigration, /returns table \(\s*participant_id text,\s*participant_name text,\s*routes_compared integer,\s*completion_order integer/s);
+  assert.match(routeExplorerCompletionOrderMigration, /min\(created_at\) as first_completed_at/);
+  assert.match(routeExplorerCompletionOrderMigration, /case when count\(\*\) >= 23 then max\(first_completed_at\) end as completed_at/);
+  assert.match(routeExplorerCompletionOrderMigration, /row_number\(\) over \(order by completed_at, participant_id\)::integer as completion_order/);
+  assert.match(routeExplorerCompletionOrderMigration, /positions\.completion_order nulls last/);
+  assert.match(routeExplorerCompletionOrderMigration, /grant execute on function public\.get_calm_route_explorers\(\) to anon/);
+  assert.doesNotMatch(routeExplorerCompletionOrderMigration, /returns table \([^)]*completed_at/s);
+  assert.doesNotMatch(routeExplorerCompletionOrderMigration, /q1_choice|q2_reasons|q3_note|session_id|pair_id/);
+  assert.match(postflight, /latest_completion_order/);
+});
+
+test('exposes only current-corpus participant progress through the Route Explorers RPC', () => {
+  assert.match(routeExplorersMigration, /create or replace function public\.get_calm_route_explorers\(\)/);
+  assert.match(routeExplorersMigration, /returns table \(\s*participant_id text,\s*participant_name text,\s*routes_compared integer/s);
+  assert.match(routeExplorersMigration, /security definer/);
+  assert.match(routeExplorersMigration, /set search_path = ''/);
+  assert.match(routeExplorersMigration, /count\(distinct route_number\)/);
+  assert.match(routeExplorersMigration, /calm-curated-v2/);
+  assert.match(routeExplorersMigration, /20c716cbb91a4fb09f6eb86c686afeab5dd099378886b6bd1cc548adeb366715/);
+  assert.match(routeExplorersMigration, /grant execute on function public\.get_calm_route_explorers\(\) to anon/);
+  assert.match(routeExplorersMigration, /revoke all on public\.benchmark_answers from anon, authenticated/);
+  assert.doesNotMatch(routeExplorersMigration, /q1_choice|q2_reasons|q3_note|session_id|pair_id/);
+  assert.doesNotMatch(routeExplorersMigration, /\b(delete|truncate|drop)\b/i);
+  assert.match(postflight, /get_calm_route_explorers/);
 });
 
 test('validates the current questionnaire extensions in the write-only RPC', () => {

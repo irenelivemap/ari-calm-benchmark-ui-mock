@@ -92,4 +92,19 @@ select
     in pg_get_functiondef('public.submit_benchmark_answer(jsonb)'::regprocedure)
   ) > 0 as validates_fast_alternative_note;
 
+select
+  p.proname,
+  p.prosecdef as security_definer,
+  has_function_privilege('anon', 'public.get_calm_route_explorers()', 'EXECUTE') as anon_can_execute
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public'
+  and p.proname = 'get_calm_route_explorers';
+
+select
+  count(*)::integer as route_explorers,
+  coalesce(max(routes_compared), 0)::integer as highest_route_count,
+  coalesce(max(completion_order), 0)::integer as latest_completion_order
+from public.get_calm_route_explorers();
+
 rollback;

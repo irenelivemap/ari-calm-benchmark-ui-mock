@@ -49,6 +49,22 @@ test('provides a deterministic, varied Calm team-results fixture', () => {
   assert.ok(agreement.quietPreferenceInterval.high < 50);
 });
 
+test('provides varied participant progress for the local Route Explorers preview', () => {
+  const explorers = MockTeamResults.createRouteExplorerProgress();
+  const counts = explorers.map(explorer => explorer.routesCompared);
+
+  assert.equal(explorers.length, 15);
+  assert.equal(new Set(explorers.map(explorer => explorer.participantId)).size, 15);
+  assert.equal(Math.max(...counts), 23);
+  assert.equal(Math.min(...counts), 1);
+  assert.ok(new Set(counts).size >= 10);
+  assert.equal(explorers.find(explorer => explorer.participantId === MockTeamResults.CURRENT_PARTICIPANT_ID).routesCompared, 23);
+  assert.deepEqual(
+    explorers.filter(explorer => explorer.routesCompared === 23).map(explorer => explorer.completionOrder),
+    [1, 2, 3]
+  );
+});
+
 function agreementEligibleCount(answers) {
   return answers.filter(answer => ['route_a', 'route_b', 'both_work_well'].includes(answer.q1Choice)).length;
 }

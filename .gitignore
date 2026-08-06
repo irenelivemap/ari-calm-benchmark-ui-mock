@@ -5,3 +5,7 @@
 node_modules/
 _site/
 *.log
+.vercel
+.env*
+test-results/
+playwright-report/

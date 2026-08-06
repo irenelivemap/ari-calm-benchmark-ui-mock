@@ -39,10 +39,11 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- impeccable-disable-next-line overused-font -- Fraunces is the documented fallback for ARI's New Spirit accent. -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260806-participant-full-width-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260806-route-explorers-1">
   <style>
     body {
       margin: 0;
@@ -320,10 +321,10 @@
   <script src="./src/data/mock-fast-google-route-pairs.js?v=20260714-fast-google-ui-1"></script>
   <script src="./src/data/calm-benchmark-data.js?v=20260806-conditional-notes-1"></script>
   <script src="./src/data/benchmark-transport.js?v=20260804-persist-endpoint-1"></script>
-  <script src="./src/data/supabase-transport.js?v=20260804-write-rpc-1"></script>
+  <script src="./src/data/supabase-transport.js?v=20260806-route-explorers-1"></script>
   <script src="./src/data/mock-route-diagnostics.js?v=20260805-calm-corpus-v2-1"></script>
-  <script src="./src/data/mock-team-results.js?v=20260806-conditional-notes-1"></script>
-  <script src="./src/results/calm-results.js?v=20260806-conditional-notes-1"></script>
+  <script src="./src/data/mock-team-results.js?v=20260806-route-explorer-preview-1"></script>
+  <script src="./src/results/calm-results.js?v=20260806-route-explorers-1"></script>
   <script src="./src/api/route-pair-generator.js?v=20260715-live-google-pairs-1"></script>
   <script src="./src/maps/route-overlap.js?v=20260729-street-view-any-point-1"></script>
   <script src="./src/maps/map-loading.js?v=20260805-calm-launch-fixes-1"></script>
@@ -654,26 +655,28 @@
      * FORM: Existing results world extended as an operate surface with a master-detail participant view.
      */
     let calmResultsView = 'participants';
+    let routeExplorersExpanded = false;
     let choiceReasonsMode = 'all';
     let freeTextTheme = null;
     let selectedResultsParticipantId = '';
     let rpExplorerItems = [];
     let rpExplorerIndex = -1;
     let rpExplorerTrigger = null;
+    const urlParams = new URLSearchParams(window.location.search);
+    const researcherMode = !runtimeConfig.production && urlParams.get('researcher') === '1';
+    const localSamplePreviewMode = !runtimeConfig.production && urlParams.get('sample') === '1';
     const storedSampleResultsMode = localStorage.getItem(SAMPLE_RESULTS_STORAGE);
     let sampleResultsEnabled = !runtimeConfig.production
-      && (storedSampleResultsMode === 'sample' || storedSampleResultsMode === '1');
+      && (
+        localSamplePreviewMode
+        || (researcherMode && (storedSampleResultsMode === 'sample' || storedSampleResultsMode === '1'))
+      );
     let challengeRouteTimer = null;
     let challengeMedalTimer = null;
     let challengeRouteResizeFrame = null;
     let challengeRouteObserver = null;
-    const urlParams = new URLSearchParams(window.location.search);
     let freshPreviewMode = !runtimeConfig.production
       && (urlParams.get('fresh') === '1' || urlParams.get('preview') === 'fresh');
-    const RESEARCHER_STORAGE = 'ari-calm-researcher-mode-v1';
-    if (urlParams.get('researcher') === '1') localStorage.setItem(RESEARCHER_STORAGE, '1');
-    else if (urlParams.get('researcher') === '0') localStorage.removeItem(RESEARCHER_STORAGE);
-    const researcherMode = !runtimeConfig.production && localStorage.getItem(RESEARCHER_STORAGE) === '1';
     if (!researcherMode) {
       document.querySelectorAll('[data-reset-test-data]').forEach(button => button.remove());
     }
@@ -699,7 +702,7 @@
     const dataRepository = dataRepositories[activeChallenge];
 
     function resultsAreAvailable() {
-      if (researcherMode) return true;
+      if (researcherMode || sampleResultsEnabled) return true;
       const answers = dataRepository.getSnapshot().answers || [];
       return !freshPreviewMode && answers.length > 0;
     }
@@ -735,7 +738,7 @@
     if (!researcherMode) {
       sampleResultsEnabled = !runtimeConfig.production
         && activeChallenge === 'calm'
-        && !hasSavedAnswers;
+        && (localSamplePreviewMode || !hasSavedAnswers);
     } else if (
       !runtimeConfig.production
       && activeChallenge === 'calm'
@@ -775,6 +778,11 @@
     const remoteTeamResults = {
       status: remoteTransport ? 'idle' : 'local',
       answers: [],
+      error: null
+    };
+    const remoteRouteExplorers = {
+      status: remoteTransport?.listRouteExplorers ? 'idle' : 'local',
+      entries: [],
       error: null
     };
     if (remoteTransport) {
@@ -979,7 +987,153 @@
       if (activePage === 'results') renderCommunityResults();
     }
 
+    async function loadRemoteRouteExplorers() {
+      if (researcherMode || sampleResultsEnabled || activeChallenge !== 'calm' || !remoteTransport?.listRouteExplorers) return;
+      if (remoteRouteExplorers.status === 'loading' || remoteRouteExplorers.status === 'ready') return;
+      remoteRouteExplorers.status = 'loading';
+      remoteRouteExplorers.error = null;
+      if (activePage === 'results') renderCommunityResults();
+      try {
+        remoteRouteExplorers.entries = await remoteTransport.listRouteExplorers();
+        remoteRouteExplorers.status = 'ready';
+      } catch (error) {
+        remoteRouteExplorers.status = 'error';
+        remoteRouteExplorers.error = error;
+        console.warn('Could not refresh Route Explorers.', error);
+      }
+      if (activePage === 'results') renderCommunityResults();
+    }
+
+    function routeExplorerEntries(participantSummaries) {
+      const entries = new Map();
+      const addEntry = entry => {
+        const participantId = String(entry.participantId || entry.participant_id || '').trim();
+        if (!participantId) return;
+        const routesCompared = Number(
+          entry.routesCompared
+          ?? entry.routes_compared
+          ?? entry.routePairs
+          ?? entry.comparisons
+          ?? 0
+        );
+        const rawCompletionOrder = Number(entry.completionOrder ?? entry.completion_order);
+        const completionOrder = Number.isFinite(rawCompletionOrder) && rawCompletionOrder > 0
+          ? Math.floor(rawCompletionOrder)
+          : null;
+        const completionAt = routesCompared >= DEMO_INITIAL_ROUNDS
+          ? entry.completedAt ?? entry.completed_at ?? entry.lastUpdated ?? entry.last_updated ?? null
+          : null;
+        const candidate = {
+          participantId,
+          participant: entry.participant || entry.participantName || entry.participant_name || 'Anonymous',
+          routesCompared,
+          completionOrder,
+          completedAt: completionAt
+        };
+        const existing = entries.get(participantId);
+        const candidateHasCompletionOrder = candidate.completionOrder !== null || candidate.completedAt;
+        const existingHasCompletionOrder = existing?.completionOrder !== null || existing?.completedAt;
+        if (
+          !existing
+          || routesCompared > existing.routesCompared
+          || (routesCompared === existing.routesCompared && candidateHasCompletionOrder && !existingHasCompletionOrder)
+        ) {
+          entries.set(participantId, candidate);
+        }
+      };
+      if (sampleResultsEnabled && !researcherMode && AriMockTeamResults.createRouteExplorerProgress) {
+        AriMockTeamResults.createRouteExplorerProgress().forEach(addEntry);
+      } else {
+        if (!sampleResultsEnabled && remoteRouteExplorers.status === 'ready') remoteRouteExplorers.entries.forEach(addEntry);
+        participantSummaries.forEach(addEntry);
+      }
+      return AriCalmResults.rankRouteExplorers([...entries.values()], {
+        totalRoutes: DEMO_INITIAL_ROUNDS,
+        milestones: MILESTONES
+      });
+    }
+
+    function renderRouteExplorerMedals(explorer) {
+      return MILESTONES.map((milestone, index) => {
+        const earned = index < explorer.earnedMedals;
+        const isCurrentLevel = earned && index === explorer.earnedMedals - 1;
+        return `<span class="calm-route-explorer-medal${earned ? ' is-earned' : ''}${isCurrentLevel ? ' is-current-level' : ''}" data-medal-tier="${index + 1}" title="${escapeHtml(milestone.name)} · ${earned ? (isCurrentLevel ? 'current level' : 'earned') : `unlocks at ${milestone.at}`}" aria-hidden="true">${milestone.icon}</span>`;
+      }).join('');
+    }
+
+    function renderRouteExplorerRank(rank) {
+      if (rank > 3) return String(rank);
+      return `
+        <svg class="calm-route-explorers__rank-trophy" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <path class="calm-route-explorers__rank-trophy-cup" d="M9 5h14v5.5c0 5-2.7 8.3-7 9.6-4.3-1.3-7-4.6-7-9.6V5Z"/>
+          <path class="calm-route-explorers__rank-trophy-handles" d="M9 8H5.5v2c0 3 1.7 4.7 4.6 5.1M23 8h3.5v2c0 3-1.7 4.7-4.6 5.1"/>
+          <path class="calm-route-explorers__rank-trophy-stem" d="M14.5 19h3v5h-3z"/>
+          <path class="calm-route-explorers__rank-trophy-base" d="M11 24h10v3H11z"/>
+          <path class="calm-route-explorers__rank-trophy-shine" d="M12 7v4.2c0 2.8 1.2 4.6 3.1 5.5"/>
+        </svg>`;
+    }
+
+    function renderRouteExplorers(participantSummaries, currentParticipantId) {
+      if (researcherMode) return '';
+      const explorers = routeExplorerEntries(participantSummaries);
+      const duplicateNames = explorers.reduce((groups, explorer) => {
+        const key = explorer.participant.toLocaleLowerCase();
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(explorer.participantId);
+        return groups;
+      }, new Map());
+      const displayName = explorer => {
+        const matches = duplicateNames.get(explorer.participant.toLocaleLowerCase()) || [];
+        const position = matches.indexOf(explorer.participantId);
+        return matches.length > 1 ? `${explorer.participant} · ${position + 1}` : explorer.participant;
+      };
+      const status = sampleResultsEnabled || !remoteTransport?.listRouteExplorers
+        ? ''
+        : remoteRouteExplorers.status === 'loading' || remoteRouteExplorers.status === 'idle'
+          ? '<p class="calm-route-explorers__status" role="status">Updating team progress…</p>'
+          : remoteRouteExplorers.status === 'error'
+            ? '<p class="calm-route-explorers__status" data-state="error" role="status">Team progress is temporarily unavailable. Your saved progress is still shown.</p>'
+            : '';
+      const rows = explorers.map((explorer, index) => {
+        const isCurrent = explorer.participantId === currentParticipantId;
+        const isMobilePrimary = index < 5 || isCurrent;
+        const isComplete = explorer.routesCompared >= explorer.totalRoutes;
+        const name = escapeHtml(displayName(explorer));
+        const progress = Math.min(100, Math.max(0, Math.round((explorer.routesCompared / explorer.totalRoutes) * 100)));
+        return `
+          <div class="calm-route-explorers__row${isCurrent ? ' is-current' : ''}${isMobilePrimary ? ' is-mobile-primary' : ''}${isComplete ? ' is-complete' : ''}" role="row">
+            <span class="calm-route-explorers__rank${explorer.rank <= 3 ? ' is-top-rank' : ''}" data-rank-position="${explorer.rank}" role="cell"><span class="ari-visually-hidden">Rank ${explorer.rank}</span>${renderRouteExplorerRank(explorer.rank)}</span>
+            <span class="calm-route-explorers__name" role="rowheader"><strong${isCurrent ? ' class="marker-lime marker-static"' : ''}>${name}</strong></span>
+            <span class="calm-route-explorers__medals" role="cell" aria-label="${explorer.earnedMedals} of ${MILESTONES.length} medals earned. Current level: ${escapeHtml(explorer.medalName)}">${renderRouteExplorerMedals(explorer)}</span>
+            <span class="calm-route-explorers__score" role="cell">
+              <span class="calm-route-explorers__progress" role="progressbar" aria-label="${name} route progress" aria-valuemin="0" aria-valuemax="${explorer.totalRoutes}" aria-valuenow="${explorer.routesCompared}" style="--route-progress: ${progress}%"><span aria-hidden="true"></span></span>
+              <strong${isComplete ? ' class="marker-lime marker-static"' : ''}>${isComplete ? '<svg class="calm-route-explorers__complete-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="m4.5 10.5 3.4 3.4 7.6-8"/></svg>' : ''}${explorer.routesCompared}<span aria-hidden="true"> / ${explorer.totalRoutes}</span><span class="ari-visually-hidden"> of ${explorer.totalRoutes} routes${isComplete ? ', complete' : ''}</span></strong>
+            </span>
+          </div>`;
+      }).join('');
+
+      return `
+        <section class="calm-route-explorers${routeExplorersExpanded ? ' is-expanded' : ''}" aria-labelledby="route-explorers-title">
+          <header class="calm-route-explorers__head">
+            <h2 id="route-explorers-title">Route Explorers Leaderboard</h2>
+          </header>
+          ${status}
+          ${rows ? `
+            <div class="calm-route-explorers__table" role="table" aria-label="Route Explorers leaderboard">
+              <div class="calm-route-explorers__header" role="row">
+                <span role="columnheader">Rank</span>
+                <span role="columnheader">Participant</span>
+                <span role="columnheader">Medals</span>
+                <span role="columnheader">Routes</span>
+              </div>
+              <div role="rowgroup">${rows}</div>
+            </div>
+            ${explorers.length > 5 ? `<button type="button" class="calm-route-explorers__toggle" data-results-action="toggle-explorers" aria-expanded="${routeExplorersExpanded}">${routeExplorersExpanded ? 'Show fewer' : `Show all ${explorers.length}`}</button>` : ''}` : '<p class="calm-route-explorers__empty">The first explorer will appear after a saved comparison.</p>'}
+        </section>`;
+    }
+
     function renderCalmResultsSwitcher(participantCount) {
+      if (!researcherMode) return '';
       const sourceState = sampleResultsEnabled ? 'sample' : remoteTeamResults.status;
       const sourceLabel = sampleResultsEnabled
         ? 'Illustrative sample data'
@@ -1003,11 +1157,10 @@
             ${sampleToggle}
           </div>` : '';
       return `
-        <div class="calm-results-toolbar${researcherMode ? '' : ' calm-results-toolbar--participant'}">
+        <div class="calm-results-toolbar">
           <nav class="calm-results-switcher" aria-label="Calm results view">
-            <button type="button" data-results-view="overview" aria-pressed="false" disabled>Overview <span class="calm-results-switcher__soon">Soon</span></button>
-            <button type="button" data-results-view="participants" aria-pressed="${calmResultsView === 'participants'}">${researcherMode ? 'Participants' : 'My results'}</button>
-            ${researcherMode ? `<button type="button" data-results-view="routes" aria-pressed="${calmResultsView === 'routes'}">Routes</button>` : ''}
+            <button type="button" data-results-view="participants" aria-pressed="${calmResultsView === 'participants'}">Participants</button>
+            <button type="button" data-results-view="routes" aria-pressed="${calmResultsView === 'routes'}">Routes</button>
           </nav>
           ${resultsMeta}
         </div>`;
@@ -1594,6 +1747,17 @@
         .sort((a, b) => b[1] - a[1]);
       const choiceReasonResponseCount = participantSummary.rows.filter(row => row.q2Reasons.length > 0).length;
       const rejectionReasonResponseCount = participantSummary.rows.filter(row => row.reasons.length > 0).length;
+      const shapedChoiceReasonCounts = [...choiceReasonEntries, ...rejectionReasonEntries]
+        .reduce((counts, [label, count]) => {
+          counts.set(label, (counts.get(label) || 0) + count);
+          return counts;
+        }, new Map());
+      const shapedChoiceReasonEntries = [...shapedChoiceReasonCounts.entries()]
+        .map(([label, count]) => [label, count])
+        .sort((a, b) => b[1] - a[1]);
+      const shapedChoiceReasonResponseCount = participantSummary.rows
+        .filter(row => row.q2Reasons.length > 0 || row.reasons.length > 0)
+        .length;
       const participantButtons = orderedParticipants.map(item => {
         const isSelected = item.participantId === selectedResultsParticipantId;
         return `
@@ -1615,40 +1779,43 @@
             <div class="calm-participant-list__items">${participantButtons}</div>
           </aside>` : ''}
           <section class="calm-participant-detail" aria-labelledby="calm-participant-detail-title">
-            <header class="calm-participant-detail__header">
-              ${researcherMode ? '<p class="calm-results-eyebrow">Participant record</p>' : ''}
-              <h2 id="calm-participant-detail-title">${escapeHtml(selectedParticipantLabel)}</h2>
-              ${researcherMode ? `<p>${selectedPerson.comparisons} completed comparison${selectedPerson.comparisons === 1 ? '' : 's'} across ${selectedPerson.routePairs} route pair${selectedPerson.routePairs === 1 ? '' : 's'}. Updated ${formatUpdated(selectedPerson.lastUpdated)}.</p>` : ''}
-            </header>
+            ${researcherMode ? `
+              <header class="calm-participant-detail__header">
+                <p class="calm-results-eyebrow">Participant record</p>
+                <h2 id="calm-participant-detail-title">${escapeHtml(selectedParticipantLabel)}</h2>
+                <p>${selectedPerson.comparisons} completed comparison${selectedPerson.comparisons === 1 ? '' : 's'} across ${selectedPerson.routePairs} route pair${selectedPerson.routePairs === 1 ? '' : 's'}. Updated ${formatUpdated(selectedPerson.lastUpdated)}.</p>
+              </header>` : `
+              <header class="calm-participant-results-heading">
+                <h2 id="calm-participant-detail-title">Your choices</h2>
+              </header>`}
             ${researcherMode ? `
             <section class="calm-team-metrics calm-participant-metrics" aria-label="${escapeHtml(selectedParticipantLabel)} summary">
               <div><strong>${selectedPerson.comparisons}</strong><span>Comparisons</span></div>
               <div><strong>${selectedPerson.routePairs}</strong><span>Route pairs</span></div>
               <div><strong>${selectedPerson.sessions}</strong><span>Sessions</span></div>
-            </section>` : `
-            <section class="calm-participant-route-count" aria-label="${selectedPerson.comparisons} routes compared">
-              <strong class="marker-lime marker-static">${selectedPerson.comparisons}</strong>
-              <span>route${selectedPerson.comparisons === 1 ? '' : 's'} compared</span>
-            </section>`}
+            </section>` : ''}
             <div class="calm-team-analysis calm-participant-analysis">
               <section aria-labelledby="participant-choice-title">
-                <h2 id="participant-choice-title">Route choices</h2>
+                <h3 id="participant-choice-title">${researcherMode ? 'Route choices' : 'Your route choices'}</h3>
                 <div class="calm-results-chart">${renderBarRows(outcomeEntries, participantSummary.total, 'calm-result-row--outcome')}</div>
               </section>
               <section aria-labelledby="participant-reasons-title">
-                <h2 id="participant-reasons-title">Reasons for choosing routes</h2>
-                <div class="calm-results-chart">${choiceReasonEntries.length
-                  ? renderBarRows(choiceReasonEntries, choiceReasonResponseCount)
-                  : '<p class="calm-participant-empty-note">No route-choice reasons selected.</p>'}</div>
+                <h3 id="participant-reasons-title">${researcherMode ? 'Reasons for choosing routes' : 'What shaped your choices'}</h3>
+                <div class="calm-results-chart">${(researcherMode ? choiceReasonEntries : shapedChoiceReasonEntries).length
+                  ? renderBarRows(
+                      researcherMode ? choiceReasonEntries : shapedChoiceReasonEntries,
+                      researcherMode ? choiceReasonResponseCount : shapedChoiceReasonResponseCount
+                    )
+                  : `<p class="calm-participant-empty-note">${researcherMode ? 'No route-choice reasons selected.' : 'No reasons selected.'}</p>`}</div>
               </section>
-              ${rejectionReasonEntries.length ? `
+              ${researcherMode && rejectionReasonEntries.length ? `
               <section aria-labelledby="participant-rejection-reasons-title">
-                <h2 id="participant-rejection-reasons-title">Reasons for choosing neither</h2>
+                <h3 id="participant-rejection-reasons-title">Reasons for choosing neither</h3>
                 <div class="calm-results-chart">${renderBarRows(rejectionReasonEntries, rejectionReasonResponseCount)}</div>
               </section>` : ''}
             </div>
             <section class="calm-participant-cards" aria-labelledby="participant-records-title">
-              <h2 id="participant-records-title" class="calm-pp-cards-title">Evaluation records</h2>
+              <h3 id="participant-records-title" class="calm-pp-cards-title">${researcherMode ? 'Participant records' : 'Your comparisons'}</h3>
               <div class="calm-pp-cards-list">${renderParticipantPairCards(participantSummary.rows)}</div>
             </section>
           </section>
@@ -1680,20 +1847,31 @@
       parkRouteProfiles();
       communityResultsContent.innerHTML = `
         <header class="calm-results-dashboard-header${researcherMode ? '' : ' calm-results-dashboard-header--participant'}">
-          <h1>${researcherMode ? 'Team results' : 'Your results'}</h1>
+          ${researcherMode
+            ? '<h1>Team results</h1>'
+            : '<h1>A quick explanation of what you did</h1>'}
           <div class="calm-results-dashboard-summary">
-            <p class="calm-results-dashboard-summary__lead">${researcherMode
-              ? `<strong class="marker-lime marker-static">${summary.participants} team member${summary.participants === 1 ? '' : 's'}</strong> familiar with Zürich completed <strong class="marker-lime marker-static">${summary.total} route comparison${summary.total === 1 ? '' : 's'}</strong> in a blind, side-by-side format.`
-              : `You completed <strong class="marker-lime marker-static">${summary.total} route comparison${summary.total === 1 ? '' : 's'}</strong> in a blind, side-by-side format.`}</p>
-            <div class="calm-results-dashboard-summary__details">
-              <p>For each pair, the routes were shown as Route A and Route B, so evaluators did not know which profile generated them. One came from a <strong class="calm-results-profile-label" data-profile="nature">Nature-focused profile</strong>, with more emphasis on greenery, tree canopy, and proximity to water. The other came from a <strong class="calm-results-profile-label" data-profile="quiet">Quiet-focused profile</strong>, with more emphasis on avoiding noise, main roads, and areas with higher accident risk.</p>
-              <div class="calm-results-dashboard-summary__support">
-                <p>Evaluators judged whether Route A, Route B, both, or neither worked as a Calm route, or whether they were unsure.</p>
-                <p>The results help us compare model hypotheses and identify cases to investigate. They reflect structured internal judgments, not the preferences of Zürich pedestrians as a whole.</p>
+            ${researcherMode ? `
+              <p class="calm-results-dashboard-summary__lead"><strong class="marker-lime marker-static">${summary.participants} team member${summary.participants === 1 ? '' : 's'}</strong> familiar with Zürich completed <strong class="marker-lime marker-static">${summary.total} route comparison${summary.total === 1 ? '' : 's'}</strong> in a blind, side-by-side format.</p>
+              <div class="calm-results-dashboard-summary__details">
+                <p>For each pair, the routes were shown as Route A and Route B, so evaluators did not know which profile generated them. One came from a <strong class="calm-results-profile-label" data-profile="nature">Nature-focused profile</strong>, with more emphasis on greenery, tree canopy, and proximity to water. The other came from a <strong class="calm-results-profile-label" data-profile="quiet">Quiet-focused profile</strong>, with more emphasis on avoiding noise, main roads, and areas with higher accident risk.</p>
+                <div class="calm-results-dashboard-summary__support">
+                  <p>Evaluators judged whether Route A, Route B, both, or neither worked as a Calm route, or whether they were unsure.</p>
+                  <p>The results help us compare model hypotheses and identify cases to investigate. They reflect structured internal judgments, not the preferences of Zürich pedestrians as a whole.</p>
+                </div>
               </div>
-            </div>
+            ` : `
+              <div class="calm-results-dashboard-summary__details">
+                <p>You compared pairs of Calm routes without knowing which model created each one. In every pair, one route came from a <strong class="calm-results-profile-label" data-profile="nature">Nature-focused profile</strong>, which gives more weight to greenery, tree canopy and water. The other came from a <strong class="calm-results-profile-label" data-profile="quiet">Quiet-focused profile</strong>, which gives more weight to avoiding noise, main roads and areas with higher accident risk.</p>
+                <div class="calm-results-dashboard-summary__support">
+                  <p>For each pair, you told us whether you preferred Route A, Route B, both routes or neither, or whether you were unsure.</p>
+                  <p>Your responses help us understand which approach works better, what people value in a Calm route and which cases need further investigation. Since this was an internal evaluation, the results reflect the judgments of the evaluators rather than Zürich pedestrians as a whole.</p>
+                </div>
+              </div>
+            `}
           </div>
         </header>
+        ${renderRouteExplorers(participantSummaries, currentParticipantId)}
         ${renderCalmResultsSwitcher(participantSummaries.length)}
         <div class="calm-results-dashboard-panel" data-results-panel="${calmResultsView}">
           ${activeContent}
@@ -1895,6 +2073,7 @@
       if (view === 'results') {
         renderCommunityResults();
         void loadRemoteTeamResults();
+        void loadRemoteRouteExplorers();
       }
       if (isTeam) renderTeamResults();
       if (view === 'route-profiles') renderRouteProfiles();
@@ -2387,6 +2566,7 @@
               throw queuedDelivery.error || new Error('Completed comparison queued for remote delivery.');
             }
             updateResultsAvailability();
+            if (remoteRouteExplorers.status === 'ready') remoteRouteExplorers.status = 'idle';
             if (!runtimeConfig.production) {
               console.log('Benchmark answer payload:', answer);
               console.log('Benchmark answer save:', result.status, answerDelivery?.status || 'local-only');
@@ -2500,6 +2680,12 @@
 
     communityResults.addEventListener('click', event => {
       const resultsAction = event.target.closest('[data-results-action]')?.dataset.resultsAction;
+      if (resultsAction === 'toggle-explorers') {
+        routeExplorersExpanded = !routeExplorersExpanded;
+        renderCommunityResults();
+        requestAnimationFrame(() => communityResults.querySelector('[data-results-action="toggle-explorers"]')?.focus());
+        return;
+      }
       if (resultsAction === 'sample-data') {
         sampleResultsEnabled = true;
         selectedResultsParticipantId = '';
@@ -2513,6 +2699,7 @@
         localStorage.setItem(SAMPLE_RESULTS_STORAGE, 'saved');
         renderCommunityResults();
         void loadRemoteTeamResults();
+        void loadRemoteRouteExplorers();
         return;
       }
       if (resultsAction === 'continue') {
@@ -2629,6 +2816,7 @@
         requestAnimationFrame(() => {
           communityResults.querySelector('[data-results-participant][aria-pressed="true"]')?.focus();
         });
+        return;
       }
     });
 

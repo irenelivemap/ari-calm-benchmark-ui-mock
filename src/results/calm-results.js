@@ -26,6 +26,12 @@
   const Q2_CHOICES = ['yes', 'no', 'not_sure'];
   const Q3_WORTH_CHOICES = ['a_lot', 'somewhat', 'a_little', 'not_at_all', 'not_sure'];
   const Q3_FAST_ALTERNATIVE_QUESTION = 'When would you choose Fast instead of a Calm route? (Optional)';
+  const ROUTE_EXPLORER_MILESTONES = [
+    { at: 5, name: 'Street Scout' },
+    { at: 10, name: 'Trail Seeker' },
+    { at: 15, name: 'World Mapper' },
+    { at: 23, name: 'Cosmic Explorer' }
+  ];
   const REASONS = [
     'not_enough_greenery_water',
     'too_busy_or_crowded',
@@ -570,6 +576,104 @@
       );
   }
 
+  function rankRouteExplorers(participants, options = {}) {
+    const totalRoutes = Math.max(1, Number(options.totalRoutes) || 23);
+    const milestones = (options.milestones || ROUTE_EXPLORER_MILESTONES)
+      .map(item => ({ at: Number(item.at), name: String(item.name || '') }))
+      .filter(item => Number.isFinite(item.at) && item.at > 0 && item.name)
+      .sort((a, b) => a.at - b.at);
+    const byParticipant = new Map();
+
+    (participants || []).forEach((participant, index) => {
+      const participantId = String(
+        participant.participantId
+        || participant.participant_id
+        || `participant-${index + 1}`
+      ).trim();
+      const participantName = String(
+        participant.participant
+        || participant.participantName
+        || participant.participant_name
+        || 'Anonymous'
+      ).trim() || 'Anonymous';
+      const rawCount = Number(
+        participant.routesCompared
+        ?? participant.routes_compared
+        ?? participant.routePairs
+        ?? participant.comparisons
+        ?? 0
+      );
+      const routesCompared = Math.min(totalRoutes, Math.max(0, Number.isFinite(rawCount) ? Math.floor(rawCount) : 0));
+      const rawCompletionOrder = Number(participant.completionOrder ?? participant.completion_order);
+      const completionOrder = Number.isFinite(rawCompletionOrder) && rawCompletionOrder > 0
+        ? Math.floor(rawCompletionOrder)
+        : null;
+      const rawCompletedAt = participant.completedAt
+        ?? participant.completed_at
+        ?? participant.completionAt
+        ?? participant.completion_at
+        ?? null;
+      const completedAt = Number.isFinite(Date.parse(rawCompletedAt)) ? new Date(rawCompletedAt).toISOString() : null;
+      const candidate = { participantId, participant: participantName, routesCompared, completionOrder, completedAt };
+      const existing = byParticipant.get(participantId);
+      if (!existing || routesCompared > existing.routesCompared) {
+        byParticipant.set(participantId, candidate);
+      } else if (routesCompared === existing.routesCompared) {
+        const completionOrders = [existing.completionOrder, completionOrder].filter(Number.isFinite);
+        const completionDates = [existing.completedAt, completedAt]
+          .map(value => Date.parse(value))
+          .filter(Number.isFinite);
+        byParticipant.set(participantId, {
+          ...existing,
+          completionOrder: completionOrders.length ? Math.min(...completionOrders) : null,
+          completedAt: completionDates.length ? new Date(Math.min(...completionDates)).toISOString() : null
+        });
+      }
+    });
+
+    const sorted = [...byParticipant.values()].sort((a, b) => {
+      const progressDifference = b.routesCompared - a.routesCompared;
+      if (progressDifference) return progressDifference;
+      if (a.routesCompared >= totalRoutes) {
+        const aHasOrder = Number.isFinite(a.completionOrder);
+        const bHasOrder = Number.isFinite(b.completionOrder);
+        if (aHasOrder && bHasOrder && a.completionOrder !== b.completionOrder) {
+          return a.completionOrder - b.completionOrder;
+        }
+        if (aHasOrder !== bHasOrder) return aHasOrder ? -1 : 1;
+        const aCompletedAt = Date.parse(a.completedAt);
+        const bCompletedAt = Date.parse(b.completedAt);
+        const aHasDate = Number.isFinite(aCompletedAt);
+        const bHasDate = Number.isFinite(bCompletedAt);
+        if (aHasDate && bHasDate && aCompletedAt !== bCompletedAt) return aCompletedAt - bCompletedAt;
+        if (aHasDate !== bHasDate) return aHasDate ? -1 : 1;
+      }
+      return a.participant.localeCompare(b.participant, undefined, { sensitivity: 'base' })
+        || a.participantId.localeCompare(b.participantId);
+    });
+    let previousCount = null;
+    let previousRank = 0;
+    return sorted.map((participant, index) => {
+      const sharesProgressRank = previousCount === participant.routesCompared
+        && participant.routesCompared < totalRoutes;
+      const rank = sharesProgressRank ? previousRank : index + 1;
+      previousCount = participant.routesCompared;
+      previousRank = rank;
+      const earnedMilestones = milestones.filter(milestone => participant.routesCompared >= milestone.at);
+      const nextMilestone = milestones.find(milestone => participant.routesCompared < milestone.at) || null;
+      return {
+        ...participant,
+        rank,
+        earnedMedals: earnedMilestones.length,
+        medalName: earnedMilestones.length
+          ? earnedMilestones[earnedMilestones.length - 1].name
+          : `First medal at ${milestones[0]?.at || totalRoutes}`,
+        nextMedalAt: nextMilestone?.at || null,
+        totalRoutes
+      };
+    });
+  }
+
   function mergeAnswers(remoteAnswers, localAnswers) {
     const merged = new Map();
     [...(remoteAnswers || []), ...(localAnswers || [])].forEach((answer, index) => {
@@ -606,6 +710,7 @@
     Q2_CHOICES,
     Q3_WORTH_CHOICES,
     Q3_FAST_ALTERNATIVE_QUESTION,
+    ROUTE_EXPLORER_MILESTONES,
     REASONS,
     CHOICE_REASONS,
     CHOICE_REASON_LABELS,
@@ -624,6 +729,7 @@
     analyzeAgreement,
     wilsonInterval,
     summarizeParticipants,
+    rankRouteExplorers,
     mergeAnswers,
     createPreferenceSnapshot
   };

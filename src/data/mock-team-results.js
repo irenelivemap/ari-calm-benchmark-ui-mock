@@ -23,6 +23,8 @@
     ['sample-ruth', 'Ruth Okafor']
   ];
 
+  const ROUTE_EXPLORER_PROGRESS = [23, 23, 23, 18, 16, 15, 13, 12, 10, 9, 7, 6, 5, 3, 1];
+
   const Q = 'calm_quiet';
   const N = 'calm_nature';
   const B = 'both_work_well';
@@ -234,8 +236,18 @@
     });
   }
 
+  function createRouteExplorerProgress() {
+    return PARTICIPANTS.map(([participantId, participantName], index) => ({
+      participantId,
+      participantName,
+      routesCompared: ROUTE_EXPLORER_PROGRESS[index],
+      completionOrder: ROUTE_EXPLORER_PROGRESS[index] === 23 ? index + 1 : null
+    }));
+  }
+
   return {
     CURRENT_PARTICIPANT_ID,
-    createCalmTeamAnswers
+    createCalmTeamAnswers,
+    createRouteExplorerProgress
   };
 });

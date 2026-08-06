@@ -33,9 +33,10 @@
    *   storage   — Web Storage instance (defaults to localStorage)
    *   fetchImpl — fetch implementation (defaults to globalThis.fetch)
    *
-   * Write-only RPCs expected in Supabase (see supabase/migrations):
+   * RPCs expected in Supabase (see supabase/migrations):
    *   submit_benchmark_answer — append/idempotency by captureId
    *   save_benchmark_progress — latest checkpoint by sessionId
+   *   get_calm_route_explorers — privacy-limited team progress only
    */
   function createSupabaseTransport(options = {}) {
     const base = String(options.url || '').replace(/\/$/, '');
@@ -68,6 +69,21 @@
         throw new Error(`Supabase ${functionName} returned ${response.status}: ${body}`);
       }
       return response;
+    }
+
+    async function invokeRead(functionName) {
+      const response = await fetchImpl(`${base}/rest/v1/rpc/${functionName}`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: '{}'
+      });
+      if (!response.ok) {
+        const body = await response.text().catch(() => '');
+        throw new Error(`Supabase ${functionName} returned ${response.status}: ${body}`);
+      }
+      const payload = await response.json();
+      if (!Array.isArray(payload)) throw new Error(`Supabase ${functionName} returned an invalid response.`);
+      return payload;
     }
 
     async function deliver(item) {
@@ -133,6 +149,7 @@
     return {
       saveAnswer: record => save('answer', record),
       saveProgress: record => save('progress', record),
+      listRouteExplorers: () => invokeRead('get_calm_route_explorers'),
       flush,
       getPendingCount: () => readQueue(storage, queueKey).length
     };

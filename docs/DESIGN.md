@@ -59,6 +59,7 @@ Rules:
 - The single primary action uses blurple with plum ink. Route green, purple, and Fast orange never style generic actions.
 - Secondary buttons should be subtle but visibly clickable.
 - Status chips should use neutral text and transparent or very low-emphasis backgrounds.
+- Street Scout, Trail Seeker, World Mapper, and Cosmic Explorer reuse one shared four-tier medal palette across Home, the comparison HUD, and Results.
 - Check contrast whenever text sits on tinted or dark surfaces.
 - On dark glass surfaces, readable text must not go below `rgba(255,255,255,0.84)`. Decorative separators, borders, and disabled states may be lower, but labels, status, goals, and helper copy may not.
 
@@ -74,6 +75,9 @@ Rules:
 - Product UI labels, buttons, HUD text, and question text use Cera Pro/Poppins.
 - The serif accent is only for selected intro/title moments, not for controls or labels.
 - Button text should never be larger than the content title it supports.
+- Home and Results share one page-title role: `40–42px`, `1.02` desktop line-height (`1.08` on mobile), `800` weight, and `-0.02em` tracking. Page titles must not silently change scale between the two views.
+- Participant-facing Results explanation copy uses the same Home reading role: `17px` with `1.55` line-height. Charts, percentages, diagnostic metadata, and evaluation-record details retain the compact analytical scale.
+- Shared navigation and primary-action labels use the Home control scale (`0.92em` in a `17px` context). Compact analytical controls may be smaller when they do not carry the primary task.
 - Recommended in-test scale:
   - Question title: around `1rem`, bold.
   - Body/help text: around `0.82rem` to `0.86rem`.
@@ -110,6 +114,7 @@ Alignment QA:
 - Run `window.ariCheckAlignment()` in the browser console when checking the current visible state manually.
 - A group fails if its vertical center drift is more than `1px`.
 - If a hidden element is visually collapsed, also collapse its spacing (`gap`, margin, padding, line-height side effects), or remove it from layout.
+- Home and Results use the same desktop content frame: `1224px` of usable content within the `1280px` shell, with `28px` desktop gutters and `18px` mobile gutters.
 
 Benchmark screen:
 
@@ -319,8 +324,19 @@ Rules:
 ## Results Rules
 
 - Calm Route Comparison keeps the persistent `Results` navigation item visible from the beginning, but disables it until the participant's first completed comparison is successfully saved. The disabled control retains its footprint, shows a quiet lock, and explains the prerequisite in a compact tooltip on hover or keyboard focus. The tooltip is also connected as the control's accessible description. Results enables without navigating or calling attention to itself; returning participants with saved answers see it enabled immediately.
-- The shared results introduction uses the display role for `Your results` or `Team results`, the body role for its lead sentence, and the detail role for explanatory paragraphs. On wide screens, the explanation uses the full dashboard width in two readable columns; below `900px`, it returns to one column. Paragraphs keep a `12px` internal rhythm and `20px` between the lead and the explanation.
-- The current Calm participant surface has one active view: `My results`. `Overview` remains visible but disabled with a `Soon` label. Local researcher mode replaces `My results` with `Participants` and adds a `Routes` diagnostics view; it does not enable Overview.
+- `Team results` keeps the same page-title treatment as Home. The participant introduction keeps the document's semantic `h1` but uses the section-sized visual treatment `A quick explanation of what you did`, matching `Route Explorers Leaderboard`, followed by one full-width column in the Home reading role. The denser researcher explanation can use two columns on wide screens and returns to one below `900px`. Paragraphs keep a `12px` internal rhythm.
+- The current Calm participant surface has one active Results view, so it does not repeat that state in a second local switcher. Researcher mode exposes only the real `Participants` and `Routes` destinations. Do not show a disabled `Overview` or `Soon` placeholder until that destination exists.
+- Keep the full Calm evaluation explanation visible in the Results introduction. Immediately after it, show `Route Explorers Leaderboard`, followed by `Your choices` analytics and `Your comparisons` records. Do not move the explanation into a disclosure and do not add a leaderboard tab.
+- Use dividers only for the two participant Results transitions: team progress to personal choices, and personal summaries to detailed comparisons. Do not bracket `Route Explorers`, underline `Your choices`, or draw an outer line around the leaderboard; use whitespace and separators only between multiple leaderboard rows.
+- `Route Explorers Leaderboard` is participant-facing only; do not show it in researcher mode. It ranks unique valid current-corpus route comparisons and caps progress at 23. Participants below 23 with equal progress share a rank. Participants who reach 23 are ordered and ranked by the time they first completed all 23 distinct routes, so the earliest finisher stays ahead; the public feed exposes only that completion order, never the underlying timestamp. Each row shows rank, participant, the four earned/locked medal seals, and a neutral progress bar with `N / 23`; do not repeat the medal level in a separate column. The current participant uses the lime marker treatment regardless of rank, without a redundant identity badge.
+- In each Route Explorers row, the newest earned medal is slightly larger, fully saturated, and marked by one small sun-yellow sparkle; it never uses an outer selection ring. Earlier earned medals recede slightly and locked medals remain dashed. Ranks 1–3 replace their numbers with one authored trophy-cup glyph in gold, silver, or bronze; all lower ranks remain plain numbers without badges. A completed `23 / 23` count uses the lime marker and a check icon, without changing the participant's rank logic.
+- The local-only `sample=1` participant preview uses 15 deterministic mock participants with varied progress from 1 to 23 routes, so every rank, medal tier, and progress-bar state can be evaluated without altering saved participant data.
+- Desktop shows all participant rows. Mobile shows the top five plus the current participant and expands the complete list inline through one `Show all` control. Participant names are not interactive.
+- The separate participant-name heading and oversized route-count block are omitted from participant Results because the highlighted leaderboard row already carries identity and progress. Personal analytics are titled `Your choices`, and participant evaluation records are titled `Your comparisons`.
+- Participant `What shaped your choices` combines reasons supplied after choosing a route with reasons supplied after choosing neither. The participant sees one coherent explanation of all factors; researcher mode keeps the two branches separate for analysis.
+- Global and local tab controls share the same selected-state grammar: a quiet grey group surface with an off-white selected item and plum text. Do not invert one tab system while keeping the other light.
+- Use two radius tiers: `40px` for expressive Home feature cards and `16–24px` for quieter Results and data surfaces. Evaluation-record groups use the `16px` data radius.
+- Results eyebrow and metadata text must use a secondary color that maintains at least `4.5:1` contrast against the off-white canvas.
 - Calm Quiet and Calm Nature use decoded route identities in Results. Because A/B presentation is randomized, the participant-facing A/B route colors must not be reused as if they permanently represented Quiet or Nature. Results use Ari blurple for Calm Quiet and Ari green for Calm Nature; shared, rejected, and uncertain outcomes recede into the neutral Ari greys.
 - Local researcher preview data includes 15 deterministic illustrative testers across all 23 embedded route pairs so varied outcomes remain inspectable without entering production data.
 - Researcher `Participants` lists every contributor by name. The participant attached to the current local session appears first, without an additional identity badge. Selecting a name shows only that person's counts, decoded choices, reasons, optional written details, and round-by-round records.

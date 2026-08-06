@@ -6,7 +6,7 @@ The benchmark separates completed answers from resumable progress:
 2. An unfinished session upserts one progress record.
 3. Results read the same challenge dataset and never maintain a second answer source.
 
-The browser implements this contract in `src/data/calm-benchmark-data.js` with local storage. GitHub Pages sends the same validated records through the write-only Supabase RPCs used by `src/data/supabase-transport.js`; direct anon table access and reads are blocked. A self-hosted deployment can instead supply `dataApiBase` and use `src/data/benchmark-transport.js`. Researcher reads happen in the Supabase dashboard or through an authenticated server-side feed.
+The browser implements this contract in `src/data/calm-benchmark-data.js` with local storage. The hosted site sends the same validated records through the write-only Supabase RPCs used by `src/data/supabase-transport.js`; direct anon table access and raw-answer reads are blocked. The participant-facing Route Explorers leaderboard uses a separate aggregate RPC that returns only participant name/code, stable participant ID, unique current-corpus route count, and a completion-order integer for people who finished all 23 routes. That ordinal is derived from the server time when the participant first accumulated 23 distinct route answers; the timestamp itself is never returned. A self-hosted deployment can instead supply `dataApiBase` and use `src/data/benchmark-transport.js`; its leaderboard requires an equivalent privacy-limited endpoint. Researcher reads happen in the Supabase dashboard or through an authenticated server-side feed.
 
 ## Challenge Datasets
 

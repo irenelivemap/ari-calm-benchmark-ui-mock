@@ -53,15 +53,15 @@ The upserted record for an unfinished session. It includes the current pair, hid
 
 ## Production Persistence
 
-The GitHub Pages deployment writes to Supabase project `xyrmytymcipyntdtsksu` using its public anon key and two write-only RPC functions. Direct anon table access and anonymous reads are blocked. This is the active production backend, not a preview fixture. The file-backed HTTP data API is an optional alternative for a future self-hosted deployment.
+The hosted participant deployment uses Supabase project `xyrmytymcipyntdtsksu` through a public anon key, two write-only RPC functions, and one privacy-limited Route Explorers aggregate RPC. Direct anon table access and anonymous raw-answer reads are blocked. The aggregate feed exposes only participant name/code, stable participant ID, and unique current-corpus route count. This is the active production backend, not a preview fixture. The file-backed HTTP data API is an optional alternative for a future self-hosted deployment.
 
 ## Participant Results
 
-The participant-facing `My results` view, enabled after the first saved comparison. It consolidates the current person's answers across sessions. The Calm `Overview` tab is currently disabled and labelled `Soon`; aggregate team evidence is not participant-facing.
+The participant-facing Results view, enabled after the first saved comparison. Its visible introduction is followed by the `Route Explorers` team leaderboard, personal choice/reason charts, and expandable comparison records. The leaderboard highlights the current participant without a separate `You` badge and shows four earned/locked medal states. Personal answer data remains device-scoped; only privacy-limited team progress is participant-facing. Because there is one participant Results destination, the page does not repeat it in a local switcher.
 
 ## Researcher Results
 
-The local-development research view over saved or illustrative answer records. It adds participant and route-diagnostics views and is never enabled on the production participant site. Authorized production research reads happen in the Supabase dashboard.
+The local-development research view over saved or illustrative answer records. It is enabled only by an explicit `researcher=1` URL and never persists into ordinary participant links. It keeps the existing `Participants` and `Routes` diagnostic destinations and intentionally omits the participant-facing `Route Explorers` leaderboard. The full researcher view is never enabled on the production participant site; authorized production research reads happen in the Supabase dashboard.
 
 ## Medal / Rank
 

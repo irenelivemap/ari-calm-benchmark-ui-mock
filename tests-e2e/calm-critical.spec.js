@@ -210,6 +210,11 @@ test('branch-specific surroundings reasons are shown and saved in the correct fo
   expect(rejectedAnswer.q2Note).toBe('');
   expect(rejectedAnswer.q3Issues).toEqual(['not_enough_beautiful_or_pleasant_surroundings']);
   expect(rejectedAnswer.q3Note).toBe('Neither route had pleasant surroundings.');
+
+  await page.goto('/?game=calm&view=results');
+  const shapedChoices = page.getByRole('heading', { name: 'What shaped your choices' }).locator('..');
+  await expect(shapedChoices.getByText('Not enough beautiful or pleasant surroundings', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Reasons for choosing neither' })).toHaveCount(0);
 });
 
 test('Calm participant results use current choice reasons and personal wording', async ({ page }) => {
@@ -223,10 +228,14 @@ test('Calm participant results use current choice reasons and personal wording',
   await page.waitForFunction(() => window.ariCalmData.snapshot().answers.length === 1);
 
   await page.goto('/?game=calm&view=results');
-  await expect(page.getByRole('heading', { name: 'Your results' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Reasons for choosing routes' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'A quick explanation of what you did', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Route Explorers Leaderboard', level: 2 })).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Route Explorers leaderboard' })).toBeVisible();
+  await expect(page.getByRole('progressbar', { name: /route progress$/ })).toHaveCount(1);
+  await expect(page.getByRole('heading', { name: 'Your choices', level: 2 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'What shaped your choices' })).toBeVisible();
   await expect(
-    page.getByRole('heading', { name: 'Reasons for choosing routes' })
+    page.getByRole('heading', { name: 'What shaped your choices' })
       .locator('..')
       .getByText('More trees or green space', { exact: true })
   ).toBeVisible();
@@ -236,6 +245,48 @@ test('Calm participant results use current choice reasons and personal wording',
   await firstRecord.locator('.calm-pp-card__header').click();
   await expect(firstRecord.locator('.calm-pp-card__body')).toBeVisible();
   await expectUsableMap(page, firstRecord);
+});
+
+test('the local participant sample URL shows varied Route Explorers mock data', async ({ page }) => {
+  await page.goto('/?game=calm&sample=1&view=results');
+
+  await expect(page.getByRole('heading', { name: 'A quick explanation of what you did', level: 1 })).toBeVisible();
+  await expect(page.locator('.calm-route-explorers__row')).toHaveCount(15);
+  await expect(page.getByRole('progressbar', { name: /route progress$/ })).toHaveCount(15);
+  await expect(page.locator('.calm-route-explorers__row.is-current')).toContainText('Irene');
+  await expect(page.locator('.calm-route-explorers__row').first().locator('[data-rank-position="1"]')).toBeVisible();
+  await expect(page.locator('.calm-route-explorers__rank-trophy')).toHaveCount(3);
+  await expect(page.locator('.calm-route-explorers__row.is-complete')).toHaveCount(3);
+  await expect(page.locator('.calm-route-explorers__row.is-complete').locator('[data-rank-position="1"]')).toHaveCount(1);
+  await expect(page.locator('.calm-route-explorers__row.is-complete').locator('[data-rank-position="2"]')).toHaveCount(1);
+  await expect(page.locator('.calm-route-explorers__row.is-complete').locator('[data-rank-position="3"]')).toHaveCount(1);
+  await expect(page.locator('.calm-route-explorers__row').first().locator('.calm-route-explorer-medal.is-current-level')).toHaveCount(1);
+  await expect(page.locator('.calm-route-explorers__row.is-complete .calm-route-explorers__complete-icon')).toHaveCount(3);
+
+  const progressValues = await page.getByRole('progressbar', { name: /route progress$/ }).evaluateAll(bars => (
+    bars.map(bar => Number(bar.getAttribute('aria-valuenow')))
+  ));
+  expect(Math.max(...progressValues)).toBe(23);
+  expect(Math.min(...progressValues)).toBe(1);
+  expect(new Set(progressValues).size).toBeGreaterThanOrEqual(10);
+});
+
+test('a researcher preview never makes later participant links open in researcher mode', async ({ page }) => {
+  await beginCalmComparison(page, 'QA participant mode 021');
+  await choose(page, 'q1Choice', 'route_a');
+  await page.locator('[data-form]').evaluate(form => form.requestSubmit());
+  await choose(page, 'q2Reasons', 'quieter_or_less_busy_streets');
+  await page.locator('[data-form]').evaluate(form => form.requestSubmit());
+  await choose(page, 'q3WorthShowing', 'a_lot');
+  await page.locator('[data-form]').evaluate(form => form.requestSubmit());
+  await page.waitForFunction(() => window.ariCalmData.snapshot().answers.length === 1);
+
+  await page.goto('/?game=calm&researcher=1&view=results');
+  await expect(page.getByRole('heading', { name: 'Team results', level: 1 })).toBeVisible();
+
+  await page.goto('/?game=calm&view=results');
+  await expect(page.getByRole('heading', { name: 'A quick explanation of what you did', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Team results', level: 1 })).toHaveCount(0);
 });
 
 test('the Calm flow fits a narrow mobile viewport', async ({ page }) => {
@@ -268,4 +319,9 @@ test('researcher route profiles render every pair from the same diagnostics corp
     sameFingerprint: true,
     exactPairOrder: true
   });
+
+  await page.goto('/?game=calm&researcher=1&view=results');
+  await expect(page.getByRole('heading', { name: 'Team results', level: 1 })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Participants' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Route Explorers Leaderboard' })).toHaveCount(0);
 });

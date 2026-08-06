@@ -13,7 +13,7 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 
 - **Supabase project `xyrmytymcipyntdtsksu` is the active production persistence backend for the GitHub Pages deployment.** It is not mock or preview infrastructure.
 - `runtime-config.js` intentionally contains the Supabase project URL and **public anon key**. A Supabase anon key is a browser credential governed by row-level security, not a private service-role secret. Do not remove or blank either value as a security cleanup.
-- `supabase-setup.sql` plus `supabase/migrations/` are the canonical database setup. Participant browsers execute only the two write-only RPC functions; direct anon table access and reads remain blocked. Researchers read through the authenticated Supabase dashboard.
+- `supabase-setup.sql` plus `supabase/migrations/` are the canonical database setup. Participant browsers execute two write-only RPC functions and the privacy-limited Route Explorers aggregate RPC; direct anon table access and raw-answer reads remain blocked. Researchers read full records through the authenticated Supabase dashboard.
 - `src/data/supabase-transport.js` is the primary GitHub Pages production transport. `src/data/benchmark-transport.js` and `server/data-api.js` are an optional self-hosted alternative, not a prerequisite for the current deployment.
 - Localhost and `file://` previews must not write to production Supabase. Supabase is selected automatically only when runtime production mode is active.
 - Production must fail closed only when **neither** Supabase nor the optional HTTP data API is configured.

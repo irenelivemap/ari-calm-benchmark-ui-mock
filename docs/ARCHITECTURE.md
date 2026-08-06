@@ -112,7 +112,7 @@ Owns record normalization, validation, migration, idempotency, local persistence
 
 ### `src/data/benchmark-transport.js`
 
-Owns the optional self-hosted HTTP delivery path. Answers use `POST` plus `Idempotency-Key`; progress uses an idempotent `PUT`. GitHub Pages instead calls two Supabase write-only RPCs with equivalent capture/session conflict handling. Direct anon table access is disabled. Failed requests enter a local outbox and block forward progress until synchronized. Production fails closed when neither transport is configured.
+Owns the optional self-hosted HTTP delivery path. Answers use `POST` plus `Idempotency-Key`; progress uses an idempotent `PUT`. The hosted participant deployment instead calls two Supabase write-only RPCs with equivalent capture/session conflict handling and one privacy-limited aggregate RPC for Route Explorers. The feed includes a server-derived completion-order integer for participants who have finished all 23 distinct routes, without exposing the completion timestamp. Direct anon table access is disabled. Failed requests enter a local outbox and block forward progress until synchronized. Production fails closed when neither transport is configured. A self-hosted leaderboard must implement the same aggregate-only read contract before it is enabled.
 
 ### `src/app/runtime.js`
 
@@ -121,6 +121,8 @@ Owns environment defaults, `/routing/` base-path inference, clean challenge slug
 ### GitHub Pages deployment
 
 The application remains a static, framework-free site. `.github/workflows/deploy-pages.yml` runs the test suite, copies only the participant-facing static files through `scripts/build-pages.mjs`, and substitutes the repository secrets `ARI_GOOGLE_MAPS_KEY` and `ARI_MAPTILER_KEY` into the artifact's copy of `runtime-config.js`. The tracked source configuration stays key-free. The build fails closed when either secret is absent so a deployment cannot silently publish without Street View or its production basemap.
+
+The linked Vercel project is a deployment mirror and uses `vercel.json` to run the same `scripts/build-pages.mjs` packaging step into `_site`. Its Production environment must provide the same two browser-restricted keys; serving the repository root directly is not a valid production build because the tracked runtime placeholders are intentionally empty.
 
 ### `src/results/calm-results.js`
 

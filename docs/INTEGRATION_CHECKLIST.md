@@ -30,7 +30,8 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [ ] Deploy the optional container only if the team chooses to replace or complement GitHub Pages.
 - [ ] If deployed, point `game.livemap.sh` DNS at it.
 - [ ] If deployed, provide a browser-restricted Google Maps key for `https://game.livemap.sh/*`.
-- [x] Connect production persistence to the existing Supabase project through write-only anonymous RPCs.
+- [x] Connect production persistence through write-only anonymous RPCs and define a separate privacy-limited Route Explorers aggregate RPC.
+- [x] Apply `20260806_route_explorer_completion_order.sql` and confirm the public Route Explorers feed returns finish order without returning timestamps.
 
 ## GitHub Pages
 
@@ -103,7 +104,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [x] Participant-facing wording and follow-up rules match [`QUESTIONNAIRE.md`](QUESTIONNAIRE.md).
 - [x] Assignable route keys are `calm_quiet` and `calm_nature`; every fixture also supplies a non-randomized `fast` reference route.
 - [x] Route geometry and diagnostics are generated together from the ordered `calm-curated-v2` manifest, and answers/progress carry its exact fingerprint.
-- [ ] Apply `20260806_questionnaire_extensions.sql` before deploying the questionnaire UI that sends the two new surroundings reasons, the optional better-route note, or the conditional Fast-alternative note.
+- [x] Apply `20260806_questionnaire_extensions.sql` before deploying the questionnaire UI that sends the two new surroundings reasons, the optional better-route note, or the conditional Fast-alternative note.
 - [x] Route A/B and Both work well selections show the Calm preference-reasons Q2; the remaining neutral choices skip it.
 - [x] Q1 offers Route A, Route B, Both work well, Both work poorly, and I'm not sure.
 - [x] Route A, Route B, and Both work well require the value-vs-Fast Q3 and redraw the relevant Calm route(s) with Fast and all visible times.

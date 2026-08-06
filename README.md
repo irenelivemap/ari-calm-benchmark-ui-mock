@@ -56,6 +56,7 @@ The participant application still has no build step or npm runtime dependency. P
 | `/fresh.html` | Local-only new-player QA preview that does not delete saved browser data. |
 | `/demo.html` | Compatibility redirect for previously shared links. |
 | `/?game=google&view=results&preview=1` | Local-only Fast vs Google results preview that bypasses its release lock. |
+| `/?game=calm&sample=1&view=results` | Local-only participant Results preview with varied Route Explorers progress across 15 mock participants. |
 | `/?researcher=1&view=results` | Local-only Calm researcher preview with sample/saved-data controls. |
 | `/?researcher=1&view=route-profiles` | Local-only route-diagnostics preview. |
 | `/?view=team-results` | Local-only legacy internal-results prototype. |
@@ -107,13 +108,15 @@ For a new live challenge, replace its fixture provider through the `routePairPro
 
 ### Connect production persistence
 
-GitHub Pages is connected to the existing Supabase project through the public anon key in `runtime-config.js`. Participants execute narrowly scoped write-only RPC functions; direct table access and anonymous reads are blocked. The app atomically stores each completed answer with its following checkpoint, rejects backward progress, and queues failed Supabase writes for retry. The active project has already been migrated through `20260805_route_corpus_v2.sql`; apply `20260806_questionnaire_extensions.sql` before deploying the matching questionnaire update. Use the Supabase runbook when preparing or updating an environment. A self-hosted deployment may instead set `ARI_DATA_API_BASE`; `server/data-api.js` implements that optional transport. Keep both persistence contracts aligned with [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
+The hosted participant site is connected to the existing Supabase project through the public anon key in `runtime-config.js`. Participants execute two narrowly scoped write-only RPC functions plus one privacy-limited Route Explorers RPC; direct table access and anonymous raw-answer reads are blocked. The aggregate feed returns only participant name/code, stable participant ID, unique current-corpus route count, and a completion-order integer for 23-route finishers. The app atomically stores each completed answer with its following checkpoint, rejects backward progress, and queues failed Supabase writes for retry. Apply `20260806_questionnaire_extensions.sql`, `20260806_route_explorers.sql`, and `20260806_route_explorer_completion_order.sql` before deploying the matching participant UI. Use the Supabase runbook when preparing or updating an environment. A self-hosted deployment may instead set `ARI_DATA_API_BASE`; `server/data-api.js` implements that optional write transport and must add an equivalent privacy-limited progress endpoint before enabling the shared leaderboard. Keep both persistence contracts aligned with [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
 
 To exercise the full loop locally, start the data API with `ARI_DATA_ADMIN_TOKEN=dev-secret ARI_ALLOWED_ORIGINS=http://127.0.0.1:8765 node server/data-api.js`, then run `ARI_DATA_API_BASE=/api/v1/benchmarks npm start` in another terminal. The dev server proxies `/api/v1/benchmarks/*` to the local data API and injects the base into runtime configuration.
 
 ## Production Deployment
 
 The active participant deployment is GitHub Pages at `https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/`. The prepared container and `game.livemap.sh` remain optional future infrastructure; see [`deploy/README.md`](deploy/README.md).
+
+The linked Vercel project is a deployment mirror. [`vercel.json`](vercel.json) runs the same fail-closed participant build as GitHub Pages, so both `ARI_GOOGLE_MAPS_KEY` and `ARI_MAPTILER_KEY` must exist in the Vercel Production environment before a production deployment can succeed.
 
 The LinkedIn preview image is [`assets/ari-route-arcade-social.png`](assets/ari-route-arcade-social.png). Its editable source is [`tools/social-preview.html`](tools/social-preview.html).
 

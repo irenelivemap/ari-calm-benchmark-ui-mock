@@ -6,6 +6,12 @@ const { join } = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const ROOT = join(__dirname, '..');
+const vercelConfig = JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf8'));
+
+test('uses the fail-closed participant artifact for the Vercel mirror', () => {
+  assert.equal(vercelConfig.buildCommand, 'node scripts/build-pages.mjs --out _site');
+  assert.equal(vercelConfig.outputDirectory, '_site');
+});
 
 test('builds a static Pages artifact with Street View configured without changing source', () => {
   const output = mkdtempSync(join(tmpdir(), 'ari-pages-build-'));
