@@ -136,8 +136,8 @@ test('the optional better-route note is conditionally shown, resumed, saved, and
   await expect(fastNoteField).toBeHidden();
   await choose(page, 'q3WorthShowing', 'a_lot');
   await expect(fastNoteField).toBeVisible();
-  await expect(fastNoteField).toHaveAttribute('placeholder', 'When would you choose Fast instead of a Calm route? (Optional)');
-  await expect(fastNoteField).toHaveAttribute('aria-label', 'When would you choose Fast instead of a Calm route? (Optional)');
+  await expect(fastNoteField).toHaveAttribute('placeholder', 'When might you take the Fast route shown instead? (Optional)');
+  await expect(fastNoteField).toHaveAttribute('aria-label', 'When might you take the Fast route shown instead? (Optional)');
   await fastNoteField.fill('A response that should be cleared.');
   await choose(page, 'q3WorthShowing', 'not_at_all');
   await expect(fastNoteField).toBeHidden();
@@ -160,7 +160,7 @@ test('the optional better-route note is conditionally shown, resumed, saved, and
   await firstRecord.locator('.calm-pp-card__header').click();
   await expect(firstRecord.getByText('I know a better Calm route', { exact: true })).toBeVisible();
   await expect(firstRecord.getByText(note, { exact: false })).toBeVisible();
-  await expect(firstRecord.getByText('When would you choose Fast instead of a Calm route? (Optional)', { exact: true })).toBeVisible();
+  await expect(firstRecord.getByText('When might you take the Fast route shown instead? (Optional)', { exact: true })).toBeVisible();
   await expect(firstRecord.getByText(fastNote, { exact: false })).toBeVisible();
 });
 

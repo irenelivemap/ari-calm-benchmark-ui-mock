@@ -76,7 +76,7 @@ test('reveals, autosaves, restores, and displays the optional better-route note'
 test('reveals the Fast-alternative note only for the three positive Q3 answers', () => {
   assert.equal((html.match(/noteMode: 'values'/g) || []).length, 3);
   assert.equal((html.match(/noteValues: \['a_lot', 'somewhat', 'a_little'\]/g) || []).length, 3);
-  assert.equal((html.match(/When would you choose Fast instead of a Calm route\? \(Optional\)/g) || []).length >= 3, true);
+  assert.equal((html.match(/When might you take the Fast route shown instead\? \(Optional\)/g) || []).length >= 3, true);
   assert.match(app, /q3Variant\.noteMode === 'values'/);
   assert.match(app, /selectedQ3Values\.some\(value => q3Variant\.noteValues\.includes\(value\)\)/);
   assert.match(app, /q3Note\.setAttribute\('aria-label', variant\.notePrompt/);

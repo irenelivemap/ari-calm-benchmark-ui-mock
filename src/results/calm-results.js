@@ -25,7 +25,7 @@
   ];
   const Q2_CHOICES = ['yes', 'no', 'not_sure'];
   const Q3_WORTH_CHOICES = ['a_lot', 'somewhat', 'a_little', 'not_at_all', 'not_sure'];
-  const Q3_FAST_ALTERNATIVE_QUESTION = 'When would you choose Fast instead of a Calm route? (Optional)';
+  const Q3_FAST_ALTERNATIVE_QUESTION = 'When might you take the Fast route shown instead? (Optional)';
   const ROUTE_EXPLORER_MILESTONES = [
     { at: 5, name: 'Street Scout' },
     { at: 10, name: 'Trail Seeker' },

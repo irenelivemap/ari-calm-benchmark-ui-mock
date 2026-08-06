@@ -179,7 +179,7 @@ Follow-ups:
 
 For Route A, Route B, and Both work well, the Q3 map redraws the selected Calm route(s) with the round's Fast reference and displays every visible route's rounded time. Fast remains a reference route only: it is never assigned to Route A or Route B. Historical Calm records without `q3WorthShowing` retain their previous validation behavior.
 
-For current Calm records, `q3Note` with `q3NoteKind: "fast_alternative"` answers **When would you choose Fast instead of a Calm route? (Optional)**. It may contain up to 500 characters only when `q3WorthShowing` is `a_lot`, `somewhat`, or `a_little`; the UI clears it if the participant changes to `not_at_all` or `not_sure`. Rejection-branch detail uses `q3NoteKind: "supporting_detail"`. Historical records without `q3NoteKind` retain their original generic `q3Note` meaning.
+For current Calm records, `q3Note` with `q3NoteKind: "fast_alternative"` answers **When might you take the Fast route shown instead? (Optional)**. It may contain up to 500 characters only when `q3WorthShowing` is `a_lot`, `somewhat`, or `a_little`; the UI clears it if the participant changes to `not_at_all` or `not_sure`. Rejection-branch detail uses `q3NoteKind: "supporting_detail"`. Historical records without `q3NoteKind` retain their original generic `q3Note` meaning.
 
 For `none_work_well`, the Q3 prompt asks what made the participant choose neither route and uses the dedicated one-or-both-routes rejection reasons. `not_sure` is exclusive, and an optional note appears after any reason is selected.
 

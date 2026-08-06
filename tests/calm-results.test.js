@@ -72,21 +72,21 @@ test('uses the current conditional Calm questions in participant results', () =>
     q1Flag: 'I know a better Calm route',
     q2: 'What made you choose Route A?',
     q3: 'Compared with only seeing Fast, how much does adding Route A improve things for you?',
-    q3Note: 'When would you choose Fast instead of a Calm route? (Optional)'
+    q3Note: 'When might you take the Fast route shown instead? (Optional)'
   });
   assert.deepEqual(Results.participantQuestionCopy(answer({ q1Choice: 'route_b' })), {
     q1: 'Which route would you choose for a calmer walk?',
     q1Flag: 'I know a better Calm route',
     q2: 'What made you choose Route B?',
     q3: 'Compared with only seeing Fast, how much does adding Route B improve things for you?',
-    q3Note: 'When would you choose Fast instead of a Calm route? (Optional)'
+    q3Note: 'When might you take the Fast route shown instead? (Optional)'
   });
   assert.deepEqual(Results.participantQuestionCopy(answer({ q1Choice: 'both_work_well' })), {
     q1: 'Which route would you choose for a calmer walk?',
     q1Flag: 'I know a better Calm route',
     q2: 'What made both routes work well?',
     q3: 'Compared with only seeing Fast, how much does also having any of these calmer routes improve things for you?',
-    q3Note: 'When would you choose Fast instead of a Calm route? (Optional)'
+    q3Note: 'When might you take the Fast route shown instead? (Optional)'
   });
   assert.deepEqual(Results.participantQuestionCopy(answer({ q1Choice: 'none_work_well' })), {
     q1: 'Which route would you choose for a calmer walk?',

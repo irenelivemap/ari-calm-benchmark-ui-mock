@@ -71,7 +71,7 @@ test('keeps the conditional Fast-alternative prompt aligned', () => {
   const app = read('src/app/calm-benchmark.js');
   const questionnaire = read('docs/QUESTIONNAIRE.md');
   const prompt = Results.Q3_FAST_ALTERNATIVE_QUESTION;
-  assert.equal(prompt, 'When would you choose Fast instead of a Calm route? (Optional)');
+  assert.equal(prompt, 'When might you take the Fast route shown instead? (Optional)');
   assert.equal(html.includes(prompt), true);
   assert.match(app, /notePrompt/);
   assert.equal(questionnaire.includes(prompt), true);

@@ -70,7 +70,7 @@ or
 
 After **A lot**, **Somewhat**, or **A little** is selected, an optional text field appears:
 
-**When would you choose Fast instead of a Calm route? (Optional)**
+**When might you take the Fast route shown instead? (Optional)**
 
 The field does not appear for **Not at all** or **I'm not sure**.
 
