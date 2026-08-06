@@ -62,8 +62,9 @@ test('keeps participant records explorable and easy to interpret', () => {
   assert.doesNotMatch(html, /querySelectorAll\('\.calm-pp-card__header\[aria-expanded="true"\]'/);
   assert.match(css, /\.calm-pp-route-table tbody tr\.is-selected th::before\s*\{[^}]*content:\s*'✓'/s);
   assert.doesNotMatch(css, /\.calm-pp-card__header\[aria-expanded="true"\] \.calm-team-outcome\s*\{[^}]*display:\s*none;/s);
-  assert.match(css, /\.calm-pp-answer\s*\{[^}]*grid-template-columns:\s*minmax\(210px, 0\.38fr\) minmax\(0, 0\.62fr\);/s);
+  assert.match(css, /\.calm-pp-answer\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);[^}]*gap:\s*8px;/s);
   assert.match(css, /@media \(max-width: 700px\)[\s\S]*?\.calm-pp-answer\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s);
+  assert.match(css, /\.calm-pp-note-text\s*\{[^}]*font-style:\s*normal;[^}]*color:\s*var\(--ari-ink\);/s);
 });
 
 test('reveals, autosaves, restores, and displays the optional better-route note', () => {
@@ -90,6 +91,19 @@ test('reveals the Fast-alternative note only for the three positive Q3 answers',
   assert.match(html, /questionCopy\.q3Note/);
 });
 
+test('keeps Q3 emphasis readable without extra-bold fragments', () => {
+  for (const selector of ['a', 'b', 'c', 'fast']) {
+    assert.match(css, new RegExp(`\\.ari-route-question-tag--${selector}\\s*\\{[^}]*font-weight:\\s*700;`, 's'));
+  }
+  assert.match(css, /\.ari-question-block \.ari-choice-grid \.ari-choice-anchor\s*\{[^}]*font-weight:\s*700;/s);
+  assert.doesNotMatch(css, /\.ari-route-question-tag--(?:a|b|c|fast)\s*\{[^}]*font-weight:\s*800;/s);
+});
+
+test('keeps both Q1 route time values at the same compact text size and weight', () => {
+  assert.match(css, /\.ari-choice-metrics strong\s*\{[^}]*font-size:\s*0\.78rem;[^}]*font-weight:\s*600;/s);
+  assert.match(css, /\.ari-choice-metrics small\s*\{[^}]*font-size:\s*0\.78rem;[^}]*font-weight:\s*600;[^}]*opacity:\s*0\.8;/s);
+});
+
 test('keeps the team summary concise', () => {
   assert.match(html, /team member\$\{summary\.participants === 1 \? '' : 's'\}<\/strong> familiar with Zürich completed <strong[^>]*>\$\{summary\.total\} route comparison\$\{summary\.total === 1 \? '' : 's'\}<\/strong> in a blind, side-by-side format/);
   assert.doesNotMatch(html, /marker-lime[^>]*>[^<]*familiar with Zürich/);
@@ -104,7 +118,7 @@ test('keeps the team summary concise', () => {
 
 test('uses participant-focused results copy while preserving profile colors', () => {
   assert.match(html, /You compared pairs of Calm routes without knowing which model created each one\./);
-  assert.match(html, /For each pair, you told us whether you preferred Route A, Route B, both routes or neither, or whether you were unsure\./);
+  assert.doesNotMatch(html, /For each pair, you told us whether you preferred Route A, Route B, both routes or neither, or whether you were unsure\./);
   assert.match(html, /Your responses help us understand which approach works better, what people value in a Calm route and which cases need further investigation\./);
   assert.doesNotMatch(html, /You completed <strong class="marker-lime marker-static">\$\{summary\.total\} route comparison/);
   assert.match(html, /class="calm-results-profile-label" data-profile="nature">Nature-focused profile<\/strong>/);
@@ -121,7 +135,7 @@ test('aligns Home and Results typography without enlarging analytical data', () 
   assert.match(css, /\.calm-results-dashboard-header h1\s*\{[^}]*font:\s*var\(--font-page-title\);[^}]*letter-spacing:\s*-0\.02em;/s);
   assert.match(css, /\.calm-hero h1,\s*\.calm-results-dashboard-header h1\s*\{[^}]*line-height:\s*1\.08;/s);
   assert.match(html, /<h1>A quick explanation of what you did<\/h1>/);
-  assert.match(css, /\.calm-results-dashboard-header--participant > h1,\s*\.calm-route-explorers__head h2,\s*\.calm-participant-results-heading h2\s*\{[^}]*font:\s*var\(--font-heading-md\);/s);
+  assert.match(css, /\.calm-results-dashboard-header--participant > h1,\s*\.calm-route-explorers__head h2\s*\{[^}]*font:\s*var\(--font-heading-md\);/s);
   assert.match(css, /\.calm-results-dashboard-header--participant \.calm-results-dashboard-summary\s*\{[^}]*font:\s*var\(--font-reading\);[^}]*letter-spacing:\s*normal;/s);
   assert.match(css, /\.calm-result-row__copy span\s*\{[^}]*font-size:\s*0\.9em;/s);
   assert.match(css, /\.calm-result-row small\s*\{[^}]*font-size:\s*var\(--font-size-micro\);/s);
@@ -153,10 +167,26 @@ test('places participant-only Route Explorers between the visible introduction a
   assert.doesNotMatch(html, /routes unlock Cosmic Explorer/);
   assert.match(html, /data-results-action="toggle-explorers"/);
   assert.doesNotMatch(html, /data-route-explorer-participant/);
-  assert.match(html, /<h2 id="calm-participant-detail-title">Your choices<\/h2>/);
+  assert.match(html, /<h2 id="calm-participant-detail-title" class="ari-visually-hidden">Your choices<\/h2>/);
+  assert.match(html, /<h3 id="participant-choice-title">Route choices<\/h3>/);
+  assert.match(html, /<h3 id="participant-reasons-title">\$\{researcherMode \? 'Reasons for choosing routes' : 'What influenced you'\}<\/h3>/);
+  assert.doesNotMatch(html, /class="calm-participant-results-heading"/);
   assert.match(html, /<h3 id="participant-records-title" class="calm-pp-cards-title">\$\{researcherMode \? 'Participant records' : 'Your comparisons'\}<\/h3>/);
   assert.doesNotMatch(html, /class="calm-participant-route-count"/);
   assert.equal((html.match(/<button[^>]+data-results-view=/g) || []).length, 2);
+});
+
+test('keeps participant and researcher Results compact across viewports', () => {
+  assert.match(html, /data-results-participant-select/);
+  assert.match(html, /\$\{selectedPerson\.routePairs} \/ \$\{DEMO_INITIAL_ROUNDS}<\/strong><span>Routes compared/);
+  assert.match(html, /\$\{percentage\(selectedPerson\.routePairs, DEMO_INITIAL_ROUNDS\)}%<\/strong><span>Complete/);
+  assert.doesNotMatch(html, /<span>Sessions<\/span>/);
+  assert.match(html, /visibleShapedChoiceReasonEntries = participantReasonsExpanded[\s\S]*?shapedChoiceReasonEntries\.slice\(0, 5\)/);
+  assert.match(html, /data-results-action="toggle-participant-reasons"/);
+  assert.match(css, /\.calm-results-dashboard-header--participant \.calm-results-dashboard-summary__details\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);[^}]*gap:\s*12px;[^}]*width:\s*100%;[^}]*max-width:\s*none;/s);
+  assert.match(css, /\.calm-participant-analysis\s*\{[^}]*grid-template-columns:\s*minmax\(240px, 0\.72fr\) minmax\(0, 1\.28fr\);/s);
+  assert.match(css, /@media \(max-width: 900px\)[\s\S]*?\.calm-participant-list__picker\s*\{[^}]*display:\s*grid;/s);
+  assert.match(css, /@media \(max-width: 900px\)[\s\S]*?\.calm-participant-list__items\s*\{[^}]*display:\s*none;/s);
 });
 
 test('renders an accessible responsive leaderboard with four earned or locked medals', () => {
@@ -168,7 +198,8 @@ test('renders an accessible responsive leaderboard with four earned or locked me
   assert.match(html, /isCurrentLevel \? ' is-current-level' : ''/);
   assert.match(html, /data-rank-position="\$\{explorer\.rank}"/);
   assert.match(html, /class="calm-route-explorers__rank-trophy"/);
-  assert.match(html, /function renderRouteExplorerRank\(rank\) \{\s*if \(rank > 3\) return String\(rank\);/s);
+  assert.match(html, /function renderRouteExplorerRank\(rank\) \{\s*if \(rank > 3\) return `<span aria-hidden="true">\$\{rank}<\/span>`;/s);
+  assert.match(html, /role="cell" aria-label="Rank \$\{explorer\.rank}"/);
   assert.match(html, /calm-route-explorers__complete-icon/);
   assert.match(html, /marker-lime marker-static/);
   assert.doesNotMatch(html, /<span role="columnheader">Level<\/span>/);
@@ -178,13 +209,14 @@ test('renders an accessible responsive leaderboard with four earned or locked me
   assert.match(css, /\.calm-route-explorers__header,\s*\.calm-route-explorers__row\s*\{[^}]*grid-template-columns:\s*48px minmax\(200px, 1fr\) 132px minmax\(210px, 0\.9fr\);/s);
   assert.match(css, /\.calm-route-explorers__progress > span\s*\{[^}]*width:\s*var\(--route-progress\);[^}]*background:\s*var\(--ari-plum\);/s);
   assert.match(css, /@media \(max-width: 700px\)[\s\S]*?\.calm-route-explorers__row\s*\{[^}]*grid-template-areas:\s*"rank name medals"\s*"rank score score";/s);
-  assert.match(css, /\.calm-route-explorers:not\(\.is-expanded\) \.calm-route-explorers__row:not\(\.is-mobile-primary\)\s*\{[^}]*display:\s*none;/s);
+  assert.match(css, /\.calm-route-explorers:not\(\.is-expanded\) \.calm-route-explorers__row:not\(\.is-primary\)\s*\{[^}]*display:\s*none;/s);
   assert.match(css, /\.calm-route-explorers__toggle:focus-visible/);
   assert.match(css, /\.calm-route-explorers__header\s*\{[^}]*font:\s*700 var\(--font-size-micro\)\/1\.2 var\(--ari-font\);/s);
   assert.match(css, /\.calm-route-explorers__row\.is-current\s*\{[^}]*border-radius:\s*var\(--ari-radius-data\);/s);
   assert.match(css, /\.calm-route-explorers\s*\{[^}]*border-bottom:\s*1px solid var\(--ari-hairline\);/s);
   assert.doesNotMatch(css, /\.calm-route-explorers\s*\{[^}]*border-top:/s);
-  assert.match(css, /\.calm-route-explorers__row \+ \.calm-route-explorers__row\s*\{[^}]*border-top:\s*1px solid var\(--ari-hairline\);/s);
+  assert.match(css, /\.calm-route-explorers__row:nth-child\(4\),\s*\.calm-route-explorers__row\.is-current-outside-top\s*\{[^}]*border-top:\s*1px solid var\(--ari-hairline\);/s);
+  assert.doesNotMatch(css, /\.calm-route-explorers__row \+ \.calm-route-explorers__row\s*\{[^}]*border-top:/s);
   assert.doesNotMatch(css, /\.calm-participant-analysis\s*\{[^}]*border-top:/s);
   assert.match(css, /--ari-medal-tier-1-top:\s*#ecb98c;/);
   assert.match(css, /\.calm-route-explorer-medal\[data-medal-tier="4"\]\s*\{[^}]*--explorer-medal-top:\s*var\(--ari-medal-tier-4-top\);/s);
@@ -201,7 +233,7 @@ test('documents and enforces the quieter Results surface tier', () => {
   assert.match(css, /\.calm-pp-cards-list\s*\{[^}]*border-radius:\s*var\(--ari-radius-data\);/s);
   assert.match(css, /\.calm-results-eyebrow,\s*\.calm-results-index\s*\{[^}]*color:\s*var\(--ari-faint\);/s);
   assert.match(css, /\.calm-results-action\s*\{[^}]*min-height:\s*52px;[^}]*font:\s*700 0\.92em\/1 var\(--ari-font\);/s);
-  assert.match(design, /Home and Results share one page-title role/);
+  assert.match(design, /Home and researcher `Team results` use the `40–42px` page-title role/);
   assert.match(design, /one active Results view, so it does not repeat that state in a second local switcher/);
   assert.match(design, /Use two radius tiers/);
 });

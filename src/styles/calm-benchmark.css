@@ -298,10 +298,12 @@ html.is-challenge-dialog-open {
   transition: background-color 180ms ease, color 180ms ease, transform 180ms var(--motion-settle);
 }
 
-.calm-challenge-option.is-available:hover {
-  background: #fffef4;
-  color: var(--ari-ink);
-  transform: translateX(4px);
+@media (hover: hover) and (pointer: fine) {
+  .calm-challenge-option.is-available:hover {
+    background: #fffef4;
+    color: var(--ari-ink);
+    transform: translateX(4px);
+  }
 }
 
 .calm-challenge-option:disabled {
@@ -1533,6 +1535,7 @@ html.is-challenge-dialog-open {
   grid-template-areas:
     "label label"
     "title form"
+    "greeting form"
     "medals form";
 }
 
@@ -1599,6 +1602,17 @@ html.is-challenge-dialog-open {
 .calm-start-left h2 {
   grid-area: title;
   color: #fff;
+}
+
+.calm-start-participant {
+  grid-area: greeting;
+  max-width: 36ch;
+  margin: -8px 0 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.84);
+  font: 600 var(--font-size-small)/1.4 var(--ari-font);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .calm-start-left .calm-icon {
@@ -1848,13 +1862,18 @@ html.is-challenge-dialog-open {
   transition: opacity 160ms ease;
 }
 
-.calm-medal:not(.is-earned):hover .calm-medal__seal,
 .calm-medal:not(.is-earned):focus-visible .calm-medal__seal,
 .calm-medal.is-flipped .calm-medal__seal,
-.calm-medal:not(.is-earned):hover .calm-medal__label,
 .calm-medal:not(.is-earned):focus-visible .calm-medal__label,
 .calm-medal.is-flipped .calm-medal__label {
   opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .calm-medal:not(.is-earned):hover .calm-medal__seal,
+  .calm-medal:not(.is-earned):hover .calm-medal__label {
+    opacity: 1;
+  }
 }
 
 /* The next medal is lifted by material, not ornament: full presence, a
@@ -1917,12 +1936,14 @@ html.is-challenge-dialog-open {
   transform: rotateY(180deg) translateY(-1px);
 }
 
-.calm-medal:hover .calm-medal__flip {
-  transform: translateY(-2px);
-}
+@media (hover: hover) and (pointer: fine) {
+  .calm-medal:hover .calm-medal__flip {
+    transform: translateY(-2px);
+  }
 
-.calm-medal.is-flipped:hover .calm-medal__flip {
-  transform: rotateY(180deg) translateY(-2px);
+  .calm-medal.is-flipped:hover .calm-medal__flip {
+    transform: rotateY(180deg) translateY(-2px);
+  }
 }
 
 .calm-medal__face {
@@ -2496,6 +2517,8 @@ html.is-challenge-dialog-open {
 .calm-results-dashboard-header--participant .calm-results-dashboard-summary__details {
   grid-template-columns: minmax(0, 1fr);
   gap: 12px;
+  width: 100%;
+  max-width: none;
 }
 
 .calm-results-dashboard-header h1 {
@@ -2543,7 +2566,8 @@ html.is-challenge-dialog-open {
 }
 
 @media (max-width: 900px) {
-  .calm-results-dashboard-summary__details {
+  .calm-results-dashboard-summary__details,
+  .calm-results-dashboard-header--participant .calm-results-dashboard-summary__details {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
   }
@@ -2575,8 +2599,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-results-dashboard-header--participant > h1,
-.calm-route-explorers__head h2,
-.calm-participant-results-heading h2 {
+.calm-route-explorers__head h2 {
   margin: 0;
   color: var(--ari-ink);
   font: var(--font-heading-md);
@@ -2625,8 +2648,15 @@ html.is-challenge-dialog-open {
   color: var(--ari-ink);
 }
 
-.calm-route-explorers__row + .calm-route-explorers__row {
+.calm-route-explorers__row:nth-child(4),
+.calm-route-explorers__row.is-current-outside-top {
+  margin-top: 6px;
   border-top: 1px solid var(--ari-hairline);
+  padding-top: 16px;
+}
+
+.calm-route-explorers:not(.is-expanded) .calm-route-explorers__row:not(.is-primary) {
+  display: none;
 }
 
 .calm-route-explorers__row.is-current {
@@ -2848,7 +2878,18 @@ html.is-challenge-dialog-open {
 }
 
 .calm-route-explorers__toggle {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 16px;
+  border: 1px solid var(--ari-hairline);
+  border-radius: var(--ari-radius-btn);
+  padding: 0 16px;
+  background: transparent;
+  color: var(--ari-ink);
+  cursor: pointer;
+  font: 700 var(--font-size-small)/1 var(--ari-font);
 }
 
 .calm-results-toolbar {
@@ -3955,6 +3996,10 @@ html.is-challenge-dialog-open {
   font-variant-numeric: tabular-nums;
 }
 
+.calm-participant-list__picker {
+  display: none;
+}
+
 .calm-participant-list__items {
   display: grid;
   padding: 0 10px 16px;
@@ -4019,17 +4064,31 @@ html.is-challenge-dialog-open {
   padding: 0 0 26px;
 }
 
-.calm-participant-results-heading {
-  padding: 0 0 26px;
-}
-
 .calm-participant-metrics {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   border-top: 1px solid var(--ari-hairline);
 }
 
 .calm-participant-analysis {
+  grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.28fr);
   gap: 44px;
+}
+
+.calm-participant-reasons-toggle {
+  min-height: 44px;
+  margin-top: 18px;
+  border: 1px solid var(--ari-hairline);
+  border-radius: var(--ari-radius-btn);
+  padding: 0 16px;
+  background: transparent;
+  color: var(--ari-ink);
+  cursor: pointer;
+  font: 700 var(--font-size-small)/1 var(--ari-font);
+}
+
+.calm-participant-reasons-toggle:focus-visible {
+  outline: 2px solid var(--ari-focus);
+  outline-offset: 3px;
 }
 
 .calm-participant-empty-note {
@@ -4266,15 +4325,15 @@ html.is-challenge-dialog-open {
 
 .calm-pp-answers {
   display: grid;
-  gap: 28px;
+  gap: 30px;
   padding: 28px 32px 32px;
 }
 
 .calm-pp-answer {
   display: grid;
-  grid-template-columns: minmax(210px, 0.38fr) minmax(0, 0.62fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: 32px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -4310,8 +4369,9 @@ html.is-challenge-dialog-open {
   margin: 0;
   border-radius: 8px;
   padding: 8px 12px;
-  background: color-mix(in srgb, var(--ari-yellow) 30%, #fff);
-  color: var(--ari-muted);
+  border: 1px solid color-mix(in srgb, var(--ari-yellow) 32%, var(--ari-hairline));
+  background: color-mix(in srgb, var(--ari-yellow) 12%, #fff);
+  color: var(--ari-ink);
   font: var(--font-fine);
   font-weight: 600;
 }
@@ -4423,8 +4483,9 @@ html.is-challenge-dialog-open {
 .calm-pp-note-text {
   margin: 0;
   font: var(--font-small);
-  font-style: italic;
-  color: var(--ari-muted);
+  font-style: normal;
+  color: var(--ari-ink);
+  line-height: 1.55;
 }
 
 .calm-pp-route-table {
@@ -5644,6 +5705,7 @@ html.is-challenge-dialog-open {
     grid-template-areas:
       "label label"
       "title form"
+      "greeting form"
       "medals form";
     column-gap: 20px;
   }
@@ -5690,27 +5752,39 @@ html.is-challenge-dialog-open {
   }
 
   .calm-participant-list {
-    overflow: hidden;
     border-right: 0;
     border-bottom: 1px solid var(--ari-hairline);
   }
 
+  .calm-participant-list__picker {
+    display: grid;
+    gap: 7px;
+    padding: 0 16px 20px;
+    color: var(--ari-muted);
+    font: 700 var(--font-size-micro)/1.3 var(--ari-font);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .calm-participant-list__picker select {
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid rgba(33, 26, 42, 0.2);
+    border-radius: var(--ari-radius-inner);
+    padding: 0 42px 0 14px;
+    background: var(--ari-off-white);
+    color: var(--ari-ink);
+    font: 600 1rem/1 var(--ari-font);
+    text-transform: none;
+  }
+
+  .calm-participant-list__picker select:focus-visible {
+    outline: 2px solid var(--ari-focus);
+    outline-offset: 2px;
+  }
+
   .calm-participant-list__items {
-    display: flex;
-    overflow-x: auto;
-    padding: 0 16px 18px;
-    scrollbar-width: thin;
-  }
-
-  .calm-participant-list__items button {
-    flex: 0 0 240px;
-    width: auto;
-    border-top: 0;
-    border-left: 1px solid var(--ari-hairline);
-  }
-
-  .calm-participant-list__items button:first-child {
-    border-left: 0;
+    display: none;
   }
 
   .calm-participant-detail {
@@ -5982,8 +6056,7 @@ html.is-challenge-dialog-open {
   }
 
   .calm-results-dashboard-header--participant > h1,
-  .calm-route-explorers__head h2,
-  .calm-participant-results-heading h2 {
+  .calm-route-explorers__head h2 {
     font: var(--font-heading-sm);
   }
 
@@ -5999,10 +6072,6 @@ html.is-challenge-dialog-open {
     gap: 7px 12px;
     min-height: 100px;
     padding: 13px 4px;
-  }
-
-  .calm-route-explorers:not(.is-expanded) .calm-route-explorers__row:not(.is-mobile-primary) {
-    display: none;
   }
 
   .calm-route-explorers__rank {
@@ -6032,21 +6101,6 @@ html.is-challenge-dialog-open {
     width: 22px;
     height: 22px;
     flex-basis: 22px;
-  }
-
-  .calm-route-explorers__toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    margin-top: 14px;
-    border: 1px solid var(--ari-hairline);
-    border-radius: var(--ari-radius-btn);
-    padding: 0 16px;
-    background: transparent;
-    color: var(--ari-ink);
-    cursor: pointer;
-    font: 700 var(--font-size-small)/1 var(--ari-font);
   }
 
   .calm-results-toolbar {
@@ -6180,7 +6234,7 @@ html.is-challenge-dialog-open {
   }
 
   .calm-participant-metrics {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .calm-participant-metrics > div,
@@ -6241,7 +6295,6 @@ html.is-challenge-dialog-open {
     grid-template-columns: 92px minmax(0, 1fr);
     gap: 12px;
     max-width: none;
-    border-bottom: 1px solid var(--ari-hairline);
     padding: 11px 12px;
     overflow-wrap: anywhere;
   }
@@ -6272,16 +6325,20 @@ html.is-challenge-dialog-open {
     line-height: 1.08;
   }
 
+  .calm-hero h1 {
+    font-size: clamp(2.1rem, 9vw, 2.45rem);
+  }
+
   .calm-hero p {
     font-size: 1.06em;
     line-height: 1.48;
   }
 
   .calm-route-slot {
-    display: inline-grid;
+    display: grid;
     width: 4.1em;
     height: 1.12em;
-    margin-left: 0.22em;
+    margin: 0.14em 0 0;
     overflow: hidden;
     vertical-align: baseline;
     font-size: 1em;
@@ -6432,7 +6489,7 @@ html.is-challenge-dialog-open {
 
   .calm-start-card.is-resumed {
     grid-template-columns: 1fr;
-    grid-template-areas: "label" "title" "medals" "form";
+    grid-template-areas: "label" "title" "greeting" "medals" "form";
   }
 
   .calm-resume-right {
@@ -7756,7 +7813,7 @@ html.is-challenge-dialog-open {
 
 .ari-choice-metrics strong {
   text-align: left;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.005em;
   white-space: nowrap;
@@ -7764,10 +7821,10 @@ html.is-challenge-dialog-open {
 
 .ari-choice-metrics small {
   text-align: left;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.005em;
-  opacity: 0.68;
+  opacity: 0.8;
   white-space: nowrap;
 }
 
@@ -9106,22 +9163,22 @@ html.is-challenge-dialog-open {
 /* Coloured route name in follow-up question headings */
 .ari-route-question-tag--a {
   color: color-mix(in srgb, var(--ari-route-a) 65%, #fff);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .ari-route-question-tag--b {
   color: color-mix(in srgb, var(--ari-route-b) 65%, #fff);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .ari-route-question-tag--c {
   color: #7BA7F5;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .ari-route-question-tag--fast {
   color: color-mix(in srgb, var(--ari-orange) 80%, #fff);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .ari-value-route-times {
@@ -9205,7 +9262,7 @@ html.is-challenge-dialog-open {
 }
 
 .ari-question-block .ari-choice-grid .ari-choice-anchor {
-  font-weight: 800;
+  font-weight: 700;
 }
 
 /* Default / no context */

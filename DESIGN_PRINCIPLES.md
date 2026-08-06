@@ -63,3 +63,18 @@ Check contrast when combining semi-transparent colours — the effective contras
 
 **Blinded study language.**
 Route labels are always A / B (never algorithm names) to preserve the blind comparison. Do not expose `calm_quiet` / `calm_nature` identifiers in UI copy.
+
+---
+
+## Results Hierarchy
+
+**Explanation, progress, personal evidence.**
+Participant Results keeps the study explanation visible, follows it with a compact top-five-plus-you leaderboard, then shows personal choices and comparison records. This order should remain stable without letting the leaderboard push personal evidence out of reach.
+
+The participant explanation uses one full-width text flow at every viewport. Researcher summaries may retain analytical columns on wide screens and collapse to one column on narrow screens.
+
+**Researcher navigation adapts to the viewport.**
+Use the persistent participant list on wide screens and one full-width participant select on narrow screens. Session count is implementation detail and must not appear as a participant metric.
+
+**Questions and answers read as one unit.**
+In expanded comparison records, place each question directly above its answer. Use normal, high-contrast body type for participant comments and reserve yellow for small confirmation details rather than large emphasis surfaces.

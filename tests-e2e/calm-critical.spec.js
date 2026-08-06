@@ -320,7 +320,7 @@ test('branch-specific surroundings reasons are shown and saved in the correct fo
   expect(rejectedAnswer.q3Note).toBe('Neither route had pleasant surroundings.');
 
   await page.goto('/?game=calm&view=results');
-  const shapedChoices = page.getByRole('heading', { name: 'What shaped your choices' }).locator('..');
+  const shapedChoices = page.getByRole('heading', { name: 'What influenced you' }).locator('..');
   await expect(shapedChoices.getByText('Not enough beautiful or pleasant surroundings', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Reasons for choosing neither' })).toHaveCount(0);
 });
@@ -340,10 +340,11 @@ test('Calm participant results use current choice reasons and personal wording',
   await expect(page.getByRole('heading', { name: 'Route Explorers Leaderboard', level: 2 })).toBeVisible();
   await expect(page.getByRole('table', { name: 'Route Explorers leaderboard' })).toBeVisible();
   await expect(page.getByRole('progressbar', { name: /route progress$/ })).toHaveCount(1);
-  await expect(page.getByRole('heading', { name: 'Your choices', level: 2 })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'What shaped your choices' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your choices', level: 2, includeHidden: true })).toHaveClass(/ari-visually-hidden/);
+  await expect(page.getByRole('heading', { name: 'Route choices', level: 3 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'What influenced you' })).toBeVisible();
   await expect(
-    page.getByRole('heading', { name: 'What shaped your choices' })
+    page.getByRole('heading', { name: 'What influenced you' })
       .locator('..')
       .getByText('More trees or green space', { exact: true })
   ).toBeVisible();
@@ -360,7 +361,8 @@ test('the local participant sample URL shows varied Route Explorers mock data', 
 
   await expect(page.getByRole('heading', { name: 'A quick explanation of what you did', level: 1 })).toBeVisible();
   await expect(page.locator('.calm-route-explorers__row')).toHaveCount(15);
-  await expect(page.getByRole('progressbar', { name: /route progress$/ })).toHaveCount(15);
+  await expect(page.locator('.calm-route-explorers__row:visible')).toHaveCount(5);
+  await expect(page.getByRole('progressbar', { name: /route progress$/ })).toHaveCount(5);
   await expect(page.locator('.calm-route-explorers__row.is-current')).toContainText('Irene');
   await expect(page.locator('.calm-route-explorers__row').first().locator('[data-rank-position="1"]')).toBeVisible();
   await expect(page.locator('.calm-route-explorers__rank-trophy')).toHaveCount(3);
@@ -371,12 +373,37 @@ test('the local participant sample URL shows varied Route Explorers mock data', 
   await expect(page.locator('.calm-route-explorers__row').first().locator('.calm-route-explorer-medal.is-current-level')).toHaveCount(1);
   await expect(page.locator('.calm-route-explorers__row.is-complete .calm-route-explorers__complete-icon')).toHaveCount(3);
 
+  await page.getByRole('button', { name: 'Show all 15' }).click();
+  await expect(page.locator('.calm-route-explorers__row:visible')).toHaveCount(15);
+  await expect(page.getByRole('progressbar', { name: /route progress$/ })).toHaveCount(15);
+  await expect(page.getByText('Alex (AL-1)', { exact: true })).toBeVisible();
+  await expect(page.getByText('Alex (AL-2)', { exact: true })).toBeVisible();
+
   const progressValues = await page.getByRole('progressbar', { name: /route progress$/ }).evaluateAll(bars => (
     bars.map(bar => Number(bar.getAttribute('aria-valuenow')))
   ));
   expect(Math.max(...progressValues)).toBe(23);
   expect(Math.min(...progressValues)).toBe(1);
   expect(new Set(progressValues).size).toBeGreaterThanOrEqual(10);
+
+  const desktopIntroColumns = await page.locator(
+    '.calm-results-dashboard-header--participant .calm-results-dashboard-summary__details'
+  ).evaluate(element => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/));
+  expect(desktopIntroColumns).toHaveLength(1);
+  const unusedIntroWidth = await page.evaluate(() => {
+    const wrap = document.querySelector('.calm-results-wrap');
+    const details = document.querySelector('.calm-results-dashboard-header--participant .calm-results-dashboard-summary__details');
+    return Math.round((wrap?.getBoundingClientRect().width || 0) - (details?.getBoundingClientRect().width || 0));
+  });
+  expect(unusedIntroWidth).toBe(0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const participantIntroColumns = await page.locator(
+    '.calm-results-dashboard-header--participant .calm-results-dashboard-summary__details'
+  ).evaluate(element => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/));
+  expect(participantIntroColumns).toHaveLength(1);
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
 });
 
 test('a researcher preview never makes later participant links open in researcher mode', async ({ page }) => {
@@ -395,6 +422,20 @@ test('a researcher preview never makes later participant links open in researche
   await page.goto('/?game=calm&view=results');
   await expect(page.getByRole('heading', { name: 'A quick explanation of what you did', level: 1 })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Team results', level: 1 })).toHaveCount(0);
+});
+
+test('researcher participant navigation becomes one usable mobile selector', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/?game=calm&researcher=1&sample=1&view=results');
+
+  const picker = page.locator('[data-results-participant-select]');
+  await expect(picker).toBeVisible();
+  await expect(page.locator('.calm-participant-list__items')).toBeHidden();
+  await picker.selectOption('sample-maya');
+  await expect(page.locator('.calm-participant-detail__header').getByRole('heading', { name: 'Maya Chen' })).toBeVisible();
+  await expect(page.getByText('Sessions', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Routes compared', { exact: true })).toBeVisible();
+  await expect(page.getByText('Complete', { exact: true })).toBeVisible();
 });
 
 test('the Calm flow fits a narrow mobile viewport', async ({ page }) => {

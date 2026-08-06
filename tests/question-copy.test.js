@@ -82,8 +82,9 @@ test('keeps the first-comparison Q1 guidance aligned with the questionnaire', ()
   const app = read('src/app/calm-benchmark.js');
   const questionnaire = read('docs/QUESTIONNAIRE.md');
   const guidance = [
-    'Times are estimates. A “+” time shows how much longer that route takes than Fast for the same start and destination.',
-    'If both routes work well but you prefer one, choose Route A or Route B. Choose “Both work well” only when you have no preference.'
+    'Each route shows its estimated time, then the extra time versus Fast for the same trip.',
+    'If you prefer one route, choose Route A or B, even if both work well.',
+    'Choose “Both work well” only if you really have no preference, and “Both work poorly” if neither route feels calm enough.'
   ];
   guidance.forEach(copy => {
     assert.equal(html.includes(copy), true, copy);

@@ -43,7 +43,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260806-route-explorers-1">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260806-results-polish-7">
   <style>
     body {
       margin: 0;
@@ -220,6 +220,7 @@
               <span id="start-kicker-text">Start testing</span>
             </div>
             <h2 id="start-h2">Ready to <span>compare routes?</span></h2>
+            <p class="calm-start-participant" id="start-participant" hidden></p>
             <div class="calm-medal-shelf calm-hidden" id="medal-shelf" aria-label="Milestones"></div>
           </div>
           <form class="calm-start-form" id="start-form">
@@ -634,8 +635,9 @@
           showRouteMetrics: true,
           routeMetricMode: 'duration-vs-fast',
           routeMetricsHelp: [
-            'Times are estimates. A “+” time shows how much longer that route takes than Fast for the same start and destination.',
-            'If both routes work well but you prefer one, choose Route A or Route B. Choose “Both work well” only when you have no preference.'
+            'Each route shows its estimated time, then the extra time versus Fast for the same trip.',
+            'If you prefer one route, choose Route A or B, even if both work well.',
+            'Choose “Both work well” only if you really have no preference, and “Both work poorly” if neither route feels calm enough.'
           ]
         },
         routePairProvider: AriCalmBenchmark.mockRoutePairProvider
@@ -656,6 +658,7 @@
      */
     let calmResultsView = 'participants';
     let routeExplorersExpanded = false;
+    let participantReasonsExpanded = false;
     let choiceReasonsMode = 'all';
     let freeTextTheme = null;
     let selectedResultsParticipantId = '';
@@ -854,7 +857,7 @@
         const value = percentage(count, total);
         return `<div class="calm-result-row ${className}" data-result-key="${escapeHtml(key)}">` +
           `<div class="calm-result-row__copy"><span>${escapeHtml(label)}</span><b>${value}%</b></div>` +
-          `<div class="calm-result-bar" aria-label="${escapeHtml(label)}: ${value}%"><span style="width:${value}%"></span></div>` +
+          `<div class="calm-result-bar" role="progressbar" aria-label="${escapeHtml(label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${value}"><span style="width:${value}%"></span></div>` +
           `<small>${count} comparison${count === 1 ? '' : 's'}</small>` +
         `</div>`;
       }).join('');
@@ -1062,7 +1065,7 @@
     }
 
     function renderRouteExplorerRank(rank) {
-      if (rank > 3) return String(rank);
+      if (rank > 3) return `<span aria-hidden="true">${rank}</span>`;
       return `
         <svg class="calm-route-explorers__rank-trophy" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
           <path class="calm-route-explorers__rank-trophy-cup" d="M9 5h14v5.5c0 5-2.7 8.3-7 9.6-4.3-1.3-7-4.6-7-9.6V5Z"/>
@@ -1073,20 +1076,42 @@
         </svg>`;
     }
 
+    function shortParticipantCode(participantId) {
+      const parts = String(participantId || '')
+        .toLocaleLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter(Boolean);
+      const last = parts.at(-1) || 'id';
+      const previous = parts.at(-2) || parts.at(0) || 'p';
+      if (/^\d+$/.test(last)) return `${previous.slice(0, 2).toUpperCase()}-${last}`;
+      return String(participantId || 'ID').replace(/[^a-z0-9]/gi, '').slice(-4).toUpperCase() || 'ID';
+    }
+
+    function participantDisplayLabels(participants) {
+      const labels = new Map();
+      const duplicateNames = participants.reduce((groups, participant) => {
+        const key = participant.participant.toLocaleLowerCase();
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(participant);
+        return groups;
+      }, new Map());
+      duplicateNames.forEach(items => {
+        items.forEach(item => {
+          labels.set(
+            item.participantId,
+            items.length > 1
+              ? `${item.participant} (${shortParticipantCode(item.participantId)})`
+              : item.participant
+          );
+        });
+      });
+      return labels;
+    }
+
     function renderRouteExplorers(participantSummaries, currentParticipantId) {
       if (researcherMode) return '';
       const explorers = routeExplorerEntries(participantSummaries);
-      const duplicateNames = explorers.reduce((groups, explorer) => {
-        const key = explorer.participant.toLocaleLowerCase();
-        if (!groups.has(key)) groups.set(key, []);
-        groups.get(key).push(explorer.participantId);
-        return groups;
-      }, new Map());
-      const displayName = explorer => {
-        const matches = duplicateNames.get(explorer.participant.toLocaleLowerCase()) || [];
-        const position = matches.indexOf(explorer.participantId);
-        return matches.length > 1 ? `${explorer.participant} · ${position + 1}` : explorer.participant;
-      };
+      const participantLabels = participantDisplayLabels(explorers);
       const status = sampleResultsEnabled || !remoteTransport?.listRouteExplorers
         ? ''
         : remoteRouteExplorers.status === 'loading' || remoteRouteExplorers.status === 'idle'
@@ -1096,13 +1121,14 @@
             : '';
       const rows = explorers.map((explorer, index) => {
         const isCurrent = explorer.participantId === currentParticipantId;
-        const isMobilePrimary = index < 5 || isCurrent;
+        const isPrimary = index < 5 || isCurrent;
+        const isCurrentOutsideTop = isCurrent && index >= 5;
         const isComplete = explorer.routesCompared >= explorer.totalRoutes;
-        const name = escapeHtml(displayName(explorer));
+        const name = escapeHtml(participantLabels.get(explorer.participantId) || explorer.participant);
         const progress = Math.min(100, Math.max(0, Math.round((explorer.routesCompared / explorer.totalRoutes) * 100)));
         return `
-          <div class="calm-route-explorers__row${isCurrent ? ' is-current' : ''}${isMobilePrimary ? ' is-mobile-primary' : ''}${isComplete ? ' is-complete' : ''}" role="row">
-            <span class="calm-route-explorers__rank${explorer.rank <= 3 ? ' is-top-rank' : ''}" data-rank-position="${explorer.rank}" role="cell"><span class="ari-visually-hidden">Rank ${explorer.rank}</span>${renderRouteExplorerRank(explorer.rank)}</span>
+          <div class="calm-route-explorers__row${isCurrent ? ' is-current' : ''}${isPrimary ? ' is-primary' : ''}${isCurrentOutsideTop ? ' is-current-outside-top' : ''}${isComplete ? ' is-complete' : ''}" role="row">
+            <span class="calm-route-explorers__rank${explorer.rank <= 3 ? ' is-top-rank' : ''}" data-rank-position="${explorer.rank}" role="cell" aria-label="Rank ${explorer.rank}">${renderRouteExplorerRank(explorer.rank)}</span>
             <span class="calm-route-explorers__name" role="rowheader"><strong${isCurrent ? ' class="marker-lime marker-static"' : ''}>${name}</strong></span>
             <span class="calm-route-explorers__medals" role="cell" aria-label="${explorer.earnedMedals} of ${MILESTONES.length} medals earned. Current level: ${escapeHtml(explorer.medalName)}">${renderRouteExplorerMedals(explorer)}</span>
             <span class="calm-route-explorers__score" role="cell">
@@ -1627,26 +1653,26 @@
                 ${row.q1KnowsBetter || (reasonsQuestion && (reasons.length || reasonsNote)) || (!rejectedBoth && questionCopy.q3 && (worthLabel || row.note)) ? `<section class="calm-pp-answers">
                   ${row.q1KnowsBetter ? `<div class="calm-pp-better-route">
                     <p class="calm-pp-selected-flag"><span aria-hidden="true"></span>${escapeHtml(questionCopy.q1Flag)}</p>
-                    ${row.q1BetterRouteNote ? `<blockquote class="calm-pp-note-text">“${escapeHtml(row.q1BetterRouteNote)}”</blockquote>` : ''}
+                    ${row.q1BetterRouteNote ? `<blockquote class="calm-pp-note-text">${escapeHtml(row.q1BetterRouteNote)}</blockquote>` : ''}
                   </div>` : ''}
                   ${reasonsQuestion && (reasons.length || reasonsNote) ? `<div class="calm-pp-answer">
                     <p class="calm-pp-question">${escapeHtml(reasonsQuestion)}</p>
                     <div class="calm-pp-answer__content">
                       ${reasons.length ? `<ul class="calm-pp-reasons-list">${reasons.map(reason => `<li>${escapeHtml(reason)}</li>`).join('')}</ul>` : ''}
-                      ${reasonsNote ? `<blockquote class="calm-pp-note-text">“${escapeHtml(reasonsNote)}”</blockquote>` : ''}
+                      ${reasonsNote ? `<blockquote class="calm-pp-note-text">${escapeHtml(reasonsNote)}</blockquote>` : ''}
                     </div>
                   </div>` : ''}
                   ${!rejectedBoth && questionCopy.q3 && worthLabel ? `<div class="calm-pp-answer">
                     <p class="calm-pp-question">${escapeHtml(questionCopy.q3)}</p>
                     <div class="calm-pp-answer__content">
                       ${worthLabel ? `<p class="calm-pp-response"><strong>${escapeHtml(worthLabel)}</strong></p>` : ''}
-                      ${row.note && row.q3NoteKind !== 'fast_alternative' ? `<blockquote class="calm-pp-note-text">“${escapeHtml(row.note)}”</blockquote>` : ''}
+                      ${row.note && row.q3NoteKind !== 'fast_alternative' ? `<blockquote class="calm-pp-note-text">${escapeHtml(row.note)}</blockquote>` : ''}
                     </div>
                   </div>` : ''}
                   ${!rejectedBoth && questionCopy.q3Note && row.note && row.q3NoteKind === 'fast_alternative' ? `<div class="calm-pp-answer">
                     <p class="calm-pp-question">${escapeHtml(questionCopy.q3Note)}</p>
                     <div class="calm-pp-answer__content">
-                      <blockquote class="calm-pp-note-text">“${escapeHtml(row.note)}”</blockquote>
+                      <blockquote class="calm-pp-note-text">${escapeHtml(row.note)}</blockquote>
                     </div>
                   </div>` : ''}
                 </section>` : ''}
@@ -1713,21 +1739,7 @@
           </section>`;
       }
 
-      const participantLabels = new Map();
-      const duplicateNameGroups = orderedParticipants.reduce((groups, item) => {
-        const key = item.participant.toLocaleLowerCase();
-        if (!groups.has(key)) groups.set(key, []);
-        groups.get(key).push(item);
-        return groups;
-      }, new Map());
-      duplicateNameGroups.forEach(items => {
-        items.forEach((item, index) => {
-          participantLabels.set(
-            item.participantId,
-            items.length > 1 ? `${item.participant} · ${index + 1}` : item.participant
-          );
-        });
-      });
+      const participantLabels = participantDisplayLabels(orderedParticipants);
 
       const selectedPerson = orderedParticipants.find(item => item.participantId === selectedResultsParticipantId);
       const selectedParticipantLabel = participantLabels.get(selectedResultsParticipantId) || selectedPerson?.participant || 'Unknown';
@@ -1755,17 +1767,24 @@
       const shapedChoiceReasonEntries = [...shapedChoiceReasonCounts.entries()]
         .map(([label, count]) => [label, count])
         .sort((a, b) => b[1] - a[1]);
+      const visibleShapedChoiceReasonEntries = participantReasonsExpanded
+        ? shapedChoiceReasonEntries
+        : shapedChoiceReasonEntries.slice(0, 5);
       const shapedChoiceReasonResponseCount = participantSummary.rows
         .filter(row => row.q2Reasons.length > 0 || row.reasons.length > 0)
         .length;
       const participantButtons = orderedParticipants.map(item => {
         const isSelected = item.participantId === selectedResultsParticipantId;
+        const completion = percentage(item.routePairs, DEMO_INITIAL_ROUNDS);
         return `
           <button type="button" data-results-participant="${escapeHtml(item.participantId)}" aria-pressed="${isSelected}">
             <span><strong>${escapeHtml(participantLabels.get(item.participantId))}</strong></span>
-            <small>${item.comparisons} comparison${item.comparisons === 1 ? '' : 's'} · ${item.routePairs} route pair${item.routePairs === 1 ? '' : 's'}</small>
+            <small>${item.routePairs} / ${DEMO_INITIAL_ROUNDS} routes · ${completion}% complete</small>
           </button>`;
       }).join('');
+      const participantOptions = orderedParticipants.map(item => `
+        <option value="${escapeHtml(item.participantId)}"${item.participantId === selectedResultsParticipantId ? ' selected' : ''}>${escapeHtml(participantLabels.get(item.participantId))}</option>`
+      ).join('');
 
       const showParticipantList = researcherMode || orderedParticipants.length > 1;
       return `
@@ -1776,6 +1795,10 @@
               <h2 id="calm-participant-list-title">${researcherMode ? 'Participants' : 'My results'}</h2>
               <span>${orderedParticipants.length}</span>
             </div>
+            ${researcherMode ? `<label class="calm-participant-list__picker" for="calm-participant-picker">
+              <span>Choose a participant</span>
+              <select id="calm-participant-picker" data-results-participant-select>${participantOptions}</select>
+            </label>` : ''}
             <div class="calm-participant-list__items">${participantButtons}</div>
           </aside>` : ''}
           <section class="calm-participant-detail" aria-labelledby="calm-participant-detail-title">
@@ -1783,30 +1806,28 @@
               <header class="calm-participant-detail__header">
                 <p class="calm-results-eyebrow">Participant record</p>
                 <h2 id="calm-participant-detail-title">${escapeHtml(selectedParticipantLabel)}</h2>
-                <p>${selectedPerson.comparisons} completed comparison${selectedPerson.comparisons === 1 ? '' : 's'} across ${selectedPerson.routePairs} route pair${selectedPerson.routePairs === 1 ? '' : 's'}. Updated ${formatUpdated(selectedPerson.lastUpdated)}.</p>
+                <p>${selectedPerson.routePairs} of ${DEMO_INITIAL_ROUNDS} routes compared. Updated ${formatUpdated(selectedPerson.lastUpdated)}.</p>
               </header>` : `
-              <header class="calm-participant-results-heading">
-                <h2 id="calm-participant-detail-title">Your choices</h2>
-              </header>`}
+              <h2 id="calm-participant-detail-title" class="ari-visually-hidden">Your choices</h2>`}
             ${researcherMode ? `
             <section class="calm-team-metrics calm-participant-metrics" aria-label="${escapeHtml(selectedParticipantLabel)} summary">
-              <div><strong>${selectedPerson.comparisons}</strong><span>Comparisons</span></div>
-              <div><strong>${selectedPerson.routePairs}</strong><span>Route pairs</span></div>
-              <div><strong>${selectedPerson.sessions}</strong><span>Sessions</span></div>
+              <div><strong>${selectedPerson.routePairs} / ${DEMO_INITIAL_ROUNDS}</strong><span>Routes compared</span></div>
+              <div><strong>${percentage(selectedPerson.routePairs, DEMO_INITIAL_ROUNDS)}%</strong><span>Complete</span></div>
             </section>` : ''}
             <div class="calm-team-analysis calm-participant-analysis">
               <section aria-labelledby="participant-choice-title">
-                <h3 id="participant-choice-title">${researcherMode ? 'Route choices' : 'Your route choices'}</h3>
+                <h3 id="participant-choice-title">Route choices</h3>
                 <div class="calm-results-chart">${renderBarRows(outcomeEntries, participantSummary.total, 'calm-result-row--outcome')}</div>
               </section>
               <section aria-labelledby="participant-reasons-title">
-                <h3 id="participant-reasons-title">${researcherMode ? 'Reasons for choosing routes' : 'What shaped your choices'}</h3>
-                <div class="calm-results-chart">${(researcherMode ? choiceReasonEntries : shapedChoiceReasonEntries).length
+                <h3 id="participant-reasons-title">${researcherMode ? 'Reasons for choosing routes' : 'What influenced you'}</h3>
+                <div class="calm-results-chart">${(researcherMode ? choiceReasonEntries : visibleShapedChoiceReasonEntries).length
                   ? renderBarRows(
-                      researcherMode ? choiceReasonEntries : shapedChoiceReasonEntries,
+                      researcherMode ? choiceReasonEntries : visibleShapedChoiceReasonEntries,
                       researcherMode ? choiceReasonResponseCount : shapedChoiceReasonResponseCount
                     )
                   : `<p class="calm-participant-empty-note">${researcherMode ? 'No route-choice reasons selected.' : 'No reasons selected.'}</p>`}</div>
+                ${!researcherMode && shapedChoiceReasonEntries.length > 5 ? `<button type="button" class="calm-participant-reasons-toggle" data-results-action="toggle-participant-reasons" aria-expanded="${participantReasonsExpanded}">${participantReasonsExpanded ? 'Show fewer reasons' : `Show all ${shapedChoiceReasonEntries.length} reasons`}</button>` : ''}
               </section>
               ${researcherMode && rejectionReasonEntries.length ? `
               <section aria-labelledby="participant-rejection-reasons-title">
@@ -1864,7 +1885,6 @@
               <div class="calm-results-dashboard-summary__details">
                 <p>You compared pairs of Calm routes without knowing which model created each one. In every pair, one route came from a <strong class="calm-results-profile-label" data-profile="nature">Nature-focused profile</strong>, which gives more weight to greenery, tree canopy and water. The other came from a <strong class="calm-results-profile-label" data-profile="quiet">Quiet-focused profile</strong>, which gives more weight to avoiding noise, main roads and areas with higher accident risk.</p>
                 <div class="calm-results-dashboard-summary__support">
-                  <p>For each pair, you told us whether you preferred Route A, Route B, both routes or neither, or whether you were unsure.</p>
                   <p>Your responses help us understand which approach works better, what people value in a Calm route and which cases need further investigation. Since this was an internal evaluation, the results reflect the judgments of the evaluators rather than Zürich pedestrians as a whole.</p>
                 </div>
               </div>
@@ -2399,15 +2419,19 @@
         document.getElementById('challenge-action').textContent = 'Resume →';
         const next = MILESTONES.find(m => count < m.at) || null;
         const participantName = (progress.participantName || '').trim();
-        document.getElementById('start-kicker-text').textContent = participantName
-          ? `Welcome back, ${participantName}`
-          : 'Welcome back';
+        document.getElementById('start-kicker-text').textContent = 'Continue testing';
+        const startParticipant = document.getElementById('start-participant');
+        startParticipant.hidden = !participantName;
+        startParticipant.textContent = participantName ? `Welcome back, ${participantName}` : '';
         document.getElementById('start-h2').innerHTML =
           `${count} <span>route${count === 1 ? '' : 's'} compared.</span>`;
       } else {
         updateChallengePreview(0);
         document.getElementById('challenge-action').textContent = 'Play →';
         document.getElementById('start-kicker-text').textContent = 'Start testing';
+        const startParticipant = document.getElementById('start-participant');
+        startParticipant.hidden = true;
+        startParticipant.textContent = '';
         document.getElementById('start-h2').innerHTML = `Ready to <span>compare routes?</span>`;
       }
     }
@@ -2693,9 +2717,16 @@
         requestAnimationFrame(() => communityResults.querySelector('[data-results-action="toggle-explorers"]')?.focus());
         return;
       }
+      if (resultsAction === 'toggle-participant-reasons') {
+        participantReasonsExpanded = !participantReasonsExpanded;
+        renderCommunityResults();
+        requestAnimationFrame(() => communityResults.querySelector('[data-results-action="toggle-participant-reasons"]')?.focus());
+        return;
+      }
       if (resultsAction === 'sample-data') {
         sampleResultsEnabled = true;
         selectedResultsParticipantId = '';
+        participantReasonsExpanded = false;
         localStorage.setItem(SAMPLE_RESULTS_STORAGE, 'sample');
         renderCommunityResults();
         return;
@@ -2703,6 +2734,7 @@
       if (resultsAction === 'saved-data') {
         sampleResultsEnabled = false;
         selectedResultsParticipantId = '';
+        participantReasonsExpanded = false;
         localStorage.setItem(SAMPLE_RESULTS_STORAGE, 'saved');
         renderCommunityResults();
         void loadRemoteTeamResults();
@@ -2819,12 +2851,22 @@
       const participantButton = event.target.closest('[data-results-participant]');
       if (participantButton && participantButton.dataset.resultsParticipant !== selectedResultsParticipantId) {
         selectedResultsParticipantId = participantButton.dataset.resultsParticipant;
+        participantReasonsExpanded = false;
         renderCommunityResults();
         requestAnimationFrame(() => {
           communityResults.querySelector('[data-results-participant][aria-pressed="true"]')?.focus();
         });
         return;
       }
+    });
+
+    communityResults.addEventListener('change', event => {
+      const participantSelect = event.target.closest('[data-results-participant-select]');
+      if (!participantSelect || participantSelect.value === selectedResultsParticipantId) return;
+      selectedResultsParticipantId = participantSelect.value;
+      participantReasonsExpanded = false;
+      renderCommunityResults();
+      requestAnimationFrame(() => communityResults.querySelector('[data-results-participant-select]')?.focus());
     });
 
     teamResults.addEventListener('change', event => {
