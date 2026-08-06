@@ -575,7 +575,6 @@
       loadingRound: false,
       loadError: null,
       panelCollapsed: false,
-      panelCollapsedBeforeStreetView: null,
       mapAdapter: null,
       mapDisplayMode: null,
       routeMetricsHelpExpanded: false,
@@ -1252,10 +1251,6 @@
       window.clearTimeout(streetViewCloseTimer);
       const alreadySplit = els.mapShell.classList.contains('is-street-split');
       const viewStateBeforeSplit = alreadySplit ? null : state.mapAdapter.getViewState();
-      if (!alreadySplit) {
-        state.panelCollapsedBeforeStreetView = state.panelCollapsed;
-        updatePanelState(true, { animate: true });
-      }
       els.mapShell.classList.add('is-street-split');
       els.benchmark.classList.add('is-street-view-open');
       els.streetDivider.hidden = false;
@@ -1302,10 +1297,6 @@
       els.streetViewer.classList.remove('is-visible');
       els.streetViewer.hidden = true;
       applyStoredSplit();
-      if (state.panelCollapsedBeforeStreetView === false) {
-        updatePanelState(false, { animate: true });
-      }
-      state.panelCollapsedBeforeStreetView = null;
     }
 
     function closeStreetView({ immediate = false, restoreMap = true, restoreFocus = true, deactivate = false } = {}) {

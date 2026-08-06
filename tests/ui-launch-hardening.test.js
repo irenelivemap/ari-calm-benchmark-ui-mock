@@ -220,6 +220,19 @@ test('uses readable secondary text and respects reduced-motion preferences', () 
   assert.match(css, /\.ari-onboarding__close\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px/s);
 });
 
+test('keeps the question panel state and size stable through Street View', () => {
+  const showStreetViewerSource = app.slice(
+    app.indexOf('function showStreetViewer()'),
+    app.indexOf('function removeStreetViewPositionListener()')
+  );
+  assert.doesNotMatch(app, /panelCollapsedBeforeStreetView/);
+  assert.doesNotMatch(showStreetViewerSource, /updatePanelState\(true/);
+  assert.match(css, /\.ari-benchmark\.is-street-view-open \.ari-question-card\s*\{[^}]*width:\s*min\([\s\S]*?var\(--ari-rail-width\)/);
+  assert.match(css, /@media \(max-width: 700px\)[\s\S]*?\.ari-benchmark\.is-street-view-open \.ari-question-card\s*\{[^}]*max-height:\s*min\([\s\S]*?var\(--ari-sv-split-m, 58%\)/);
+  assert.doesNotMatch(css, /\.ari-benchmark\.is-street-view-open \.ari-question-card \.ari-question-stack\s*\{[^}]*display:\s*none/);
+  assert.match(design, /Opening Street View preserves the question card's current expanded or collapsed state and its normal dimensions/);
+});
+
 test('celebrates comparison ten without inviting the participant to stop', () => {
   assert.match(app, /data-milestone-confetti/);
   assert.match(app, /milestone\.at === 10 && canContinueAfterCurrentRound\(\)/);

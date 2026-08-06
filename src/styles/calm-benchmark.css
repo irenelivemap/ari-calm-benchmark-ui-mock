@@ -7286,11 +7286,14 @@ html.is-challenge-dialog-open {
     height: 44px;
   }
 
-  /* The question card keeps its usual top-left place over the map column and
-     stays answerable above the split surfaces. */
+  /* Preserve the participant's panel state and normal rail width. Only let
+     the card narrow when the remaining map column cannot fit the full rail. */
   .ari-benchmark.is-street-view-open .ari-question-card {
     z-index: 55;
-    width: 300px;
+    width: min(
+      var(--ari-rail-width),
+      calc(100% - var(--ari-sv-split, 65%) - (2 * var(--ari-map-control-inset)))
+    );
   }
 
   .ari-benchmark.is-street-view-open .ari-question-card.is-collapsed .ari-panel-summary {
@@ -9316,6 +9319,10 @@ html.is-challenge-dialog-open {
     max-height: none;
     border-radius: 18px;
   }
+
+  .ari-benchmark.is-street-view-open .ari-question-card {
+    width: auto;
+  }
 }
 
 @media (max-width: 700px) {
@@ -9463,24 +9470,6 @@ html.is-challenge-dialog-open {
     height: 6px;
   }
 
-  .ari-benchmark.is-street-view-open .ari-question-card {
-    max-height: 80px;
-    overflow: hidden;
-    cursor: pointer;
-  }
-
-  .ari-benchmark.is-street-view-open .ari-question-card .ari-card-header,
-  .ari-benchmark.is-street-view-open .ari-question-card .ari-question-stack {
-    display: none;
-  }
-
-  .ari-benchmark.is-street-view-open .ari-question-card .ari-panel-summary {
-    max-height: 60px;
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
-  }
-
   .ari-map.is-street-split .ari-map__tools,
   .ari-map.is-street-split .ari-street-mode-hint {
     display: none;
@@ -9508,6 +9497,18 @@ html.is-challenge-dialog-open {
       linear-gradient(180deg, rgba(16, 18, 17, 0.98), rgba(8, 9, 9, 0.98));
     color: #fff;
     box-shadow: 0 20px 44px rgba(16, 21, 17, 0.32), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+
+  /* The panel remains expanded or collapsed exactly as the participant left
+     it. When the panorama leaves a short map area, constrain only its height
+     and retain the existing internal scroll instead of hiding the question. */
+  .ari-benchmark.is-street-view-open .ari-question-card {
+    width: auto;
+    max-height: min(
+      62svh,
+      520px,
+      calc(100% - var(--ari-sv-split-m, 58%) - (2 * var(--ari-map-control-inset)))
+    );
   }
 
   .ari-panel-summary b {

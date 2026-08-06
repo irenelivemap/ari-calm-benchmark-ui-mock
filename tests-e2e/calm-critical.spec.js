@@ -50,6 +50,70 @@ test('a newly loaded Calm round can resume before Q1 is answered', async ({ page
   expect(resumed[sessionId].routeAssignment).toEqual(checkpoint.routeAssignment);
 });
 
+test('Street View preserves the question panel state and normal desktop size', async ({ page }) => {
+  await beginCalmComparison(page, 'QA Street View panel 024');
+  await expectUsableMap(page);
+
+  const panel = page.locator('[data-question-card]');
+  if (await panel.evaluate(element => element.classList.contains('is-collapsed'))) {
+    await page.locator('[data-action="toggle-panel"]').click();
+  }
+  await expect(panel).not.toHaveClass(/is-collapsed/);
+  await page.waitForTimeout(450);
+  const expandedBefore = await panel.boundingBox();
+
+  await page.getByRole('button', { name: 'Turn on Street View' }).click();
+  await page.keyboard.press('a');
+  await expect(page.locator('[data-map]')).toHaveClass(/is-street-split/);
+  await expect(panel).not.toHaveClass(/is-collapsed/);
+  await page.waitForTimeout(450);
+  const expandedDuring = await panel.boundingBox();
+  expect(Math.abs(expandedDuring.width - expandedBefore.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(expandedDuring.height - expandedBefore.height)).toBeLessThanOrEqual(1);
+
+  await page.locator('.ari-street-viewer__back').click();
+  await expect(page.locator('[data-map]')).not.toHaveClass(/is-street-split/);
+  await expect(panel).not.toHaveClass(/is-collapsed/);
+
+  await page.locator('[data-action="toggle-panel"]').click();
+  await expect(panel).toHaveClass(/is-collapsed/);
+  await page.waitForTimeout(400);
+  const collapsedBefore = await panel.boundingBox();
+  await page.getByRole('button', { name: 'Turn on Street View' }).click();
+  await page.keyboard.press('a');
+  await expect(page.locator('[data-map]')).toHaveClass(/is-street-split/);
+  await expect(panel).toHaveClass(/is-collapsed/);
+  await page.waitForTimeout(450);
+  const collapsedDuring = await panel.boundingBox();
+  expect(Math.abs(collapsedDuring.width - collapsedBefore.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(collapsedDuring.height - collapsedBefore.height)).toBeLessThanOrEqual(1);
+});
+
+test('Street View keeps the mobile question visible within the remaining map area', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await beginCalmComparison(page, 'QA Street View mobile 025');
+  await expectUsableMap(page);
+
+  const panel = page.locator('[data-question-card]');
+  if (await panel.evaluate(element => element.classList.contains('is-collapsed'))) {
+    await page.locator('[data-action="toggle-panel"]').click();
+  }
+  await expect(panel).not.toHaveClass(/is-collapsed/);
+  await page.waitForTimeout(450);
+  const before = await panel.boundingBox();
+
+  await page.getByRole('button', { name: 'Turn on Street View' }).click();
+  await page.keyboard.press('a');
+  await expect(page.locator('[data-map]')).toHaveClass(/is-street-split/);
+  await expect(panel).not.toHaveClass(/is-collapsed/);
+  await page.waitForTimeout(450);
+
+  const during = await panel.boundingBox();
+  const divider = await page.locator('[data-street-divider]').boundingBox();
+  expect(during.y).toBeGreaterThanOrEqual(divider.y - 1);
+  expect(during.height).toBeLessThanOrEqual(before.height + 1);
+});
+
 test('an immediate reload after finishing a Calm comparison advances once', async ({ page }) => {
   await beginCalmComparison(page, 'QA participant 018');
 
