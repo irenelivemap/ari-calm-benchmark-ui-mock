@@ -10,6 +10,8 @@ function answer(overrides = {}) {
     pairId: 'pair-1',
     clientTs: '2026-07-13T10:00:00.000Z',
     q1Choice: 'route_a',
+    q1KnowsBetter: false,
+    q1BetterRouteNote: '',
     q2Separate: null,
     q2Reasons: ['quieter_or_less_busy_streets'],
     q2Note: '',
@@ -44,11 +46,24 @@ test('decodes selected route labels instead of treating A, B, and C as outcomes'
 
 test('preserves the selected-route reasons for the results layer', () => {
   const row = Results.normalizeRow(answer({
-    q2Reasons: ['more_trees_or_green_space'],
-    q2Note: 'More shade'
+    q2Reasons: ['more_beautiful_streets_or_surroundings'],
+    q2Note: 'More pleasant surroundings'
   }));
-  assert.deepEqual(row.q2Reasons, ['more_trees_or_green_space']);
-  assert.equal(row.q2Note, 'More shade');
+  assert.deepEqual(row.q2Reasons, ['more_beautiful_streets_or_surroundings']);
+  assert.equal(row.q2Note, 'More pleasant surroundings');
+  assert.equal(
+    Results.CHOICE_REASON_LABELS.more_beautiful_streets_or_surroundings,
+    'More beautiful streets or surroundings'
+  );
+});
+
+test('preserves the optional better-route note for participant and researcher results', () => {
+  const row = Results.normalizeRow(answer({
+    q1KnowsBetter: true,
+    q1BetterRouteNote: 'Take the smaller path along the river.'
+  }));
+  assert.equal(row.q1KnowsBetter, true);
+  assert.equal(row.q1BetterRouteNote, 'Take the smaller path along the river.');
 });
 
 test('uses the current conditional Calm questions in participant results', () => {
@@ -56,31 +71,36 @@ test('uses the current conditional Calm questions in participant results', () =>
     q1: 'Which route would you choose for a calmer walk?',
     q1Flag: 'I know a better Calm route',
     q2: 'What made you choose Route A?',
-    q3: 'Compared with only seeing Fast, how much does adding Route A improve things for you?'
+    q3: 'Compared with only seeing Fast, how much does adding Route A improve things for you?',
+    q3Note: 'When would you choose Fast instead of a Calm route? (Optional)'
   });
   assert.deepEqual(Results.participantQuestionCopy(answer({ q1Choice: 'route_b' })), {
     q1: 'Which route would you choose for a calmer walk?',
     q1Flag: 'I know a better Calm route',
     q2: 'What made you choose Route B?',
-    q3: 'Compared with only seeing Fast, how much does adding Route B improve things for you?'
+    q3: 'Compared with only seeing Fast, how much does adding Route B improve things for you?',
+    q3Note: 'When would you choose Fast instead of a Calm route? (Optional)'
   });
   assert.deepEqual(Results.participantQuestionCopy(answer({ q1Choice: 'both_work_well' })), {
     q1: 'Which route would you choose for a calmer walk?',
     q1Flag: 'I know a better Calm route',
     q2: 'What made both routes work well?',
-    q3: 'Compared with only seeing Fast, how much does also having any of these calmer routes improve things for you?'
+    q3: 'Compared with only seeing Fast, how much does also having any of these calmer routes improve things for you?',
+    q3Note: 'When would you choose Fast instead of a Calm route? (Optional)'
   });
   assert.deepEqual(Results.participantQuestionCopy(answer({ q1Choice: 'none_work_well' })), {
     q1: 'Which route would you choose for a calmer walk?',
     q1Flag: 'I know a better Calm route',
     q2: null,
-    q3: 'What made you choose neither route?'
+    q3: 'What made you choose neither route?',
+    q3Note: null
   });
   assert.deepEqual(Results.participantQuestionCopy(answer({ q1Choice: 'hard_to_judge' })), {
     q1: 'Which route would you choose for a calmer walk?',
     q1Flag: 'I know a better Calm route',
     q2: null,
-    q3: null
+    q3: null,
+    q3Note: null
   });
 });
 
@@ -121,12 +141,21 @@ test('counts the dedicated Both work poorly reasons', () => {
       q1Choice: 'none_work_well',
       q2Reasons: [],
       q3WorthShowing: null,
-      q3Issues: ['streets_too_busy_or_noisy', 'takes_too_long']
+      q3Issues: [
+        'streets_too_busy_or_noisy',
+        'takes_too_long',
+        'not_enough_beautiful_or_pleasant_surroundings'
+      ]
     })
   ]);
 
   assert.equal(result.reasonCounts.streets_too_busy_or_noisy, 1);
   assert.equal(result.reasonCounts.takes_too_long, 1);
+  assert.equal(result.reasonCounts.not_enough_beautiful_or_pleasant_surroundings, 1);
+  assert.equal(
+    Results.REASON_LABELS.not_enough_beautiful_or_pleasant_surroundings,
+    'Not enough beautiful or pleasant surroundings'
+  );
 });
 
 test('aggregates whether selected Calm routes are worth showing beyond Fast', () => {

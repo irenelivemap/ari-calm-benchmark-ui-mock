@@ -16,8 +16,9 @@ src/app/calm-benchmark.js
         |      MapLibre (MapTiler/OpenFreeMap), Leaflet, or Google Maps adapter
         |
         +--> routePairProvider
-        |      src/api/route-pair-generator.js against the routing facade,
-        |      with mock fixtures as offline fallback
+        |      Calm: generated, fingerprinted 23-pair embedded corpus
+        |      Fast vs Google: routing facade + Google Directions,
+        |      with preview fixtures as an offline fallback
         |
         +--> answerSink / progressSink
                local repository + Supabase or HTTP transport/outbox
@@ -25,14 +26,17 @@ src/app/calm-benchmark.js
 src/data/calm-benchmark-data.js
   validation + idempotent local repository + NDJSON export
 
+src/data/supabase-transport.js
+  GitHub Pages Supabase delivery + retryable local outbox
+
 src/data/benchmark-transport.js
-  production Supabase/HTTP delivery + retryable local outbox
+  optional self-hosted HTTP delivery + retryable local outbox
 
 src/app/runtime.js
   environment configuration + clean/legacy URL resolution
 
 scripts/build-pages.mjs
-  deployment-only static packaging + Google Maps browser-key injection
+  deployment-only static packaging + Google Maps and MapTiler browser-key injection
 
 src/results/calm-results.js
   shared pure aggregation and participant-result question mapping
@@ -45,16 +49,18 @@ Historical `calm-*` filenames are retained to avoid breaking shared links and in
 | Path | Behavior |
 | --- | --- |
 | `/` | Opens Calm Route Comparison directly. |
-| `/?game=calm` | Opens Calm Route Comparison directly. |
+| `/?game=calm` | Legacy explicit Calm query; equivalent to `/`. |
 | `/?game=google` | Opens Fast vs Google Fast directly. |
-| `/routing/` | Production-path Calm Route Comparison entry. |
-| `/routing/fast-vs-google` | Clean public Fast vs Google path. |
-| `/routing/calm-route-comparison` | Clean public Calm Route Comparison path. |
-| `/routing/fast-vs-calm` | Legacy Calm Route Comparison path. |
-| `/fresh.html` | Non-destructive new-player preview. Existing local data is ignored, not deleted. |
+| `/routing/` | Optional-container Calm entry and local production-path preview. |
+| `/routing/fast-vs-google` | Optional-container Fast vs Google entry. |
+| `/routing/calm-route-comparison` | Optional-container explicit Calm entry. |
+| `/routing/fast-vs-calm` | Optional-container legacy Calm alias. |
+| `/fresh.html` | Local-only non-destructive new-player preview. Existing local data is ignored, not deleted. |
 | `/demo.html` | Compatibility redirect for older shared links. |
-| `/?view=results&preview=1` | Community results preview that bypasses the Fast vs Google release lock. Calm results are available from the start. |
-| `/?view=team-results` | Direct internal results prototype; not present in participant navigation. |
+| `/?game=google&view=results&preview=1` | Local-only Fast vs Google results preview that bypasses its release lock. |
+| `/?researcher=1&view=results` | Local-only Calm researcher results preview. |
+| `/?researcher=1&view=route-profiles` | Local-only Calm route-diagnostics preview. |
+| `/?view=team-results` | Local-only legacy internal-results prototype. |
 
 ## Module Ownership
 
@@ -66,7 +72,7 @@ Owns page-level composition and challenge selection:
 - Calm-focused intro and dormant multi-challenge configuration
 - local repository selection
 - start/resume wiring
-- community and team results rendering
+- participant results and local-only researcher results rendering
 - Google Maps script loading
 
 Do not move challenge-specific question options into the shared shell. Keeping runtime options in `CHALLENGE_CONFIGS` makes challenge differences visible. Exact current wording is catalogued in `docs/QUESTIONNAIRE.md`; participant-result mappings in `src/results/calm-results.js` are covered by question-copy drift tests.
@@ -98,7 +104,7 @@ Own provider-specific map behavior behind one adapter interface. `map-loading.js
 
 ### `src/api/route-pair-generator.js`
 
-Owns random route-pair generation, imported from the `livemap-routing` guided blind bench: the central-Zurich sampling polygon, the 400–3000 m origin/destination distance gate, and the `POST {apiBase}/route` facade call that fetches both configured profiles in one request. Generated pairs are persisted per session so retries and resumed sessions load the identical pair, and the provider falls back to the mock fixtures when the facade is unreachable. Browser- and CommonJS-compatible so Node tests exercise the same implementation.
+Owns live route-pair generation for Fast vs Google, imported from the `livemap-routing` guided blind bench: the central-Zurich sampling polygon, the 400–3000 m origin/destination distance gate, and the routing-facade calls used to fetch ARI Fast before requesting Google Directions. Generated pairs are persisted per session so retries and resumed sessions load the identical pair, and that challenge falls back to preview fixtures when the live dependencies are unavailable. Browser- and CommonJS-compatible so Node tests exercise the same implementation.
 
 ### `src/data/calm-benchmark-data.js`
 
@@ -120,19 +126,19 @@ The application remains a static, framework-free site. `.github/workflows/deploy
 
 Owns pure result normalization and aggregation. It must not read DOM state or storage directly.
 
-### `src/data/mock-*.js`
+### Embedded corpus and preview fixtures
 
-UI fixtures only. They model the route-pair contract and must never become the production route source.
+`src/data/mock-route-pairs.js` and `src/data/mock-route-diagnostics.js` have historical filenames but contain the generated, fingerprinted `calm-curated-v2` study corpus. They are production inputs for the Calm challenge and must only be regenerated from the paired GeoJSON/diagnostics exports. `src/data/mock-fast-google-route-pairs.js` and `src/data/mock-team-results.js` remain preview fixtures and never enter production research data.
 
 ## Runtime Flow
 
 1. `index.html` opens Calm Route Comparison by default. Explicit Google paths remain available for compatibility and internal development.
 2. It creates a challenge-specific local repository.
 3. Start or Resume calls `AriCalmBenchmark.mount` with the challenge configuration and adapters.
-4. The shell verifies that the Calm route and diagnostics artifacts carry the same corpus version and SHA-256 fingerprint, then requests a route pair. Curated fixtures shuffle pairs 1–10 as the first group and pairs 11–23 as the second group. Both orders derive from the session and remain stable on resume; every pair still receives a randomized hidden assignment to Route A/B.
+4. The shell verifies that the Calm route and diagnostics artifacts carry the same corpus version and SHA-256 fingerprint, then requests a route pair. The curated corpus shuffles pairs 1–10 as the first group and pairs 11–23 as the second group. Both orders derive from the session and remain stable on resume; every pair still receives a randomized hidden assignment to Route A/B.
 5. A completed comparison and its following progress checkpoint are validated and written locally in one atomic dataset update, then delivered through the configured Supabase or HTTP transport.
 6. An unfinished state is persisted as soon as a pair loads, locally upserted, and remotely sent through the same retryable transport. Monotonic guards prevent delayed checkpoints from moving a session backward.
-7. Result views read the same challenge dataset and aggregate it through `AriCalmResults`.
+7. Participant `My results` reads the same challenge dataset and aggregates it through `AriCalmResults`. Local researcher mode may additionally show sample/saved participant records and route diagnostics; production researcher access is through Supabase rather than the participant browser.
 
 ## Extension Points
 

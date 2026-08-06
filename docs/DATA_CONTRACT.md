@@ -10,6 +10,7 @@ type LatLngTuple = [latitude: number, longitude: number];
 type RouteType =
   | "calm_quiet"
   | "calm_nature"
+  | "fast" // Current Calm reference route; never assigned to A/B.
   | "human" // legacy Calm records only
   | "livemap_fast"
   | "google";
@@ -17,7 +18,7 @@ type RouteType =
 type RouteOption = {
   routeId: string;
   geometry: LatLngTuple[];
-  source?: "google" | "model" | "saved" | "mock" | "livemap_fast";
+  source?: RouteType | "model" | "saved" | "mock";
   metadata?: {
     distanceMeters?: number;
     durationSeconds?: number;
@@ -43,12 +44,12 @@ type BenchmarkRoutePair = {
 };
 ```
 
-Only the route keys configured for the active challenge are required.
+The required comparison and reference routes are challenge-specific:
 
-| Challenge | Required route keys | Test ID |
-| --- | --- | --- |
-| Calm Route Comparison | `calm_quiet`, `calm_nature` | `calm_route_comparison` |
-| Fast vs Google Fast | `livemap_fast`, `google` | `ari_fast_vs_google` |
+| Challenge | Assignable route keys | Additional reference route | Test ID |
+| --- | --- | --- | --- |
+| Calm Route Comparison | `calm_quiet`, `calm_nature` | `fast` | `calm_route_comparison` |
+| Fast vs Google Fast | `livemap_fast`, `google` | None | `ari_fast_vs_google` |
 
 ## Provider Interface
 

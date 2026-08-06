@@ -47,6 +47,8 @@ function validAnswer(overrides = {}) {
       B: { routeId: 'nature-route-1', routeType: 'calm_nature', source: 'model' }
     },
     q1Choice: 'route_a',
+    q1KnowsBetter: false,
+    q1BetterRouteNote: '',
     q2Separate: null,
     q2Reasons: ['quieter_or_less_busy_streets'],
     q2Note: '',
@@ -110,6 +112,81 @@ test('rejects submitted answers that do not satisfy conditional questions', () =
     () => repository.saveAnswer(validAnswer({ q3WorthShowing: null })),
     error => error instanceof DataValidationError
   );
+});
+
+test('stores a better-route note only when its Q1 flag is selected', () => {
+  const note = 'I would walk through the park beside the river. 🌳';
+  const selected = validateAnswerRecord(validAnswer({
+    q1KnowsBetter: true,
+    q1BetterRouteNote: note
+  }));
+  assert.equal(selected.valid, true);
+  assert.equal(selected.record.q1BetterRouteNote, note);
+
+  const orphaned = validateAnswerRecord(validAnswer({
+    q1KnowsBetter: false,
+    q1BetterRouteNote: note
+  }));
+  assert.equal(orphaned.valid, false);
+  assert.match(orphaned.errors.join(' '), /q1BetterRouteNote must be empty/);
+
+  const tooLong = validateAnswerRecord(validAnswer({
+    q1KnowsBetter: true,
+    q1BetterRouteNote: 'x'.repeat(501)
+  }));
+  assert.equal(tooLong.valid, false);
+  assert.match(tooLong.errors.join(' '), /500 characters or fewer/);
+
+  const wrongType = validateAnswerRecord(validAnswer({
+    q1KnowsBetter: true,
+    q1BetterRouteNote: { route: 'river path' }
+  }));
+  assert.equal(wrongType.valid, false);
+  assert.match(wrongType.errors.join(' '), /must be a string/);
+});
+
+test('accepts a selected better-route note in every Q1 branch', () => {
+  const note = 'I would use the smaller street behind the station.';
+  const branchAnswers = [
+    validAnswer({ q1Choice: 'route_a' }),
+    validAnswer({ q1Choice: 'route_b' }),
+    validAnswer({ q1Choice: 'both_work_well' }),
+    validAnswer({
+      q1Choice: 'none_work_well',
+      q2Reasons: [],
+      q3WorthShowing: null,
+      q3Issues: ['takes_too_long']
+    }),
+    validAnswer({
+      q1Choice: 'hard_to_judge',
+      q2Reasons: [],
+      q3WorthShowing: null,
+      q3Issues: []
+    })
+  ];
+  branchAnswers.forEach(answer => {
+    const result = validateAnswerRecord({
+      ...answer,
+      q1KnowsBetter: true,
+      q1BetterRouteNote: note
+    });
+    assert.equal(result.valid, true, `${answer.q1Choice}: ${result.errors.join('; ')}`);
+    assert.equal(result.record.q1BetterRouteNote, note);
+  });
+});
+
+test('preserves the better-route note in partial progress', () => {
+  const note = 'Use the path behind the school.';
+  const result = validateProgressRecord(validProgress({
+    partialAnswer: validAnswer({
+      q1KnowsBetter: true,
+      q1BetterRouteNote: note,
+      q2Reasons: [],
+      q3WorthShowing: null
+    })
+  }));
+  assert.equal(result.valid, true);
+  assert.equal(result.record.partialAnswer.q1BetterRouteNote, note);
 });
 
 test('strictly validates current v2 Calm corpus records', () => {
@@ -489,6 +566,41 @@ test('requires the value-vs-Fast answer for Route A, Route B, and Both work well
   });
 });
 
+test('stores the Fast-alternative note only for the three positive Q3 answers', () => {
+  ['a_lot', 'somewhat', 'a_little'].forEach(q3WorthShowing => {
+    const result = validateAnswerRecord(validAnswer({
+      v: 2,
+      participantId: 'participant-123',
+      pairId: 'calm-route-comparison-01-round-1',
+      q3WorthShowing,
+      q3Note: 'When time matters more than the calmer environment.',
+      q3NoteKind: 'fast_alternative',
+      labels: {
+        A: { routeId: 'calm-round-1-calm-quiet', routeType: 'calm_quiet', source: 'saved' },
+        B: { routeId: 'calm-round-1-calm-nature', routeType: 'calm_nature', source: 'saved' }
+      }
+    }));
+    assert.equal(result.valid, true, `${q3WorthShowing}: ${result.errors.join('; ')}`);
+  });
+
+  ['not_at_all', 'not_sure'].forEach(q3WorthShowing => {
+    const result = validateAnswerRecord(validAnswer({
+      v: 2,
+      participantId: 'participant-123',
+      pairId: 'calm-route-comparison-01-round-1',
+      q3WorthShowing,
+      q3Note: 'This should have been cleared.',
+      q3NoteKind: 'fast_alternative',
+      labels: {
+        A: { routeId: 'calm-round-1-calm-quiet', routeType: 'calm_quiet', source: 'saved' },
+        B: { routeId: 'calm-round-1-calm-nature', routeType: 'calm_nature', source: 'saved' }
+      }
+    }));
+    assert.equal(result.valid, false);
+    assert.match(result.errors.join(' '), /q3Note is allowed only/);
+  });
+});
+
 test('accepts optional Q2 details after any selected reason', () => {
   const result = validateAnswerRecord(validAnswer({
     q2Reasons: ['takes_less_time'],
@@ -497,6 +609,44 @@ test('accepts optional Q2 details after any selected reason', () => {
 
   assert.equal(result.valid, true);
   assert.equal(result.record.q2Note, 'The time difference mattered today.');
+});
+
+test('accepts the selected-route surroundings reason only in Q2', () => {
+  ['route_a', 'route_b', 'both_work_well'].forEach(q1Choice => {
+    const result = validateAnswerRecord(validAnswer({
+      q1Choice,
+      q1Choices: [q1Choice],
+      q2Reasons: ['more_beautiful_streets_or_surroundings'],
+      q2Note: 'The street felt more pleasant.',
+      q3WorthShowing: 'somewhat',
+      q3Issues: []
+    }));
+    assert.equal(result.valid, true, result.errors.join('; '));
+  });
+});
+
+test('accepts the insufficient-surroundings reason only in the neither branch', () => {
+  const accepted = validateAnswerRecord(validAnswer({
+    q1Choice: 'none_work_well',
+    q1Choices: ['none_work_well'],
+    q2Reasons: [],
+    q2Note: '',
+    q3WorthShowing: null,
+    q3Issues: ['not_enough_beautiful_or_pleasant_surroundings'],
+    q3Note: 'Neither route felt pleasant enough.',
+    q3NoteKind: 'supporting_detail'
+  }));
+  assert.equal(accepted.valid, true, accepted.errors.join('; '));
+
+  const rejected = validateAnswerRecord(validAnswer({
+    q1Choice: 'route_a',
+    q1Choices: ['route_a'],
+    q2Reasons: ['not_enough_beautiful_or_pleasant_surroundings'],
+    q3WorthShowing: 'somewhat',
+    q3Issues: []
+  }));
+  assert.equal(rejected.valid, false);
+  assert.match(rejected.errors.join(' '), /q2Reasons/);
 });
 
 test('rejects Q2 details without a selected reason', () => {

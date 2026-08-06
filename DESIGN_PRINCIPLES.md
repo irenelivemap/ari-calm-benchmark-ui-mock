@@ -22,11 +22,11 @@ Users read top-to-bottom; the call to action comes after they have absorbed the 
 **Toggle state must be immediately legible from colour alone.**
 Active toggles use the brand green (`--ari-green` / `--ari-green-deep`), not a shade of dark ink. Dark-on-dark active states are indistinguishable from inactive states at a glance.
 
-**An active mode that opens a sub-view should survive that sub-view closing.**
-Street View mode stays on when the panorama viewer is closed. The user is in a mode; dismissing one output of that mode does not exit the mode. Only explicitly toggling the control (or pressing Esc a second time) deactivates the mode.
+**Closing a sub-view returns to the parent task.**
+Closing the Street View inspector returns to the ordinary comparison map and turns Street View mode off. This prevents the next map gesture from unexpectedly reopening the inspector.
 
-**Two-level Esc for modal-within-mode flows.**
-First Esc closes the innermost surface (e.g. panorama viewer). Second Esc exits the parent mode (Street View mode off). Never collapse both into one keystroke.
+**Esc exits the active Street View state.**
+When the panorama is open, Esc closes it and turns Street View mode off. When only targeting mode is active, Esc turns that mode off.
 
 ---
 
@@ -36,7 +36,7 @@ First Esc closes the innermost surface (e.g. panorama viewer). Second Esc exits 
 A ghost text link outside the active card is invisible. The × dismiss button lives inside the card (top-left), so it is always within the user's focal area without requiring a separate hunt.
 
 **Sequential, one-spotlight-at-a-time flow.**
-Each onboarding step highlights exactly one element. Showing all coachmarks simultaneously creates cognitive overload.
+The opening briefing is followed by three numbered steps. Each step highlights one element, keeps a quiet Back control beside the step count, and preserves the map camera and answer state when revisited.
 
 ---
 

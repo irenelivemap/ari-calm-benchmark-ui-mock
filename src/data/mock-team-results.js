@@ -62,6 +62,7 @@
     calm_quiet: [
       'quieter_or_less_busy_streets',
       'less_need_to_watch_traffic',
+      'more_beautiful_streets_or_surroundings',
       'easier_to_follow',
       'takes_less_time',
       'familiar_route_or_area',
@@ -72,6 +73,7 @@
     calm_nature: [
       'more_trees_or_green_space',
       'more_near_water',
+      'more_beautiful_streets_or_surroundings',
       'quieter_or_less_busy_streets',
       'takes_less_time',
       'familiar_route_or_area',
@@ -82,6 +84,7 @@
     both_work_well: [
       'quieter_or_less_busy_streets',
       'more_trees_or_green_space',
+      'more_beautiful_streets_or_surroundings',
       'easier_to_follow',
       'more_near_water',
       'takes_less_time',
@@ -94,6 +97,7 @@
     'streets_too_busy_or_noisy',
     'not_enough_trees_or_green_space',
     'not_enough_route_near_water',
+    'not_enough_beautiful_or_pleasant_surroundings',
     'too_much_attention_traffic',
     'takes_too_long',
     'hard_to_follow',
@@ -186,7 +190,10 @@
             ]
           : [];
         const worthCycle = ['a_lot', 'a_lot', 'somewhat', 'somewhat', 'a_little', 'not_at_all', 'not_sure'];
-        const q3Note = [Q, N, B].includes(outcome) && seed % 4 === 0
+        const q3WorthShowing = [Q, N, B].includes(outcome)
+          ? worthCycle[(participantIndex + pairIndex) % worthCycle.length]
+          : null;
+        const q3Note = ['a_lot', 'somewhat', 'a_little'].includes(q3WorthShowing) && seed % 4 === 0
           ? Q3_NOTES[seed % Q3_NOTES.length]
           : '';
 
@@ -208,14 +215,16 @@
           labelMap: { ...assignment },
           q2Separate: null,
           q1KnowsBetter: seed % 11 === 0,
+          q1BetterRouteNote: seed % 11 === 0
+            ? 'I would take the smaller streets through the nearby park.'
+            : '',
           q2Reasons,
           q2Note,
-          q3WorthShowing: [Q, N, B].includes(outcome)
-            ? worthCycle[(participantIndex + pairIndex) % worthCycle.length]
-            : null,
+          q3WorthShowing,
           q3Issues,
           reasons: [...q3Issues],
           q3Note,
+          q3NoteKind: q3Note ? 'fast_alternative' : null,
           note: '',
           clientTs: createdAt,
           createdAt,

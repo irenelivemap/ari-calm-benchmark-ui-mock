@@ -28,10 +28,12 @@ type BenchmarkDatasetV2 = {
   test: "calm_route_comparison" | "ari_fast_vs_google";
   updatedAt: string;
   sessions: Record<string, SessionSummary>;
-  progressBySessionId: Record<string, BenchmarkProgressV2>;
-  answers: BenchmarkAnswerV2[];
+  progressBySessionId: Record<string, BenchmarkProgressV2 | BenchmarkProgressV3>;
+  answers: Array<BenchmarkAnswerV2 | BenchmarkAnswerV3>;
 };
 ```
+
+The dataset envelope retains version 2 for compatibility; the current Calm corpus stores version 3 answer and progress records inside it.
 
 Completed answers are append-only and idempotent by `captureId`. Progress is an upsert by `sessionId`.
 
@@ -106,6 +108,10 @@ The answer feed is newline-delimited JSON, one completed answer per line. Record
 - `clientTs`
 
 Current aliases such as `sessionId`, `participantName`, `q1Choice`, and `q3Issues` remain present.
+
+For Calm answers, the optional `q1BetterRouteNote` travels in both partial progress and the final answer payload. It is stored only when `q1KnowsBetter` is `true`, is limited to 500 characters, and is exposed to researchers as `q1_better_route_note` in the private Supabase analysis view.
+
+The existing `q3Note` field stores the conditional Fast-alternative response for current Calm records and `q3NoteKind: "fast_alternative"` labels that meaning explicitly. It is autosaved with partial progress and accepted in a final answer only when `q3WorthShowing` is `a_lot`, `somewhat`, or `a_little`. Rejection details use `q3NoteKind: "supporting_detail"`; historical records without a kind retain the field's previous generic meaning.
 
 ## Verification
 

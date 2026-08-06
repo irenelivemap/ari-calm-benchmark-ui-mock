@@ -19,17 +19,17 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [x] Implement `progressSink` with atomic local completion and monotonic remote checkpoints.
 - [x] Select or replace the map adapter.
 - [x] Remove the design-phase `Reset test data` control in production mode.
-- [x] Keep the internal team-results route out of participant navigation in production mode.
+- [x] Keep researcher and legacy team-results routes disabled in production mode.
 
 ## Public Host
 
-- [x] Prepare `/routing/`, `/routing/fast-vs-google`, and `/routing/calm-route-comparison` (with `/routing/fast-vs-calm` as a legacy alias).
+- [x] Prepare optional-container entries at `/routing/`, `/routing/fast-vs-google`, and `/routing/calm-route-comparison` (with `/routing/fast-vs-calm` as a legacy alias).
 - [x] Proxy routing calls through the public host at `/api/v1/routing`.
 - [x] Disable query-based API, Google key, reset, and QA overrides in production.
 - [x] Add LinkedIn/Open Graph metadata and a social preview image.
-- [ ] Deploy the prepared container with the infrastructure team's deployment permissions.
-- [ ] Point `game.livemap.sh` DNS at that deployment.
-- [ ] Provide a browser-restricted Google Maps key for `https://game.livemap.sh/*`.
+- [ ] Deploy the optional container only if the team chooses to replace or complement GitHub Pages.
+- [ ] If deployed, point `game.livemap.sh` DNS at it.
+- [ ] If deployed, provide a browser-restricted Google Maps key for `https://game.livemap.sh/*`.
 - [x] Connect production persistence to the existing Supabase project through write-only anonymous RPCs.
 
 ## GitHub Pages
@@ -88,13 +88,13 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [x] The active Calm challenge shows the current question flow.
 - [x] Retrying or immediately reloading a completed comparison does not create a duplicate answer or stale progress.
 - [x] Leaving mid-round saves progress without submitting an incomplete answer.
-- [x] Personal and team results decode choices and the current Calm reason taxonomies from the hidden assignment correctly.
+- [x] Participant results and local researcher previews decode choices and the current Calm reason taxonomies from the hidden assignment correctly.
 - [x] The participant Calm URL works on desktop and at the 390px mobile breakpoint.
 - [x] App-owned controls use 44px touch targets, corrected secondary-text contrast, semantic headings, and reduced-motion behavior.
 - [x] `npm test` and the Calm Playwright regression suite pass locally.
-- [ ] `https://game.livemap.sh/routing/` loads without a path redirect loop.
-- [ ] Both clean challenge URLs survive a direct page refresh.
-- [ ] A real routing request succeeds through the same-origin public proxy.
+- [ ] If the optional container is deployed, verify `https://game.livemap.sh/routing/` loads without a path redirect loop.
+- [ ] If the optional container is deployed, verify both clean challenge URLs survive a direct page refresh.
+- [ ] If the optional container is deployed, verify a real routing request succeeds through its same-origin proxy.
 
 ## Challenge-specific Checks
 
@@ -103,6 +103,7 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [x] Participant-facing wording and follow-up rules match [`QUESTIONNAIRE.md`](QUESTIONNAIRE.md).
 - [x] Assignable route keys are `calm_quiet` and `calm_nature`; every fixture also supplies a non-randomized `fast` reference route.
 - [x] Route geometry and diagnostics are generated together from the ordered `calm-curated-v2` manifest, and answers/progress carry its exact fingerprint.
+- [ ] Apply `20260806_questionnaire_extensions.sql` before deploying the questionnaire UI that sends the two new surroundings reasons, the optional better-route note, or the conditional Fast-alternative note.
 - [x] Route A/B and Both work well selections show the Calm preference-reasons Q2; the remaining neutral choices skip it.
 - [x] Q1 offers Route A, Route B, Both work well, Both work poorly, and I'm not sure.
 - [x] Route A, Route B, and Both work well require the value-vs-Fast Q3 and redraw the relevant Calm route(s) with Fast and all visible times.

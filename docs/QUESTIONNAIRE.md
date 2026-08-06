@@ -18,6 +18,12 @@ Historical answer fields remain readable for data compatibility, but historical 
 
 Optional checkbox: **I know a better Calm route**
 
+When selected, an optional text field appears:
+
+**Tell us about the route you have in mind (optional)**
+
+The response is stored with that comparison. Clearing the checkbox also clears the conditional text response.
+
 The first comparison shows this guidance below Q1:
 
 - **Times are estimates. A “+” time shows how much longer that route takes than Fast for the same start and destination.**
@@ -32,6 +38,7 @@ Later comparisons place the same guidance under **About these choices**.
 - Quieter or less busy streets
 - More trees or green space
 - More of the route is near water
+- More beautiful streets or surroundings
 - Less need to watch for traffic
 - Takes less time
 - Easier to follow
@@ -61,7 +68,11 @@ or
 - Not at all
 - I'm not sure
 
-After an answer is selected, **Add details (optional)** appears.
+After **A lot**, **Somewhat**, or **A little** is selected, an optional text field appears:
+
+**When would you choose Fast instead of a Calm route? (Optional)**
+
+The field does not appear for **Not at all** or **I'm not sure**.
 
 ### Q3 — Both work well selected
 
@@ -78,6 +89,7 @@ Hint: **Select all that apply to one or both routes.**
 - Streets are too busy or noisy
 - Not enough trees or green space
 - Not enough of the route is near water
+- Not enough beautiful or pleasant surroundings
 - Too much attention needed around traffic
 - Takes too long
 - Hard to follow

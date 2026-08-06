@@ -1,15 +1,15 @@
-# Production Deployment
+# Optional Container Deployment
 
-The container serves the public experience at `https://game.livemap.sh/routing/` and proxies route requests through the same origin.
+The active participant deployment is GitHub Pages. This container is prepared for a future `https://game.livemap.sh/routing/` deployment and can proxy live route requests through the same origin; it is not required for the current Calm team study.
 
 ## Required Infrastructure
 
-The infrastructure team only needs to:
+If the team chooses this host, the infrastructure team needs to:
 
 1. Point `game.livemap.sh` to this container.
 2. Terminate HTTPS at the platform ingress.
 3. Set the environment values below.
-4. Connect the benchmark persistence endpoint before public launch.
+4. Verify persistence: retain the configured Supabase transport or connect the optional HTTP data API.
 
 ## Environment
 
@@ -30,12 +30,13 @@ The Google and MapTiler browser keys are delivered to the browser by design. The
 
 | URL | Behavior |
 | --- | --- |
-| `/routing/` | Challenge selector. |
+| `/routing/` | Calm Route Comparison. |
 | `/routing/fast-vs-google` | ARI Fast vs Google Fast. |
-| `/routing/fast-vs-calm` | ARI Fast vs ARI Calm. |
+| `/routing/calm-route-comparison` | Explicit Calm Route Comparison entry. |
+| `/routing/fast-vs-calm` | Legacy Calm Route Comparison alias. |
 | `/api/v1/routing/*` | Same-origin proxy to the routing facade. |
 
-Existing `?game=google` and `?game=calm` links remain supported outside the production host.
+Legacy `?game=google` and `?game=calm` links remain supported by the shared runtime.
 
 ## Data API Contract
 

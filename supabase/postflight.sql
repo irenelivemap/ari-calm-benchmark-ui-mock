@@ -71,7 +71,25 @@ select column_name, data_type
 from information_schema.columns
 where table_schema = 'public'
   and table_name = 'benchmark_answers_analysis'
-  and column_name in ('q1_knows_better', 'corpus_version', 'corpus_fingerprint')
+  and column_name in ('q1_knows_better', 'q1_better_route_note', 'q3_note_kind', 'corpus_version', 'corpus_fingerprint')
 order by ordinal_position;
+
+select
+  position(
+    'more_beautiful_streets_or_surroundings'
+    in pg_get_functiondef('public.submit_benchmark_answer(jsonb)'::regprocedure)
+  ) > 0 as allows_selected_route_surroundings_reason,
+  position(
+    'not_enough_beautiful_or_pleasant_surroundings'
+    in pg_get_functiondef('public.submit_benchmark_answer(jsonb)'::regprocedure)
+  ) > 0 as allows_neither_surroundings_reason,
+  position(
+    'q1BetterRouteNote'
+    in pg_get_functiondef('public.submit_benchmark_answer(jsonb)'::regprocedure)
+  ) > 0 as validates_better_route_note,
+  position(
+    'q3Note is allowed only after a positive Q3 answer'
+    in pg_get_functiondef('public.submit_benchmark_answer(jsonb)'::regprocedure)
+  ) > 0 as validates_fast_alternative_note;
 
 rollback;

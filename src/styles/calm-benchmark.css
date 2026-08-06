@@ -2476,7 +2476,7 @@ html.is-challenge-dialog-open {
 .calm-results-dashboard-summary {
   display: grid;
   gap: 12px;
-  max-width: 72ch;
+  width: 100%;
   margin: 16px 0 0;
   color: var(--ari-muted);
   font: var(--font-detail);
@@ -2496,6 +2496,25 @@ html.is-challenge-dialog-open {
 
 .calm-results-dashboard-summary > .calm-results-dashboard-summary__lead {
   margin-bottom: 8px;
+}
+
+.calm-results-dashboard-summary__details {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: start;
+}
+
+.calm-results-dashboard-summary__support {
+  display: grid;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .calm-results-dashboard-summary__details {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
 }
 
 .calm-results-dashboard-summary strong {
@@ -4049,6 +4068,18 @@ html.is-challenge-dialog-open {
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: translateY(-1px) rotate(45deg);
+}
+
+.calm-pp-better-route {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+
+.calm-pp-better-route .calm-pp-note-text {
+  max-width: 72ch;
+  border-left: 2px solid var(--ari-hairline);
+  padding-left: 14px;
 }
 
 .calm-pp-route-details {
@@ -8556,6 +8587,10 @@ html.is-challenge-dialog-open {
 
 .ari-q1-flag:has(input:checked) {
   color: rgba(255, 255, 255, 0.9);
+}
+
+.ari-q1-better-route-note textarea {
+  min-height: 72px;
 }
 
 .ari-question-note[hidden] {

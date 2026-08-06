@@ -88,33 +88,18 @@ Rules:
 Intro page:
 
 - The current Calm-only phase uses a shared header with static `Calm Route Comparison` context on the left and `Home | Results` views on the right. The header shares the exact content width of the intro below it — its wrap participates in the same border-box sizing as the content.
-- The multi-challenge selector is dormant during this phase. The root and fresh-preview entry points open Calm Route Comparison directly, with no intermediary screen.
-- The selector rules below are retained only as a future reactivation specification; they do not describe the current participant flow.
-- While the chooser is open, its off-white canvas and dark cabinet surface preserve continuity with the benchmark while fully replacing its content. No benchmark, header, map, or page scrollbar remains visible behind it.
-- Direct benchmark links such as `?game=calm` bypass the first-visit chooser. Returning visitors reopen the last selected challenge.
-- The chooser is one continuous arcade stage rather than a web-style menu beside a preview card. Challenge selection is the primary task, Play or Resume is the primary command, and player progress is secondary context.
-- On desktop, the stage uses a `60 / 40` structure: a vertical challenge list on the left and an unframed player-status pane on the right. The cabinet header and its divider provide the outer structure; the stage does not add another enclosing card or outline. On mobile, the same content stacks in task order: challenges, status, then Play or Resume.
-- Challenge keys use full comparison names: `ARI Fast vs Google`, `ARI Fast vs ARI Calm`, and `ARI Fast vs ARI Safe`. The selected available key uses a powered split green/purple surface, a bright frame, an arcade cursor, and `Ready`. Unavailable keys use raised graphite surfaces that are visibly distinct from the cabinet, with readable labels and a quiet `Soon` state.
-- The player-status pane never repeats the selected challenge. It shows the current medal, rank, and one concise progress line. Before the final medal the line combines routes with the next medal threshold; after completion it combines routes with the medal count.
-- Challenge order never changes. The medal stays aligned to the center of the middle challenge key, even when the top or bottom key is selected. The route animation begins at two output ports on the selected key, travels as a parallel paired cable, then enters the fixed medal dock. Top and bottom selections use mirrored cable geometry; only the upstream transport cable reroutes.
-- The medal, route endpoints, and rank copy are measured from the rendered layout. Route geometry stays inside the medal's vertical footprint in the status pane, and the rank copy below it is an explicit no-route zone. This keeps longer future rank names clear without masking collisions behind text.
-- On stacked mobile layouts, the circuit uses the stage's outer rail to avoid crossing the remaining challenge keys, then enters a fixed symmetrical top dock above the medal.
-- Opening the chooser draws both routes once, then uses a slow moving trace to keep the screen in attract mode. A confirmed selection retracts and redraws only the transport cable, leaves the medal dock stable, then gives the medal one restrained power pulse. Hover never moves the circuit. Reduced-motion mode shows the completed route immediately without looping or pulsing motion.
-- All challenges share one vertical selector. Calm Route Comparison and Fast vs Google Fast are playable. Fast vs Safe remains visible as a disabled `Soon` option until its flow exists.
-- The stage has exactly one ivory Play or Resume command. It is intentionally distinct from the dark challenge keys.
-- Selection is communicated by the cursor and active frame only. Do not add `Select a challenge`, `Selected challenge`, or `Selected` labels, and do not repeat the selected challenge inside the CRT.
-- `fresh.html` is the non-destructive QA entry point. It previews a new player without deleting locally saved sessions.
+- The root entry opens Calm Route Comparison directly. The dormant challenge chooser remains implementation scaffolding for internal development and is not part of the current participant design contract.
+- `fresh.html` is a local-only, non-destructive QA entry point. It previews a new player without deleting locally saved sessions.
 - Development previews may enable `Reset test data` through runtime configuration. It clears local answers, progress, participant state, medals, and challenge selection, then returns to the true first screen while preserving map API configuration. Production removes this control from the DOM.
-- Switching challenges must preserve existing progress. Results and comparison views always belong to the currently selected challenge.
 - Header, intro text, cards, and start card must share the same content width.
 - On mobile, the session card appears before the start card.
 - Avoid repeating the same information in the hero, cards, and start section.
 - The `How it works` and `Session` overview cards are always expanded. Their notch labels are headings, not interactive controls, and returning testers see the same complete overview as new testers.
 - Side-by-side overview cards use a `360px` desktop height. Their title rows are content-driven so translated or wrapped headings cannot collide with the card body. Below `900px`, both cards return to content-driven height.
 - The intro question and route label form one responsive typographic lockup: they fill one line on wide desktop and wrap naturally at narrower widths. The fixed route slot continuously swaps between Route A and Route B; pointer and keyboard interaction must not stop this authored comparison cue, while reduced-motion mode keeps Route A static.
-- The expanded Session card uses `23 comparisons.` as the full route-pair journey, reassures testers with `Every careful comparison helps.`, gives the target duration as `About 6 to 8 min`, confirms `Desktop and mobile` support, and introduces the four-medal progression culminating in `Cosmic Explorer` at 23 comparisons.
+- The expanded Session card uses `23 comparisons.` as the full route-pair journey, reassures testers with `Every careful comparison helps.`, gives the target duration as `About 10 minutes`, confirms `Desktop and mobile` support, and introduces the four-medal progression culminating in `Cosmic Explorer` at 23 comparisons.
 - The resume card is an evolving rank world. It begins as the near-black arcade cabinet, then progressively gains street geometry, a traced trail, a horizon, map contours, constellations, and a cosmic field as medals are earned.
-- Rank motifs remain low-contrast behind the content and never change the card layout or ivory action. The latest rank controls the surface tint, border light, and title accent. The countdown caption stays neutral white regardless of rank — tinted text there reads as a route color.
+- Rank motifs remain low-contrast behind the content and never change the card layout or ivory action. The latest rank controls the surface tint, border light, and title accent.
 - Crossing a medal threshold reveals the new world layer outward from that medal's position once. Reloading or revisiting an already earned tier must not replay the animation, and reduced-motion users receive the final state immediately.
 - Do not add a separate `How your answers help` disclosure to the Session card. Keep its content in one scan-friendly stack.
 
@@ -173,7 +158,7 @@ Street View:
 - Street View is an explicit map mode so ordinary pan, pinch, double-click, and zoom gestures stay unchanged.
 - Street View sits first as one connected 148×44 control: a near-black text cell joined directly to a white `360°` cell. The full shape is clickable, and the restrained 14px radius keeps it distinct from a generic capsule. The glyph communicates panorama without using a human figure that could be mistaken for accessibility.
 - An 8px gap separates the exploration mode from one provider-neutral 44px-wide navigation rail. The rail groups `Fit`, `Zoom in`, and `Zoom out` in that order with fine dividers, keeping their centers and hit targets identical across map engines.
-- Activating Street View keeps the control named `Street View`, clearly inverts the glyph cell, and shows a persistent compact status: `Street View mode on` / `Select any point on the map to explore it in Street View.` Keyboard users can press A, B, or C for a representative point on that route.
+- Activating Street View changes the control outcome to `Exit Street View`, clearly inverts the glyph cell, and exposes an accessible instruction to select any map point. Keyboard users can press A or B for a representative point on that route.
 - Fit uses the inward-arrows fit-to-content glyph. Never use outward fullscreen corners for Fit; they promise fullscreen, not framing.
 - Street View accepts any map point and searches for the nearest available imagery. A click directly on a visible route snaps to that route only to preserve its blinded A/B identity; clicks elsewhere remain at the chosen map coordinate.
 - Selecting a point opens a split inspection layout: on desktop the panorama fills the right 65% (55% below 1100px wide) while the live comparison map keeps a full-height left column; on mobile the panorama takes the top 58% with the map below it. The map column keeps all routes, the moving position marker, and its map controls, and selecting another map point retargets the panorama.
@@ -181,7 +166,7 @@ Street View:
 - The seam between map and panorama is a draggable divider with a slim grabber and a 44px hit band: `col-resize` on desktop, a horizontal thumb bar on mobile. Dragging clamps (desktop panorama 40–85% with the map column never under 440px; mobile panorama 30–70%), arrow keys nudge it by 2% for keyboard users, double-click resets to the default split, and the chosen ratio persists per device.
 - Entering and leaving Street View animates the same seam: it glides open to the saved split (~320ms) and glides shut on `Back to map` (~300ms) while the map resizes continuously. The app never refits routes or restores an older camera; the participant's latest center and zoom survive both transitions. Reduced motion switches instantly.
 - `Back to map` keeps the latest camera, restores the previous question-panel state and answers, then turns the mode off.
-- The viewer identifies points on Route A or Route B with the visible route color. Off-route points are rejected before the viewer opens. It never exposes the route source.
+- The viewer identifies points selected on Route A or Route B with the visible route color. Off-route points remain neutral `Map point` selections. It never exposes the route source.
 - The map marks the current panorama position with a live marker: identity-colored core, soft pulsing halo (static at low opacity under reduced motion), and a translucent view cone that rotates with the panorama heading. It is the only element on the map that pulses or has a beam, so it can never be confused with the static start/destination dots. It moves as the tester walks and the cone follows where they look.
 - If imagery or the Google API is unavailable, show that state inside the inspector and keep the tester in the benchmark. Never open an external tab as a fallback.
 - If the base map cannot start, try the configured fallback automatically. Only after every map engine fails, show one compact dark in-map status with `Map unavailable`, a short connection explanation, and `Try again`. Never leave the map as an unexplained blank surface or replace the benchmark with a full-page error.
@@ -195,27 +180,24 @@ Purpose:
 
 Behavior:
 
-- Onboarding uses simultaneous contextual coachmarks, not a step-by-step tour.
-- All essential instructions appear at the same time beside the UI they explain.
+- Onboarding is sequential: one opening briefing followed by three numbered steps.
+- Each numbered step presents one instruction and, where relevant, one contextual highlight. Previous-step navigation sits beside the step count; the opening briefing has no Back control.
 - Do not include zoom instructions; standard map zoom controls remain available without explanation.
-- One `Start comparison →` action closes onboarding and smoothly expands the question panel so the tester can answer immediately.
-- Do not add progress dots, a skip link, or controls that imply multiple steps.
-- Coachmarks avoid every highlighted target, the primary action, and one another on desktop and mobile.
-- While onboarding is open, the map and question card are inert, focus moves to `Start comparison →`, and Tab remains contained in the dialog.
+- The final `Start comparison →` action closes onboarding and smoothly expands the question panel so the tester can answer immediately.
+- Do not add progress dots or a detached skip link. The consistent top-left × dismisses the introduction at every step.
+- Coachmarks avoid their highlighted target and the primary action on desktop and mobile.
+- While onboarding is open, the map and question card are inert and Tab remains contained in the active dialog step.
 - The dimming layer has real transparent cutouts so highlighted controls remain at full brightness.
-- Coachmarks use flat warm-ivory surfaces with dark text, strong connectors, and a single synchronized entrance pulse so guidance cannot be mistaken for the dark application UI.
+- Coachmarks use flat warm-ivory surfaces with dark text and strong connectors so guidance cannot be mistaken for the dark application UI.
 - `Start comparison →` remains a brighter, raised pill with a heavy dark frame so it reads as the action rather than another coachmark.
-- `Start comparison →` is a prominent bottom-center dock on desktop and remains top-center on mobile to avoid the question card.
 - Initial route fitting is immediate and runs once before onboarding settles; opening or closing onboarding must not pan or refit the map.
 
 Current onboarding overview:
 
-1. Beside Fit: `Fit both routes` / `Return to the full comparison.`
-2. Beside Street View: `Explore the street` / `Turn on Street View, then select any point on the map.`
-3. Beside the question card: `Answer when ready` / `Open the question card.`
-4. Beside Exit: `Leave anytime` / `Your place is saved.`
-
-Resume reassurance is attached directly to the `×` exit control instead of appearing as detached explanatory copy.
+1. Briefing: `Before you start` explains the calm-walk scenario.
+2. Step 1: `Compare the routes` explains the shared start and destination.
+3. Step 2: `Explore the map` introduces pan, zoom, and Street View.
+4. Step 3: `Choose when ready` points to the question panel and ends with `Start comparison →`.
 
 ## HUD Rules
 
@@ -282,12 +264,12 @@ The complete current question and option catalogue lives in [`QUESTIONNAIRE.md`]
 The dark start card on the intro page has two states that must read as the same surface:
 
 - State 0 (no saved progress): kicker `Start testing`, title `Ready to compare routes?`, name form on the right.
-- Resume (saved progress): kicker `Welcome back, [name]`, title is always the count (`4 routes compared.`). The rank is never written in the title — the lit medal in the shelf is the rank statement, because the shelf is the journey display. The right cluster is `Resume →` with a one-line countdown caption beneath it.
+- Resume (saved progress): kicker `Welcome back, [name]`, title is always the count (`4 routes compared.`). The rank is never written in the title — the lit medal in the shelf is the rank statement. The right cluster contains only `Resume →`.
 
 Rules:
 
 - Both states use the intro h2 pattern: bold number in Cera Pro/Poppins, serif italic phrase in New Spirit/Fraunces. No scoreboard numerals, no glow, no all-caps data blocks.
-- There is no secondary progress bar on the card: the medal shelf is the only progress visual. Each fact appears exactly once — count in the title, journey and rank in the shelf, distance-to-next in the countdown caption.
+- There is no secondary progress bar or countdown caption on the card: the medal shelf is the only progress visual. Each fact appears exactly once — count in the title, journey and rank in the shelf.
 - The `Resume →` button uses the same blurple primary treatment as `Start test →`.
 - The resume action cluster contains exactly one element: `Resume →`. The distance to the next medal is carried by the next medal's light fill, never by a caption. Recency is not displayed anywhere on the card. The participant name appears once in the greeting and is not repeated in the action cluster.
 - At standard widths, the action cluster uses no more than about 40% of the card, aligns to the card's right padding, and bottom-aligns with the two-row medal shelf rather than centering against the whole card.
@@ -337,25 +319,22 @@ Rules:
 ## Results Rules
 
 - Calm Route Comparison keeps the persistent `Results` navigation item visible from the beginning, but disables it until the participant's first completed comparison is successfully saved. The disabled control retains its footprint, shows a quiet lock, and explains the prerequisite in a compact tooltip on hover or keyboard focus. The tooltip is also connected as the control's accessible description. Results enables without navigating or calling attention to itself; returning participants with saved answers see it enabled immediately.
-- The team-results introduction uses the display role for `Team results`, the body role for its lead sentence, and the detail role for explanatory paragraphs. Prose is constrained to `72ch`; paragraphs use a `12px` rhythm with `20px` between the lead and the first explanation.
-- Calm results use two primary views: `Overview` for team-wide evidence and `Participants` for named individual records.
-- `Overview` answers the first research question in a strict reading order: team tester and comparison totals first; then the percentage where Calm Nature worked as an option (`Calm Nature + Both work well`); then the complete Q1 outcome distribution for Calm Quiet, Calm Nature, both, neither, and uncertainty; then the overall Quiet-versus-Nature preference and its uncertainty. Pair-level agreement and the participant heatmap remain supporting evidence below this summary. Overall repeated judgments use participant-clustered 95% intervals, while individual route pairs use Wilson 95% intervals.
-- The Quiet-versus-Nature overview includes only comparisons where one route was selected. It shows the aggregate preference split, whether its participant-clustered interval rules out an even split, how many route pairs each approach led, ties, and the median within-pair majority. A small numerical lead must not be described as a clear winner when its interval includes 50%.
-- The Overview participant-by-pair heatmap keeps route pairs as columns and participants as rows. Its row summaries describe viability, single-route preference, and decisiveness without ranking participants or treating variation across different routes as error.
+- The shared results introduction uses the display role for `Your results` or `Team results`, the body role for its lead sentence, and the detail role for explanatory paragraphs. On wide screens, the explanation uses the full dashboard width in two readable columns; below `900px`, it returns to one column. Paragraphs keep a `12px` internal rhythm and `20px` between the lead and the explanation.
+- The current Calm participant surface has one active view: `My results`. `Overview` remains visible but disabled with a `Soon` label. Local researcher mode replaces `My results` with `Participants` and adds a `Routes` diagnostics view; it does not enable Overview.
 - Calm Quiet and Calm Nature use decoded route identities in Results. Because A/B presentation is randomized, the participant-facing A/B route colors must not be reused as if they permanently represented Quiet or Nature. Results use Ari blurple for Calm Quiet and Ari green for Calm Nature; shared, rejected, and uncertain outcomes recede into the neutral Ari greys.
-- Preview data includes 15 deterministic illustrative testers across all 23 embedded route pairs so clear agreement, mixed judgment, rejection, and uncertainty states remain inspectable without entering production data.
-- `Participants` lists every contributor by name. The participant attached to the current local session appears first, without an additional identity badge. Selecting a name shows only that person's counts, decoded choices, reasons, optional written details, and round-by-round records.
+- Local researcher preview data includes 15 deterministic illustrative testers across all 23 embedded route pairs so varied outcomes remain inspectable without entering production data.
+- Researcher `Participants` lists every contributor by name. The participant attached to the current local session appears first, without an additional identity badge. Selecting a name shows only that person's counts, decoded choices, reasons, optional written details, and round-by-round records.
 - Participant-facing `My results` shows one consolidated history for the current person and never introduces a session selector. Researcher mode may still expose session counts as provenance inside a participant record.
-- Names and optional written details are explicitly described as visible to the evaluation team at the point of entry.
 - Participant identity is derived consistently from the normalized name or team-issued code, so the same person is consolidated across sessions and devices. Session IDs remain separate and never count as team-member identities. Use unique team-issued participant codes when two people could share the same name; names alone cannot distinguish them reliably.
 - Individual records are descriptive, not evaluative: never rank people or label a choice as correct, aligned, or misaligned with the team.
-- Individual records repeat each relevant follow-up question beside its recorded answer. The optional better-route checkbox remains part of the Q1 answer and appears only when selected as `✓ I know a better Calm route`; it is never rewritten as a separate yes/no question.
+- Individual records repeat each relevant follow-up question beside its recorded answer. The optional better-route checkbox remains part of the Q1 answer and appears only when selected as `✓ I know a better Calm route`; it is never rewritten as a separate yes/no question. When the participant supplied the conditional route description, Results show it directly below the selected flag.
+- The Q3 Fast-alternative text field appears only after `A lot`, `Somewhat`, or `A little`. Its placeholder and accessible name use `When would you choose Fast instead of a Calm route? (Optional)`; changing to `Not at all` or `I'm not sure` hides the field and clears its value. Results show this prompt beside its response instead of presenting the text as an unlabeled comment.
 - Evaluation-record headers keep the decoded Q1 outcome chip visible in both collapsed and expanded states so the summary and controls do not jump. The expanded detail does not repeat the Q1 question and outcome; it begins with any selected better-route flag, then shows only follow-up answers, the map, and route details.
 - Expanded record answers use a stable question-and-answer grid on wider screens: muted `font-fine` questions in the left column and the related chips, answer, and note grouped in the right column. The grid stacks question above answer below `700px`. The optional better-route flag sits above the grid as quiet context rather than competing with the answer hierarchy. Reason chips stay low-emphasis on `grey-02`; route colors are reserved for decoded route outcomes.
 - In an individual record's route table, selected Calm routes replace the route dot with a same-color checkmark. Unselected rows keep their route-identity dots, and `aria-current` remains the non-visual selection signal.
 - Each expanded individual record shows the evaluated route-pair map and comparison table. Records expand independently so participants can keep several routes open while reviewing their choices.
 - Production answers are written to Supabase. Authorized researchers inspect or export the shared dataset through the Supabase dashboard; participant browsers cannot read it.
-- Preview builds with no saved answers open on deterministic illustrative results and offer a `Use saved data` switch; populated previews offer `View sample data`. Sample records never enter the saved answer repository, exports, or production UI.
+- Local researcher mode can switch between deterministic sample data and saved device data. Sample records never enter the saved answer repository, exports, or production UI.
 - Tied or neutral-only route selections use neutral copy and never manufacture a leading route.
 - On narrow screens, the participant list becomes a horizontally scrollable selector and evaluation records reflow into labeled rows rather than forcing a wide table.
 - Fast vs Google Fast results remain hidden until 10 completed comparisons so aggregate choices cannot influence an active participant before the checkpoint.
@@ -393,7 +372,7 @@ Check every UI change against this list:
 - Are Route A / Route B colors used only for routes and route choices?
 - Are floating controls at least `20px` from mobile edges and `24px` from desktop edges?
 - Are touch targets at least `44px x 44px`?
-- Does onboarding show the complete minimum workflow together without adding unnecessary instructions?
+- Does onboarding teach one clear concept per step without adding unnecessary instructions?
 - Does the question panel collapse when map inspection matters?
 - Is there any repeated or unnecessary copy?
 - Does the change work on both laptop and mobile?

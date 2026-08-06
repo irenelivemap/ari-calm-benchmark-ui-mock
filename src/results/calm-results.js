@@ -25,6 +25,7 @@
   ];
   const Q2_CHOICES = ['yes', 'no', 'not_sure'];
   const Q3_WORTH_CHOICES = ['a_lot', 'somewhat', 'a_little', 'not_at_all', 'not_sure'];
+  const Q3_FAST_ALTERNATIVE_QUESTION = 'When would you choose Fast instead of a Calm route? (Optional)';
   const REASONS = [
     'not_enough_greenery_water',
     'too_busy_or_crowded',
@@ -35,6 +36,7 @@
     'streets_too_busy_or_noisy',
     'not_enough_trees_or_green_space',
     'not_enough_route_near_water',
+    'not_enough_beautiful_or_pleasant_surroundings',
     'too_much_attention_traffic',
     'takes_too_long',
     'hard_to_follow',
@@ -57,6 +59,7 @@
     'quieter_or_less_busy_streets',
     'more_trees_or_green_space',
     'more_near_water',
+    'more_beautiful_streets_or_surroundings',
     'less_need_to_watch_traffic',
     'takes_less_time',
     'easier_to_follow',
@@ -69,6 +72,7 @@
     quieter_or_less_busy_streets: 'Quieter or less busy streets',
     more_trees_or_green_space: 'More trees or green space',
     more_near_water: 'More of the route is near water',
+    more_beautiful_streets_or_surroundings: 'More beautiful streets or surroundings',
     less_need_to_watch_traffic: 'Less need to watch for traffic',
     takes_less_time: 'Takes less time',
     easier_to_follow: 'Easier to follow',
@@ -87,6 +91,7 @@
     streets_too_busy_or_noisy: 'Streets are too busy or noisy',
     not_enough_trees_or_green_space: 'Not enough trees or green space',
     not_enough_route_near_water: 'Not enough of the route is near water',
+    not_enough_beautiful_or_pleasant_surroundings: 'Not enough beautiful or pleasant surroundings',
     too_much_attention_traffic: 'Too much attention needed around traffic',
     takes_too_long: 'Takes too long',
     hard_to_follow: 'Hard to follow',
@@ -124,7 +129,10 @@
       q1: PARTICIPANT_QUESTION_COPY.q1,
       q1Flag: PARTICIPANT_QUESTION_COPY.q1Flag,
       q2: conditional.q2,
-      q3: conditional.q3
+      q3: conditional.q3,
+      q3Note: ['route_a', 'route_b', 'both_work_well'].includes(choice)
+        ? Q3_FAST_ALTERNATIVE_QUESTION
+        : null
     };
   }
 
@@ -217,12 +225,14 @@
       exactOutcome: exactOutcome(answer),
       q2: answer.q2Separate || null,
       q1KnowsBetter: answer.q1KnowsBetter === true,
+      q1BetterRouteNote: answer.q1BetterRouteNote || '',
       q2Reasons: Array.isArray(answer.q2Reasons) ? [...answer.q2Reasons] : [],
       q2Note: answer.q2Note || answer.q2Other || '',
       q2Other: answer.q2Other || '',
       q3WorthShowing: answer.q3WorthShowing || null,
       reasons: [...reasons],
       note: answer.q3Note || answer.note || '',
+      q3NoteKind: answer.q3NoteKind || null,
       selectedSlots: selectedSlots(answer),
       raw: answer
     };
@@ -595,6 +605,7 @@
     SUBSTANTIVE_OUTCOMES,
     Q2_CHOICES,
     Q3_WORTH_CHOICES,
+    Q3_FAST_ALTERNATIVE_QUESTION,
     REASONS,
     CHOICE_REASONS,
     CHOICE_REASON_LABELS,

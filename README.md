@@ -12,10 +12,8 @@ Testers see only Route A and Route B. The hidden provider assignment is stored w
 
 ## Live Preview
 
-- [Calm Route Comparison](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/)
-- [Calm Route Comparison](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/?game=calm)
-- [Fast vs Google Fast](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/?game=google)
-- [Fresh-player preview](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/fresh.html)
+- [Calm Route Comparison — participant site](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/)
+- [Fast vs Google Fast — compatibility entry](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/?game=google)
 
 ## Local Setup
 
@@ -50,15 +48,17 @@ The participant application still has no build step or npm runtime dependency. P
 | URL | Use |
 | --- | --- |
 | `/` | Calm Route Comparison. |
-| `/?game=calm` | Calm Route Comparison challenge. |
+| `/?game=calm` | Legacy explicit Calm query; equivalent to `/`. |
 | `/?game=google` | Fast vs Google Fast challenge. |
-| `/routing/` | Production-path preview of Calm Route Comparison. |
-| `/routing/fast-vs-google` | Clean public Fast vs Google path. |
-| `/routing/fast-vs-calm` | Legacy public alias for Calm Route Comparison. |
-| `/fresh.html` | New-player QA preview without deleting saved browser data. |
+| `/routing/` | Local preview of the optional container's Calm entry. |
+| `/routing/fast-vs-google` | Local preview of the optional container's Fast vs Google entry. |
+| `/routing/fast-vs-calm` | Local preview of the legacy Calm alias. |
+| `/fresh.html` | Local-only new-player QA preview that does not delete saved browser data. |
 | `/demo.html` | Compatibility redirect for previously shared links. |
-| `/?view=results&preview=1` | Community-results preview that bypasses the Fast vs Google release lock. |
-| `/?view=team-results` | Direct internal-results prototype. |
+| `/?game=google&view=results&preview=1` | Local-only Fast vs Google results preview that bypasses its release lock. |
+| `/?researcher=1&view=results` | Local-only Calm researcher preview with sample/saved-data controls. |
+| `/?researcher=1&view=route-profiles` | Local-only route-diagnostics preview. |
+| `/?view=team-results` | Local-only legacy internal-results prototype. |
 
 ## Repository Map
 
@@ -68,9 +68,12 @@ src/app/calm-benchmark.js          Shared active-benchmark UI and question state
 src/maps/map-adapter.js            MapLibre, Leaflet, and Google Maps adapter
 src/api/route-pair-generator.js    Random Zurich route pairs from the LiveMap routing facade
 src/data/calm-benchmark-data.js    Validation, local persistence, export
-src/data/benchmark-transport.js    Production HTTP delivery and offline outbox
+src/data/supabase-transport.js     GitHub Pages Supabase delivery and offline outbox
+src/data/benchmark-transport.js    Optional self-hosted HTTP delivery and offline outbox
 src/app/runtime.js                 Runtime configuration and public URL handling
-src/data/mock-*.js                 Demo route-pair fixtures
+src/data/mock-route-pairs.js       Generated, versioned 23-pair Calm corpus (historical filename)
+src/data/mock-fast-google-*.js     Fast/Google preview fixtures
+src/data/mock-team-results.js      Researcher-preview fixture
 src/results/calm-results.js        Pure results aggregation
 src/styles/calm-benchmark.css      Complete visual system
 server/data-api.js                 File-backed benchmark persistence service
@@ -100,11 +103,11 @@ Use the adapter interface in `src/maps/map-adapter.js`. The shell accepts Leafle
 
 ### Connect real route data
 
-Replace the mock `routePairProvider`; do not edit the fixtures into a production source. The route input is documented in [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md). `src/api/route-pair-generator.js` is the reference implementation against the LiveMap routing facade.
+For a new live challenge, replace its fixture provider through the `routePairProvider` interface. Calm is already bound to the generated, fingerprinted 23-pair corpus in `src/data/mock-route-pairs.js`; despite its historical filename, that file is the current study corpus and must be regenerated rather than hand-edited. The route input is documented in [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md). `src/api/route-pair-generator.js` is the live Fast vs Google implementation against the LiveMap routing facade.
 
 ### Connect production persistence
 
-GitHub Pages is connected to the existing Supabase project through the public anon key in `runtime-config.js`. Participants execute narrowly scoped write-only RPC functions; direct table access and anonymous reads are blocked. The app atomically stores each completed answer with its following checkpoint, rejects backward progress, and queues failed Supabase writes for retry. Apply migrations through `20260805_route_corpus_v2.sql` before collecting `calm-curated-v2` answers. A self-hosted deployment may instead set `ARI_DATA_API_BASE`; `server/data-api.js` implements that optional transport. Keep both persistence contracts aligned with [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
+GitHub Pages is connected to the existing Supabase project through the public anon key in `runtime-config.js`. Participants execute narrowly scoped write-only RPC functions; direct table access and anonymous reads are blocked. The app atomically stores each completed answer with its following checkpoint, rejects backward progress, and queues failed Supabase writes for retry. The active project has already been migrated through `20260805_route_corpus_v2.sql`; apply `20260806_questionnaire_extensions.sql` before deploying the matching questionnaire update. Use the Supabase runbook when preparing or updating an environment. A self-hosted deployment may instead set `ARI_DATA_API_BASE`; `server/data-api.js` implements that optional transport. Keep both persistence contracts aligned with [`docs/ANSWER_SCHEMA.md`](docs/ANSWER_SCHEMA.md) and [`docs/DATA_SAVING.md`](docs/DATA_SAVING.md).
 
 To exercise the full loop locally, start the data API with `ARI_DATA_ADMIN_TOKEN=dev-secret ARI_ALLOWED_ORIGINS=http://127.0.0.1:8765 node server/data-api.js`, then run `ARI_DATA_API_BASE=/api/v1/benchmarks npm start` in another terminal. The dev server proxies `/api/v1/benchmarks/*` to the local data API and injects the base into runtime configuration.
 
@@ -123,7 +126,7 @@ Both active challenges use the same route-pair provider contract, but their curr
 
 - Default endpoint: `POST /api/v1/routing/route` on the same origin.
 - In preview mode, point at another deployment once with `?api=https://host/api/v1/routing`; the base is kept in local storage. Production disables query-based configuration.
-- When the facade is unreachable (for example on GitHub Pages) or, for the Google challenge, no Maps key is configured, the challenge falls back to the mock fixtures and logs a console warning.
+- Fast vs Google falls back to its fixtures and logs a console warning when the facade is unreachable or no Google Maps key is configured. Calm always uses its embedded, versioned study corpus.
 - Generated pairs are cached per session, so retrying or resuming a round loads the identical pair.
 - For local end-to-end testing, run the livemap-routing service (GraphHopper on port 8989), then `npm run start:live`: it serves the UI and proxies `/api/v1/routing/*` to the service same-origin, so no CORS setup is needed.
 

@@ -412,10 +412,15 @@
                     })}
                   </div>
                   ${benchmark.q1Flag ? `
-                  <label class="ari-q1-flag">
-                    <input type="checkbox" name="q1KnowsBetter" value="${escapeHtml(benchmark.q1Flag.value)}">
-                    <span>${escapeHtml(benchmark.q1Flag.label)}</span>
-                  </label>` : ''}
+                  <div class="ari-q1-flag-group">
+                    <label class="ari-q1-flag">
+                      <input type="checkbox" name="q1KnowsBetter" value="${escapeHtml(benchmark.q1Flag.value)}" aria-controls="ari-q1-better-route-note" aria-expanded="false">
+                      <span>${escapeHtml(benchmark.q1Flag.label)}</span>
+                    </label>
+                    <div class="ari-question-note ari-q1-better-route-note" id="ari-q1-better-route-note" data-q1-better-route-note hidden>
+                      <textarea id="ari-q1-better-route-note-input" name="q1BetterRouteNote" maxlength="500" aria-label="${escapeHtml(benchmark.q1Flag.notePrompt || 'Tell us about the route you have in mind (optional)')}" placeholder="${escapeHtml(benchmark.q1Flag.notePlaceholder || 'Tell us about the route you have in mind (optional)')}" disabled></textarea>
+                    </div>
+                  </div>` : ''}
                 </fieldset>
                 </section>
 
@@ -445,7 +450,7 @@
                     ${renderChoiceOptions(benchmark.q3Options, { name: 'q3Issues', type: 'checkbox' })}
                   </div>
                   <div class="ari-question-note" data-q3-note hidden>
-                    <textarea name="q3Note" maxlength="500" aria-label="Add optional details about your answer" placeholder="Add details (optional)"></textarea>
+                    <textarea id="ari-q3-note-input" name="q3Note" maxlength="500" aria-label="Add optional details about your answer" placeholder="Add details (optional)"></textarea>
                   </div>
                 </fieldset>
                 </section>
@@ -625,6 +630,9 @@
       routeMetricsHelp: root.querySelector('[data-route-metrics-help]'),
       routeMetricsToggle: root.querySelector('[data-action="toggle-route-metrics-help"]'),
       routeMetricsToggleLabel: root.querySelector('[data-route-metrics-toggle-label]'),
+      q1KnowsBetter: root.querySelector('input[name="q1KnowsBetter"]'),
+      q1BetterRouteNoteWrap: root.querySelector('[data-q1-better-route-note]'),
+      q1BetterRouteNote: root.querySelector('textarea[name="q1BetterRouteNote"]'),
       q2: root.querySelector('[data-q2]'),
       q3: root.querySelector('[data-q3]'),
       q2Question: root.querySelector('[data-q2-question]'),
@@ -1573,6 +1581,9 @@
             inputName: variant.inputName || 'q3Issues',
             inputType: variant.inputType || 'checkbox',
             noteMode: variant.noteMode || 'selection',
+            noteValues: Array.isArray(variant.noteValues) ? variant.noteValues : [],
+            notePrompt: variant.notePrompt || '',
+            notePlaceholder: variant.notePlaceholder || 'Add details (optional)',
             withIcons: variant.withIcons !== false,
             options: Array.isArray(variant.options) ? variant.options : benchmark.q3Options
           }
@@ -1584,6 +1595,9 @@
             inputName: 'q3Issues',
             inputType: 'checkbox',
             noteMode: 'selection',
+            noteValues: [],
+            notePrompt: '',
+            notePlaceholder: 'Add details (optional)',
             withIcons: true,
             options: benchmark.q3Options
           };
@@ -1714,6 +1728,8 @@
       if (variant.hint) els.q3Grid.setAttribute('aria-describedby', 'ari-q3-hint');
       else els.q3Grid.removeAttribute('aria-describedby');
       els.q3Question.innerHTML = q3QuestionHtml(q1, variant);
+      els.q3Note.setAttribute('aria-label', variant.notePrompt || 'Add optional details about your answer');
+      els.q3Note.placeholder = variant.notePlaceholder;
       renderQ3RouteTimes(q1, variant);
       return variant;
     }
@@ -1789,16 +1805,29 @@
       state.mapAdapter.setSelectedRoutes(
         state.questionStep === 'q1' ? getSelectedRouteKeys() : []
       );
+      const knowsBetter = !!els.q1KnowsBetter?.checked;
+      if (els.q1BetterRouteNoteWrap && els.q1BetterRouteNote) {
+        els.q1BetterRouteNoteWrap.hidden = !knowsBetter;
+        els.q1BetterRouteNote.disabled = !knowsBetter;
+        els.q1KnowsBetter.setAttribute('aria-expanded', String(knowsBetter));
+        if (!knowsBetter) els.q1BetterRouteNote.value = '';
+      }
       const hasQ2Selection = !!els.form.querySelector('input[name="q2Reasons"]:checked');
       els.q2NoteWrap.hidden = !hasQ2Selection;
       els.q2Note.disabled = !hasQ2Selection;
       if (!hasQ2Selection) els.q2Note.value = '';
       const q3InputName = q3Variant.inputName || 'q3Issues';
+      const selectedQ3Values = Array.from(
+        els.form.querySelectorAll(`input[name="${q3InputName}"]:checked`),
+        input => input.value
+      );
       const hasQ3NoteTrigger = q3Variant.noteMode === 'none'
         ? false
         : q3Variant.noteMode === 'other'
-          ? !!els.form.querySelector(`input[name="${q3InputName}"][value="other"]:checked`)
-          : !!els.form.querySelector(`input[name="${q3InputName}"]:checked`);
+          ? selectedQ3Values.includes('other')
+          : q3Variant.noteMode === 'values'
+            ? selectedQ3Values.some(value => q3Variant.noteValues.includes(value))
+            : selectedQ3Values.length > 0;
       els.q3NoteWrap.hidden = !hasQ3NoteTrigger;
       els.q3Note.disabled = !hasQ3NoteTrigger;
       if (!hasQ3NoteTrigger) els.q3Note.value = '';
@@ -2130,10 +2159,12 @@
       const q1Choices = form.getAll('q1Choice');
       const q1Choice = q1Choices.length > 1 ? 'multiple_routes' : q1Choices[0] || null;
       const q1KnowsBetter = form.get('q1KnowsBetter') !== null;
+      const q1BetterRouteNote = q1KnowsBetter ? form.get('q1BetterRouteNote') || '' : '';
       const q2Separate = form.get('q2Separate') || null;
       const q2Reasons = form.getAll('q2Reasons');
       const q3WorthShowing = form.get('q3WorthShowing') || null;
       const q3Issues = form.getAll('q3Issues');
+      const q3Note = form.get('q3Note') || '';
       const roundId = `${state.sessionId}-round-${state.roundIndex + 1}`;
       const activeSlots = ROUTE_SLOTS.filter(({ key }) => state.assignment[key]);
       const labelMap = Object.fromEntries(activeSlots.map(({ slot, key }) => [slot, state.assignment[key]]));
@@ -2176,14 +2207,18 @@
         choice: q1Choice,
         q1Choices,
         q1KnowsBetter,
+        q1BetterRouteNote,
         q2Separate,
         q2Reasons,
         q2Note: form.get('q2Note') || '',
         q3WorthShowing,
         q3Issues,
         reasons: [...q3Issues],
-        q3Note: form.get('q3Note') || '',
-        note: form.get('q3Note') || '',
+        q3Note,
+        q3NoteKind: q3Note
+          ? q3Variant.kind === 'worth_fast' ? 'fast_alternative' : 'supporting_detail'
+          : null,
+        note: q3Note,
         metricsShown: !!benchmark.showRouteMetrics,
         fastRouteShown: state.questionStep === 'q3' && q3Variant.kind === 'worth_fast',
         fastRoute,
@@ -2225,6 +2260,7 @@
       });
       const knowsBetter = els.form.querySelector('input[name="q1KnowsBetter"]');
       if (knowsBetter) knowsBetter.checked = answer.q1KnowsBetter === true;
+      if (els.q1BetterRouteNote) els.q1BetterRouteNote.value = answer.q1BetterRouteNote || '';
       els.form.querySelectorAll('input[name="q2Separate"]').forEach(input => {
         input.checked = input.value === (answer.q2Separate || null);
       });
@@ -2393,6 +2429,10 @@
       autosave();
     });
     els.q2Note.addEventListener('input', () => {
+      updateQuestionFlow();
+      autosave();
+    });
+    els.q1BetterRouteNote?.addEventListener('input', () => {
       updateQuestionFlow();
       autosave();
     });

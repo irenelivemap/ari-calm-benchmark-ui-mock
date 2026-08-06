@@ -26,6 +26,8 @@ test('exposes accessible page landmarks and launch form feedback', () => {
   assert.match(html, /<main id="calm-benchmark-root"/);
   assert.doesNotMatch(html, /participant-consent|calm-consent|calm-privacy-note|I agree to share my name/);
   assert.doesNotMatch(app, /consentVersion|consentedAt|participantConsent/);
+  assert.match(html, /<div>About 10 minutes<\/div>/);
+  assert.doesNotMatch(html, /About 6 to 8 min/);
 });
 
 test('keeps Results unavailable until the first comparison is saved', () => {
@@ -49,6 +51,7 @@ test('keeps participant records explorable and easy to interpret', () => {
   assert.doesNotMatch(html, /class="calm-pp-question">\$\{escapeHtml\(questionCopy\.q1\)\}/);
   assert.match(html, /<span class="calm-team-outcome"[^>]*>\$\{escapeHtml\(outcomeLabel\)\}<\/span>/);
   assert.match(html, /questionCopy\.q1Flag/);
+  assert.match(html, /row\.q1BetterRouteNote/);
   assert.match(html, /class="calm-pp-answer__content"/);
   assert.doesNotMatch(html, /querySelectorAll\('\.calm-pp-card__header\[aria-expanded="true"\]'/);
   assert.match(css, /\.calm-pp-route-table tbody tr\.is-selected th::before\s*\{[^}]*content:\s*'✓'/s);
@@ -57,12 +60,38 @@ test('keeps participant records explorable and easy to interpret', () => {
   assert.match(css, /@media \(max-width: 700px\)[\s\S]*?\.calm-pp-answer\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s);
 });
 
+test('reveals, autosaves, restores, and displays the optional better-route note', () => {
+  assert.match(app, /name="q1BetterRouteNote" maxlength="500"/);
+  assert.match(app, /name="q1BetterRouteNote"[^>]*aria-label="\$\{escapeHtml\(benchmark\.q1Flag\.notePrompt/);
+  assert.doesNotMatch(app, /<label for="ari-q1-better-route-note-input">/);
+  assert.match(app, /data-q1-better-route-note hidden/);
+  assert.match(app, /q1BetterRouteNoteWrap\.hidden = !knowsBetter/);
+  assert.match(app, /\n\s*q1BetterRouteNote,/);
+  assert.match(app, /els\.q1BetterRouteNote\.value = answer\.q1BetterRouteNote \|\| ''/);
+  assert.match(app, /els\.q1BetterRouteNote\?\.addEventListener\('input'/);
+  assert.match(css, /\.ari-q1-better-route-note textarea\s*\{[^}]*min-height:\s*72px/s);
+});
+
+test('reveals the Fast-alternative note only for the three positive Q3 answers', () => {
+  assert.equal((html.match(/noteMode: 'values'/g) || []).length, 3);
+  assert.equal((html.match(/noteValues: \['a_lot', 'somewhat', 'a_little'\]/g) || []).length, 3);
+  assert.equal((html.match(/When would you choose Fast instead of a Calm route\? \(Optional\)/g) || []).length >= 3, true);
+  assert.match(app, /q3Variant\.noteMode === 'values'/);
+  assert.match(app, /selectedQ3Values\.some\(value => q3Variant\.noteValues\.includes\(value\)\)/);
+  assert.match(app, /q3Note\.setAttribute\('aria-label', variant\.notePrompt/);
+  assert.match(app, /q3Note\.placeholder = variant\.notePlaceholder/);
+  assert.doesNotMatch(app, /data-q3-note-label/);
+  assert.match(html, /questionCopy\.q3Note/);
+});
+
 test('keeps the team summary concise', () => {
   assert.match(html, /team member\$\{summary\.participants === 1 \? '' : 's'\}<\/strong> familiar with Zürich completed <strong[^>]*>\$\{summary\.total\} route comparison\$\{summary\.total === 1 \? '' : 's'\}<\/strong> in a blind, side-by-side format/);
   assert.doesNotMatch(html, /marker-lime[^>]*>[^<]*familiar with Zürich/);
   assert.doesNotMatch(html, /marker-lime[^>]*>[^<]*blind, side-by-side/);
   assert.doesNotMatch(html, /familiar with Zürich<\/strong> evaluated <strong>\$\{summary\.routePairs\} origin–destination pair/);
-  assert.match(css, /\.calm-results-dashboard-summary\s*\{[^}]*gap:\s*12px;[^}]*max-width:\s*72ch;[^}]*font:\s*var\(--font-detail\);/s);
+  assert.match(css, /\.calm-results-dashboard-summary\s*\{[^}]*gap:\s*12px;[^}]*width:\s*100%;[^}]*font:\s*var\(--font-detail\);/s);
+  assert.match(css, /\.calm-results-dashboard-summary__details\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1\.25fr\) minmax\(0, 0\.75fr\);/s);
+  assert.match(css, /@media \(max-width: 900px\)[\s\S]*?\.calm-results-dashboard-summary__details\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s);
   assert.match(css, /\.calm-results-dashboard-summary__lead\s*\{[^}]*font:\s*var\(--font-body\);/s);
   assert.match(css, /\.calm-results-dashboard-summary > \.calm-results-dashboard-summary__lead\s*\{[^}]*margin-bottom:\s*8px;/s);
 });
@@ -115,7 +144,9 @@ test('shows one save confirmation after a completed comparison', () => {
 });
 
 test('preserves Q3 details in both the current field and the legacy note alias', () => {
-  assert.match(app, /q3Note: form\.get\('q3Note'\) \|\| '',\s*note: form\.get\('q3Note'\) \|\| '',/);
+  assert.match(app, /const q3Note = form\.get\('q3Note'\) \|\| ''/);
+  assert.match(app, /q3NoteKind: q3Note[\s\S]*?'fast_alternative'[\s\S]*?'supporting_detail'/);
+  assert.match(app, /note: q3Note/);
 });
 
 test('binds Calm sessions, answers, results, and queued writes to one verified route corpus', () => {

@@ -12,18 +12,49 @@ const corpusMigration = fs.readFileSync(
   path.join(root, 'supabase/migrations/20260805_route_corpus_v2.sql'),
   'utf8'
 );
+const questionnaireMigration = fs.readFileSync(
+  path.join(root, 'supabase/migrations/20260806_questionnaire_extensions.sql'),
+  'utf8'
+);
 const runbook = fs.readFileSync(path.join(root, 'supabase/README.md'), 'utf8');
 const postflight = fs.readFileSync(path.join(root, 'supabase/postflight.sql'), 'utf8');
 
 test('documents the Calm launch migration in chronological production order', () => {
-  const hardening = runbook.indexOf('20260804_launch_hardening.sql');
-  const writeOnly = runbook.indexOf('20260804_write_only_rpc.sql');
-  const calmFixes = runbook.indexOf('20260805_calm_launch_fixes.sql');
-  const corpusV2 = runbook.indexOf('20260805_route_corpus_v2.sql');
+  const safeOrder = runbook.slice(runbook.indexOf('## Safe order of operations'));
+  const hardening = safeOrder.indexOf('20260804_launch_hardening.sql');
+  const writeOnly = safeOrder.indexOf('20260804_write_only_rpc.sql');
+  const calmFixes = safeOrder.indexOf('20260805_calm_launch_fixes.sql');
+  const corpusV2 = safeOrder.indexOf('20260805_route_corpus_v2.sql');
+  const questionnaire = safeOrder.indexOf('20260806_questionnaire_extensions.sql');
   assert.ok(hardening >= 0);
   assert.ok(writeOnly > hardening);
   assert.ok(calmFixes > writeOnly);
   assert.ok(corpusV2 > calmFixes);
+  assert.ok(questionnaire > corpusV2);
+});
+
+test('validates the current questionnaire extensions in the write-only RPC', () => {
+  assert.match(questionnaireMigration, /more_beautiful_streets_or_surroundings/);
+  assert.match(questionnaireMigration, /not_enough_beautiful_or_pleasant_surroundings/);
+  assert.match(questionnaireMigration, /length\(coalesce\(p_record->>'q1BetterRouteNote', ''\)\) > 500/);
+  assert.match(questionnaireMigration, /jsonb_typeof\(p_record->'q1BetterRouteNote'\) is distinct from 'string'/);
+  assert.match(questionnaireMigration, /better-route notes require the Q1 flag/);
+  assert.match(questionnaireMigration, /q3Note is allowed only after a positive Q3 answer/);
+  assert.match(questionnaireMigration, /positive q3Note requires fast_alternative kind/);
+  assert.match(questionnaireMigration, /rejection q3Note requires supporting_detail kind/);
+  assert.match(questionnaireMigration, /as q1_better_route_note/);
+  assert.match(questionnaireMigration, /as q3_note_kind/);
+  assert.match(questionnaireMigration, /create or replace function public\.submit_benchmark_answer/);
+  assert.match(questionnaireMigration, /revoke all on function public\.submit_benchmark_answer\(jsonb\) from public/);
+  assert.match(questionnaireMigration, /grant execute on function public\.submit_benchmark_answer\(jsonb\) to anon/);
+  assert.match(questionnaireMigration, /revoke all on public\.benchmark_answers_analysis from anon, authenticated/);
+  assert.doesNotMatch(questionnaireMigration, /\b(delete|truncate|drop)\b/i);
+  assert.match(postflight, /allows_selected_route_surroundings_reason/);
+  assert.match(postflight, /allows_neither_surroundings_reason/);
+  assert.match(postflight, /validates_better_route_note/);
+  assert.match(postflight, /validates_fast_alternative_note/);
+  assert.match(postflight, /q1_better_route_note/);
+  assert.match(postflight, /q3_note_kind/);
 });
 
 test('binds v3 Calm rows and the analysis view to the exact route corpus', () => {

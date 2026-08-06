@@ -42,6 +42,41 @@ test('documents every current conditional Calm question used by participant resu
     .forEach(copy => assert.equal(questionnaire.includes(copy), true, copy));
 });
 
+test('keeps the branch-specific surroundings reasons aligned', () => {
+  const html = read('index.html');
+  const questionnaire = read('docs/QUESTIONNAIRE.md');
+  const results = read('src/results/calm-results.js');
+  [
+    'More beautiful streets or surroundings',
+    'Not enough beautiful or pleasant surroundings'
+  ].forEach(copy => {
+    assert.equal(html.includes(copy), true, copy);
+    assert.equal(questionnaire.includes(copy), true, copy);
+    assert.equal(results.includes(copy), true, copy);
+  });
+});
+
+test('keeps the conditional better-route prompt aligned', () => {
+  const html = read('index.html');
+  const app = read('src/app/calm-benchmark.js');
+  const questionnaire = read('docs/QUESTIONNAIRE.md');
+  const prompt = 'Tell us about the route you have in mind (optional)';
+  assert.equal(html.includes(prompt), true);
+  assert.equal(app.includes(prompt), true);
+  assert.equal(questionnaire.includes(prompt), true);
+});
+
+test('keeps the conditional Fast-alternative prompt aligned', () => {
+  const html = read('index.html');
+  const app = read('src/app/calm-benchmark.js');
+  const questionnaire = read('docs/QUESTIONNAIRE.md');
+  const prompt = Results.Q3_FAST_ALTERNATIVE_QUESTION;
+  assert.equal(prompt, 'When would you choose Fast instead of a Calm route? (Optional)');
+  assert.equal(html.includes(prompt), true);
+  assert.match(app, /notePrompt/);
+  assert.equal(questionnaire.includes(prompt), true);
+});
+
 test('keeps the first-comparison Q1 guidance aligned with the questionnaire', () => {
   const html = read('index.html');
   const app = read('src/app/calm-benchmark.js');

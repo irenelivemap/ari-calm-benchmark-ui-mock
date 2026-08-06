@@ -24,8 +24,8 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 - Preserve blinding. Testers see `Route A` and `Route B`; provider identities stay in the hidden assignment.
 - Treat `docs/QUESTIONNAIRE.md` as the canonical current copy. Keep runtime options and follow-up logic in `CHALLENGE_CONFIGS` in `index.html`, and keep participant-result rendering aligned through its drift tests.
 - Keep shared active-benchmark behavior in `src/app/calm-benchmark.js`. The historical filename is retained for compatibility and powers every challenge.
-- Treat `src/data/mock-*.js` as fixtures only. Production data must enter through `routePairProvider`.
-- `src/api/route-pair-generator.js` owns random route-pair generation against the routing facade. Keep its fixture fallback working; GitHub Pages has no backend.
+- Treat `src/data/mock-fast-google-route-pairs.js` and `src/data/mock-team-results.js` as preview fixtures only. `src/data/mock-route-pairs.js` is the generated, fingerprinted Calm study corpus despite its historical filename; regenerate it with `scripts/build-calm-route-corpus.mjs` and never hand-edit it.
+- `src/api/route-pair-generator.js` owns live Fast vs Google route-pair generation against the routing facade. Keep its fixture fallback working; GitHub Pages does not host that facade.
 - `src/app/runtime.js` owns base-path and challenge URL behavior. Preserve both clean `/routing/*` paths and legacy `?game=` preview links.
 - `src/data/supabase-transport.js` owns primary GitHub Pages production delivery and its local outbox. Never allow older queued progress to overwrite newer progress.
 - `src/data/benchmark-transport.js` and `server/data-api.js` own the optional self-hosted persistence path. The server must validate with `src/data/calm-benchmark-data.js`, stay append-only for answers, and never accept a record whose `test` does not match the endpoint.

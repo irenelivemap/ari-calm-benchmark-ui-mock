@@ -8,13 +8,13 @@ product
 
 - Internal route researchers and routing engineers collecting structured comparison data.
 - Product and design teammates evaluating the benchmark experience.
-- External participants comparing routes without needing prior ARI context.
+- Current internal team participants comparing routes without needing prior ARI context.
 
 All participants use the same comparison flow and produce records with the same validity rules.
 
 ## Product Purpose
 
-This prototype tests whether people prefer or trust one walking route over another while keeping provider identity hidden.
+This prototype measures which walking-route options people prefer while keeping provider identity hidden.
 
 The current benchmark family includes:
 
@@ -38,7 +38,7 @@ The map is the primary decision surface. Questions, progress, medals, and result
 - **Map first**: route visibility, pan, zoom, fit, and optional Street View are core to the task.
 - **Low friction**: no unnecessary clicks, repeated explanations, or forced detours before the next comparison.
 - **Resumable**: leaving and returning must preserve the same session, pair, assignment, question step, and partial answer.
-- **Motivating, not coercive**: medals and community results encourage more comparisons without changing answer semantics.
+- **Motivating, not coercive**: medals and personal result history encourage more comparisons without changing answer semantics.
 - **Momentum through milestones**: comparison 10 celebrates progress without interrupting the route flow; the persistent exit remains available, and the true completion state appears after all 23 comparisons.
 - **One data foundation**: internal and external participants produce equivalent records.
 - **Adapter-driven integration**: real routes, maps, and persistence replace explicit interfaces rather than rewriting the UI.

@@ -1,6 +1,6 @@
 # Data Governance Before Launch
 
-This checklist separates implemented technical controls from decisions the evaluation team must own. Do not describe the study as launch-ready until the decision fields below are completed.
+This document separates implemented technical controls from decisions owned outside the repository. The current launch is an internal team study; the evaluation owner has accepted participant-name collection and chose not to make the remaining organizational policy items technical launch blockers.
 
 ## Data collected
 
@@ -15,7 +15,7 @@ This checklist separates implemented technical controls from decisions the evalu
 - Participant writes use the public Supabase anon role through two write-only RPC functions.
 - Supabase row-level security blocks anonymous reads.
 - Capture IDs make completed-answer writes idempotent.
-- Current Calm records are validated against the 23-pair corpus in the browser. The reviewed `20260805_calm_launch_fixes.sql` migration applies equivalent database validation, enforces one answer per session round, and caps each Calm session at 23 answers.
+- Current Calm records are validated against the 23-pair corpus and current questionnaire in the browser. The reviewed `20260805_calm_launch_fixes.sql` migration applies equivalent baseline database validation, enforces one answer per session round, and caps each Calm session at 23 answers. `20260806_questionnaire_extensions.sql` extends the database validation for the two current branch-specific surroundings reasons, the optional better-route note, and the conditional Fast-alternative note.
 - Research exports can be checked with `npm run audit:data -- <file>`.
 
 ## Organizational follow-up
@@ -24,22 +24,23 @@ The evaluation owner confirmed on 2026-08-05 that this is an internal study and 
 
 | Decision | Owner value required before launch |
 | --- | --- |
-| Purpose and lawful basis | _To be completed_ |
+| Purpose and lawful basis | Internal Calm-routing preference research; formal organizational wording remains outside this repository. |
 | Whether names are necessary or participant codes are sufficient | Participant names accepted for this internal study (confirmed 2026-08-05) |
-| Retention period | _To be completed_ |
-| Contact for access, correction, and deletion requests | _To be completed_ |
-| Authorized Supabase dashboard members | _To be completed_ |
-| Backup / point-in-time recovery policy | _To be completed_ |
-| Export storage location and access list | _To be completed_ |
+| Retention period | Team decision outside the technical launch gate. |
+| Contact for access, correction, and deletion requests | Team decision outside the technical launch gate. |
+| Authorized Supabase dashboard members | Supabase project owners manage access. |
+| Backup / point-in-time recovery policy | A private, RLS-enabled `launch_backup` snapshot was created before migration; ongoing policy remains a team decision. |
+| Export storage location and access list | Team decision outside the technical launch gate. |
 
 ## Technical launch gates
 
-- [ ] Apply `supabase/migrations/20260805_calm_launch_fixes.sql` in the production Supabase project.
-- [ ] Run `supabase/postflight.sql` and retain the output with the launch record.
-- [ ] Perform one clearly tagged production Calm submission, verify answer and progress rows, export it, and run `npm run audit:data -- <export>`.
+- [x] Apply migrations through `supabase/migrations/20260805_route_corpus_v2.sql` in the production Supabase project.
+- [x] Run `supabase/postflight.sql` and verify the production invariants.
+- [ ] Apply `supabase/migrations/20260806_questionnaire_extensions.sql` and rerun `supabase/postflight.sql` before deploying the matching questionnaire UI.
+- [x] Perform one clearly tagged production Calm submission, verify answer/progress/analysis rows, and remove only the tagged QA rows.
 - [ ] Confirm dedicated Google and MapTiler browser keys are restricted to the exact participant origin and have quota alerts.
 
-## Current production blocker discovered 2026-08-04
+## Resolved production finding from 2026-08-04
 
 The 2026-08-04 audit initially found participant answer data exposed to the anon role. The launch-hardening migration removed that access, and `npm run smoke:production` now verifies zero anonymous rows exposed. The follow-up write-only RPC migration preserves participant delivery without reopening table reads.
 

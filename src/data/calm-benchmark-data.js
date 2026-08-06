@@ -25,10 +25,12 @@
   ]);
   const Q2_CHOICES = new Set(['yes', 'no', 'not_sure']);
   const Q3_WORTH_CHOICES = new Set(['a_lot', 'somewhat', 'a_little', 'not_at_all', 'not_sure']);
+  const Q3_FAST_NOTE_CHOICES = new Set(['a_lot', 'somewhat', 'a_little']);
   const Q2_REASONS = new Set([
     'quieter_or_less_busy_streets',
     'more_trees_or_green_space',
     'more_near_water',
+    'more_beautiful_streets_or_surroundings',
     'less_need_to_watch_traffic',
     'takes_less_time',
     'easier_to_follow',
@@ -46,6 +48,7 @@
     'streets_too_busy_or_noisy',
     'not_enough_trees_or_green_space',
     'not_enough_route_near_water',
+    'not_enough_beautiful_or_pleasant_surroundings',
     'too_much_attention_traffic',
     'takes_too_long',
     'hard_to_follow',
@@ -161,6 +164,8 @@
       q1Choice,
       choice: q1Choice,
       q1Choices,
+      q1KnowsBetter: input.q1KnowsBetter === true,
+      q1BetterRouteNote: asString(input.q1BetterRouteNote),
       q2Separate: input.q2Separate || null,
       ...(q2Reasons ? { q2Reasons } : {}),
       q2Note: asString(input.q2Note || input.q2Other),
@@ -171,6 +176,7 @@
       q3Issues,
       reasons: [...q3Issues],
       q3Note: asString(input.q3Note || input.note),
+      q3NoteKind: input.q3NoteKind || null,
       note: asString(input.note || input.q3Note),
       routeAssignment: Object.fromEntries(
         ROUTE_SLOTS
@@ -288,6 +294,13 @@
     });
     if (record.q2Note.length > 500) errors.push('q2Note must be 500 characters or fewer.');
     if (record.q3Note.length > 500) errors.push('q3Note must be 500 characters or fewer.');
+    if (input?.q1BetterRouteNote != null && typeof input.q1BetterRouteNote !== 'string') {
+      errors.push('q1BetterRouteNote must be a string.');
+    }
+    if (record.q1BetterRouteNote.length > 500) errors.push('q1BetterRouteNote must be 500 characters or fewer.');
+    if (record.q1BetterRouteNote && record.q1KnowsBetter !== true) {
+      errors.push('q1BetterRouteNote must be empty unless q1KnowsBetter is true.');
+    }
     if (strictCurrentCalm && (typeof record.participantId !== 'string' || !record.participantId || record.participantId.length > 200)) {
       errors.push('participantId is required and must be 200 characters or fewer for current Calm records.');
     }
@@ -382,6 +395,9 @@
     if (record.q3WorthShowing != null && !Q3_WORTH_CHOICES.has(record.q3WorthShowing)) {
       errors.push('q3WorthShowing is invalid.');
     }
+    if (record.q3NoteKind != null && !['fast_alternative', 'supporting_detail'].includes(record.q3NoteKind)) {
+      errors.push('q3NoteKind is invalid.');
+    }
 
     if (!allowPartial && Q1_CHOICES.has(record.q1Choice)) {
       const isFastGoogle = record.test === 'ari_fast_vs_google';
@@ -419,6 +435,23 @@
         }
         if (!needsCalmRejectionReasons && record.q3Issues.length) {
           errors.push('q3Issues must be empty for this Q1 answer.');
+        }
+        if (strictCurrentCalm && needsCalmWorthQ3 && record.q3Note
+          && !Q3_FAST_NOTE_CHOICES.has(record.q3WorthShowing)) {
+          errors.push('q3Note is allowed only after A lot, Somewhat, or A little.');
+        }
+        if (strictCurrentCalm && needsCalmWorthQ3 && record.q3Note && record.q3NoteKind !== 'fast_alternative') {
+          errors.push('q3NoteKind must be fast_alternative for this Q3 response.');
+        }
+        if (strictCurrentCalm && needsCalmRejectionReasons && record.q3Note
+          && record.q3NoteKind !== 'supporting_detail') {
+          errors.push('q3NoteKind must be supporting_detail for a rejection note.');
+        }
+        if (strictCurrentCalm && !record.q3Note && record.q3NoteKind != null) {
+          errors.push('q3NoteKind must be empty when q3Note is empty.');
+        }
+        if (strictCurrentCalm && !needsCalmWorthQ3 && !needsCalmRejectionReasons && record.q3Note) {
+          errors.push('q3Note must be empty for this Q1 answer.');
         }
       } else {
         if (record.q3WorthShowing) errors.push('q3WorthShowing must be empty for this test.');

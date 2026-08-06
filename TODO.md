@@ -7,7 +7,8 @@ Supabase project `xyrmytymcipyntdtsksu` is the active production persistence bac
 
 ## Required before inviting participants
 
-- [x] Apply [`supabase/migrations/20260805_calm_launch_fixes.sql`](supabase/migrations/20260805_calm_launch_fixes.sql) and verify the [`supabase/postflight.sql`](supabase/postflight.sql) invariants.
+- [x] Apply migrations through [`supabase/migrations/20260805_route_corpus_v2.sql`](supabase/migrations/20260805_route_corpus_v2.sql) and verify the [`supabase/postflight.sql`](supabase/postflight.sql) invariants.
+- [ ] Apply [`supabase/migrations/20260806_questionnaire_extensions.sql`](supabase/migrations/20260806_questionnaire_extensions.sql) and rerun [`supabase/postflight.sql`](supabase/postflight.sql) before deploying the matching questionnaire UI.
 - [x] Make one clearly tagged production Calm submission; verify the answer, progress, and researcher-view projection in Supabase; then remove only the tagged QA rows.
 - [x] Create a private, RLS-enabled `launch_backup` snapshot of both production tables before applying the migration (the Free Supabase plan has no scheduled backups).
 - [ ] Confirm the Google Maps key is limited to the Maps JavaScript API and the exact participant origin.

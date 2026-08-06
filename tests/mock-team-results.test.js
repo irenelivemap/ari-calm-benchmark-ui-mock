@@ -32,6 +32,11 @@ test('provides a deterministic, varied Calm team-results fixture', () => {
   assert.ok(summary.positionBias.selectedAsB > 0);
   assert.equal(summary.positionBias.selectedAsC, 0);
   assert.ok(answers.some(answer => answer.q1KnowsBetter === true));
+  assert.ok(answers.some(answer => answer.q1KnowsBetter && answer.q1BetterRouteNote));
+  assert.ok(answers.every(answer => answer.q1KnowsBetter || !answer.q1BetterRouteNote));
+  assert.ok(answers.every(answer => !answer.q3Note || ['a_lot', 'somewhat', 'a_little'].includes(answer.q3WorthShowing)));
+  assert.ok(answers.some(answer => answer.q2Reasons.includes('more_beautiful_streets_or_surroundings')));
+  assert.ok(answers.some(answer => answer.q3Issues.includes('not_enough_beautiful_or_pleasant_surroundings')));
 
   const agreement = Results.analyzeAgreement(answers);
   assert.equal(agreement.participants.length, 15);

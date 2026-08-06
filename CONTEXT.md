@@ -55,13 +55,13 @@ The upserted record for an unfinished session. It includes the current pair, hid
 
 The GitHub Pages deployment writes to Supabase project `xyrmytymcipyntdtsksu` using its public anon key and two write-only RPC functions. Direct anon table access and anonymous reads are blocked. This is the active production backend, not a preview fixture. The file-backed HTTP data API is an optional alternative for a future self-hosted deployment.
 
-## Community Results
+## Participant Results
 
-Participant-facing aggregate results. They are released in completed batches so active testers do not see unstable percentages after every answer.
+The participant-facing `My results` view, enabled after the first saved comparison. It consolidates the current person's answers across sessions. The Calm `Overview` tab is currently disabled and labelled `Soon`; aggregate team evidence is not participant-facing.
 
-## Team Results
+## Researcher Results
 
-The internal research view over the same answer records. It is accessed directly and is not shown in participant navigation.
+The local-development research view over saved or illustrative answer records. It adds participant and route-diagnostics views and is never enabled on the production participant site. Authorized production research reads happen in the Supabase dashboard.
 
 ## Medal / Rank
 
