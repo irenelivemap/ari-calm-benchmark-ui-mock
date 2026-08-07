@@ -27,21 +27,22 @@ Use this checklist when connecting the shared benchmark UI to `livemap-routing` 
 - [x] Proxy routing calls through the public host at `/api/v1/routing`.
 - [x] Disable query-based API, Google key, reset, and QA overrides in production.
 - [x] Add LinkedIn/Open Graph metadata and a social preview image.
-- [ ] Deploy the optional container only if the team chooses to replace or complement GitHub Pages.
+- [ ] Deploy the optional container only if the team chooses to replace or complement the hosted static deployment.
 - [ ] If deployed, point `game.livemap.sh` DNS at it.
 - [ ] If deployed, provide a browser-restricted Google Maps key for `https://game.livemap.sh/*`.
 - [x] Connect production persistence through write-only anonymous RPCs and define a separate privacy-limited Route Explorers aggregate RPC.
 - [x] Apply `20260806_route_explorer_completion_order.sql` and confirm the public Route Explorers feed returns finish order without returning timestamps.
 
-## GitHub Pages
+## Hosted static deployment
 
-- [x] Configure the repository Actions secret `ARI_GOOGLE_MAPS_KEY`; the deployed participant site loads Google Street View.
+- [x] Deploy the canonical participant site at `https://ari-benchmark.vercel.app/` and redirect the earlier Vercel domains.
+- [x] Configure `ARI_GOOGLE_MAPS_KEY` in Vercel and the GitHub Pages fallback; the participant site loads Google Street View.
 - [ ] In the key owner's Google Cloud console, restrict the shared key to the Maps JavaScript API and the exact participant origin, then add a quota alert.
-- [x] Configure the repository Actions secret `ARI_MAPTILER_KEY`; the deployed participant site loads the `streets-v4` style.
+- [x] Configure `ARI_MAPTILER_KEY` in Vercel and the GitHub Pages fallback; the participant site loads the `streets-v4` style.
 - [ ] In the key owner's MapTiler console, restrict the shared key to the exact participant origin, then add a quota alert.
 - [x] Build the participant artifact without writing the Google key into Git history.
-- [x] Publish GitHub Pages through GitHub Actions.
-- [x] Run the `Deploy participant site` workflow and confirm `streetViewConfigured: true` with `npm run smoke:production`.
+- [x] Publish the GitHub Pages fallback through GitHub Actions.
+- [x] Confirm `streetViewConfigured: true`, MapTiler availability, Supabase configuration, and zero anonymous raw-row exposure with `npm run smoke:production`.
 
 ## Route Provider
 

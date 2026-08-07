@@ -27,7 +27,7 @@ src/data/calm-benchmark-data.js
   validation + idempotent local repository + NDJSON export
 
 src/data/supabase-transport.js
-  GitHub Pages Supabase delivery + retryable local outbox
+  hosted participant Supabase delivery + retryable local outbox
 
 src/data/benchmark-transport.js
   optional self-hosted HTTP delivery + retryable local outbox
@@ -118,11 +118,11 @@ Owns the optional self-hosted HTTP delivery path. Answers use `POST` plus `Idemp
 
 Owns environment defaults, `/routing/` base-path inference, clean challenge slugs, and compatibility with the existing `?game=` links. Production settings arrive through `runtime-config.js`, which the Caddy deployment renders from environment values.
 
-### GitHub Pages deployment
+### Hosted static deployments
 
-The application remains a static, framework-free site. `.github/workflows/deploy-pages.yml` runs the test suite, copies only the participant-facing static files through `scripts/build-pages.mjs`, and substitutes the repository secrets `ARI_GOOGLE_MAPS_KEY` and `ARI_MAPTILER_KEY` into the artifact's copy of `runtime-config.js`. The tracked source configuration stays key-free. The build fails closed when either secret is absent so a deployment cannot silently publish without Street View or its production basemap.
+The application remains a static, framework-free site. Vercel is the canonical participant host at `https://ari-benchmark.vercel.app/`; `vercel.json` packages the participant files through `scripts/build-pages.mjs`, injects the Production environment's browser keys, and applies the response-security policy. The build fails closed when either key is absent so a deployment cannot silently publish without Street View or its production basemap.
 
-The linked Vercel project is a deployment mirror and uses `vercel.json` to run the same `scripts/build-pages.mjs` packaging step into `_site`. Its Production environment must provide the same two browser-restricted keys; serving the repository root directly is not a valid production build because the tracked runtime placeholders are intentionally empty.
+GitHub Pages is the fallback. `.github/workflows/deploy-pages.yml` runs the test suite, packages the same participant-facing files, and substitutes repository secrets into the artifact's `runtime-config.js`. The tracked source configuration stays key-free. Serving the repository root directly is not a valid production build because the tracked runtime placeholders are intentionally empty.
 
 ### `src/results/calm-results.js`
 
@@ -163,6 +163,6 @@ Contracts are documented in [`DATA_CONTRACT.md`](DATA_CONTRACT.md), [`ANSWER_SCH
 - Progress records are upserted by `sessionId`.
 - Each challenge has a separate test ID and local storage key.
 - Versioned Calm answers and progress carry `corpusVersion` and `corpusFingerprint`; Results excludes records from any other corpus.
-- The static/no-build shape is intentional for rapid sharing through GitHub Pages.
+- The static/no-build shape is intentional for reliable deployment to Vercel and the GitHub Pages fallback.
 - Google Maps keys are runtime configuration and must never be committed.
 - Production fails closed only when neither the configured Supabase connection nor `ARI_DATA_API_BASE` is available; the UI never collects browser-only production answers.

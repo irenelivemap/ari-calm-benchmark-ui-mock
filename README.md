@@ -1,4 +1,4 @@
-# ARI Route Benchmark UI
+# Ari Route Benchmark UI
 
 Static, map-first UI for blinded route-comparison research. The same benchmark shell currently supports:
 
@@ -8,16 +8,16 @@ Static, map-first UI for blinded route-comparison research. The same benchmark s
 
 Testers see only Route A and Route B. The hidden provider assignment is stored with each answer for later analysis.
 
-> **Production data status:** GitHub Pages is already connected to Supabase project `xyrmytymcipyntdtsksu`. The URL and public anon key in `runtime-config.js` are intentional browser configuration protected by row-level security. The Node data API is optional and is not required for the current deployment.
+> **Production data status:** The hosted participant site is connected to Supabase project `xyrmytymcipyntdtsksu`. The URL and public anon key in `runtime-config.js` are intentional browser configuration protected by row-level security. The Node data API is optional and is not required for the current deployment.
 
 ## Live Preview
 
-- [Calm Route Comparison — participant site](https://ari-calm-benchmark.vercel.app/)
+- [Calm Route Comparison — participant site](https://ari-benchmark.vercel.app/)
 - [Fast vs Google Fast — compatibility entry](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/?game=google)
 
 ## Local Setup
 
-Node.js 20 or newer is required for the server and tests.
+Node.js 24 is required for local tooling, tests, and deployment builds.
 
 ```bash
 git clone https://github.com/irenelivemap/ari-calm-benchmark-ui-mock.git
@@ -69,7 +69,7 @@ src/app/calm-benchmark.js          Shared active-benchmark UI and question state
 src/maps/map-adapter.js            MapLibre, Leaflet, and Google Maps adapter
 src/api/route-pair-generator.js    Random Zurich route pairs from the LiveMap routing facade
 src/data/calm-benchmark-data.js    Validation, local persistence, export
-src/data/supabase-transport.js     GitHub Pages Supabase delivery and offline outbox
+src/data/supabase-transport.js     Hosted participant delivery to Supabase and offline outbox
 src/data/benchmark-transport.js    Optional self-hosted HTTP delivery and offline outbox
 src/app/runtime.js                 Runtime configuration and public URL handling
 src/data/mock-route-pairs.js       Generated, versioned 23-pair Calm corpus (historical filename)
@@ -114,9 +114,9 @@ To exercise the full loop locally, start the data API with `ARI_DATA_ADMIN_TOKEN
 
 ## Production Deployment
 
-The active participant deployment is Vercel at `https://ari-calm-benchmark.vercel.app/`. GitHub Pages and the prepared container remain optional fallback infrastructure; see [`deploy/README.md`](deploy/README.md).
+The active participant deployment is Vercel at `https://ari-benchmark.vercel.app/`. The earlier Vercel domains redirect to this canonical address. GitHub Pages and the prepared container remain optional fallback infrastructure; see [`deploy/README.md`](deploy/README.md).
 
-The linked Vercel project is a deployment mirror. [`vercel.json`](vercel.json) runs the same fail-closed participant build as GitHub Pages, so both `ARI_GOOGLE_MAPS_KEY` and `ARI_MAPTILER_KEY` must exist in the Vercel Production environment before a production deployment can succeed.
+[`vercel.json`](vercel.json) runs the fail-closed participant build and applies the production response-security policy. Both `ARI_GOOGLE_MAPS_KEY` and `ARI_MAPTILER_KEY` must exist in the Vercel Production environment before a production deployment can succeed.
 
 The LinkedIn preview image is [`assets/ari-route-arcade-social.png`](assets/ari-route-arcade-social.png). Its editable source is [`tools/social-preview.html`](tools/social-preview.html).
 
@@ -143,7 +143,7 @@ A configured Google Maps key does not switch the base map for Fast vs Calm: it l
 
 For private local testing, set `ARI_MAPTILER_KEY` before running `npm start`. Without a key, local previews intentionally use the OpenFreeMap fallback.
 
-The GitHub Pages workflow reads the repository secret `ARI_MAPTILER_KEY`, injects it only into the published artifact, and refuses to deploy without it. Use a browser key restricted to the participant origins, including `https://irenelivemap.github.io/*` and the final production domain. The browser receives this key by design; its protection comes from MapTiler origin restrictions rather than secrecy in generated JavaScript.
+The Vercel deployment and GitHub Pages fallback inject `ARI_MAPTILER_KEY` only into their published artifacts and refuse to deploy without it. Restrict the browser key to the exact participant origins, including `https://ari-benchmark.vercel.app` and the GitHub Pages fallback. The browser receives this key by design; its protection comes from MapTiler origin restrictions rather than secrecy in generated JavaScript.
 
 ## Google Maps
 
@@ -154,9 +154,9 @@ For private local testing, either:
 - start the local server with `ARI_GOOGLE_MAPS_KEY` in its environment, or
 - open `?gmap=YOUR_KEY` once on `file://`, `localhost`, or `127.0.0.1`; the app moves the key to local storage and removes it from the URL. Production URLs never accept this override.
 
-The GitHub Pages participant site is deployed by `.github/workflows/deploy-pages.yml`. It reads the repository secrets `ARI_GOOGLE_MAPS_KEY` and `ARI_MAPTILER_KEY`, injects them only into the published static artifact, and refuses to deploy without either one. The source `runtime-config.js` intentionally keeps both browser-key fields empty.
+The Vercel production build and `.github/workflows/deploy-pages.yml` fallback inject `ARI_GOOGLE_MAPS_KEY` and `ARI_MAPTILER_KEY` only into their published static artifacts and refuse to deploy without either one. The source `runtime-config.js` intentionally keeps both browser-key fields empty.
 
-In Google Cloud, restrict the browser key to the Maps JavaScript API and the website referrer `https://irenelivemap.github.io/*`. Cross-origin browser requests commonly send only the origin, so do not rely on the repository path as the restriction. The browser receives this key by design; its protection comes from the API and website restrictions rather than secrecy in the generated JavaScript.
+In Google Cloud, restrict the browser key to the Maps JavaScript API and the exact participant origins `https://ari-benchmark.vercel.app/*` and `https://irenelivemap.github.io/*`. Cross-origin browser requests commonly send only the origin, so do not rely on a repository path as the restriction. The browser receives this key by design; its protection comes from the API and website restrictions rather than secrecy in the generated JavaScript.
 
 Never commit an API key.
 

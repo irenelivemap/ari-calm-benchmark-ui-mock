@@ -25,8 +25,17 @@ test('keeps one canonical Calm participant link in the README live previews', ()
   const livePreview = readme.match(/## Live Preview\n([\s\S]*?)\n## /)?.[1] || '';
   const links = livePreview.match(/https:\/\/[^\s)]+/g) || [];
   assert.equal(links.filter(link => !link.includes('game=google')).length, 1);
-  assert.match(livePreview, /https:\/\/ari-calm-benchmark\.vercel\.app\//);
+  assert.match(livePreview, /https:\/\/ari-benchmark\.vercel\.app\//);
   assert.doesNotMatch(livePreview, /game=calm/);
+});
+
+test('keeps canonical production metadata on the Vercel participant domain', () => {
+  const html = read('index.html');
+  const smoke = read('scripts/production-smoke.mjs');
+  assert.match(html, /<link rel="canonical" href="https:\/\/ari-benchmark\.vercel\.app\/">/);
+  assert.match(html, /<meta property="og:url" content="https:\/\/ari-benchmark\.vercel\.app\/">/);
+  assert.doesNotMatch(html, /ari-calm-benchmark\.vercel\.app/);
+  assert.match(smoke, /https:\/\/ari-benchmark\.vercel\.app\//);
 });
 
 test('keeps current interaction behavior in the design documents', () => {

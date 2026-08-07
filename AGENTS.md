@@ -11,10 +11,10 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 
 ## Production Persistence — Do Not Reinterpret
 
-- **Supabase project `xyrmytymcipyntdtsksu` is the active production persistence backend for the GitHub Pages deployment.** It is not mock or preview infrastructure.
+- **Supabase project `xyrmytymcipyntdtsksu` is the active production persistence backend for the hosted participant deployment.** It is not mock or preview infrastructure.
 - `runtime-config.js` intentionally contains the Supabase project URL and **public anon key**. A Supabase anon key is a browser credential governed by row-level security, not a private service-role secret. Do not remove or blank either value as a security cleanup.
 - `supabase-setup.sql` plus `supabase/migrations/` are the canonical database setup. Participant browsers execute two write-only RPC functions and the privacy-limited Route Explorers aggregate RPC; direct anon table access and raw-answer reads remain blocked. Researchers read full records through the authenticated Supabase dashboard.
-- `src/data/supabase-transport.js` is the primary GitHub Pages production transport. `src/data/benchmark-transport.js` and `server/data-api.js` are an optional self-hosted alternative, not a prerequisite for the current deployment.
+- `src/data/supabase-transport.js` is the primary hosted-production transport. `src/data/benchmark-transport.js` and `server/data-api.js` are an optional self-hosted alternative, not a prerequisite for the current deployment.
 - Localhost and `file://` previews must not write to production Supabase. Supabase is selected automatically only when runtime production mode is active.
 - Production must fail closed only when **neither** Supabase nor the optional HTTP data API is configured.
 - Before changing persistence, inspect `runtime-config.js`, `supabase-setup.sql`, and `docs/DATA_SAVING.md`. Do not infer backend status from `dataApiBase` alone.
@@ -25,9 +25,9 @@ This repository is a static, framework-free prototype for blinded ARI route benc
 - Treat `docs/QUESTIONNAIRE.md` as the canonical current copy. Keep runtime options and follow-up logic in `CHALLENGE_CONFIGS` in `index.html`, and keep participant-result rendering aligned through its drift tests.
 - Keep shared active-benchmark behavior in `src/app/calm-benchmark.js`. The historical filename is retained for compatibility and powers every challenge.
 - Treat `src/data/mock-fast-google-route-pairs.js` and `src/data/mock-team-results.js` as preview fixtures only. `src/data/mock-route-pairs.js` is the generated, fingerprinted Calm study corpus despite its historical filename; regenerate it with `scripts/build-calm-route-corpus.mjs` and never hand-edit it.
-- `src/api/route-pair-generator.js` owns live Fast vs Google route-pair generation against the routing facade. Keep its fixture fallback working; GitHub Pages does not host that facade.
+- `src/api/route-pair-generator.js` owns live Fast vs Google route-pair generation against the routing facade. Keep its fixture fallback working; the static participant hosts do not provide that facade.
 - `src/app/runtime.js` owns base-path and challenge URL behavior. Preserve both clean `/routing/*` paths and legacy `?game=` preview links.
-- `src/data/supabase-transport.js` owns primary GitHub Pages production delivery and its local outbox. Never allow older queued progress to overwrite newer progress.
+- `src/data/supabase-transport.js` owns primary hosted-production delivery and its local outbox. Never allow older queued progress to overwrite newer progress.
 - `src/data/benchmark-transport.js` and `server/data-api.js` own the optional self-hosted persistence path. The server must validate with `src/data/calm-benchmark-data.js`, stay append-only for answers, and never accept a record whose `test` does not match the endpoint.
 - Never commit a Google Maps or MapTiler API key. Local browser-key setup is described in `README.md`.
 - Do not reset or rewrite a tester's browser data during visual QA. Use `fresh.html` for a non-destructive new-player preview.

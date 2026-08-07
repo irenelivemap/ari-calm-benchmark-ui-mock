@@ -1,6 +1,6 @@
 # Optional Container Deployment
 
-The active participant deployment is GitHub Pages. This container is prepared for a future `https://game.livemap.sh/routing/` deployment and can proxy live route requests through the same origin; it is not required for the current Calm team study.
+The active participant deployment is Vercel at `https://ari-benchmark.vercel.app/`; GitHub Pages is a fallback. This container is prepared for a future `https://game.livemap.sh/routing/` deployment and can proxy live route requests through the same origin; it is not required for the current Calm team study.
 
 ## Required Infrastructure
 
@@ -49,7 +49,7 @@ PUT  /api/v1/benchmarks/{testId}/sessions/{sessionId}/progress
 
 Failed writes stay in a local outbox and retry on the next save, page load, or `online` event. The server must enforce answer idempotency using the `Idempotency-Key` header.
 
-GitHub Pages uses the existing Supabase configuration. For deployments that remove it, do not launch while `ARI_DATA_API_BASE` is empty: production fails closed when neither persistence transport is available.
+The Vercel participant site and GitHub Pages fallback use the existing Supabase configuration. For deployments that remove it, do not launch while `ARI_DATA_API_BASE` is empty: production fails closed when neither persistence transport is available.
 
 ## Data API Service
 

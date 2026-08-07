@@ -8,9 +8,20 @@ const { spawnSync } = require('node:child_process');
 const ROOT = join(__dirname, '..');
 const vercelConfig = JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf8'));
 
-test('uses the fail-closed participant artifact for the Vercel mirror', () => {
+test('uses the fail-closed participant artifact for canonical Vercel production', () => {
   assert.equal(vercelConfig.buildCommand, 'node scripts/build-pages.mjs --out _site');
   assert.equal(vercelConfig.outputDirectory, '_site');
+});
+
+test('applies the required production response-security policy', () => {
+  const allHeaders = vercelConfig.headers.flatMap(rule => rule.headers);
+  const byName = Object.fromEntries(allHeaders.map(header => [header.key.toLowerCase(), header.value]));
+  assert.match(byName['content-security-policy'], /frame-ancestors 'none'/);
+  assert.match(byName['content-security-policy'], /xyrmytymcipyntdtsksu\.supabase\.co/);
+  assert.equal(byName['referrer-policy'], 'strict-origin-when-cross-origin');
+  assert.equal(byName['permissions-policy'], 'camera=(), microphone=(), geolocation=()');
+  assert.equal(byName['x-content-type-options'], 'nosniff');
+  assert.equal(byName['x-frame-options'], 'DENY');
 });
 
 test('builds a static Pages artifact with Street View configured without changing source', () => {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Read-only production smoke test. It never submits participant data. */
-const siteUrl = new URL(process.argv[2] || 'https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/');
+const siteUrl = new URL(process.argv[2] || 'https://ari-benchmark.vercel.app/');
 
 async function fetchOk(url, options) {
   const response = await fetch(url, options);

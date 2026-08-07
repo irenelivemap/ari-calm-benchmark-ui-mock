@@ -1,5 +1,5 @@
 (function (root) {
-  // PRODUCTION PERSISTENCE: GitHub Pages actively writes to the Supabase project below.
+  // PRODUCTION PERSISTENCE: the hosted participant site writes to the Supabase project below.
   // The anon key is intentionally public/browser-safe and restricted by the RLS policies
   // in supabase-setup.sql. Do not blank these values merely because dataApiBase is empty;
   // the HTTP data API is an optional self-hosted alternative, not the current backend.

@@ -1,5 +1,5 @@
 -- ARI Calm Benchmark — Supabase production persistence setup.
--- ACTIVE PROJECT: xyrmytymcipyntdtsksu (GitHub Pages production backend).
+-- ACTIVE PROJECT: xyrmytymcipyntdtsksu (hosted participant production backend).
 -- The browser uses the public anon key. Never place a service_role key in this repo.
 -- Run this once in your Supabase project's SQL editor.
 -- Dashboard → SQL Editor → New query → paste → Run
