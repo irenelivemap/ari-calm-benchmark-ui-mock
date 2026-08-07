@@ -15,7 +15,7 @@ This document separates implemented technical controls from decisions owned outs
 - Participant writes use the public Supabase anon role through two write-only RPC functions. The only participant-readable team feed is the Route Explorers aggregate RPC, limited to participant name/code, stable participant ID, unique current-corpus route count, and a completion-order integer for participants who reached all 23 routes. The underlying completion timestamp remains private.
 - Supabase row-level security blocks anonymous reads.
 - Capture IDs make completed-answer writes idempotent.
-- Current Calm records are validated against the 23-pair corpus and current questionnaire in the browser. The reviewed `20260805_calm_launch_fixes.sql` migration applies equivalent baseline database validation, enforces one answer per session round, and caps each Calm session at 23 answers. `20260806_questionnaire_extensions.sql` extends the database validation for the two current branch-specific surroundings reasons, the optional better-route note, and the conditional Fast-alternative note.
+- Current Calm records are validated against the 23-pair corpus and current questionnaire in the browser. The reviewed `20260805_calm_launch_fixes.sql` migration applies equivalent baseline database validation, enforces one answer per session round, and caps each Calm session at 23 answers. `20260806_questionnaire_extensions.sql` preserves database compatibility with the original branch-specific surroundings reasons and validates the optional better-route note and conditional Fast-alternative note.
 - Research exports can be checked with `npm run audit:data -- <file>`.
 
 ## Organizational follow-up

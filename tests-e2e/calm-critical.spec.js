@@ -272,27 +272,19 @@ test('the optional better-route note is conditionally shown, resumed, saved, and
   await expect(firstRecord.getByText(fastNote, { exact: false })).toBeVisible();
 });
 
-test('branch-specific surroundings reasons are shown and saved in the correct follow-ups', async ({ page }) => {
-  await beginCalmComparison(page, 'QA surroundings selected 021');
+test('removed paired reasons stay hidden while a current neither reason is saved', async ({ page }) => {
+  await beginCalmComparison(page, 'QA current Q2 reasons 021');
   await choose(page, 'q1Choice', 'route_a');
   await page.locator('[data-form]').evaluate(form => form.requestSubmit());
-  const positiveReason = page.locator(
+  await expect(page.locator(
     'input[name="q2Reasons"][value="more_beautiful_streets_or_surroundings"]'
-  );
-  await expect(positiveReason).toBeVisible();
+  )).toHaveCount(0);
+  await expect(page.locator(
+    'input[name="q2Reasons"][value="familiar_route_or_area"]'
+  )).toHaveCount(0);
   await expect(page.locator(
     'input[name="q3Issues"][value="not_enough_beautiful_or_pleasant_surroundings"]'
   )).toHaveCount(0);
-  await choose(page, 'q2Reasons', 'more_beautiful_streets_or_surroundings');
-  await page.locator('textarea[name="q2Note"]').fill('The street environment felt more beautiful.');
-  await page.locator('[data-form]').evaluate(form => form.requestSubmit());
-  await choose(page, 'q3WorthShowing', 'somewhat');
-  await page.locator('[data-form]').evaluate(form => form.requestSubmit());
-  await page.waitForFunction(() => window.ariCalmData.snapshot().answers.length === 1);
-
-  const selectedAnswer = await page.evaluate(() => window.ariCalmData.snapshot().answers[0]);
-  expect(selectedAnswer.q2Reasons).toEqual(['more_beautiful_streets_or_surroundings']);
-  expect(selectedAnswer.q2Note).toBe('The street environment felt more beautiful.');
 
   await page.evaluate(() => localStorage.clear());
   await page.goto('/?game=calm&fresh=1&qa=surroundings-neither');
@@ -304,24 +296,30 @@ test('branch-specific surroundings reasons are shown and saved in the correct fo
   await choose(page, 'q1Choice', 'none_work_well');
   await page.locator('[data-form]').evaluate(form => form.requestSubmit());
   await expect(page.locator('[data-q2]')).toBeHidden();
-  const rejectionReason = page.locator(
+  await expect(page.locator(
     'input[name="q3Issues"][value="not_enough_beautiful_or_pleasant_surroundings"]'
+  )).toHaveCount(0);
+  await expect(page.locator(
+    'input[name="q3Issues"][value="prefer_another_known_route"]'
+  )).toHaveCount(0);
+  const rejectionReason = page.locator(
+    'input[name="q3Issues"][value="not_enough_route_near_water"]'
   );
   await expect(rejectionReason).toBeVisible();
-  await choose(page, 'q3Issues', 'not_enough_beautiful_or_pleasant_surroundings');
-  await page.locator('textarea[name="q3Note"]').fill('Neither route had pleasant surroundings.');
+  await choose(page, 'q3Issues', 'not_enough_route_near_water');
+  await page.locator('textarea[name="q3Note"]').fill('Neither route spent enough time near water.');
   await page.locator('[data-form]').evaluate(form => form.requestSubmit());
   await page.waitForFunction(() => window.ariCalmData.snapshot().answers.length === 1);
 
   const rejectedAnswer = await page.evaluate(() => window.ariCalmData.snapshot().answers[0]);
   expect(rejectedAnswer.q2Reasons).toEqual([]);
   expect(rejectedAnswer.q2Note).toBe('');
-  expect(rejectedAnswer.q3Issues).toEqual(['not_enough_beautiful_or_pleasant_surroundings']);
-  expect(rejectedAnswer.q3Note).toBe('Neither route had pleasant surroundings.');
+  expect(rejectedAnswer.q3Issues).toEqual(['not_enough_route_near_water']);
+  expect(rejectedAnswer.q3Note).toBe('Neither route spent enough time near water.');
 
   await page.goto('/?game=calm&view=results');
   const shapedChoices = page.getByRole('heading', { name: 'What influenced you' }).locator('..');
-  await expect(shapedChoices.getByText('Not enough beautiful or pleasant surroundings', { exact: true })).toBeVisible();
+  await expect(shapedChoices.getByText('Not enough of the route is near water', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Reasons for choosing neither' })).toHaveCount(0);
 });
 

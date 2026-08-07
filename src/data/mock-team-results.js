@@ -64,33 +64,32 @@
     calm_quiet: [
       'quieter_or_less_busy_streets',
       'less_need_to_watch_traffic',
-      'more_beautiful_streets_or_surroundings',
       'easier_to_follow',
       'takes_less_time',
-      'familiar_route_or_area',
+      'other',
       'quieter_or_less_busy_streets',
       'less_need_to_watch_traffic',
+      'easier_to_follow',
       'not_sure'
     ],
     calm_nature: [
       'more_trees_or_green_space',
       'more_near_water',
-      'more_beautiful_streets_or_surroundings',
       'quieter_or_less_busy_streets',
       'takes_less_time',
-      'familiar_route_or_area',
+      'easier_to_follow',
       'more_trees_or_green_space',
       'more_near_water',
+      'less_need_to_watch_traffic',
       'not_sure'
     ],
     both_work_well: [
       'quieter_or_less_busy_streets',
       'more_trees_or_green_space',
-      'more_beautiful_streets_or_surroundings',
       'easier_to_follow',
       'more_near_water',
       'takes_less_time',
-      'familiar_route_or_area',
+      'other',
       'less_need_to_watch_traffic'
     ]
   };
@@ -99,11 +98,9 @@
     'streets_too_busy_or_noisy',
     'not_enough_trees_or_green_space',
     'not_enough_route_near_water',
-    'not_enough_beautiful_or_pleasant_surroundings',
     'too_much_attention_traffic',
     'takes_too_long',
-    'hard_to_follow',
-    'prefer_another_known_route'
+    'hard_to_follow'
   ];
 
   const Q2_NOTES = [

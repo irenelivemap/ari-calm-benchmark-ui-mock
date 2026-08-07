@@ -39,11 +39,9 @@ Later comparisons place the same guidance under **About these choices**.
 - Quieter or less busy streets
 - More trees or green space
 - More of the route is near water
-- More beautiful streets or surroundings
 - Less need to watch for traffic
 - Takes less time
 - Easier to follow
-- I know this route or area better
 - Other
 - I'm not sure
 
@@ -90,11 +88,9 @@ Hint: **Select all that apply to one or both routes.**
 - Streets are too busy or noisy
 - Not enough trees or green space
 - Not enough of the route is near water
-- Not enough beautiful or pleasant surroundings
 - Too much attention needed around traffic
 - Takes too long
 - Hard to follow
-- I know another route I would prefer
 - Other
 - I'm not sure
 

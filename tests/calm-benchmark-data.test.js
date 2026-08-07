@@ -611,42 +611,30 @@ test('accepts optional Q2 details after any selected reason', () => {
   assert.equal(result.record.q2Note, 'The time difference mattered today.');
 });
 
-test('accepts the selected-route surroundings reason only in Q2', () => {
-  ['route_a', 'route_b', 'both_work_well'].forEach(q1Choice => {
+test('rejects Q2 reasons removed from the current questionnaire', () => {
+  ['more_beautiful_streets_or_surroundings', 'familiar_route_or_area'].forEach(reason => {
     const result = validateAnswerRecord(validAnswer({
-      q1Choice,
-      q1Choices: [q1Choice],
-      q2Reasons: ['more_beautiful_streets_or_surroundings'],
-      q2Note: 'The street felt more pleasant.',
-      q3WorthShowing: 'somewhat',
-      q3Issues: []
+      q2Reasons: [reason],
+      q3WorthShowing: 'somewhat'
     }));
-    assert.equal(result.valid, true, result.errors.join('; '));
+    assert.equal(result.valid, false);
+    assert.match(result.errors.join(' '), /q2Reasons/);
   });
 });
 
-test('accepts the insufficient-surroundings reason only in the neither branch', () => {
-  const accepted = validateAnswerRecord(validAnswer({
-    q1Choice: 'none_work_well',
-    q1Choices: ['none_work_well'],
-    q2Reasons: [],
-    q2Note: '',
-    q3WorthShowing: null,
-    q3Issues: ['not_enough_beautiful_or_pleasant_surroundings'],
-    q3Note: 'Neither route felt pleasant enough.',
-    q3NoteKind: 'supporting_detail'
-  }));
-  assert.equal(accepted.valid, true, accepted.errors.join('; '));
-
-  const rejected = validateAnswerRecord(validAnswer({
-    q1Choice: 'route_a',
-    q1Choices: ['route_a'],
-    q2Reasons: ['not_enough_beautiful_or_pleasant_surroundings'],
-    q3WorthShowing: 'somewhat',
-    q3Issues: []
-  }));
-  assert.equal(rejected.valid, false);
-  assert.match(rejected.errors.join(' '), /q2Reasons/);
+test('rejects reasons removed from the Both work poorly questionnaire', () => {
+  ['not_enough_beautiful_or_pleasant_surroundings', 'prefer_another_known_route'].forEach(reason => {
+    const result = validateAnswerRecord(validAnswer({
+      q1Choice: 'none_work_well',
+      q1Choices: ['none_work_well'],
+      q2Reasons: [],
+      q2Note: '',
+      q3WorthShowing: null,
+      q3Issues: [reason]
+    }));
+    assert.equal(result.valid, false);
+    assert.match(result.errors.join(' '), /q3Issues/);
+  });
 });
 
 test('rejects Q2 details without a selected reason', () => {
@@ -675,8 +663,7 @@ test('accepts the dedicated Both work poorly rejection reasons', () => {
       'not_enough_route_near_water',
       'too_much_attention_traffic',
       'takes_too_long',
-      'hard_to_follow',
-      'prefer_another_known_route'
+      'hard_to_follow'
     ]
   }));
 

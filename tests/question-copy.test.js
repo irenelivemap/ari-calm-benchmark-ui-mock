@@ -42,17 +42,24 @@ test('documents every current conditional Calm question used by participant resu
     .forEach(copy => assert.equal(questionnaire.includes(copy), true, copy));
 });
 
-test('keeps the branch-specific surroundings reasons aligned', () => {
+test('keeps paired reasons aligned and removed reasons out of both questionnaire branches', () => {
   const html = read('index.html');
   const questionnaire = read('docs/QUESTIONNAIRE.md');
   const results = read('src/results/calm-results.js');
-  [
-    'More beautiful streets or surroundings',
-    'Not enough beautiful or pleasant surroundings'
-  ].forEach(copy => {
+  ['More of the route is near water', 'Not enough of the route is near water'].forEach(copy => {
     assert.equal(html.includes(copy), true, copy);
     assert.equal(questionnaire.includes(copy), true, copy);
     assert.equal(results.includes(copy), true, copy);
+  });
+  [
+    'More beautiful streets or surroundings',
+    'I know this route or area better',
+    'Not enough beautiful or pleasant surroundings',
+    'I know another route I would prefer'
+  ].forEach(copy => {
+    assert.equal(html.includes(copy), false, copy);
+    assert.equal(questionnaire.includes(copy), false, copy);
+    assert.equal(results.includes(copy), false, copy);
   });
 });
 

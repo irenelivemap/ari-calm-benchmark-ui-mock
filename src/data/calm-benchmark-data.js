@@ -30,11 +30,9 @@
     'quieter_or_less_busy_streets',
     'more_trees_or_green_space',
     'more_near_water',
-    'more_beautiful_streets_or_surroundings',
     'less_need_to_watch_traffic',
     'takes_less_time',
     'easier_to_follow',
-    'familiar_route_or_area',
     'other',
     'not_sure'
   ]);
@@ -48,11 +46,9 @@
     'streets_too_busy_or_noisy',
     'not_enough_trees_or_green_space',
     'not_enough_route_near_water',
-    'not_enough_beautiful_or_pleasant_surroundings',
     'too_much_attention_traffic',
     'takes_too_long',
     'hard_to_follow',
-    'prefer_another_known_route',
     'other',
     'longer_time',
     'longer_distance',

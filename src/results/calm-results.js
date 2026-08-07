@@ -42,11 +42,9 @@
     'streets_too_busy_or_noisy',
     'not_enough_trees_or_green_space',
     'not_enough_route_near_water',
-    'not_enough_beautiful_or_pleasant_surroundings',
     'too_much_attention_traffic',
     'takes_too_long',
     'hard_to_follow',
-    'prefer_another_known_route',
     'not_sure',
     'other'
   ];
@@ -65,11 +63,9 @@
     'quieter_or_less_busy_streets',
     'more_trees_or_green_space',
     'more_near_water',
-    'more_beautiful_streets_or_surroundings',
     'less_need_to_watch_traffic',
     'takes_less_time',
     'easier_to_follow',
-    'familiar_route_or_area',
     'other',
     'not_sure'
   ];
@@ -78,11 +74,9 @@
     quieter_or_less_busy_streets: 'Quieter or less busy streets',
     more_trees_or_green_space: 'More trees or green space',
     more_near_water: 'More of the route is near water',
-    more_beautiful_streets_or_surroundings: 'More beautiful streets or surroundings',
     less_need_to_watch_traffic: 'Less need to watch for traffic',
     takes_less_time: 'Takes less time',
     easier_to_follow: 'Easier to follow',
-    familiar_route_or_area: 'I know this route or area better',
     other: 'Other',
     not_sure: "I'm not sure"
   };
@@ -97,11 +91,9 @@
     streets_too_busy_or_noisy: 'Streets are too busy or noisy',
     not_enough_trees_or_green_space: 'Not enough trees or green space',
     not_enough_route_near_water: 'Not enough of the route is near water',
-    not_enough_beautiful_or_pleasant_surroundings: 'Not enough beautiful or pleasant surroundings',
     too_much_attention_traffic: 'Too much attention needed around traffic',
     takes_too_long: 'Takes too long',
     hard_to_follow: 'Hard to follow',
-    prefer_another_known_route: 'I know another route I would prefer',
     not_sure: "I'm not sure",
     other: 'Other'
   };

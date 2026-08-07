@@ -46,14 +46,14 @@ test('decodes selected route labels instead of treating A, B, and C as outcomes'
 
 test('preserves the selected-route reasons for the results layer', () => {
   const row = Results.normalizeRow(answer({
-    q2Reasons: ['more_beautiful_streets_or_surroundings'],
-    q2Note: 'More pleasant surroundings'
+    q2Reasons: ['more_near_water'],
+    q2Note: 'The route stays close to the river.'
   }));
-  assert.deepEqual(row.q2Reasons, ['more_beautiful_streets_or_surroundings']);
-  assert.equal(row.q2Note, 'More pleasant surroundings');
+  assert.deepEqual(row.q2Reasons, ['more_near_water']);
+  assert.equal(row.q2Note, 'The route stays close to the river.');
   assert.equal(
-    Results.CHOICE_REASON_LABELS.more_beautiful_streets_or_surroundings,
-    'More beautiful streets or surroundings'
+    Results.CHOICE_REASON_LABELS.more_near_water,
+    'More of the route is near water'
   );
 });
 
@@ -144,17 +144,17 @@ test('counts the dedicated Both work poorly reasons', () => {
       q3Issues: [
         'streets_too_busy_or_noisy',
         'takes_too_long',
-        'not_enough_beautiful_or_pleasant_surroundings'
+        'not_enough_route_near_water'
       ]
     })
   ]);
 
   assert.equal(result.reasonCounts.streets_too_busy_or_noisy, 1);
   assert.equal(result.reasonCounts.takes_too_long, 1);
-  assert.equal(result.reasonCounts.not_enough_beautiful_or_pleasant_surroundings, 1);
+  assert.equal(result.reasonCounts.not_enough_route_near_water, 1);
   assert.equal(
-    Results.REASON_LABELS.not_enough_beautiful_or_pleasant_surroundings,
-    'Not enough beautiful or pleasant surroundings'
+    Results.REASON_LABELS.not_enough_route_near_water,
+    'Not enough of the route is near water'
   );
 });
 
