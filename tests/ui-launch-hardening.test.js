@@ -27,13 +27,18 @@ test('exposes accessible page landmarks and launch form feedback', () => {
   assert.match(html, /<main id="calm-benchmark-root"/);
   assert.doesNotMatch(html, /participant-consent|calm-consent|calm-privacy-note|I agree to share my name/);
   assert.doesNotMatch(app, /consentVersion|consentedAt|participantConsent/);
-  assert.match(html, /<div>About 10 minutes<\/div>/);
+  assert.match(html, /<div><span>About 10 minutes<\/span><\/div>/);
   assert.match(html, /Start with 10 <span>comparisons\.<\/span>/);
-  assert.match(html, /More time\? Complete all 23 to earn every medal and climb the leaderboard\./);
+  assert.match(html, /More time\? Complete all 23 to unlock every medal\./);
   assert.doesNotMatch(html, /Every extra comparison helps\./);
   assert.doesNotMatch(html, /Check your progress anytime in Results\./);
   assert.doesNotMatch(html, /About 6 to 8 min/);
   assert.doesNotMatch(html, /<h2>23 <span>comparisons\.<\/span><\/h2>/);
+});
+
+test('keeps the Team challenge bullet in one session-card grid cell', () => {
+  assert.match(html, /<div><span><strong>Team challenge:<\/strong> Compare routes, earn medals and see where you rank on the leaderboard\.<\/span><\/div>/);
+  assert.doesNotMatch(html, /<div><strong>Team challenge:<\/strong>/);
 });
 
 test('keeps Results unavailable until the first comparison is saved', () => {
@@ -48,6 +53,23 @@ test('keeps Results unavailable until the first comparison is saved', () => {
   assert.match(css, /\.calm-tabs button\[aria-disabled="true"\]:hover \.calm-tab-tooltip/);
   assert.match(css, /\.calm-tabs button\[aria-disabled="true"\]:focus-visible \.calm-tab-tooltip/);
   assert.match(css, /\.calm-tabs button:not\(\[aria-disabled="true"\]\) \.calm-tab-lock\s*\{[^}]*display:\s*none;/s);
+});
+
+test('guides returning participants to newly available Results without redirecting them', () => {
+  assert.doesNotMatch(html, /data-results-ready-badge/);
+  assert.match(html, /resultsTab\.setAttribute\('aria-label', 'Results, ready'\)/);
+  assert.match(html, /data-results-ready-cue role="status" aria-live="polite" aria-atomic="true" hidden>Your results are ready\.<\/span>/);
+  assert.match(html, /function showResultsGuidance\(\)/);
+  assert.match(html, /resultsGuidanceTimer = window\.setTimeout\(\(\) => hideResultsReadyCue\(\), 5000\)/);
+  assert.match(html, /if \(view === 'results'\) clearResultsGuidance\(\{ acknowledge: true \}\)/);
+  assert.match(html, /const shouldGuideToResults = view === 'testing' && resultsAreAvailable\(\)/);
+  assert.match(html, /showPage\(view\);\s*if \(shouldGuideToResults\) showResultsGuidance\(\);/s);
+  assert.match(css, /\.calm-results-ready-cue\s*\{[^}]*transform:\s*translateY\(8px\);[^}]*opacity 180ms ease,[^}]*transform 180ms var\(--motion-settle\)/s);
+  assert.match(css, /\.calm-results-ready-cue\.is-visible\s*\{[^}]*opacity:\s*1;[^}]*transform:\s*translateY\(0\);/s);
+  assert.match(css, /\.calm-tabs\.is-results-ready\s*\{[^}]*background:\s*rgba\(246, 242, 97, 0\.58\);/s);
+  assert.match(css, /\.calm-tabs\.is-results-ready button:not\(\[aria-current="page"\]\)\s*\{[^}]*color:\s*var\(--ari-ink\);/s);
+  assert.match(html, /resultsTabs\.classList\.remove\('is-results-ready'\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.calm-results-ready-cue,[\s\S]*?transform:\s*none;/);
 });
 
 test('keeps participant records explorable and easy to interpret', () => {
@@ -270,16 +292,35 @@ test('keeps the question panel state and size stable through Street View', () =>
   assert.match(design, /Opening Street View preserves the question card's current expanded or collapsed state and its normal dimensions/);
 });
 
-test('celebrates comparison ten without inviting the participant to stop', () => {
+test('celebrates comparison ten, confirms saving, and offers a clear next step', () => {
   assert.match(app, /data-milestone-confetti/);
   assert.match(app, /milestone\.at === 10 && canContinueAfterCurrentRound\(\)/);
-  assert.match(app, /MEDAL_UNLOCK_VISIBLE_MS = 3600/);
+  assert.match(app, /MEDAL_UNLOCK_VISIBLE_MS = 4500/);
+  assert.match(css, /\.ari-hud-unlock-copy\s*\{[^}]*opacity:\s*0;[^}]*transform:\s*translateY\(8px\);[^}]*opacity 180ms ease,[^}]*transform 180ms var\(--motion-settle\);/s);
+  assert.match(css, /\.ari-hud-medals\.is-unlocking \.ari-hud-unlock-copy\s*\{[^}]*opacity:\s*1;[^}]*transform:\s*translateY\(0\);/s);
+  assert.match(app, /10 comparisons saved\./);
+  assert.match(app, /You’ve completed the minimum\. Your answers are safely saved\./);
+  assert.match(app, /Keep comparing/);
+  assert.match(app, /Finish and view results/);
+  assert.match(app, /state\.completedRounds === 10/);
+  assert.match(app, /els\.endSession\.addEventListener\('click', async \(\) => \{\s*setGoalCheckpointVisible\(false, \{ focus: false \}\);\s*if \(onExit\) onExit\(\{ view: 'results' \}\);/s);
   assert.match(app, /All comparisons complete\./);
   assert.match(app, /View results →/);
   assert.doesNotMatch(app, /completedRounds % 10/);
-  assert.doesNotMatch(app, /End session|Keep comparing|finish now or keep comparing/);
+  assert.doesNotMatch(app, /End session|finish now or keep comparing/);
   assert.match(css, /@keyframes ari-milestone-confetti-burst/);
+  assert.match(css, /ari-milestone-confetti-burst 1800ms var\(--motion-settle\)/);
+  assert.match(app, /--duration', `\$\{3000 \+ \(index % 8\) \* 120\}ms`/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.ari-milestone-confetti\s*\{\s*display:\s*none;/);
+});
+
+test('explains saved progress before leaving through the exit control', () => {
+  assert.match(app, /Leave the challenge\?/);
+  assert.match(app, /Your completed comparisons are saved\. Your current unfinished comparison will not count in Results\./);
+  assert.match(app, /data-action="cancel-exit"/);
+  assert.match(app, /data-action="confirm-exit"/);
+  assert.match(app, /setExitConfirmationVisible\(true\)/);
+  assert.match(app, /if \(!state\.goalCheckpointPending\) \{\s*await Promise\.resolve\(progressSink\(readProgress\(\)\)\)\.catch\(\(\) => \{\}\);\s*\}/s);
 });
 
 test('shows the same four-medal progress shelf before the first comparison', () => {
@@ -295,7 +336,8 @@ test('shows the same four-medal progress shelf before the first comparison', () 
 test('celebrates the final comparison across the full viewport', () => {
   assert.match(app, /function showFinalComparisonConfetti\(\)/);
   assert.match(app, /const particleCount = window\.innerWidth < 700 \? 58 : 92/);
-  assert.match(app, /setGoalCheckpointVisible\(true\);\s*showFinalComparisonConfetti\(\);/);
+  assert.match(app, /setGoalCheckpointVisible\(true, \{ mode: state\.checkpointMode \}\);/);
+  assert.match(app, /if \(!canContinue\) showFinalComparisonConfetti\(\);/);
   assert.match(app, /classList\.add\('is-final'\)/);
   assert.match(css, /\.ari-milestone-confetti\.is-final \.ari-milestone-confetti__piece/);
   assert.match(css, /@keyframes ari-final-confetti-fall/);

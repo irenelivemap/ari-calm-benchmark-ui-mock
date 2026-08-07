@@ -12,7 +12,7 @@ Testers see only Route A and Route B. The hidden provider assignment is stored w
 
 ## Live Preview
 
-- [Calm Route Comparison — participant site](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/)
+- [Calm Route Comparison — participant site](https://ari-calm-benchmark.vercel.app/)
 - [Fast vs Google Fast — compatibility entry](https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/?game=google)
 
 ## Local Setup
@@ -114,7 +114,7 @@ To exercise the full loop locally, start the data API with `ARI_DATA_ADMIN_TOKEN
 
 ## Production Deployment
 
-The active participant deployment is GitHub Pages at `https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/`. The prepared container and `game.livemap.sh` remain optional future infrastructure; see [`deploy/README.md`](deploy/README.md).
+The active participant deployment is Vercel at `https://ari-calm-benchmark.vercel.app/`. GitHub Pages and the prepared container remain optional fallback infrastructure; see [`deploy/README.md`](deploy/README.md).
 
 The linked Vercel project is a deployment mirror. [`vercel.json`](vercel.json) runs the same fail-closed participant build as GitHub Pages, so both `ARI_GOOGLE_MAPS_KEY` and `ARI_MAPTILER_KEY` must exist in the Vercel Production environment before a production deployment can succeed.
 

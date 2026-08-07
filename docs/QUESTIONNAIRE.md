@@ -27,7 +27,7 @@ The response is stored with that comparison. Clearing the checkbox also clears t
 The first comparison shows this guidance below Q1:
 
 - **Each route shows its estimated time, then the extra time versus Fast for the same trip.**
-- **If you prefer one route, choose Route A or B, even if both work well.**
+- **If you prefer one route, choose Route A or B.**
 - **Choose “Both work well” only if you really have no preference, and “Both work poorly” if neither route feels calm enough.**
 
 Later comparisons place the same guidance under **About these choices**.

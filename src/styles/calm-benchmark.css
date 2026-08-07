@@ -578,6 +578,11 @@ html.is-challenge-dialog-open {
   padding: 4px;
   border-radius: 999px;
   background: var(--ari-grey-02);
+  transition: background-color 180ms var(--motion-settle);
+}
+
+.calm-tabs.is-results-ready {
+  background: rgba(246, 242, 97, 0.58);
 }
 
 .calm-intro-header-context,
@@ -592,6 +597,7 @@ html.is-challenge-dialog-open {
 }
 
 .calm-intro-header-actions {
+  position: relative;
   gap: 10px;
 }
 
@@ -668,6 +674,7 @@ html.is-challenge-dialog-open {
   font-size: 0.92em;
   font-weight: 600;
   line-height: normal;
+  transition: background-color 180ms var(--motion-settle), color 180ms ease;
 }
 
 .calm-tabs button:focus-visible {
@@ -679,6 +686,10 @@ html.is-challenge-dialog-open {
   background: var(--ari-off-white);
   color: var(--ari-ink);
   box-shadow: none;
+}
+
+.calm-tabs.is-results-ready button:not([aria-current="page"]) {
+  color: var(--ari-ink);
 }
 
 .calm-tabs button[aria-disabled="true"] {
@@ -723,6 +734,38 @@ html.is-challenge-dialog-open {
   transition: opacity 140ms ease, transform 140ms var(--motion-settle), visibility 140ms;
 }
 
+.calm-results-ready-cue {
+  position: absolute;
+  z-index: 21;
+  top: calc(100% + 10px);
+  right: 4px;
+  width: max-content;
+  max-width: min(190px, calc(100vw - 36px));
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--ari-plum);
+  color: var(--ari-off-white);
+  font: 600 var(--font-size-micro)/16px var(--ari-font);
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 6px 18px rgba(33, 26, 42, 0.16);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms var(--motion-settle),
+    visibility 0s linear 180ms;
+}
+
+.calm-results-ready-cue.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
 .calm-tabs button[aria-disabled="true"]:hover .calm-tab-tooltip,
 .calm-tabs button[aria-disabled="true"]:focus-visible .calm-tab-tooltip {
   opacity: 1;
@@ -734,6 +777,16 @@ html.is-challenge-dialog-open {
   .calm-tab-tooltip {
     transform: none;
     transition: none;
+  }
+
+  .calm-results-ready-cue,
+  .calm-results-ready-cue.is-visible {
+    transform: none;
+    transition: opacity 180ms ease, visibility 0s linear 180ms;
+  }
+
+  .calm-results-ready-cue.is-visible {
+    transition-delay: 0s;
   }
 }
 
@@ -2158,7 +2211,7 @@ html.is-challenge-dialog-open {
 }
 
 .ari-milestone-confetti.is-active .ari-milestone-confetti__piece {
-  animation: ari-milestone-confetti-burst 1350ms var(--motion-settle) var(--delay) both;
+  animation: ari-milestone-confetti-burst 1800ms var(--motion-settle) var(--delay) both;
 }
 
 .ari-milestone-confetti.is-final .ari-milestone-confetti__piece {
@@ -2219,12 +2272,14 @@ html.is-challenge-dialog-open {
   overflow: hidden;
   margin-left: 0;
   opacity: 0;
+  transform: translateY(8px);
   white-space: normal;
   transition:
     width 320ms var(--motion-settle),
     max-width 320ms var(--motion-settle),
     margin-left 320ms var(--motion-settle),
-    opacity 180ms ease 70ms;
+    opacity 180ms ease,
+    transform 180ms var(--motion-settle);
 }
 
 .ari-hud-medals.is-unlocking .ari-hud-unlock-copy {
@@ -2232,6 +2287,7 @@ html.is-challenge-dialog-open {
   max-width: 104px;
   margin-left: 8px;
   opacity: 1;
+  transform: translateY(0);
 }
 
 .ari-hud-unlock-copy small {
@@ -2390,6 +2446,11 @@ html.is-challenge-dialog-open {
   .ari-hud-dial__flip,
   .ari-hud-dial__segment::before {
     transition: none;
+  }
+
+  .ari-hud-unlock-copy,
+  .ari-hud-medals.is-unlocking .ari-hud-unlock-copy {
+    transform: none;
   }
 }
 

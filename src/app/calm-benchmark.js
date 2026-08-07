@@ -1,7 +1,7 @@
 (function () {
   const DEFAULT_TOTAL_ROUNDS = 10;
   const HUD_SEGMENT_COUNT = 5;
-  const MEDAL_UNLOCK_VISIBLE_MS = 3600;
+  const MEDAL_UNLOCK_VISIBLE_MS = 4500;
   const ROUTE_SLOTS = [
     { slot: 'A', key: 'routeA', value: 'route_a', className: 'ari-choice--route-a' },
     { slot: 'B', key: 'routeB', value: 'route_b', className: 'ari-choice--route-b' },
@@ -461,11 +461,20 @@
                 <button class="ari-btn ari-btn--primary" data-submit type="submit" disabled>Next question →</button>
               </div>
             </form>
-            <section class="ari-goal-checkpoint" data-goal-checkpoint role="dialog" aria-labelledby="ari-goal-checkpoint-title" hidden>
-              <h2 id="ari-goal-checkpoint-title">All comparisons complete.</h2>
-              <span>Your answers are saved and your results are ready.</span>
+            <section class="ari-goal-checkpoint" data-goal-checkpoint role="dialog" aria-labelledby="ari-goal-checkpoint-title" aria-describedby="ari-goal-checkpoint-copy" hidden>
+              <h2 id="ari-goal-checkpoint-title" data-goal-checkpoint-title>All comparisons complete.</h2>
+              <span id="ari-goal-checkpoint-copy" data-goal-checkpoint-copy>Your answers are saved and your results are ready.</span>
               <div class="ari-goal-checkpoint__actions">
+                <button class="ari-btn ari-btn--primary" data-action="continue-after-goal" type="button" hidden>Keep comparing</button>
                 <button class="ari-btn ari-btn--primary" data-action="end-session" type="button">View results →</button>
+              </div>
+            </section>
+            <section class="ari-goal-checkpoint ari-exit-confirmation" data-exit-confirmation role="dialog" aria-modal="true" aria-labelledby="ari-exit-confirmation-title" aria-describedby="ari-exit-confirmation-copy" hidden>
+              <h2 id="ari-exit-confirmation-title">Leave the challenge?</h2>
+              <span id="ari-exit-confirmation-copy">Your completed comparisons are saved. Your current unfinished comparison will not count in Results.</span>
+              <div class="ari-goal-checkpoint__actions">
+                <button class="ari-btn ari-btn--primary" data-action="cancel-exit" type="button">Keep comparing</button>
+                <button class="ari-btn ari-btn--secondary" data-action="confirm-exit" type="button">Exit to Home</button>
               </div>
             </section>
           </aside>
@@ -571,6 +580,10 @@
       onboardingStep: -1,
       completedRounds: options.initialCompletedRounds || 0,
       goalCheckpointPending: !!options.initialGoalCheckpointPending,
+      checkpointMode: options.initialGoalCheckpointPending
+        ? (options.initialCompletedRounds >= initialTotalRounds ? 'final' : 'minimum')
+        : null,
+      exitConfirmationOpen: false,
       roundTransitioning: false,
       loadingRound: false,
       loadError: null,
@@ -666,7 +679,14 @@
       closeStreetView: root.querySelector('[data-action="close-street-view"]'),
       milestoneConfetti: root.querySelector('[data-milestone-confetti]'),
       goalCheckpoint: root.querySelector('[data-goal-checkpoint]'),
-      endSession: root.querySelector('[data-action="end-session"]')
+      goalCheckpointTitle: root.querySelector('[data-goal-checkpoint-title]'),
+      goalCheckpointCopy: root.querySelector('[data-goal-checkpoint-copy]'),
+      continueAfterGoal: root.querySelector('[data-action="continue-after-goal"]'),
+      endSession: root.querySelector('[data-action="end-session"]'),
+      exitConfirmation: root.querySelector('[data-exit-confirmation]'),
+      exitConfirmationCopy: root.querySelector('#ari-exit-confirmation-copy'),
+      cancelExit: root.querySelector('[data-action="cancel-exit"]'),
+      confirmExit: root.querySelector('[data-action="confirm-exit"]')
     };
 
     let medalUnlockTimer = null;
@@ -748,7 +768,7 @@
     function setRoundBusy(busy) {
       state.loadingRound = busy;
       els.questionCard.toggleAttribute('aria-busy', busy);
-      els.form.toggleAttribute('inert', busy || state.panelCollapsed || state.goalCheckpointPending);
+      els.form.toggleAttribute('inert', busy || state.panelCollapsed || state.goalCheckpointPending || state.exitConfirmationOpen);
       if (busy) {
         showSystemStatus('Loading this comparison…', { kind: 'loading' });
       }
@@ -1931,7 +1951,7 @@
         form.style.transition = '';
       }
 
-      els.form.toggleAttribute('inert', collapsed || state.loadingRound || state.goalCheckpointPending);
+      els.form.toggleAttribute('inert', collapsed || state.loadingRound || state.goalCheckpointPending || state.exitConfirmationOpen);
       els.form.setAttribute('aria-hidden', String(collapsed));
       els.panelToggle.setAttribute('aria-expanded', String(!collapsed));
       els.panelToggle.setAttribute('aria-label', collapsed ? 'Expand question panel' : 'Minimize question panel');
@@ -1960,24 +1980,70 @@
       }
     }
 
-    function setGoalCheckpointVisible(visible, { focus = true } = {}) {
-      const showCompletion = !!visible && !canContinueAfterCurrentRound();
-      state.goalCheckpointPending = showCompletion;
-      els.goalCheckpoint.hidden = !showCompletion;
-      els.panelQuestion.parentElement.hidden = showCompletion;
-      els.form.hidden = showCompletion;
-      els.panelToggle.disabled = showCompletion;
-      els.questionCard.classList.toggle('is-goal-checkpoint', showCompletion);
-      if (showCompletion) {
+    function setGoalCheckpointVisible(visible, { focus = true, mode = state.checkpointMode || 'final' } = {}) {
+      const showCheckpoint = !!visible;
+      const finalCheckpoint = mode === 'final';
+      state.goalCheckpointPending = showCheckpoint;
+      state.checkpointMode = showCheckpoint ? mode : null;
+      els.goalCheckpoint.hidden = !showCheckpoint;
+      els.goalCheckpointTitle.textContent = finalCheckpoint
+        ? 'All comparisons complete.'
+        : '10 comparisons saved.';
+      els.goalCheckpointCopy.textContent = finalCheckpoint
+        ? 'Your answers are saved and your results are ready.'
+        : 'You’ve completed the minimum. Your answers are safely saved.';
+      els.continueAfterGoal.hidden = finalCheckpoint;
+      els.continueAfterGoal.classList.toggle('ari-btn--primary', !finalCheckpoint);
+      els.continueAfterGoal.classList.toggle('ari-btn--secondary', finalCheckpoint);
+      els.endSession.textContent = finalCheckpoint ? 'View results →' : 'Finish and view results';
+      els.endSession.classList.toggle('ari-btn--primary', finalCheckpoint);
+      els.endSession.classList.toggle('ari-btn--secondary', !finalCheckpoint);
+      els.panelQuestion.parentElement.hidden = showCheckpoint;
+      els.form.hidden = showCheckpoint;
+      els.panelToggle.disabled = showCheckpoint;
+      els.questionCard.classList.toggle('is-goal-checkpoint', showCheckpoint);
+      if (showCheckpoint) {
         updatePanelState(false);
         els.form.inert = true;
-        if (focus) requestAnimationFrame(() => els.endSession.focus({ preventScroll: true }));
+        if (focus) requestAnimationFrame(() => {
+          (finalCheckpoint ? els.endSession : els.continueAfterGoal).focus({ preventScroll: true });
+        });
       } else {
         els.form.hidden = false;
         els.panelQuestion.parentElement.hidden = false;
-        els.form.inert = state.panelCollapsed || state.loadingRound;
+        els.form.inert = state.panelCollapsed || state.loadingRound || state.exitConfirmationOpen;
         updateQuestionFlow();
       }
+    }
+
+    function setExitConfirmationVisible(visible, { focus = true } = {}) {
+      const showConfirmation = !!visible;
+      state.exitConfirmationOpen = showConfirmation;
+      els.exitConfirmation.hidden = !showConfirmation;
+      if (showConfirmation) {
+        els.exitConfirmationCopy.textContent = state.goalCheckpointPending
+          ? 'Your completed comparisons are saved.'
+          : 'Your completed comparisons are saved. Your current unfinished comparison will not count in Results.';
+        els.goalCheckpoint.hidden = true;
+        els.panelQuestion.parentElement.hidden = true;
+        els.form.hidden = true;
+        els.form.inert = true;
+        els.panelToggle.disabled = true;
+        els.questionCard.classList.add('is-goal-checkpoint');
+        if (focus) requestAnimationFrame(() => els.cancelExit.focus({ preventScroll: true }));
+        return;
+      }
+      if (state.goalCheckpointPending) {
+        setGoalCheckpointVisible(true, { focus, mode: state.checkpointMode || 'final' });
+        return;
+      }
+      els.panelQuestion.parentElement.hidden = false;
+      els.form.hidden = false;
+      els.form.inert = state.panelCollapsed || state.loadingRound;
+      els.panelToggle.disabled = false;
+      els.questionCard.classList.remove('is-goal-checkpoint');
+      updateQuestionFlow();
+      if (focus) requestAnimationFrame(() => els.exit.focus({ preventScroll: true }));
     }
 
     function showTenComparisonConfetti() {
@@ -2016,7 +2082,7 @@
       milestoneConfettiTimer = window.setTimeout(() => {
         els.milestoneConfetti.classList.remove('is-active');
         els.milestoneConfetti.replaceChildren();
-      }, 1600);
+      }, 2100);
     }
 
     function showFinalComparisonConfetti() {
@@ -2039,7 +2105,7 @@
         piece.style.setProperty('--final-fall-y', `calc(100vh + ${90 + (index % 6) * 22}px)`);
         piece.style.setProperty('--spin', `${index % 2 ? spin : -spin}deg`);
         piece.style.setProperty('--delay', `${(index % 12) * 38}ms`);
-        piece.style.setProperty('--duration', `${2350 + (index % 8) * 95}ms`);
+        piece.style.setProperty('--duration', `${3000 + (index % 8) * 120}ms`);
         piece.style.setProperty('--piece-color', colors[index % colors.length]);
         fragment.appendChild(piece);
       }
@@ -2051,7 +2117,7 @@
       milestoneConfettiTimer = window.setTimeout(() => {
         els.milestoneConfetti.classList.remove('is-final');
         els.milestoneConfetti.replaceChildren();
-      }, 3600);
+      }, 4550);
     }
 
     function showMedalUnlock(milestone) {
@@ -2346,7 +2412,7 @@
       state.mapDisplayMode = null;
       drawRoutes(state.pair, { hidden: deferRouteReveal });
       updateQuestionFlow();
-      setGoalCheckpointVisible(state.goalCheckpointPending);
+      setGoalCheckpointVisible(state.goalCheckpointPending, { mode: state.checkpointMode || 'final' });
       // Persist the loaded pair immediately. A participant can now refresh
       // before touching Q1 and still resume the same blinded assignment.
       void autosave();
@@ -2462,25 +2528,31 @@
       }
       state.completedRounds += 1;
       const earnedMilestone = getEarnedMilestone(state.completedRounds, milestones);
+      const minimumCheckpoint = canContinue && state.completedRounds === 10;
       if (!canContinue) {
         els.submit.textContent = 'Complete';
         state.goalCheckpointPending = true;
+        state.checkpointMode = 'final';
+      } else if (minimumCheckpoint) {
+        state.goalCheckpointPending = true;
+        state.checkpointMode = 'minimum';
+        updateProgressHud();
+        if (earnedMilestone) showMedalUnlock(earnedMilestone);
       } else {
         await playRoundTransition(state.roundIndex + 1, earnedMilestone);
       }
       if (earnedMilestone && !canContinue) showMedalUnlock(earnedMilestone);
       if (state.goalCheckpointPending && state.pair) {
-        setGoalCheckpointVisible(true);
-        showFinalComparisonConfetti();
+        setGoalCheckpointVisible(true, { mode: state.checkpointMode });
+        if (!canContinue) showFinalComparisonConfetti();
       }
-      // loadRound() persists the next pair. The final checkpoint was already
+      // loadRound() persists the next pair. Completion progress was already
       // stored atomically with the answer, so there is no stale current-round
-      // progress write after completion.
+      // progress write after completion or while the milestone is visible.
     });
 
-    els.exit.addEventListener('click', async () => {
-      await Promise.resolve(progressSink(readProgress())).catch(() => {});
-      if (onExit) onExit();
+    els.exit.addEventListener('click', () => {
+      setExitConfirmationVisible(true);
     });
 
     els.onboarding.addEventListener('click', event => {
@@ -2515,15 +2587,31 @@
     els.exitSystem.addEventListener('click', () => {
       if (onExit) onExit();
     });
+    els.continueAfterGoal.addEventListener('click', async () => {
+      const nextRoundIndex = state.roundIndex + 1;
+      els.continueAfterGoal.disabled = true;
+      setGoalCheckpointVisible(false, { focus: false });
+      await playRoundTransition(nextRoundIndex, null);
+      els.continueAfterGoal.disabled = false;
+    });
     els.endSession.addEventListener('click', async () => {
       setGoalCheckpointVisible(false, { focus: false });
-      await autosave();
       if (onExit) onExit({ view: 'results' });
+    });
+    els.cancelExit.addEventListener('click', () => {
+      setExitConfirmationVisible(false);
+    });
+    els.confirmExit.addEventListener('click', async () => {
+      els.confirmExit.disabled = true;
+      if (!state.goalCheckpointPending) {
+        await Promise.resolve(progressSink(readProgress())).catch(() => {});
+      }
+      if (onExit) onExit();
     });
 
     els.panelToggle.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (state.goalCheckpointPending) return;
+      if (state.goalCheckpointPending || state.exitConfirmationOpen) return;
       updatePanelState(!state.panelCollapsed, { animate: true });
     });
 
@@ -2545,14 +2633,14 @@
     });
 
     els.cardHeader.addEventListener('click', (e) => {
-      if (state.goalCheckpointPending) return;
+      if (state.goalCheckpointPending || state.exitConfirmationOpen) return;
       if (e.target.closest('[data-action="exit"]')) return;
       if (e.target.closest('[data-action="toggle-panel"]')) return;
       if (!state.panelCollapsed) updatePanelState(true, { animate: true });
     });
 
     els.questionCard.addEventListener('click', (e) => {
-      if (state.goalCheckpointPending) return;
+      if (state.goalCheckpointPending || state.exitConfirmationOpen) return;
       if (!state.panelCollapsed) return;
       if (e.target.closest('[data-action="toggle-panel"]')) return;
       if (e.target.closest('[data-action="open-context"]')) return;
@@ -2647,7 +2735,8 @@
     const resizeController = new AbortController();
     window.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
-        if (state.streetViewOpen) closeStreetView({ deactivate: true });
+        if (state.exitConfirmationOpen) setExitConfirmationVisible(false);
+        else if (state.streetViewOpen) closeStreetView({ deactivate: true });
         else if (state.streetViewMode) setStreetViewMode(false);
         return;
       }
@@ -2674,7 +2763,9 @@
       partialAnswer: options.initialPartialAnswer || null,
       expectedPairId: options.initialPairId || null
     }).then(loaded => {
-      if (loaded && state.goalCheckpointPending) setGoalCheckpointVisible(true);
+      if (loaded && state.goalCheckpointPending) {
+        setGoalCheckpointVisible(true, { mode: state.checkpointMode || 'final' });
+      }
     });
 
     function unmount() {

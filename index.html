@@ -3,23 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>ARI Route Benchmark</title>
+  <title>Ari Route Benchmark</title>
   <meta name="description" content="Compare routes, reveal better journeys, and help ARI learn what makes a route work.">
   <meta name="theme-color" content="#211a2a">
-  <link rel="canonical" href="https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/">
+  <link rel="canonical" href="https://ari-calm-benchmark.vercel.app/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="LiveMap">
-  <meta property="og:title" content="ARI Calm Route Comparison">
+  <meta property="og:title" content="Ari Calm Route Comparison">
   <meta property="og:description" content="Compare two walking routes and help us understand what people prefer for a calmer walk.">
-  <meta property="og:url" content="https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/">
-  <meta property="og:image" content="https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/assets/ari-route-arcade-social.png">
+  <meta property="og:url" content="https://ari-calm-benchmark.vercel.app/">
+  <meta property="og:image" content="https://ari-calm-benchmark.vercel.app/assets/ari-route-arcade-social.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="627">
   <meta property="og:image:alt" content="ARI Route Arcade with two colorful routes converging on a navigation medal">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ARI Calm Route Comparison">
+  <meta name="twitter:title" content="Ari Calm Route Comparison">
   <meta name="twitter:description" content="Compare two walking routes and help us understand what people prefer for a calmer walk.">
-  <meta name="twitter:image" content="https://irenelivemap.github.io/ari-calm-benchmark-ui-mock/assets/ari-route-arcade-social.png">
+  <meta name="twitter:image" content="https://ari-calm-benchmark.vercel.app/assets/ari-route-arcade-social.png">
   <script src="./runtime-config.js?v=20260805-calm-launch-fixes-1"></script>
   <script>
     (function () {
@@ -43,7 +43,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQXygIghgkNsZq6U+4ppYkRrxVA0Gg=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" integrity="sha256-V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=" crossorigin="">
-  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260806-results-polish-7">
+  <link rel="stylesheet" href="./src/styles/calm-benchmark.css?v=20260807-results-ready-highlight">
   <style>
     body {
       margin: 0;
@@ -71,6 +71,7 @@
             <span class="calm-tab-tooltip" id="results-tab-tooltip" role="tooltip">Available after your first comparison.</span>
           </button>
         </nav>
+        <span class="calm-results-ready-cue" data-results-ready-cue role="status" aria-live="polite" aria-atomic="true" hidden>Your results are ready.</span>
       </div>
     </div>
   </header>
@@ -202,8 +203,9 @@
                 <h2>Start with 10 <span>comparisons.</span></h2>
                 <div class="calm-session-content">
                   <div class="calm-session-points">
-                    <div>About 10 minutes</div>
-                    <div>More time? Complete all 23 to earn every medal and climb the leaderboard.</div>
+                    <div><span>About 10 minutes</span></div>
+                    <div><span><strong>Team challenge:</strong> Compare routes, earn medals and see where you rank on the leaderboard.</span></div>
+                    <div><span>More time? Complete all 23 to unlock every medal.</span></div>
                   </div>
                 </div>
               </div>
@@ -224,7 +226,7 @@
             <div class="calm-medal-shelf calm-hidden" id="medal-shelf" aria-label="Milestones"></div>
           </div>
           <form class="calm-start-form" id="start-form">
-            <label for="participant-name">Name or participant code</label>
+            <label for="participant-name">Type name or participant code</label>
             <div class="calm-start-row">
               <input id="participant-name" name="participantName" type="text" autocomplete="name" maxlength="80" required aria-describedby="start-form-error" placeholder="Type your name or code…">
               <button id="start-test" type="submit" disabled>Start test →</button>
@@ -364,7 +366,9 @@
     const skipLink = document.querySelector('.calm-skip-link');
     const startButton = document.getElementById('start-test');
     const resultsTab = document.querySelector('.calm-tabs [data-view="results"]');
+    const resultsTabs = resultsTab.closest('.calm-tabs');
     const resultsTabTooltip = document.getElementById('results-tab-tooltip');
+    const resultsReadyCue = document.querySelector('[data-results-ready-cue]');
     const runtimeConfig = AriBenchmarkRuntime.resolveConfig(window);
     document.documentElement.dataset.ariEnvironment = runtimeConfig.production ? 'production' : 'preview';
     if (runtimeConfig.showReset) {
@@ -495,7 +499,7 @@
       calm: {
         key: 'calm',
         menuLabel: 'Calm Route Comparison',
-        documentTitle: 'ARI Calm Route Comparison',
+        documentTitle: 'Ari Calm Route Comparison',
         heroQuestion: 'Which route would you choose for a calmer walk?',
         heroQuestionHtml: 'Which route would you choose for <span class="calm-hero-phrase">a <em class="calm-serif-accent">calmer</em> walk?</span>',
         heroCopy: 'Compare two possible walking routes. Their source is hidden, so choose only from the route experience you see.',
@@ -632,7 +636,7 @@
           routeMetricMode: 'duration-vs-fast',
           routeMetricsHelp: [
             'Each route shows its estimated time, then the extra time versus Fast for the same trip.',
-            'If you prefer one route, choose Route A or B, even if both work well.',
+            'If you prefer one route, choose Route A or B.',
             'Choose “Both work well” only if you really have no preference, and “Both work poorly” if neither route feels calm enough.'
           ]
         },
@@ -644,6 +648,9 @@
     let benchmarkInstance = null;
     let savedProgress = null;
     let activePage = 'testing';
+    let resultsGuidanceAcknowledged = false;
+    let resultsGuidanceTimer = null;
+    let resultsGuidanceHideTimer = null;
     let teamFilters = { participant: '', outcome: '', reason: '' };
     /**
      * THESIS: Team patterns and human records are peers, never one crowded dashboard.
@@ -706,6 +713,39 @@
       return !freshPreviewMode && answers.length > 0;
     }
 
+    function hideResultsReadyCue({ immediate = false } = {}) {
+      window.clearTimeout(resultsGuidanceTimer);
+      window.clearTimeout(resultsGuidanceHideTimer);
+      resultsReadyCue.classList.remove('is-visible');
+      const finish = () => {
+        resultsReadyCue.hidden = true;
+        resultsTabs.classList.remove('is-results-ready');
+        resultsTab.setAttribute('aria-label', 'Results');
+      };
+      if (immediate) {
+        finish();
+        return;
+      }
+      resultsGuidanceHideTimer = window.setTimeout(() => {
+        finish();
+      }, 180);
+    }
+
+    function clearResultsGuidance({ acknowledge = false } = {}) {
+      if (acknowledge) resultsGuidanceAcknowledged = true;
+      hideResultsReadyCue({ immediate: true });
+    }
+
+    function showResultsGuidance() {
+      if (resultsGuidanceAcknowledged || !resultsAreAvailable()) return;
+      resultsTabs.classList.add('is-results-ready');
+      resultsTab.setAttribute('aria-label', 'Results, ready');
+      resultsReadyCue.hidden = false;
+      requestAnimationFrame(() => requestAnimationFrame(() => resultsReadyCue.classList.add('is-visible')));
+      window.clearTimeout(resultsGuidanceTimer);
+      resultsGuidanceTimer = window.setTimeout(() => hideResultsReadyCue(), 5000);
+    }
+
     function updateResultsAvailability() {
       const available = resultsAreAvailable();
       if (available) {
@@ -713,6 +753,7 @@
         resultsTab.removeAttribute('aria-describedby');
         resultsTabTooltip.hidden = true;
       } else {
+        clearResultsGuidance();
         resultsTab.setAttribute('aria-disabled', 'true');
         resultsTab.setAttribute('aria-describedby', resultsTabTooltip.id);
         resultsTabTooltip.hidden = false;
@@ -822,7 +863,7 @@
         ? 'Pick the route you would take for a calm walk.'
         : 'Pick the one you would actually take.';
       document.getElementById('benchmark-explain-copy').textContent = activeChallenge === 'calm'
-        ? 'Tell us what informed your choice and how useful it is alongside Fast.'
+        ? 'Tell us what informed your choice.'
         : 'Tell us why you chose it.';
       const definition = document.querySelector('.calm-disclosure');
       const hasDefinition = Boolean(activeConfig.definitionQuestion && activeConfig.definitionAnswer);
@@ -2065,6 +2106,7 @@
 
     function showPage(view, { updateUrl = true } = {}) {
       if (view === 'results' && !resultsAreAvailable()) view = 'testing';
+      if (view === 'results') clearResultsGuidance({ acknowledge: true });
       activePage = view;
       const isTeam = view === 'team-results';
       introHeader.classList.toggle('calm-hidden', isTeam);
@@ -2568,12 +2610,14 @@
           routePairProvider: activeConfig.routePairProvider,
           ...extraOptions,
           onExit: ({ view = 'testing' } = {}) => {
+            const shouldGuideToResults = view === 'testing' && resultsAreAvailable();
             benchmarkInstance?.unmount();
             benchmarkInstance = null;
             benchmarkRoot.hidden = true;
             benchmarkMounted = false;
             checkResumeState();
             showPage(view);
+            if (shouldGuideToResults) showResultsGuidance();
           },
           answerSink: async (answer, completionProgress) => {
             const result = completionProgress

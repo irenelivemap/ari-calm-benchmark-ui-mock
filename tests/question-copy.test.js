@@ -90,7 +90,7 @@ test('keeps the first-comparison Q1 guidance aligned with the questionnaire', ()
   const questionnaire = read('docs/QUESTIONNAIRE.md');
   const guidance = [
     'Each route shows its estimated time, then the extra time versus Fast for the same trip.',
-    'If you prefer one route, choose Route A or B, even if both work well.',
+    'If you prefer one route, choose Route A or B.',
     'Choose “Both work well” only if you really have no preference, and “Both work poorly” if neither route feels calm enough.'
   ];
   guidance.forEach(copy => {

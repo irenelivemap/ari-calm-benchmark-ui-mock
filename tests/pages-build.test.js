@@ -40,7 +40,7 @@ test('builds a static Pages artifact with Street View configured without changin
     assert.match(deployedConfig, new RegExp(`mapTilerKey: ${JSON.stringify(fakeMapTilerKey)}`));
     assert.equal(readFileSync(join(ROOT, 'runtime-config.js'), 'utf8'), sourceConfigBefore);
     assert.doesNotMatch(sourceConfigBefore, new RegExp(fakeBrowserKey));
-    assert.match(readFileSync(join(output, 'index.html'), 'utf8'), /ARI Calm Route Comparison/);
+    assert.match(readFileSync(join(output, 'index.html'), 'utf8'), /Ari Calm Route Comparison/);
   } finally {
     rmSync(output, { recursive: true, force: true });
   }

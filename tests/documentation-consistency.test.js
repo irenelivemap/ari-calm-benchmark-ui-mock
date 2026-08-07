@@ -23,8 +23,9 @@ const read = relativePath => fs.readFileSync(path.join(root, relativePath), 'utf
 test('keeps one canonical Calm participant link in the README live previews', () => {
   const readme = read('README.md');
   const livePreview = readme.match(/## Live Preview\n([\s\S]*?)\n## /)?.[1] || '';
-  const links = livePreview.match(/irenelivemap\.github\.io\/ari-calm-benchmark-ui-mock\/[^\n)]*/g) || [];
+  const links = livePreview.match(/https:\/\/[^\s)]+/g) || [];
   assert.equal(links.filter(link => !link.includes('game=google')).length, 1);
+  assert.match(livePreview, /https:\/\/ari-calm-benchmark\.vercel\.app\//);
   assert.doesNotMatch(livePreview, /game=calm/);
 });
 
